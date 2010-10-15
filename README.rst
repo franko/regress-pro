@@ -9,7 +9,10 @@ Regress Pro is scientific / industrial software that can be used to study experi
 The software is suitable both to determine the thickness of the layers and to determine the optical properties of dielectric materials.
 
 Here a couple of screenshots of Regress Pro at work:
-.. image: images/screenshot-1.png
+
+.. image:: images/screenshot-1.png
+
+.. image:: images/screenshot-2.png
 
 Features
 --------
@@ -42,7 +45,12 @@ Regress Pro is distributed under the GNU General Public License (GPL). The progr
   GNU Scientific Library, version 1.7. The library is used mainly for the Levenberg-Marquardt algorythm for non-linear fitting.
 
   The FOX toolkit, version 1.4.33. This excellent library is used to provide a Graphical User Interface on Linux and Windows platforms.
- 
+
+Downloads
+---------
+
+`Regress Pro 1.3.2 for windows <http://github.com/downloads/franko/Regress-Pro/regress-pro-132-win.zip>`_
+
 Requirements
 ------------
 
