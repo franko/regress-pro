@@ -8,12 +8,6 @@ Regress Pro is scientific / industrial software that can be used to study experi
 
 The software is suitable both to determine the thickness of the layers and to determine the optical properties of dielectric materials.
 
-Here a couple of screenshots of Regress Pro at work:
-
-.. image:: images/screenshot-1.png
-
-.. image:: images/screenshot-2.png
-
 Features
 --------
 
