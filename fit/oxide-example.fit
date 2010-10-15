@@ -1,0 +1,27 @@
+
+sio2 = HODispersion {
+  parameters = [
+    HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333, phi= 0.0}]
+}
+
+si = ReadMATFile "dispers/si_paper.mat"
+
+void = CauchyDispersion { n = [1, 0, 0], k = [0, 0, 0] }
+
+fsg = Stack {
+  mediums = [void, sio2, si],
+  thicknesses = [300]
+}
+
+thfit = Strategy {
+  params = ["Th:1"],
+  seeds = ["100-1000,20"]
+}
+
+rifit = Strategy {
+  params = ["Th:1", "RI:1:HO:Nosc:0", "RI:1:HO:En:0"],
+  seeds = ["100-1200,10", 140, 15]
+}
+
+use stack fsg
+use strategy rifit

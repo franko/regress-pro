@@ -1,0 +1,29 @@
+ 
+sio2ho = HODispersion { 
+  parameters = [ 
+    HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333, phi= 0.0}] 
+} 
+ 
+si   = ReadNKFile "dispers/woollam-si.nk" 
+sio2 = ReadNKFile "dispers/ONO-HTO.nk" 
+ 
+void = CauchyDispersion { n = [1, 0, 0], k = [0, 0, 0] } 
+ 
+thinox = Stack { 
+  mediums = [void, sio2, si], 
+  thicknesses = [1.6] 
+} 
+ 
+thfit = Strategy { 
+  params = ["Th:1"], 
+  seeds = ["100-1000,20"] 
+} 
+ 
+rifit = Strategy { 
+  params = ["Th:1", "RI:1:HO:Nosc:0", "RI:1:HO:En:0"], 
+  seeds = ["100-1200,10", 140, 15] 
+} 
+ 
+use stack thinox 
+use strategy thfit 
+

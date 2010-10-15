@@ -1,0 +1,36 @@
+
+si = ReadMATFile "dispers/si_paper.mat"
+
+pfi_ho = HODispersion {
+  parameters = [
+    HO {nosc= 91.16939, en= 11.4153, eg= 0.0,     nu= 0.3333, phi= 0.0},
+    HO {nosc= 0.12607,  en= 4.38545, eg= 0.35442, nu= 0.3333, phi= -0.38607},
+    HO {nosc= 1.12551,  en= 5.50586, eg= 0.15388, nu= 0.3333, phi= 0.08032}]
+}
+
+void = CauchyDispersion { n = [1, 0, 0], k = [0, 0, 0] }
+
+pfistack = Stack {
+  mediums = [void, pfi_ho, si],
+  thicknesses = [325.0]
+}
+
+thfit = Strategy {
+  params = ["Th:1"],
+  seeds = ["100-600,10"]
+}
+
+rifit = Strategy {
+  params = ["RI:1:HO:Nosc:0", "RI:1:HO:En:0",
+            "RI:1:HO:Nosc:1", "RI:1:HO:En:1", "RI:1:HO:Eg:1", "RI:1:HO:Phi:1",
+            "RI:1:HO:Nosc:2", "RI:1:HO:En:2", "RI:1:HO:Eg:2", "RI:1:HO:Phi:2"],
+  seeds = [91, 11.4,
+           0.02, "4-5,0.1", 0.3, "-1.6-1.6,0.1",
+           1.1, "5.2-6.2,0.1", 0.15, 0.08]
+}
+
+set chisq_thresold 1E5
+
+use stack pfistack
+use strategy rifit
+
