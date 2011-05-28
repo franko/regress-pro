@@ -50,8 +50,9 @@ Requirements
 
 The program can be compiled both on Windows and Linux/UNIX platforms using the GCC compiler. The following libraries are needed to compile the program
 
-  * GNU Scientific Library, version 1.7
-  * FOX toolkit library, a recent version of the 1.4 branch (at least 1.4.33)
+  * GNU Scientific Library, version >= 1.7
+  * FOX toolkit library, either 1.4 or 1.6 
+    (recently tested with 1.6.37)
 
 The provided windows binary doesn't need any external library.
 

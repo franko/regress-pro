@@ -8,7 +8,7 @@
 
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 3
-#define VERSION_PATCH 2
+#define VERSION_PATCH 4
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
