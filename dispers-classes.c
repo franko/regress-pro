@@ -57,6 +57,8 @@ init_class_list ()
   node = class_list_add_node (& bruggeman_disp_class, node);
   node = class_list_add_node (& ho_disp_class, node);
   node = class_list_add_node (& cauchy_disp_class, node);
+  node = class_list_add_node (& disp_table_class, node);
+  node = class_list_add_node (& disp_sample_table_class, node);
 
   disp_class_list = node;
 

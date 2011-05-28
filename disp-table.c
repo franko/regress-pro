@@ -7,16 +7,16 @@
 #include <string.h>
 #include <assert.h>
 
+#include "dispers.h"
 #include "disp-table.h"
 #include "error-messages.h"
 
-static void disp_table_free          (struct disp_struct *d);
-static struct disp_struct * \
-            disp_table_copy          (struct disp_struct *d);
+static void     disp_table_free      (struct disp_struct *d);
+static disp_t * disp_table_copy      (const disp_t *d);
 
-static cmpl disp_table_n_value       (const disp_t *disp, double lam);
+static cmpl     disp_table_n_value   (const disp_t *disp, double lam);
 
-struct disp_class disp_table_disp_class = {
+struct disp_class disp_table_class = {
   .disp_class_id       = DISP_TABLE,
   .model_id            = MODEL_NONE,
 
@@ -27,7 +27,7 @@ struct disp_class disp_table_disp_class = {
   .copy                = disp_table_copy,
 
   .n_value             = disp_table_n_value,
-  .fp_number           = NULL,
+  .fp_number           = disp_base_fp_number,
   .n_value_deriv       = NULL,
   .apply_param         = NULL,
 
@@ -54,41 +54,41 @@ disp_table_free (struct disp_struct *d)
   free (d);
 }
 
-struct disp_struct *
-disp_table_copy (struct disp_struct *src)
+disp_t *
+disp_table_copy (const disp_t *src)
 {
   disp_t *res = disp_base_copy (src);
   data_table_ref (res->disp.table.table_ref);
   return res;
 }
 
-void
-disp_table_set_index_value (struct disp_table dt[], int idx,
+static void
+set_index_value (struct disp_table dt[], int idx,
 			    float nr, float ni)
 {
   data_table_set (dt->table_ref, idx, 0, nr);
   data_table_set (dt->table_ref, idx, 1, ni);
 }
 
-void
-disp_table_set_range (struct disp_table dt[], double lmin, double lmax)
+static void
+set_range (struct disp_table dt[], double lmin, double lmax)
 {
   dt->lambda_min    = lmin;
   dt->lambda_max    = lmax;
   dt->lambda_stride = (lmax - lmin) / (dt->points_number - 1);
 }
 
-void
-disp_table_get_range (struct disp_table const dt[],
-		      double *lmin, double *lmax, int *points)
+static void
+get_range (struct disp_table const dt[],
+	   double *lmin, double *lmax, int *points)
 {
   *lmin   = dt->lambda_min;
   *lmax   = dt->lambda_max;
   *points = dt->points_number; 
 }
 
-cmpl
-disp_table_get_value_at_index (struct disp_table const dt[], int idx)
+static cmpl
+get_value_at_index (struct disp_table const dt[], int idx)
 {
   double nr, ni;
 
@@ -98,23 +98,17 @@ disp_table_get_value_at_index (struct disp_table const dt[], int idx)
   return nr - I * ni;
 }
 
-double
-disp_table_get_lambda (const struct disp_table dt[], int idx)
-{
-  return dt->lambda_min + idx * dt->lambda_stride;
-}
-
 cmpl
 disp_table_n_value (const disp_t *disp, double lam)
 {
-  const disp_table *table = & disp->disp.table;
+  const struct disp_table *table = & disp->disp.table;
   int ni, nb;
   double lami;
   cmpl a, b, n;
   double lmin, lmax;
   double dlam;
 
-  disp_table_get_range (table, &lmin, &lmax, &nb);
+  get_range (table, &lmin, &lmax, &nb);
 
   dlam = (lmax - lmin) / (nb - 1);
   ni = (int) ((lam - lmin) / dlam);
@@ -123,8 +117,8 @@ disp_table_n_value (const disp_t *disp, double lam)
 
   lami = lmin + ni * dlam;
     
-  a = disp_table_get_value_at_index (table, ni);
-  b = disp_table_get_value_at_index (table, ni+1);
+  a = get_value_at_index (table, ni);
+  b = get_value_at_index (table, ni+1);
   n = a + (b - a) * (lam - lami) / dlam;
 
   return n;
@@ -147,7 +141,7 @@ disp_table_new_from_nk_file (const char * filename)
   if (f == NULL)
     {
       notify_error_msg (LOADING_FILE_ERROR, "Cannot open %s", filename);
-      return 1;
+      return NULL;
     }
 
   nread = fscanf(f, "%*i %f %f %i\n", & wlmin, & wlmax, &npt);
@@ -155,7 +149,7 @@ disp_table_new_from_nk_file (const char * filename)
     {
       notify_error_msg (LOADING_FILE_ERROR, "File %s not in NK format",
 			filename);
-      return 1;
+      return NULL;
     }
 
   disp_table_init (table, npt+1);
@@ -171,16 +165,16 @@ disp_table_new_from_nk_file (const char * filename)
 	  goto disp_nk_free;
 	}
 
-      disp_table_set_index_value (table, j, nr, ni);
+      set_index_value (table, j, nr, ni);
     }
 
-  disp_table_set_range (table, wlmin * 1.0E3, wlmax * 1.0E3);
+  set_range (table, wlmin * 1.0E3, wlmax * 1.0E3);
 
   fclose (f);
-  return 0;
+  return disp;
 
  disp_nk_free:
   disp_table_free (disp);
   fclose (f);
-  return 1;
+  return NULL;
 }

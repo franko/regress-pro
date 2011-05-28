@@ -1,8 +1,3 @@
-
-/*
-  $Id: dispers.c,v 1.15 2006/12/29 17:47:02 francesco Exp $
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,13 +23,15 @@ load_nk_table (const char * filename)
   disp_t * disp;
 
   disp = disp_table_new_from_nk_file (filename);
+
   if (disp == NULL)
-	return NULL;
-  str_copy_c (disp->name, bname);
+    return NULL;
 
   bname = strrchr (filename, '/');
   if (bname)
     bname++;
+
+  str_copy_c (disp->name, bname);
 
   return disp;
 }
@@ -42,83 +39,7 @@ load_nk_table (const char * filename)
 disp_t *
 load_mat_dispers (const char * filename)
 {
-  FILE * f;
-  disp_t * disp;
-  str_t row;
-  double unit_factor = 1.0;
-  enum disp_type dtype;
-
-  f = fopen (filename, "r");
-
-  if (f == NULL)
-    {
-      notify_error_msg (LOADING_FILE_ERROR, "Cannot open %s", filename);
-      return NULL;
-    }
-
-  str_init (row, 64);
-
-  str_getline (row, f);
-  disp = disp_new_with_name (DISP_UNSET, CSTR(row));
-
-  str_getline (row, f);
-
-  if (strncasecmp (CSTR(row), "CAUCHY", 6) == 0)
-    {
-      dtype = DISP_CAUCHY;
-    }
-  else if (strncasecmp (CSTR(row), "angstroms", 9) == 0)
-    {
-      str_getline (row, f);
-      unit_factor = 0.1;
-      if (strncasecmp (CSTR(row), "NK", 2) == 0)
-	dtype = DISP_TABLE;
-    }
-  else if (strncasecmp (CSTR(row), "nm", 2) == 0)
-    {
-      str_getline (row, f);
-      if (strncasecmp (CSTR(row), "NK", 2) == 0)
-	dtype = DISP_TABLE;
-    }
-    
-  switch (dtype)
-    {
-      struct data_table *table;
-        
-    case DISP_TABLE:
-      table = data_table_read_lines (f, "%f %f %f\n", 0, 3);
-      if (table == NULL)
-	goto clean_disp;
-      disp_table_init_from_table (& disp->disp.table, table);
-      break;
-    case DISP_CAUCHY:
-      notify_error_msg (LOADING_FILE_ERROR, "cauchy MAT files");
-      goto clean_disp;
-#if 0
-      cn = disp->disp.cauchy.n;
-      ck = disp->disp.cauchy.k;
-      fscanf (f, "%lf %lf %lf %*f %*f %*f\n", cn, cn+1, cn+2);
-      cn[1] *= 1e3;
-      cn[2] *= 1e6;
-      ck[0] = ck[1] = ck[2] = 0.0;
-      break;
-#endif
-    default:
-      notify_error_msg (LOADING_FILE_ERROR, "corrupted material card");
-      goto clean_disp;
-    }
-
-  fclose (f);
-  str_free (row);
-  disp->type = dtype;
-  return disp;
-
- clean_disp:
-  disp_free (disp);
-  fclose (f);
-  str_free (row);
-  return NULL;
-  
+  return disp_sample_table_new_from_mat_file (filename);
 }
 
 static int
@@ -188,11 +109,8 @@ disp_get_number_of_params (disp_t *d)
       return d->dclass->fp_number(d);
     }
 
-
   switch (d->type)
     {
-    case DISP_TABLE:
-      break;
     case DISP_LOOKUP:
       return 1;
     default:
@@ -297,15 +215,13 @@ disp_free (disp_t *d)
   switch (d->type)
     {
       int j;
-    case DISP_TABLE:
-      disp_table_dealloc (&d->disp.table);
-      break;
     case DISP_LOOKUP:
       for (j = 0; j < d->disp.lookup.nb_comps; j++)
 	disp_free (d->disp.lookup.component[j].disp);
       free (d->disp.lookup.component);
       break;
     default:
+      assert(0);
       /* */ ;
     }
   free (d);
@@ -339,10 +255,16 @@ disp_base_copy (const disp_t *src)
   return res;
 }
 
-disp_t *
+int
 disp_base_decode_param_string (const char *param)
 {
-	return -1;
+  return -1;
+}
+
+int
+disp_base_fp_number (const disp_t *src)
+{
+  return 0;
 }
 
 disp_t *
@@ -364,9 +286,6 @@ disp_copy (disp_t *d)
       struct lookup_comp *newcomp;
       int sz, j;
 
-    case DISP_TABLE:
-      data_table_ref (res->disp.table.table_ref);
-      break;
     case DISP_LOOKUP:
       sz = res->disp.lookup.nb_comps * sizeof(struct lookup_comp);
       newcomp = emalloc (sz);
@@ -510,22 +429,4 @@ decode_fit_param (fit_param_t *fp, const str_t str)
     }
 
   return 1;
-}
-
-void
-disp_get_spectral_range (disp_t *d, double *wlinf, double *wlmax,
-			 double *wlstep)
-{
-  switch (d->type)
-    {
-      int points;
-    case DISP_TABLE:
-      disp_table_get_range (&d->disp.table, wlinf, wlmax, &points);
-      *wlstep = (wlmax[0] - wlinf[0]) / (points - 1);
-      break;
-    default: 
-      *wlinf = 200.0;
-      *wlmax = 800;
-      *wlstep = 2.0;
-    }
 }

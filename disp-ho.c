@@ -4,9 +4,8 @@
 #include "dispers.h"
 #include "cmpl.h"
 
-static void ho_free          (struct disp_struct *d);
-static struct disp_struct * \
-            ho_copy          (struct disp_struct *d);
+static void     ho_free      (disp_t *d);
+static disp_t * ho_copy      (const disp_t *d);
 
 static cmpl ho_n_value       (const disp_t *disp, double lam);
 static cmpl ho_n_value_deriv (const disp_t *disp, double lam,
@@ -49,7 +48,7 @@ static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 #define HO_PARAM_NB(hn,pn) (HO_NB_PARAMS * (hn) + pn)
 
 void
-ho_free (struct disp_struct *d)
+ho_free (disp_t *d)
 {
   struct disp_ho *ho = & d->disp.ho;
   assert (d->type == DISP_HO);
@@ -58,8 +57,8 @@ ho_free (struct disp_struct *d)
   free (d);
 }
 
-struct disp_struct *
-ho_copy (struct disp_struct *src)
+disp_t *
+ho_copy (const disp_t *src)
 {
   struct disp_struct *res;
   struct disp_ho *ho;

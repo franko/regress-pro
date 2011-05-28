@@ -4,9 +4,8 @@
 #include "dispers.h"
 #include "cmpl.h"
 
-static void bruggeman_free          (struct disp_struct *d);
-static struct disp_struct * \
-            bruggeman_copy          (struct disp_struct *d);
+static void     bruggeman_free          (struct disp_struct *d);
+static disp_t * bruggeman_copy          (const disp_t *d);
 
 static cmpl bruggeman_n_value       (const disp_t *disp, double lam);
 static cmpl bruggeman_n_value_deriv (const disp_t *disp, double lam,
@@ -47,8 +46,8 @@ bruggeman_free (struct disp_struct *d)
   free (d);
 }
 
-struct disp_struct *
-bruggeman_copy (struct disp_struct *src)
+disp_t *
+bruggeman_copy (const disp_t *src)
 {
   struct disp_struct *res;
   struct disp_bruggeman *bd;

@@ -37,8 +37,7 @@ DispersWin::DispersWin(FXWindow* w, disp_t *disp)
   FXHorizontalFrame *buttonfr = new FXHorizontalFrame(topfr,LAYOUT_FILL_X|LAYOUT_RIGHT);
   new FXButton(buttonfr,"&Close",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 
-  double wlinf, wlsup, wlstep;
-  disp_get_spectral_range (disp, &wlinf, &wlsup, &wlstep);
+  const double wlinf = 200, wlsup = 800, wlstep = 2;
   range = SpectrRange(wlinf, wlsup, wlstep);
 
   nplot = new FXDataPlot();

@@ -62,7 +62,7 @@ dispers_library_init ()
   /* Silicon PAPER */
   current = disp_new_with_name (DISP_TABLE, "Si from paper");
   dt = & current->disp.table;
-  dt->kind = DISP_TABLE_UNIFORM;
+
   dt->points_number = si_data_table.rows;
   dt->lambda_min    = SI_PAPER_WVLEN_MIN;
   dt->lambda_max    = SI_PAPER_WVLEN_MAX;

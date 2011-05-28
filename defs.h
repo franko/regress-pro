@@ -20,4 +20,8 @@
 # define __END_DECLS /* empty */
 #endif
 
+#ifndef WIN32
+#define HAVE_VASPRINTF 1
+#endif
+
 #endif

@@ -1,7 +1,4 @@
-/*
-  $Id: cmpl.c,v 1.5 2006/07/12 22:48:54 francesco Exp $
- */
-
+#include <stdlib.h>
 #include <assert.h>
 #include "common.h"
 #include "cmpl.h"

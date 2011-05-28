@@ -1,7 +1,3 @@
-/*
-  $Id: cmpl.h,v 1.5 2006/05/12 15:03:14 af27 Exp $
- */
-
 #ifndef CMPL_VECTOR_H
 #define CMPL_VECTOR_H
 

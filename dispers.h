@@ -9,6 +9,7 @@
 #include "fit-params.h"
 #include "str.h"
 #include "disp-table.h"
+#include "disp-sample-table.h"
 #include "disp-bruggeman.h"
 #include "disp-ho.h"
 #include "disp-cauchy.h"
@@ -29,7 +30,7 @@ struct disp_class {
 
   /* methods to copy and free dispersions */
   void (*free)(struct disp_struct *d);
-  struct disp_struct *(*copy)(struct disp_struct *d);
+  struct disp_struct *(*copy)(const struct disp_struct *d);
     
   cmpl (*n_value)            (const struct disp_struct *d, double lam);
   int  (*fp_number)          (const struct disp_struct *d);
@@ -62,6 +63,7 @@ struct disp_lookup {
 enum disp_type {
   DISP_UNSET = 0,
   DISP_TABLE,
+  DISP_SAMPLE_TABLE,
   DISP_CAUCHY,
   DISP_HO,
   DISP_LOOKUP,
@@ -75,6 +77,7 @@ struct disp_struct {
   str_t name;
   union {
     struct disp_table table;
+    struct disp_sample_table sample_table;
     struct disp_cauchy cauchy;
     struct disp_ho ho;
     struct disp_lookup lookup;
@@ -106,12 +109,10 @@ extern int      disp_integrity_check    (disp_t *d);
 extern int      disp_check_fit_param    (disp_t *d, fit_param_t *fp);
 
 int             decode_fit_param        (fit_param_t *fp, const str_t str);
-extern void     disp_get_spectral_range (disp_t *d,
-					 double *wlinf, double *wlmax,
-					 double *wlstep);
 
 extern disp_t * disp_base_copy          (const disp_t *src);
-extern disp_t * disp_base_decode_param_string (const char *param);
+extern int      disp_base_decode_param_string (const char *param);
+extern int      disp_base_fp_number     (const disp_t *src);
 
 __END_DECLS
 

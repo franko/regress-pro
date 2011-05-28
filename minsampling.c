@@ -1,8 +1,5 @@
 
-/*
-  $Id: minsampling.c,v 1.1 2006/07/12 22:57:45 francesco Exp $
- */
-
+#include <stdlib.h>
 #include <string.h>
 
 #include "common.h"

@@ -18,7 +18,7 @@ ifeq ($(BUILD_FLAG), pentium)
 endif
 ifeq ($(BUILD_FLAG), debug)
 # DEBUG setting
-  CXX = gcc
+  CXX = g++
   CXXFLAGS = -g -Wall -W -fno-inline 
   DEFS = -DDEBUG_MEM
 endif
@@ -28,15 +28,23 @@ ifeq ($(WIN_FLAG), yes)
   DEFS += -DWIN32
 endif
 
+# FOX_HOME = c:/fra/src/fox-1.6.43
+# FOX_LIBS = -L$(FOX_HOME)/src -lfox
+# FOX_INCLUDES = -I$(FOX_HOME)/include
+
 FOX_LIBS = $(shell fox-config --libs)
 FOX_INCLUDES = $(shell fox-config --cflags)
 
-GSL_LIBS = -L/lib -lgsl -lgslcblas -lm
-GSL_INCLUDES = -I/include
+GSL_LIBS = -lgsl -lgslcblas -lm
+GSL_INCLUDES = 
 
 #  -lsupc++ -lgdi32 -mwindows 
 
-LDFLAGS = $(FOX_LIBS) $(GSL_LIBS)
+LDFLAGS = $(FOX_LIBS) $(GSL_LIBS) 
+
+ifeq ($(WIN_FLAG), yes)
+  LDFLAGS += -lgdi32 -lwsock32
+endif
 
 INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
 

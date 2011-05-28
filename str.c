@@ -242,6 +242,7 @@ str_getline (str_t d, FILE *f)
 void
 str_vprintf (str_t d, const char *fmt, int append, va_list ap)
 {
+#ifdef HAVE_VASPRINTF
   char *buffer;
   int ns;
 
@@ -257,7 +258,7 @@ str_vprintf (str_t d, const char *fmt, int append, va_list ap)
       d->size = ns;
       d->length = strlen (buffer);
     }
-#if 0
+#else
   static char buffer[1024];
   int ns;
   ns = vsnprintf (buffer, 1024, fmt, ap);

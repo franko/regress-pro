@@ -576,7 +576,7 @@ EllissWindow::setErrorRegion (int sl, int el)
 
   while (cl < sl)
     {
-      char *ptr = strchr (base, '\n');
+      const char *ptr = strchr (base, '\n');
       if (! ptr)
 	break;
       ptr ++;
@@ -591,7 +591,7 @@ EllissWindow::setErrorRegion (int sl, int el)
   next = 0;
   while (cl <= el)
     {
-      char *ptr = strchr (base, '\n');
+      const char *ptr = strchr (base, '\n');
       if (! ptr)
 	break;
       ptr ++;
