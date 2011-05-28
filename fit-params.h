@@ -1,7 +1,3 @@
-/* 
-  $Id: fit-params.h,v 1.10 2006/07/12 22:48:54 francesco Exp $
- */
-
 #ifndef FIT_PARAMS_H
 #define FIT_PARAMS_H
 

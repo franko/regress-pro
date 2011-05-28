@@ -42,6 +42,7 @@ void
 disp_sample_table_free (disp_t *d)
 {
   data_table_unref (d->disp.sample_table.table_ref);
+  str_free (d->name);
   free (d);
 }
 

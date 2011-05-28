@@ -12,10 +12,6 @@
 #include "str.h"
 #include "fit-params.h"
 
-static int lookup_find_interval (struct disp_lookup const * lookup, double p);
-
-
-
 disp_t *
 load_nk_table (const char * filename)
 {
@@ -42,55 +38,12 @@ load_mat_dispers (const char * filename)
   return disp_sample_table_new_from_mat_file (filename);
 }
 
-static int
-lookup_find_interval (struct disp_lookup const * lookup, double p)
-{
-  int j;
-
-  assert (lookup->nb_comps >= 2);
-
-  for (j = 1; j < lookup->nb_comps - 1; j++)
-    {
-      if (lookup->component[j].p >= p)
-	break;
-    }
-
-  return j-1;
-}
 
 complex double
 n_value (const disp_t *disp, double lam)
 {
-  cmpl n;
-  struct disp_lookup const * lookup;
-  
-  if (disp->dclass != NULL)
-    {
-      return disp->dclass->n_value(disp, lam);
-    }
-  
-  switch (disp->type)
-    {
-      double p1, p2;
-      cmpl n1, n2;
-      int j;
-
-    case DISP_LOOKUP:
-      lookup = & disp->disp.lookup;
-
-      j = lookup_find_interval (lookup, lookup->p);
-
-      n1 = n_value (lookup->component[j].disp, lam);
-      n2 = n_value (lookup->component[j+1].disp, lam);
-      p1 = lookup->component[j].p;
-      p2 = lookup->component[j+1].p;
-      n = n1 + (n2 - n1) * ((lookup->p - p1) / (p2 - p1));
-      break;
-    default:
-      assert (0);
-    }
-        
-  return n;
+  assert(disp->dclass != NULL);
+  return disp->dclass->n_value(disp, lam);
 }
 
 void
@@ -104,20 +57,8 @@ n_value_cpp (const disp_t *mat, double lam, double *nr, double *ni)
 int
 disp_get_number_of_params (disp_t *d)
 {
-  if (d->dclass != NULL)
-    {
-      return d->dclass->fp_number(d);
-    }
-
-  switch (d->type)
-    {
-    case DISP_LOOKUP:
-      return 1;
-    default:
-      assert (0);
-    }
-
-  return 0;
+  assert (d->dclass != NULL);
+  return d->dclass->fp_number(d);
 }
 
 int
@@ -128,22 +69,8 @@ dispers_apply_param (disp_t *d, const fit_param_t *fp, double val)
   if (fp->id != PID_LAYER_N)
     return res;
 
-  if (d->dclass != NULL)
-    {
-      return d->dclass->apply_param(d, fp, val);
-    }
-
-  switch (d->type)
-    {
-    case DISP_LOOKUP:
-      if (fp->model_id == MODEL_LOOKUP)
-	d->disp.lookup.p = val;
-      break;
-    default:
-      /* */ ;
-    }
-
-  return res;
+  assert (d->dclass != NULL);
+  return d->dclass->apply_param(d, fp, val);
 }
 
 void
@@ -155,49 +82,18 @@ get_model_param_deriv (const disp_t *disp, struct deriv_info *deriv_info,
   const struct disp_lookup * lookup;
   cmpl val = 0.0 + I * 0.0;
 
-  if (disp->dclass != NULL)
+  assert (disp->dclass != NULL);
+
+  if (! deriv_info->is_valid)
     {
-      if (! deriv_info->is_valid)
-        {
-	  int nb = disp->dclass->fp_number(disp);
-	  deriv_info->val = cmpl_vector_alloc (nb);
-	  disp->dclass->n_value_deriv(disp, lambda, deriv_info->val);
-	  deriv_info->is_valid = 1;
-	}
-
-      val = cmpl_vector_get (deriv_info->val, fp->param_nb);
-
-      *dnr = creal (val);
-      *dni = cimag (val);
-
-      return;      
+      int nb = disp->dclass->fp_number(disp);
+      deriv_info->val = cmpl_vector_alloc (nb);
+      disp->dclass->n_value_deriv(disp, lambda, deriv_info->val);
+      deriv_info->is_valid = 1;
     }
 
-  disp_type = disp->type;
+  val = cmpl_vector_get (deriv_info->val, fp->param_nb);
 
-  switch (fp->model_id)
-    {
-      cmpl n2, n1;
-      double p1, p2;
-      int j;
-
-    case MODEL_LOOKUP:
-      if (disp_type != DISP_LOOKUP)
-	break;
-      lookup = & disp->disp.lookup;
-
-      j  = lookup_find_interval (lookup, lookup->p);
-
-      n1 = n_value (lookup->component[j].disp, lambda);
-      n2 = n_value (lookup->component[j+1].disp, lambda);
-      p1 = lookup->component[j].p;
-      p2 = lookup->component[j+1].p;
-      val = (n2 - n1) / (p2 - p1);
-      break;
-    default:
-      assert (0);
-    }
-  
   *dnr = creal (val);
   *dni = cimag (val);
 }
@@ -205,26 +101,8 @@ get_model_param_deriv (const disp_t *disp, struct deriv_info *deriv_info,
 void
 disp_free (disp_t *d)
 {
-  if (d->dclass != NULL)
-    {
-      d->dclass->free (d);
-      return;
-    }
-
-  str_free (d->name);
-  switch (d->type)
-    {
-      int j;
-    case DISP_LOOKUP:
-      for (j = 0; j < d->disp.lookup.nb_comps; j++)
-	disp_free (d->disp.lookup.component[j].disp);
-      free (d->disp.lookup.component);
-      break;
-    default:
-      assert(0);
-      /* */ ;
-    }
-  free (d);
+  assert (d->dclass != NULL);
+  d->dclass->free (d);
 }
 
 disp_t *
@@ -270,48 +148,8 @@ disp_base_fp_number (const disp_t *src)
 disp_t *
 disp_copy (disp_t *d)
 {
-  disp_t *res;
-
-  if (d->dclass != NULL)
-    {
-      return d->dclass->copy (d);
-    }
-
-  res = emalloc (sizeof(disp_t));
-  memcpy (res, d, sizeof(disp_t));
-  str_init_from_str (res->name, d->name);
-
-  switch (d->type)
-    {
-      struct lookup_comp *newcomp;
-      int sz, j;
-
-    case DISP_LOOKUP:
-      sz = res->disp.lookup.nb_comps * sizeof(struct lookup_comp);
-      newcomp = emalloc (sz);
-      memcpy (newcomp, res->disp.lookup.component, sz);
-      for (j = 0; j < res->disp.lookup.nb_comps; j++)
-	newcomp[j].disp = disp_copy (newcomp[j].disp);
-      res->disp.lookup.component = newcomp;
-      break;
-    default:
-      notify_error_msg (LOADING_FILE_ERROR, "material card corrupted.\n");
-    }
-
-  return res;
-}
-
-disp_t *
-disp_new_lookup (const char *name, int nb_comps, struct lookup_comp *comp,
-		 double p0)
-{
-  disp_t *d = disp_new_with_name (DISP_LOOKUP, name);
-
-  d->disp.lookup.p = p0;
-  d->disp.lookup.nb_comps = nb_comps;
-  d->disp.lookup.component = comp;
-
-  return d;
+  assert (d->dclass != NULL);
+  return d->dclass->copy (d);
 }
 
 int
@@ -327,41 +165,15 @@ disp_integrity_check (disp_t *d)
 int
 disp_check_fit_param (disp_t *d, fit_param_t *fp)
 {
-  int ok = 0;
+  assert (d->dclass != NULL);
 
-  if (d->dclass != NULL)
-    {
-      int nb = d->dclass->fp_number (d);
-      if (fp->id != PID_LAYER_N)
-	return 1;
-      if (d->dclass->model_id != fp->model_id)
-	return 1;
-      if (fp->param_nb < 0 || fp->param_nb >= nb)
-	return 1;
-      return 0;
-    }
-
-  switch (d->type)
-    {
-    case DISP_LOOKUP:
-      ok = (fp->id == PID_LAYER_N && fp->model_id == MODEL_LOOKUP);
-      ok = ok && fp->param_nb == 0;
-      break;
-    default:
-      /* */ ;
-    }
-
-  return (ok ? 0 : 1);
-}
-
-static int
-lookup_decode (fit_param_t *fp, size_t layer, const char *s)
-{
-  if (strcmp (s, "P") != 0)
+  int nb = d->dclass->fp_number (d);
+  if (fp->id != PID_LAYER_N)
     return 1;
-
-  set_model_param (fp, layer, MODEL_LOOKUP, 0);
-
+  if (d->dclass->model_id != fp->model_id)
+    return 1;
+  if (fp->param_nb < 0 || fp->param_nb >= nb)
+    return 1;
   return 0;
 }
 
@@ -423,9 +235,6 @@ decode_fit_param (fit_param_t *fp, const str_t str)
 	      return 0;
 	    }
 	}
-    
-      if (strncmp (s, "Lookup:", 7) == 0)
-	return lookup_decode (fp, layer, snext+1);
     }
 
   return 1;
