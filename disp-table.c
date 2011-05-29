@@ -51,8 +51,7 @@ void
 disp_table_free (struct disp_struct *d)
 {
   data_table_unref (d->disp.table.table_ref);
-  str_free (d->name);
-  free (d);
+  disp_base_free (d);
 }
 
 disp_t *

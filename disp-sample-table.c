@@ -38,19 +38,28 @@ disp_sample_table_init (struct disp_sample_table dt[], int nb)
   dt->table_ref = data_table_new (nb, 3 /* columns */);
 }
 
+static void
+disp_sample_table_clear (struct disp_sample_table *dt)
+{
+  dt->nb = 0;
+}
+
 void
 disp_sample_table_free (disp_t *d)
 {
-  data_table_unref (d->disp.sample_table.table_ref);
-  str_free (d->name);
-  free (d);
+  struct disp_sample_table *dt = &d->disp.sample_table;
+  if (dt->nb > 0)
+    data_table_unref (dt->table_ref);
+  disp_base_free (d);
 }
 
 disp_t *
 disp_sample_table_copy (const disp_t *src)
 {
   disp_t *res = disp_base_copy (src);
-  data_table_ref (res->disp.sample_table.table_ref);
+  struct disp_sample_table *dt = &res->disp.sample_table;
+  if (dt->nb > 0)
+    data_table_ref (dt->table_ref);
   return res;
 }
 
@@ -87,6 +96,7 @@ disp_sample_table_new_from_mat_file (const char * filename)
 {
   FILE * f;
   str_t row;
+  disp_t *disp = NULL;
   double unit_factor = 1.0;
   enum disp_type dtype;
 
@@ -125,12 +135,16 @@ disp_sample_table_new_from_mat_file (const char * filename)
     {
     case DISP_SAMPLE_TABLE:
       {
-	disp_t *disp = disp_new (DISP_SAMPLE_TABLE);
-	struct disp_sample_table *dt = & disp->disp.sample_table;
+	struct disp_sample_table *dt;
 	struct data_table *table;
-
 	long start_pos = ftell (f);
 	int j, lines;
+
+	disp = disp_new (DISP_SAMPLE_TABLE);
+	dt = & disp->disp.sample_table;
+	disp_sample_table_clear (dt);
+
+	start_pos = ftell (f);
 
 	for (lines = 0; ; )
 	  {
@@ -145,6 +159,7 @@ disp_sample_table_new_from_mat_file (const char * filename)
 	if (lines < 2)
 	  {
 	    disp_free (disp);
+	    disp = NULL;
 	    break;
 	  }
 
@@ -166,8 +181,7 @@ disp_sample_table_new_from_mat_file (const char * filename)
 	      break;
 	  }
 
-	fclose (f);
-	return disp;
+	break;
       }	  
     case DISP_CAUCHY:
       notify_error_msg (LOADING_FILE_ERROR, "cauchy MAT files");
@@ -188,5 +202,5 @@ disp_sample_table_new_from_mat_file (const char * filename)
 
   fclose (f);
   str_free (row);
-  return NULL;
+  return disp;
 }

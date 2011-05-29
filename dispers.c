@@ -133,6 +133,13 @@ disp_base_copy (const disp_t *src)
   return res;
 }
 
+disp_t *
+disp_base_free (disp_t *d)
+{
+  str_free (d->name);
+  free (d);
+}
+
 int
 disp_base_decode_param_string (const char *param)
 {

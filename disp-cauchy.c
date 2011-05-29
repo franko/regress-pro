@@ -22,7 +22,7 @@ struct disp_class cauchy_disp_class = {
   .short_id            = "Cauchy",
   .full_id             = "Cauchy",
 
-  .free                = (void (*)(struct disp_struct *)) free,
+  .free                = disp_base_free,
   .copy                = disp_base_copy,
 
   .n_value             = cauchy_n_value,

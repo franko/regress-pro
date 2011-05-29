@@ -95,6 +95,7 @@ extern int      disp_check_fit_param    (disp_t *d, fit_param_t *fp);
 int             decode_fit_param        (fit_param_t *fp, const str_t str);
 
 extern disp_t * disp_base_copy          (const disp_t *src);
+extern disp_t * disp_base_free          (disp_t *d);
 extern int      disp_base_decode_param_string (const char *param);
 extern int      disp_base_fp_number     (const disp_t *src);
 
