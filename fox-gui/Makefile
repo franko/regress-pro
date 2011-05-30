@@ -26,14 +26,15 @@ endif
 ifeq ($(WIN_FLAG), yes)
 # Option for Windows Platform
   DEFS += -DWIN32
+
+
+  FOX_HOME = c:/fra/src/fox-1.6.43
+  FOX_LIBS = -L$(FOX_HOME)/src -lfox
+  FOX_INCLUDES = -I$(FOX_HOME)/include
+else
+  FOX_LIBS = $(shell fox-config --libs)
+  FOX_INCLUDES = $(shell fox-config --cflags)
 endif
-
-# FOX_HOME = c:/fra/src/fox-1.6.43
-# FOX_LIBS = -L$(FOX_HOME)/src -lfox
-# FOX_INCLUDES = -I$(FOX_HOME)/include
-
-FOX_LIBS = $(shell fox-config --libs)
-FOX_INCLUDES = $(shell fox-config --cflags)
 
 GSL_LIBS = -lgsl -lgslcblas -lm
 GSL_INCLUDES = 
