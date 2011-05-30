@@ -86,8 +86,6 @@ get_model_param_deriv (const disp_t *disp, struct deriv_info *deriv_info,
 
   if (! deriv_info->is_valid)
     {
-      int nb = disp->dclass->fp_number(disp);
-      deriv_info->val = cmpl_vector_alloc (nb);
       disp->dclass->n_value_deriv(disp, lambda, deriv_info->val);
       deriv_info->is_valid = 1;
     }
