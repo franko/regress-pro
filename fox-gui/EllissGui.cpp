@@ -362,7 +362,6 @@ EllissWindow::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 {
   struct multi_fit_engine *fit;
   Str analysis;
-  double chisq;
   struct {
     struct seeds *common;
     struct seeds *individual;
@@ -380,7 +379,7 @@ EllissWindow::onCmdRunMultiFit(FXObject*,FXSelector,void *)
   ProgressInfo progress(this->getApp(), this);
 
   lmfit_multi (fit, seeds.common, seeds.individual,
-	       &chisq, analysis.str(), fit_error_msgs.str(),
+	       analysis.str(), fit_error_msgs.str(),
 	       LMFIT_GET_RESULTING_STACK, 
 	       process_foxgui_events, &progress);
 
@@ -421,7 +420,11 @@ long
 EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 {
   if (this->spectrum == NULL)
-    return 0;
+    {
+      FXMessageBox::information(this, MBOX_OK, "Fitting",
+				"Please load a spectra before.");
+      return 0;
+    }
 
   updateFitStrategy();
 

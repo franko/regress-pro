@@ -18,7 +18,7 @@
 int
 lmfit_multi (struct multi_fit_engine *fit,
 	     struct seeds *seeds_common, struct seeds *seeds_priv,
-	     double * chisq, str_ptr analysis,
+	     str_ptr analysis,
 	     str_ptr error_msg, int preserve_init_stack,
 	     gui_hook_func_t hfun, void *hdata)
 {
@@ -30,7 +30,7 @@ lmfit_multi (struct multi_fit_engine *fit,
   stack_t *initial_stack;
   gsl_vector *x;
   double chi;
-  int iter, nb_common, nb_priv, nb_samples, k, ks;
+  int iter, nb_common, nb_priv, nb_samples, k, ks, j_sample;
 
   assert (! preserve_init_stack);
 
@@ -59,8 +59,21 @@ lmfit_multi (struct multi_fit_engine *fit,
 		       cfg->epsabs, cfg->epsrel,
 		       & iter, hfun, hdata, & stop_request);
 
-  chi = gsl_blas_dnrm2(s->f);
-  *chisq = 1.0e6 * pow(chi, 2.0) / f->n;
+  j_sample = 0;
+  for (k = 0; k < fit->samples_number; k++)
+    {
+      struct spectrum *spectrum = fit->spectra_list[k];
+      double chisq = 0;
+      int j, np = spectra_points (spectrum);
+
+      for (j = 0; j < np; j++, j_sample++)
+	{
+	  double fres = gsl_vector_get (s->f, j_sample);
+	  chisq += fres * fres;
+	}
+
+      gsl_vector_set (fit->chisq, k, 1.0e6 * chisq / np);
+    }
 
   if (error_msg)
     {

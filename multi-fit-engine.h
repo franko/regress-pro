@@ -36,6 +36,7 @@ struct multi_fit_engine {
   gsl_multifit_function_fdf mffun;
 
   gsl_vector *results;
+  gsl_vector *chisq;
 
   struct stack_cache cache;
 

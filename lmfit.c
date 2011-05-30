@@ -29,7 +29,7 @@ print_state (int iter, gsl_multifit_fdfsolver * s, unsigned int dof)
   printf ("iter: %3u x = ", iter);
   for (j = 0; j < nb; j++)
     printf ("%15.8f ", gsl_vector_get (s->x, j));
-  printf("Chi^2 = %g\n", 1.0E6 * pow(gsl_blas_dnrm2 (s->f), 2.0) / dof);
+  printf("Chi^2 = %g, DoF= %i\n", 1.0E6 * pow(gsl_blas_dnrm2 (s->f), 2.0) / dof, dof);
 }
 
 static void

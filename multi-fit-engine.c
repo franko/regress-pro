@@ -121,6 +121,7 @@ multi_fit_engine_prepare (struct multi_fit_engine *fit)
   cfg->chisq_thresold *= fit->samples_number;
 
   fit->results = gsl_vector_alloc (nb_total_params);
+  fit->chisq   = gsl_vector_alloc (fit->samples_number);
 
   fit->initialized = 1;
 
@@ -158,6 +159,9 @@ multi_fit_engine_disable (struct multi_fit_engine *fit)
 
   gsl_vector_free (fit->results);
   fit->results = NULL;
+
+  gsl_vector_free (fit->chisq);
+  fit->chisq = NULL;
 
   fit->initialized = 0;
 }
@@ -405,6 +409,13 @@ multi_fit_engine_print_fit_results (struct multi_fit_engine *fit,
 	  str_printf_add (text, "SAMPLE(%02i)/ %9s : %.6g\n", k, CSTR(pname),
 			  gsl_vector_get (fit->results, kp));
 	}
+    }
+
+  str_append_c (text, "Residual Chi Square by sample:\n", '\n');
+  for (k = 0; k < fit->samples_number; k++)
+    {
+      double chisq = gsl_vector_get (fit->chisq, k);
+      str_printf_add (text, "ChiSq(%02i): %g\n", k, chisq);
     }
 
   str_free (pname);
