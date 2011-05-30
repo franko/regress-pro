@@ -433,7 +433,10 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
   fit = build_fit_engine (this->symtab, &seeds);
 
   if (fit == NULL)
-    return 0;
+    {
+      reportErrors();
+      return 0;
+    }
 
   fit_engine_prepare (fit, this->spectrum);
 
@@ -559,6 +562,18 @@ EllissWindow::setFitStrategy(const char *script_text)
     }
 
   return true;
+}
+
+void
+EllissWindow::reportErrors()
+{
+  str_t errmsg;
+  str_init (errmsg, 128);
+  get_errors_list (errmsg);
+  FXMessageBox::information(this, MBOX_OK, "Script parsing",
+			    "The parsing of the script has been"
+			    " unsuccessful :\n%s", CSTR(errmsg));
+  str_free (errmsg);
 }
 
 void

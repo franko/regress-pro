@@ -84,6 +84,7 @@ public:
   void setErrorRegion (int sl, int el);
   void cleanScriptErrors ();
   void plotCanvas(FXDCWindow *dc);
+  void reportErrors();
 public:
   enum {
     ID_CANVAS = FXMainWindow::ID_LAST,
