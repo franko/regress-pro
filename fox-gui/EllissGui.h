@@ -70,6 +70,7 @@ public:
   long onUpdCanvas(FXObject*,FXSelector,void*);
   long onCmdLoadScript(FXObject*,FXSelector,void*);
   long onCmdSaveScript(FXObject*,FXSelector,void*);
+  long onCmdSaveAsScript(FXObject*,FXSelector,void *);
   long onCmdLoadSpectra(FXObject*,FXSelector,void*);
   long onCmdPlotDispers(FXObject*,FXSelector,void*);
   long onCmdRunFit(FXObject*,FXSelector,void*);
@@ -80,6 +81,7 @@ public:
 
   FXbool loadfile(const FXString& file, str_t buffer);
   FXbool setFitStrategy(const char *script_text);
+  FXbool saveScriptAs (const FXString& save_as);
   void updateFitStrategy();
   void setErrorRegion (int sl, int el);
   void cleanScriptErrors ();
@@ -90,6 +92,7 @@ public:
     ID_CANVAS = FXMainWindow::ID_LAST,
     ID_LOAD_SCRIPT,
     ID_SAVE_SCRIPT,
+    ID_SAVEAS_SCRIPT,
     ID_LOAD_SPECTRA,
     ID_DISP_PLOT,
     ID_RUN_FIT,

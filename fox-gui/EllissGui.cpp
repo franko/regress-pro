@@ -41,6 +41,7 @@ FXDEFMAP(EllissWindow) EllissWindowMap[]={
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_ABOUT,  EllissWindow::onCmdAbout),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SCRIPT, EllissWindow::onCmdLoadScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVE_SCRIPT, EllissWindow::onCmdSaveScript),
+  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVEAS_SCRIPT, EllissWindow::onCmdSaveAsScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SPECTRA, EllissWindow::onCmdLoadSpectra),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_DISP_PLOT, EllissWindow::onCmdPlotDispers),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_FIT, EllissWindow::onCmdRunFit),
@@ -79,6 +80,7 @@ EllissWindow::EllissWindow(FXApp* a)
   filemenu=new FXMenuPane(this);
   new FXMenuCommand(filemenu,"&Load",NULL,this,ID_LOAD_SCRIPT);
   new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
+  new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
   new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
   new FXMenuTitle(menubar,"&Script",NULL,filemenu);
 
@@ -231,28 +233,53 @@ EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
   return 0;
 }
 
-long
-EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
+FXbool
+EllissWindow::saveScriptAs (const FXString& save_as)
 {
-  FILE *f = fopen (scriptFile.text(), "w");
+  FILE *f = fopen (save_as.text(), "w");
 
   if (f == NULL)
     {
       FXMessageBox::information(this, MBOX_OK, "Script save",
 				"Cannot write file %s\n", scriptFile.text());
-      return 0;
+      return false;
     }
 
   if (fputs (scripttext->getText().text(), f) == EOF)
     {
       FXMessageBox::information(this, MBOX_OK, "Script save",
 				"Cannot write file %s\n", scriptFile.text());
-      return 0;
+      fclose (f);
+      return false;
     }
 
   fputc ('\n', f);
-
   fclose (f);
+  return true;
+  
+}
+
+long
+EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
+{
+  FXFileDialog open(this, "Save Script As");
+  open.setFilename(scriptFile);
+  open.setPatternList(patterns_fit);
+
+  if(open.execute())
+    {
+      FXString new_filename = open.getFilename();
+      if (saveScriptAs(new_filename))
+	scriptFile = new_filename;
+    }
+
+  return 0;
+}
+
+long
+EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
+{
+  saveScriptAs(scriptFile);
   return 0;
 }
 
