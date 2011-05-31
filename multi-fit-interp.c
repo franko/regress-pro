@@ -185,6 +185,25 @@ multi_fit_interp (struct symtab *symtab, struct gen_record *rec)
 	  goto clean_multi;
 	}
 
+      if (sample_info->constr_nb != constr_nb)
+	{
+	  notify_error_msg (SCRIPT_ERROR,
+			    "invalid number of constraints for sample %i",
+			    sample);
+	  toplevel_obj_free (sample_obj);
+	  goto clean_multi;
+	}
+
+      if (sample_info->indiv_nb != indiv_nb)
+	{
+	  notify_error_msg (SCRIPT_ERROR,
+			    "invalid number of individual parameters"
+			    " for sample %i",
+			    sample);
+	  toplevel_obj_free (sample_obj);
+	  goto clean_multi;
+	}
+
       info->spectra_list[sample] = spectrum;
 
       for (k = 0; k < sample_info->constr_nb; k++)
