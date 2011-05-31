@@ -242,35 +242,47 @@ str_getline (str_t d, FILE *f)
 void
 str_vprintf (str_t d, const char *fmt, int append, va_list ap)
 {
-#ifdef HAVE_VASPRINTF
-  char *buffer;
+#define STR_BUFSIZE 64
+  char buffer[STR_BUFSIZE];
+  char *xbuf;
+  int xbuf_size;
   int ns;
 
-  ns = vasprintf (&buffer, fmt, ap);
-  assert (ns >= 0);
+  ns = vsnprintf (buffer, STR_BUFSIZE, fmt, ap);
 
-  if (append)
-    str_append_c (d, buffer, 0);
+  if (ns >= STR_BUFSIZE)
+    {
+      xbuf_size = ns+1;
+      xbuf = emalloc (xbuf_size);
+      vsnprintf (xbuf, xbuf_size, fmt, ap);
+    }
   else
     {
-      free (d->heap);
-      d->heap = buffer;
-      d->size = ns;
-      d->length = strlen (buffer);
+      xbuf = buffer;
+      xbuf_size = 0;
     }
-#else
-  static char buffer[1024];
-  int ns;
-  ns = vsnprintf (buffer, 1024, fmt, ap);
-  buffer[1024 - 1] = 0;
-  if (ns >= 0)
+
+  if (append)
     {
-      if (append)
-	str_append_c (d, buffer, 0);
-      else
-	str_copy_c (d, buffer);
+      str_append_c (d, xbuf, 0);
+      if (xbuf_size > 0)
+	free (xbuf);
     }
-#endif
+  else
+    {
+      if (xbuf_size > 0)
+	{
+	  free (d->heap);
+	  d->heap = xbuf;
+	  d->size = xbuf_size;
+	  d->length = ns;
+	}
+      else
+	{
+	  str_copy_c_substr (d, xbuf, ns);
+	}
+    }
+#undef STR_BUFSIZE
 }
 
 void

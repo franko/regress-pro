@@ -93,6 +93,8 @@ print_matrix (str_t s, const char *fmt, const gsl_matrix *m)
 	}
       str_append_c (s, "|\n", 0);
     }
+
+  str_free (number);
 }
 
 void
