@@ -62,6 +62,13 @@ disp_get_number_of_params (disp_t *d)
 }
 
 int
+disp_get_model_id (disp_t *d)
+{
+  assert (d->dclass != NULL);
+  return d->dclass->model_id;
+}
+
+int
 dispers_apply_param (disp_t *d, const fit_param_t *fp, double val)
 {
   int res = 1;
@@ -180,6 +187,13 @@ disp_check_fit_param (disp_t *d, fit_param_t *fp)
   if (fp->param_nb < 0 || fp->param_nb >= nb)
     return 1;
   return 0;
+}
+
+double
+disp_get_param_value (const disp_t *d, const fit_param_t *fp)
+{
+  assert (d->dclass != NULL);
+  return d->dclass->get_param_value (d, fp);
 }
 
 int

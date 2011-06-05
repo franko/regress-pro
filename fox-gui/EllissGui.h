@@ -74,6 +74,7 @@ public:
   long onCmdLoadSpectra(FXObject*,FXSelector,void*);
   long onCmdPlotDispers(FXObject*,FXSelector,void*);
   long onCmdRunFit(FXObject*,FXSelector,void*);
+  long onCmdInteractiveFit(FXObject*,FXSelector,void*);
   long onCmdRunMultiFit(FXObject*,FXSelector,void*);
   long onCmdRunSimul(FXObject*,FXSelector,void*);
   long onCmdRunBatch(FXObject*,FXSelector,void*);
@@ -96,6 +97,7 @@ public:
     ID_LOAD_SPECTRA,
     ID_DISP_PLOT,
     ID_RUN_FIT,
+    ID_INTERACTIVE_FIT,
     ID_RUN_MULTI_FIT,
     ID_RUN_BATCH,
     ID_RUN_SIMUL,

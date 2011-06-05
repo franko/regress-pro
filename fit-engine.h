@@ -87,6 +87,12 @@ extern struct spectrum * generate_spectrum  (struct fit_engine *fit);
 extern void fit_engine_print_fit_results    (struct fit_engine *fit,
 					     str_t text, int tabular);
 
+extern struct fit_parameters *
+fit_engine_get_all_parameters (struct fit_engine *fit);
+
+extern double
+fit_engine_get_default_param_value (const struct fit_engine *fit, 
+				    const fit_param_t *fp);
 
 __END_DECLS
 

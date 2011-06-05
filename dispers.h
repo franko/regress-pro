@@ -35,6 +35,8 @@ struct disp_class {
 			      cmpl_vector *der);
   int  (*apply_param)        (struct disp_struct *d, const fit_param_t *fp,
 			      double val);
+  double (*get_param_value)  (const struct disp_struct *d,
+			      const fit_param_t *fp);
 
   /* class methods */
   int  (*decode_param_string)(const char *param);
@@ -89,7 +91,9 @@ extern disp_t * disp_copy               (disp_t *d);
 extern disp_t * disp_new                (enum disp_type tp);
 extern disp_t * disp_new_with_name      (enum disp_type tp, const char *name);
 extern int      disp_get_number_of_params (disp_t *d);
+extern double   disp_get_param_value    (const disp_t *d, const fit_param_t *fp);
 extern int      disp_integrity_check    (disp_t *d);
+extern int      disp_get_model_id       (disp_t *d);
 extern int      disp_check_fit_param    (disp_t *d, fit_param_t *fp);
 
 int             decode_fit_param        (fit_param_t *fp, const str_t str);

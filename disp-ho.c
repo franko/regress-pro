@@ -16,6 +16,9 @@ static int  ho_apply_param   (struct disp_struct *d,
 			      const fit_param_t *fp, double val);
 static void ho_encode_param  (str_t param, const fit_param_t *fp);
 
+static double ho_get_param_value (const struct disp_struct *d,
+				  const fit_param_t *fp);
+
 struct disp_class ho_disp_class = {
   .disp_class_id       = DISP_HO,
   .model_id            = MODEL_HO,
@@ -30,6 +33,7 @@ struct disp_class ho_disp_class = {
   .fp_number           = ho_fp_number,
   .n_value_deriv       = ho_n_value_deriv,
   .apply_param         = ho_apply_param,
+  .get_param_value     = ho_get_param_value,
 
   .decode_param_string = ho_decode_param_string,
   .encode_param        = ho_encode_param,
@@ -212,6 +216,38 @@ ho_decode_param_string (const char *param)
   return HO_PARAM_NB(nn, j);
 }
 
+static double *
+fit_param_address (struct disp_ho *d, const fit_param_t *fp)
+{
+  struct ho_params *ho;
+  int nho, npp;
+
+  assert (fp->param_nb < d->nb_hos * HO_NB_PARAMS);
+
+  nho = fp->param_nb / HO_NB_PARAMS;
+  npp = fp->param_nb % HO_NB_PARAMS;
+
+  if (nho >= d->nb_hos)
+    return NULL;
+  
+  ho = d->params + nho;
+  switch (npp)
+    {
+    case 0:
+      return &ho->nosc;
+    case 1:
+      return &ho->en;
+    case 2:
+      return &ho->eg;
+    case 3:
+      return &ho->nu;
+    default:
+      /* */ ;
+    }
+
+  return &ho->phi;
+}
+
 void
 ho_encode_param (str_t param, const fit_param_t *fp)
 {
@@ -225,36 +261,20 @@ ho_apply_param (struct disp_struct *disp, const fit_param_t *fp,
 		double val)
 {
   struct disp_ho *d = & disp->disp.ho;
-  int nho, npp;
+  double *pval = fit_param_address (d, fp);
+  if (! pval)
+    return 1;
+  *pval = val;
+  return 0;
+}
 
-  assert (fp->param_nb < d->nb_hos * HO_NB_PARAMS);
-
-  nho = fp->param_nb / HO_NB_PARAMS;
-  npp = fp->param_nb % HO_NB_PARAMS;
-
-  if (nho < d->nb_hos)
-    {
-      struct ho_params *ho = d->params + nho;
-      switch (npp)
-	{
-	case 0:
-	  ho->nosc = val; break;	
-	case 1:
-	  ho->en = val; break;	
-	case 2:
-	  ho->eg = val; break;	
-	case 3:
-	  ho->nu = val; break;	
-	case 4:
-	  ho->phi = val; break;
-	default:
-	  /* */ ;
-	}
-
-      return 0;
-    }
-
-  return 1;
+double
+ho_get_param_value (const disp_t *_d, const fit_param_t *fp)
+{
+  const struct disp_ho *d = & _d->disp.ho;
+  const double *pval = fit_param_address ((struct disp_ho *) d, fp);
+  assert (pval != NULL);
+  return *pval;
 }
 
 disp_t *

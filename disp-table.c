@@ -30,6 +30,7 @@ struct disp_class disp_table_class = {
   .fp_number           = disp_base_fp_number,
   .n_value_deriv       = NULL,
   .apply_param         = NULL,
+  .get_param_value     = NULL,
 
   .decode_param_string = disp_base_decode_param_string,
   .encode_param        = NULL,

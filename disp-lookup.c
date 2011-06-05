@@ -16,6 +16,9 @@ static int  lookup_apply_param   (struct disp_struct *d,
 				  const fit_param_t *fp, double val);
 static void lookup_encode_param  (str_t param, const fit_param_t *fp);
 
+static double lookup_get_param_value (const struct disp_struct *d,
+				      const fit_param_t *fp);
+
 struct disp_class disp_lookup_class = {
   .disp_class_id       = DISP_LOOKUP,
   .model_id            = MODEL_LOOKUP,
@@ -30,6 +33,7 @@ struct disp_class disp_lookup_class = {
   .fp_number           = lookup_fp_number,
   .n_value_deriv       = lookup_n_value_deriv,
   .apply_param         = lookup_apply_param,
+  .get_param_value     = lookup_get_param_value,
 
   .decode_param_string = lookup_decode_param_string,
   .encode_param        = lookup_encode_param,
@@ -142,6 +146,14 @@ lookup_apply_param   (struct disp_struct *d,
   assert (fp->param_nb == 0);
   lk->p = val;
   return 0;
+}
+
+double
+lookup_get_param_value (const struct disp_struct *d, const fit_param_t *fp)
+{
+  const struct disp_lookup *lk = & d->disp.lookup;
+  assert (fp->param_nb == 0);
+  return lk->p;
 }
 
 void

@@ -19,6 +19,7 @@
 #include "EllissGui.h"
 #include "DispersDialog.h"
 #include "BatchDialog.h"
+#include "InteractiveFit.h"
 #include "Strcpp.h"
 #include "error-messages.h"
 #include "fit-engine.h"
@@ -45,6 +46,7 @@ FXDEFMAP(EllissWindow) EllissWindowMap[]={
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SPECTRA, EllissWindow::onCmdLoadSpectra),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_DISP_PLOT, EllissWindow::onCmdPlotDispers),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_FIT, EllissWindow::onCmdRunFit),
+  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_INTERACTIVE_FIT, EllissWindow::onCmdInteractiveFit),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_MULTI_FIT, EllissWindow::onCmdRunMultiFit),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_BATCH, EllissWindow::onCmdRunBatch),
   };
@@ -97,6 +99,7 @@ EllissWindow::EllissWindow(FXApp* a)
   // Fit menu
   fitmenu = new FXMenuPane(this);
   new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
+  new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
   new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
   new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
   new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
@@ -566,6 +569,14 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
   return 1;
 }
 
+long
+EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
+{
+  InteractiveFit *fitwin = new InteractiveFit(this, this->symtab);
+  fitwin->create();
+  fitwin->show();
+  return 1;
+}
 
 FXbool
 EllissWindow::setFitStrategy(const char *script_text)

@@ -51,7 +51,7 @@ INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = units.cpp scale.cpp fxscale.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp main.cpp
+SRC_FILES = units.cpp scale.cpp fxscale.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp InteractiveFit.cpp main.cpp
 PRG = regress.exe
 
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)

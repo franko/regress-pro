@@ -12,6 +12,9 @@ static int  cauchy_apply_param   (struct disp_struct *d,
 			      const fit_param_t *fp, double val);
 static void cauchy_encode_param  (str_t param, const fit_param_t *fp);
 
+static double cauchy_get_param_value (const struct disp_struct *d,
+				      const fit_param_t *fp);
+
 #define CAUCHY_NB_N_PARAMS 3
 #define CAUCHY_NB_PARAMS 6
 
@@ -29,6 +32,7 @@ struct disp_class cauchy_disp_class = {
   .fp_number           = cauchy_fp_number,
   .n_value_deriv       = cauchy_n_value_deriv,
   .apply_param         = cauchy_apply_param,
+  .get_param_value     = cauchy_get_param_value,
 
   .decode_param_string = cauchy_decode_param_string,
   .encode_param        = cauchy_encode_param,
@@ -120,6 +124,17 @@ cauchy_apply_param (struct disp_struct *disp, const fit_param_t *fp,
   return 0;
 }
 
+double
+cauchy_get_param_value (const struct disp_struct *_d, const fit_param_t *fp)
+{
+  const struct disp_cauchy *d = & _d->disp.cauchy;
+  int nb = fp->param_nb;
+
+  if (nb < 3)
+    return d->n[nb];
+  
+  return d->k[nb % 3];
+}
 
 disp_t *
 disp_new_cauchy (const char *name, const double n[], const double k[])
