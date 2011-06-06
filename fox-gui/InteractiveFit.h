@@ -7,7 +7,7 @@
 
 #include "symtab.h"
 #include "fit-params.h"
-#include "fxscale.h"
+#include "fx_plot.h"
 
 class InteractiveFit : public FXMainWindow {
   FXDECLARE(InteractiveFit)

@@ -15,7 +15,7 @@
 
 #include "str.h"
 
-#include "fxscale.h"
+#include "fx_plot.h"
 #include "spectra.h"
 #include "symtab.h"
 

@@ -19,7 +19,7 @@ get_limits (int nb, double x[], double &inf, double &sup)
 }
 
 void
-Units::init (double yinf, double ysup, double spacefact)
+units::init (double yinf, double ysup, double spacefact)
 {
   double del;
 
@@ -48,7 +48,7 @@ Units::init (double yinf, double ysup, double spacefact)
   dmajor = major * expf;
 }
 
-Units::Units (int nb, double y[], double spacefact)
+units::units (int nb, double y[], double spacefact)
 {
   double yinf, ysup;
   get_limits (nb, y, yinf, ysup);
@@ -56,7 +56,7 @@ Units::Units (int nb, double y[], double spacefact)
 }
 
 void
-Units::getTickLabel (FX::FXString &lab, int tick) const
+units::get_tick_label (FX::FXString &lab, int tick) const
 {
   bool minus = (inf < 0);
   int asup = (minus ? -inf : sup);
@@ -80,11 +80,11 @@ Units::getTickLabel (FX::FXString &lab, int tick) const
 }
 
 double
-Units::getScaledValue(double x)
+units::get_scaled_value(double x)
 {
   int inf, sup;
   double ef;
 
-  getUnits(inf, sup, ef);
+  get_units(inf, sup, ef);
   return (x - inf * ef) / ((sup - inf) * ef);
 }

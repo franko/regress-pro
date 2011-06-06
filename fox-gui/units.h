@@ -1,8 +1,3 @@
-
-/*
-  $Id: units.h,v 1.2 2006/07/12 22:49:19 francesco Exp $
-*/
-
 #ifndef FOXGUI_UNITS_H
 #define FOXGUI_UNITS_H
 
@@ -16,7 +11,7 @@
 
 #include <FXString.h>
 
-class Units {
+class units {
 private:
   int major;
   int order;
@@ -28,19 +23,19 @@ private:
   void init(double min, double max, double spacefact);
 
 public:
-  Units (int nb, double x[], double spacefact = 5.0);
-  Units (double min, double max, double spacefact = 5.0)
+  units (int nb, double x[], double spacefact = 5.0);
+  units (double min, double max, double spacefact = 5.0)
     { init(min, max, spacefact); };
 
-  void   getUnits(int &start, int &fin) { start = inf; fin = sup; };
-  void   getUnits(int &start, int &fin, double &step) 
+  void   get_units(int &start, int &fin) { start = inf; fin = sup; };
+  void   get_units(int &start, int &fin, double &step) 
   { start = inf; fin = sup; step = dmajor; };
 
-  int    getDecimals () const { return nb_decimals; };
-  void   getTickLabel (FX::FXString &lab, int tick) const;
-  double getTickValue (int tick) const { return dmajor * tick; };
+  int    get_decimals () const { return nb_decimals; };
+  void   get_tick_label (FX::FXString &lab, int tick) const;
+  double get_tick_value (int tick) const { return dmajor * tick; };
 
-  double getScaledValue(double x);
+  double get_scaled_value(double x);
 };
 
 extern void get_limits (int nb, double x[], double &inf, double &sup);

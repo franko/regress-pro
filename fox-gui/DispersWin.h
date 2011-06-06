@@ -8,7 +8,7 @@
 
 #include <fx.h>
 
-#include "fxscale.h"
+#include "fx_plot.h"
 #include "dispers.h"
 
 struct SpectrRange {
