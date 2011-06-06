@@ -6,6 +6,7 @@
 #include "DispersWin.h"
 #include "SpectrRangeWin.h"
 #include "disp-util.h"
+#include "spectra-path.h"
 
 // Map
 FXDEFMAP(DispersWin) DispersWinMap[]={
@@ -40,11 +41,11 @@ DispersWin::DispersWin(FXWindow* w, disp_t *disp)
   const double wlinf = 200, wlsup = 800, wlstep = 2;
   range = SpectrRange(wlinf, wlsup, wlstep);
 
-  nplot = new FXDataPlot();
-  kplot = new FXDataPlot();
+  nplot = new plot(getApp());
+  kplot = new plot(getApp());
 
-  nplot->setTitle("Refractive index, n");
-  kplot->setTitle("Absorption coeff, k");
+  nplot->set_title("Refractive index, n");
+  kplot->set_title("Absorption coeff, k");
 
   setupNKPlot();
 }
@@ -59,35 +60,27 @@ DispersWin::~DispersWin()
 void
 DispersWin::setupNKPlot()
 {
-  int npt = (int) ((range.sup - range.inf) / range.step) + 1;
+  agg::path_storage *n_path = new agg::path_storage;
+  agg::path_storage *k_path = new agg::path_storage;
 
-  struct data_table *nk_table = data_table_new (npt, 3);
-  struct data_view nk_view[1];
+  int npt = (int) ((range.sup - range.inf) / range.step) + 1;
   
   for (int j = 0; j < npt; j++)
     {
-      float lambda = range.inf + range.step * j;
+      double lambda = range.inf + range.step * j;
       double n, k;
   
       n_value_cpp (dispers, lambda, &n, &k);
 
-      data_table_set (nk_table, j, 0, lambda);
-      data_table_set (nk_table, j, 1, (float) n);
-      data_table_set (nk_table, j, 2, (float) k);
+      n_path->line_to(lambda, n);
+      k_path->line_to(lambda, k);
     }
 
-  data_view_init (nk_view, nk_table);
-
-  XYDataSet n_dataset(nk_view, 0, 1);
-  XYDataSet k_dataset(nk_view, 0, 2);
-
   nplot->clear();
-  nplot->addPlot(n_dataset);
+  nplot->add(n_path);
 
   kplot->clear();
-  kplot->addPlot(k_dataset);
-
-  data_view_dealloc (nk_view);
+  kplot->add(k_path);
   
   plotNeedRedraw = TRUE;
 }

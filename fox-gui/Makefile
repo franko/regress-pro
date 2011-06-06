@@ -18,8 +18,9 @@ ifeq ($(BUILD_FLAG), pentium)
 endif
 ifeq ($(BUILD_FLAG), debug)
 # DEBUG setting
-  CXX = g++
-  CXXFLAGS = -g -Wall -W -fno-inline 
+  CXX = gcc
+#  CXXFLAGS = -g -Wall -W -fno-inline 
+  CXXFLAGS = -g
   DEFS = -DDEBUG_MEM
 endif
 
@@ -27,13 +28,16 @@ ifeq ($(WIN_FLAG), yes)
 # Option for Windows Platform
   DEFS += -DWIN32
 
-
   FOX_HOME = c:/fra/src/fox-1.6.43
   FOX_LIBS = -L$(FOX_HOME)/src -lfox
   FOX_INCLUDES = -I$(FOX_HOME)/include
+
+  AGG_INCLUDES = -Ic:/fra/src/agg-2.5/include
 else
   FOX_LIBS = $(shell fox-config --libs)
   FOX_INCLUDES = $(shell fox-config --cflags)
+
+  AGG_INCLUDES = -I/usr/include/agg2
 endif
 
 GSL_LIBS = -lgsl -lgslcblas -lm
@@ -41,17 +45,17 @@ GSL_INCLUDES =
 
 #  -lsupc++ -lgdi32 -mwindows 
 
-LDFLAGS = $(FOX_LIBS) $(GSL_LIBS) 
+LDFLAGS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
 
 ifeq ($(WIN_FLAG), yes)
   LDFLAGS += -lgdi32 -lwsock32
 endif
 
-INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
+INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = units.cpp scale.cpp fxscale.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp InteractiveFit.cpp main.cpp
+SRC_FILES = units.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp InteractiveFit.cpp main.cpp
 PRG = regress.exe
 
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)

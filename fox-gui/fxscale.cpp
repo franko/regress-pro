@@ -1,102 +1,65 @@
 
-/*
-  $Id: fxscale.cpp,v 1.2 2006/07/12 22:49:19 francesco Exp $
-*/
-
 #include "fxscale.h"
+#include "agg_array.h"
+#include "agg_bounding_rect.h"
 
-FXFont *FXDataPlot::font = NULL;
-FXFont *FXDataPlot::titleFont = NULL;
-
-FXDataPlot::FXDataPlot(FXColor bg)
-  : bgcol(bg)
+template <class VS, class RM>
+fx_plot<VS,RM>::fx_plot(FXColor bg) : bgcol(bg)
 {
+  this->m_font = new FXFont(app, "helvetica", 8);
+  this->m_title_font = new FXFont(app, "helvetica", 10, FXFont::Bold);
+  this->m_font->create();
+  this->m_title_font->create();
 }
 
-void
-FXDataPlot::initPlotEngine(FXApp *app)
+template <class VS, class RM>
+fx_plot<VS,RM>::clear()
 {
-  FXDataPlot::font = new FXFont(app, "helvetica", 8);
-  FXDataPlot::titleFont = new FXFont(app, "helvetica", 10, FXFont::Bold);
-  font->create();
-  titleFont->create();
+  this->dispose_elements();
+  this->m_lines.clear();
 }
 
-void
-FXDataPlot::closePlotEngine()
+template <class VS, class RM>
+fx_plot<VS,RM>::add(vertex_source *vs, FXColor col)
 {
-  delete FXDataPlot::font;
-  delete FXDataPlot::titleFont;
+  item it(vs, col);
+  this->m_lines.add(it);
+
+  agg::rect_d r;
+  agg::bounding_rect_single(vs, 0, &r.x1, &r.y1, &r.x2, &r.y2);
+
+  this->m_rect = agg::unite_rectangles(r, this->m_rect);
 }
 
-void
-FXDataPlot::setTitle(const FXString &tt)
+template <class VS, class RM>
+fx_plot<VS,RM>::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
 {
-  title = tt;
-}
-
-void
-FXDataPlot::clear()
-{
-  plots.clear();
-  styles.clear();
-}
-
-void
-FXDataPlot::addPlot(XYDataSet& ds, FXColor col)
-{
-  PlotInfo style(col);
-
-  plots.push_back(ds);
-  styles.push_back(style);
-
-  Point bl, tr;
-  ds.getLimits(bl, tr);
-  if (plots.size() == 1)
-    {
-      x.inf = bl.x;
-      x.sup = tr.x;
-      y.inf = bl.y;
-      y.sup = tr.y;
-    }
-  else
-    {
-      if (bl.x < x.inf) x.inf = bl.x;
-      if (tr.x > x.sup) x.sup = tr.x;
-      if (bl.y < y.inf) y.inf = bl.y;
-      if (tr.y > y.sup) y.sup = tr.y;
-    }
-}
-
-void
-FXDataPlot::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
-{
-  if (plots.size() == 0)
+  if (this->is_empty())
     return;
 
   const int xbord = 20, ybord = 15;
   int lmarg = xbord, rmarg = xbord;
   int tmarg = ybord, bmarg = ybord;
   const int tickw = 4, tickh = 4;
-  Units xu(x.inf, x.sup, 6.0), yu(y.inf, y.sup, 3.9);
+  Units xu(m_rect.x1, m_rect.x2, 6.0), yu(m_rect.y1, m_rect.y2, 3.9);
 
-  dc->setForeground(bgcol);
+  dc->setForeground(m_bgcol);
   dc->fillRectangle(xoffs, yoffs, ww, hh);
 
   dc->setForeground(FXRGB(0,0,0));
-  dc->setBackground(bgcol);
+  dc->setBackground(m_bgcol);
 
-  if (!title.empty())
+  if (!m_title.empty())
     {
-      int thh = titleFont->getTextHeight("H", 1);
-      int tww = titleFont->getTextWidth(title);
-      dc->setFont(titleFont);
+      int thh = m_title_font->getTextHeight("H", 1);
+      int tww = m_title_font->getTextWidth(m_title);
+      dc->setFont(m_title_font);
       dc->drawText(xoffs + lmarg + (ww - tww)/2, yoffs + tmarg,
-		   title.text(), title.length());
+		   m_title.text(), m_title.length());
       tmarg += thh;
     }
 
-  int cheight = font->getTextHeight("H", 1);
+  int cheight = m_font->getTextHeight("H", 1);
 
   FXString label;
   int ylabelwidth = 0;
@@ -106,7 +69,7 @@ FXDataPlot::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
   for (int j = jmin; j <= jmax; j++)
     {
       yu.getTickLabel(label, j);
-      int lw = font->getTextWidth(label);
+      int lw = m_font->getTextWidth(label);
       if (lw > ylabelwidth)
 	ylabelwidth = lw;
     }
@@ -140,7 +103,7 @@ FXDataPlot::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
 
   dc->drawRectangle(xoffs + lmarg, yoffs + tmarg, areaw, areah);
 
-  dc->setFont(font);
+  dc->setFont(m_font);
   yu.getUnits(jmin, jmax);
   for (int j = jmin; j <= jmax; j++)
     {
@@ -154,7 +117,7 @@ FXDataPlot::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
 
   xu.getUnits(jmin, jmax);
   xu.getTickLabel(label, jmin);
-  int xlabelwidth = font->getTextWidth(label);
+  int xlabelwidth = m_font->getTextWidth(label);
   for (int j = jmin; j <= jmax; j++)
     {
       double lx = xu.getScaledValue(xu.getTickValue(j));
@@ -166,22 +129,26 @@ FXDataPlot::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
 		   xt, tmarg + areah + tickh + yoffs);
     }
 
-  std::list<XYDataSet>::iterator ds = plots.begin();
-  std::list<PlotInfo>::iterator style = styles.begin();
-  for ( /* */; ds != plots.end(); ds++, style++)
-    {
-      int nb = ds->pointsNumber();
-      FXPoint *fxp = new FXPoint [nb];
-      for (int j = 0; j < nb; j++)
-	{
-	  Point ps, pu = ds->getPoint(j);
-	  ps.x = xu.getScaledValue(pu.x);
-	  ps.y = yu.getScaledValue(pu.y);
-	  fxp[j].x = xoffs + lmarg + (int)(ps.x * areaw);
-	  fxp[j].y = yoffs + tmarg + areah - (int)(ps.y * areah);
-	}
-      dc->setForeground(style->linecolor);
-      dc->drawLines(fxp, nb);
-      delete [] fxp;
-    }
+  for (unsigned i = 0; i < m_lines.size(); i++) {
+    item& it = m_lines[i];
+    VS *vs = it.vs;
+
+    int nb = vs->total_vertices();
+    FXPoint *fxp = new FXPoint [nb];
+
+    double x, y;
+    unsigned cmd;
+    vs->rewind(0);
+    while(!is_stop(cmd = vs->vertex(&x, &y)))
+      {
+	double sx = xu.getScaledValue(x);
+	double sy = yu.getScaledValue(y);
+	fxp[j].x = xoffs + lmarg + (int)(sx * areaw);
+	fxp[j].y = yoffs + tmarg + areah - (int)(sy * areah);
+      }
+
+    dc->setForeground(it.color);
+    dc->drawLines(fxp, nb);
+    delete [] fxp;
+  }
 }

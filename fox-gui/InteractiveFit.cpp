@@ -8,13 +8,15 @@ FXDEFMAP(InteractiveFit) InteractiveFitMap[]={
   FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_PARAM_SELECT, InteractiveFit::onCmdParamSelect),
   FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_PARAM_VALUE,  InteractiveFit::onCmdParamChange),
   FXMAPFUNC(SEL_CHANGED, InteractiveFit::ID_PARAM_VALUE,  InteractiveFit::onCmdParamChange),
+  //  FXMAPFUNC(SEL_PAINT,   InteractiveFit::ID_CANVAS,       InteractiveFit::onCmdPaint),
+  //  FXMAPFUNC(SEL_UPDATE,  InteractiveFit::ID_CANVAS,       InteractiveFit::onCmdUpdate),
 };
 
 // Object implementation
-FXIMPLEMENT(InteractiveFit,FXDialogBox,InteractiveFitMap,ARRAYNUMBER(InteractiveFitMap));
+FXIMPLEMENT(InteractiveFit,FXMainWindow,InteractiveFitMap,ARRAYNUMBER(InteractiveFitMap));
 
-InteractiveFit::InteractiveFit(FXWindow *w, struct symtab *s)
-  : FXDialogBox(w, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480),
+InteractiveFit::InteractiveFit(FXApp *app, struct symtab *s)
+  : FXMainWindow(app, "Interactive Fit", NULL, NULL, DECOR_ALL, 0, 0, 640, 480),
     params(NULL)
 {
   // Menubar
@@ -30,9 +32,9 @@ InteractiveFit::InteractiveFit(FXWindow *w, struct symtab *s)
   FXMatrix *matrix = new FXMatrix(mf, 2, LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
 
   struct seeds *seeds;
-  struct fit_engine *fit = build_fit_engine (s, &seeds);
+  fit_engine = build_fit_engine (s, &seeds);
 
-  this->params = fit_engine_get_all_parameters (fit);
+  this->params = fit_engine_get_all_parameters (fit_engine);
 
   Str pname;
   for (int k = 0; k < this->params->number; k++)
@@ -42,7 +44,7 @@ InteractiveFit::InteractiveFit(FXWindow *w, struct symtab *s)
       FXString fxpname((const FXchar *) pname.cstr());
       FXCheckButton *bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);
       FXTextField *tf = new FXTextField(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-      double fpval = fit_engine_get_default_param_value (fit, fp);
+      double fpval = fit_engine_get_default_param_value (fit_engine, fp);
       char fpvalbuf[16];
       int len = snprintf(fpvalbuf, 16, "%g", fpval);
       if (len >= 16)
@@ -50,15 +52,14 @@ InteractiveFit::InteractiveFit(FXWindow *w, struct symtab *s)
       tf->setText(fpvalbuf, true);
     }
 
-  //  FXCanvas *plotcanvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  new FXLabel(mf, "Canvas Placeholder!");
-
-  fit_engine_free (fit);
+  this->canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 }
 
 InteractiveFit::~InteractiveFit() {
-  if (this->params)
-    fit_parameters_free(this->params);
+  if (params)
+    fit_parameters_free(params);
+  fit_engine_free (fit_engine);
+  delete fitplot;
   delete fitmenu;
 }
 
@@ -73,3 +74,13 @@ InteractiveFit::onCmdParamChange(FXObject*, FXSelector, void*)
 {
   return 0;
 }
+
+/*
+void
+drawPlot(FXEvent *ev)
+{
+  FXDCWindow dc(canvas, ev);
+  int ww = canvas->getWidth(), hh = canvas->getHeight();
+  fitplot->draw(&dc, ww, hh);
+}
+*/

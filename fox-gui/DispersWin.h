@@ -23,8 +23,8 @@ struct SpectrRange {
 class DispersWin : public FXDialogBox {
   FXDECLARE(DispersWin)
 private:
-  FXDataPlot *nplot;
-  FXDataPlot *kplot;
+  plot *nplot;
+  plot *kplot;
 
   FXbool plotNeedRedraw;
 

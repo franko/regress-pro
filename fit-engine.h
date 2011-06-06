@@ -94,6 +94,10 @@ extern double
 fit_engine_get_default_param_value (const struct fit_engine *fit, 
 				    const fit_param_t *fp);
 
+extern int
+fit_engine_set_parameters (struct fit_engine *fit,
+			   struct fit_parameters *parameters);
+
 __END_DECLS
 
 #endif

@@ -21,7 +21,6 @@
 
 class EllissWindow : public FXMainWindow {
   FXDECLARE(EllissWindow)
-
 protected:
   struct spectrum *spectrum;
   struct stack *stack_result;
@@ -57,8 +56,8 @@ protected:
   bool isPlotModified;
 
   enum system_kind plotkind;
-  FXDataPlot *spectrPlot1;
-  FXDataPlot *spectrPlot2;
+  plot *spectrPlot1;
+  plot *spectrPlot2;
 
 protected:
   EllissWindow(){};

@@ -32,6 +32,7 @@
 #include "str.h"
 #include "str-util.h"
 #include "dispers-library.h"
+#include "spectra-path.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
@@ -136,8 +137,8 @@ EllissWindow::EllissWindow(FXApp* a)
 
   plotkind = SYSTEM_UNDEFINED;
 
-  spectrPlot1 = new FXDataPlot();
-  spectrPlot2 = new FXDataPlot();
+  spectrPlot1 = new plot(a);
+  spectrPlot2 = new plot(a);
 
   isPlotModified = true;
 
@@ -154,7 +155,6 @@ void
 EllissWindow::create(){
   FXMainWindow::create();
   scriptfont->create();
-  FXDataPlot::initPlotEngine(getApp());
 }
 
 void
@@ -339,7 +339,6 @@ EllissWindow::onCmdAbout(FXObject *, FXSelector, void *)
 
 // Clean up
 EllissWindow::~EllissWindow() {
-  FXDataPlot::closePlotEngine();
   delete scriptfont;
   delete filemenu;
   delete spectrmenu;
@@ -516,38 +515,45 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
   this->plotkind = fit->system_kind;
 
   struct spectrum *gensp = generate_spectrum (fit);
-  XYDataSet eds, gds;
   switch (fit->system_kind)
     {
     case SYSTEM_REFLECTOMETER:
-      eds = XYDataSet(fit->spectr->table, 0, 1);
-      gds = XYDataSet(gensp->table, 0, 1);
+      {
+	agg::path_storage *esp = new agg::path_storage;
+	agg::path_storage *gsp = new agg::path_storage;
+	refl_spectrum_path (fit->spectr, esp);
+	refl_spectrum_path (gensp, gsp);
 
-      spectrPlot1->clear();
-      spectrPlot1->addPlot(eds, FXRGB(255,0,0));
-      spectrPlot1->addPlot(gds);
-      spectrPlot1->setTitle("Reflectivity");
-      break;
+	spectrPlot1->clear();
+	spectrPlot1->add(esp, FXRGB(255,0,0));
+	spectrPlot1->add(gsp);
+	spectrPlot1->set_title("Reflectivity");
+	break;
+      }
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
-      eds = XYDataSet(fit->spectr->table, 0, 1);
-      gds = XYDataSet(gensp->table, 0, 1);
+      {
+	agg::path_storage *esp1 = new agg::path_storage;
+	agg::path_storage *esp2 = new agg::path_storage;
+	agg::path_storage *gsp1 = new agg::path_storage;
+	agg::path_storage *gsp2 = new agg::path_storage;
 
-      spectrPlot1->clear();
-      spectrPlot1->addPlot(eds, FXRGB(255,0,0));
-      spectrPlot1->addPlot(gds);
-      spectrPlot1->setTitle(fit->system_kind == SYSTEM_ELLISS_AB ? \
-			    "SE alpha" : "Tan(Psi)");
+	elliss_spectrum_path (fit->spectr, esp1, esp2);
+	elliss_spectrum_path (gensp, gsp1, gsp2);
 
-      eds = XYDataSet(fit->spectr->table, 0, 2);
-      gds = XYDataSet(gensp->table, 0, 2);
+	spectrPlot1->clear();
+	spectrPlot1->add(esp1, FXRGB(255,0,0));
+	spectrPlot1->add(gsp1);
+	spectrPlot1->set_title(fit->system_kind == SYSTEM_ELLISS_AB ?	\
+			       "SE alpha" : "Tan(Psi)");
 
-      spectrPlot2->clear();
-      spectrPlot2->addPlot(eds, FXRGB(255,0,0));
-      spectrPlot2->addPlot(gds);
-      spectrPlot2->setTitle(fit->system_kind == SYSTEM_ELLISS_AB ? \
-			    "SE beta" : "Cos(Delta)");
-      break;
+	spectrPlot2->clear();
+	spectrPlot2->add(esp2, FXRGB(255,0,0));
+	spectrPlot2->add(gsp2);
+	spectrPlot2->set_title(fit->system_kind == SYSTEM_ELLISS_AB ?	\
+			       "SE beta" : "Cos(Delta)");
+	break;
+      }
     default:
       /* */;
     }
@@ -572,9 +578,9 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-  InteractiveFit *fitwin = new InteractiveFit(this, this->symtab);
+  InteractiveFit *fitwin = new InteractiveFit(this->getApp(), this->symtab);
   fitwin->create();
-  fitwin->show();
+  fitwin->show(FX::PLACEMENT_SCREEN);
   return 1;
 }
 

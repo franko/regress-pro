@@ -506,6 +506,34 @@ build_fit_engine (struct symtab *symtab, struct seeds **seeds)
   return fit;
 }
 
+int
+fit_engine_set_parameters (struct fit_engine *fit,
+			   struct fit_parameters *parameters)
+{
+  struct stack *stack = fit->stack;
+
+  if (check_fit_parameters (stack, parameters) != 0)
+    return 1;
+
+  fit->parameters = parameters;
+
+  if (fit->initialized)
+    {
+      int np = parameters->number;
+
+      fit->mffun.p = np;
+
+      int rsz = fit->results->size;
+      if (rsz < np)
+	{
+	  gsl_vector_free (fit->results);
+	  fit->results = gsl_vector_alloc (np);
+	}
+    }
+
+  return 0;
+}
+
 void
 fit_engine_free (struct fit_engine *fit)
 {
