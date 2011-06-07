@@ -163,11 +163,12 @@ fit_engine_apply_param (struct fit_engine *fit, const fit_param_t *fp,
   return res;
 }
 
-int
-fit_engine_commit_parameters (struct fit_engine *fit, const gsl_vector *x)
+void
+fit_engine_apply_parameters (struct fit_engine *fit,
+			     const struct fit_parameters *fps, 
+			     const gsl_vector *x)
 {
   size_t j;
-  struct fit_parameters const * fps = fit->parameters;
 
   for (j = 0; j < fps->number; j++)
     {
@@ -179,8 +180,13 @@ fit_engine_commit_parameters (struct fit_engine *fit, const gsl_vector *x)
 	 are checked in advance. */
       assert (status == 0);
     }
+}
 
-  return 0;
+void
+fit_engine_commit_parameters (struct fit_engine *fit, const gsl_vector *x)
+{
+  struct fit_parameters const * fps = fit->parameters;
+  fit_engine_apply_parameters (fit, fps, x);
 }
 
 int

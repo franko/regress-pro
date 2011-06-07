@@ -64,7 +64,11 @@ extern void fit_engine_disable              (struct fit_engine *f);
 extern int  check_fit_parameters            (struct stack *stack,
 					     struct fit_parameters *fps);
 
-extern int  fit_engine_commit_parameters    (struct fit_engine *fit,
+extern void fit_engine_commit_parameters    (struct fit_engine *fit,
+					     const gsl_vector *x);
+
+extern void fit_engine_apply_parameters     (struct fit_engine *fit,
+					     const struct fit_parameters *fps, 
 					     const gsl_vector *x);
 
 extern void fit_engine_restore_spectr       (struct fit_engine *fit);

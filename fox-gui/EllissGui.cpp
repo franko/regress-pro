@@ -578,7 +578,7 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-  InteractiveFit *fitwin = new InteractiveFit(this->getApp(), this->symtab);
+  InteractiveFit *fitwin = new InteractiveFit(this->getApp(), this->symtab, this->spectrum);
   fitwin->create();
   fitwin->show(FX::PLACEMENT_SCREEN);
   return 1;
