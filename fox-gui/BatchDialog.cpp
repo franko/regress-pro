@@ -145,7 +145,7 @@ BatchDialog::onCmdRun(FXObject*,FXSelector,void*)
       if (bname)
 	bname++;
 
-      fit_engine_prepare (fit, spectr);
+      fit_engine_prepare (fit, spectr, 1);
 
       lmfit_grid (fit, this->seeds, &chisq, NULL, NULL, LMFIT_PRESERVE_STACK,
 		  batch_foxgui_hook, this);

@@ -25,7 +25,7 @@ static void dispose_fit_engine_cache (struct fit_engine *f);
 
 void
 build_stack_cache (struct stack_cache *cache, stack_t *stack,
-		   struct spectrum *spectr, int RIs_are_fixed)
+		   struct spectrum *spectr, int th_only_optimize)
 {
   size_t nb_med = stack->nb;
   size_t j;
@@ -44,9 +44,9 @@ build_stack_cache (struct stack_cache *cache, stack_t *stack,
       di->val = (tpnb == 0 ? NULL : cmpl_vector_alloc (tpnb));
     }
 
-  cache->th_only = RIs_are_fixed;
+  cache->th_only = th_only_optimize;
 
-  if (RIs_are_fixed)
+  if (th_only_optimize)
     {
       int k, npt = spectra_points (spectr);
       cmpl *ns;
@@ -103,8 +103,9 @@ build_fit_engine_cache (struct fit_engine *f)
   int nblyr = nb - 2;
   size_t dmultipl = (f->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
   int RI_fixed = fit_parameters_are_RI_fixed (f->parameters);
-  
-  build_stack_cache (&f->cache, f->stack, f->spectr, RI_fixed);
+  int th_only_optimize = RI_fixed && f->fixed_parameters;
+
+  build_stack_cache (&f->cache, f->stack, f->spectr, th_only_optimize);
 
   f->jac_th = gsl_vector_alloc (dmultipl * nblyr);
 
@@ -190,7 +191,8 @@ fit_engine_commit_parameters (struct fit_engine *fit, const gsl_vector *x)
 }
 
 int
-fit_engine_prepare (struct fit_engine *fit, struct spectrum *s)
+fit_engine_prepare (struct fit_engine *fit, struct spectrum *s,
+		    int fixed_parameters)
 {
   struct fit_config *cfg = fit->config;
 
@@ -212,6 +214,8 @@ fit_engine_prepare (struct fit_engine *fit, struct spectrum *s)
 	  fit->system_kind == SYSTEM_ELLISS_PSIDEL)
 	elliss_sample_minimize (fit->spectr, 0.05);
     }
+
+  fit->fixed_parameters = fixed_parameters;
 
   build_fit_engine_cache (fit);
 
@@ -529,12 +533,8 @@ fit_engine_set_parameters (struct fit_engine *fit,
 
       fit->mffun.p = np;
 
-      int rsz = fit->results->size;
-      if (rsz < np)
-	{
-	  gsl_vector_free (fit->results);
-	  fit->results = gsl_vector_alloc (np);
-	}
+      gsl_vector_free (fit->results);
+      fit->results = gsl_vector_alloc (np);
     }
 
   return 0;

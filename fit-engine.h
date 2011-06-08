@@ -35,6 +35,7 @@ struct fit_engine {
   struct fit_config config[1];
 
   int initialized;
+  int fixed_parameters;
 
   gsl_multifit_function_fdf mffun;
 
@@ -57,7 +58,8 @@ struct symtab;
 extern void fit_engine_free                 (struct fit_engine *fit);
 
 extern int  fit_engine_prepare              (struct fit_engine *f,
-					     struct spectrum *s);
+					     struct spectrum *s,
+					     int fixed_parameters);
 
 extern void fit_engine_disable              (struct fit_engine *f);
 
@@ -77,7 +79,7 @@ extern void fit_engine_restore_spectr       (struct fit_engine *fit);
 extern void build_stack_cache               (struct stack_cache *cache,
 					     stack_t *stack,
 					     struct spectrum *spectr,
-					     int RIs_are_fixed);
+					     int th_only_optimize);
 
 extern void dispose_stack_cache             (struct stack_cache *cache);
 

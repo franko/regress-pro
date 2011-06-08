@@ -32,13 +32,41 @@ class InteractiveFit : public FXMainWindow {
     }
   };
 
-private:
-    struct fit_parameters *params;
-    gsl_vector *param_values;
-  struct fit_engine *fit_engine;
-  FXCanvas *canvas;
+  struct parameters_info {
+    int number;
+    struct fit_parameters *parameters;
+    gsl_vector* values;
+    agg::pod_array<bool> select;
+    double* base_ptr;
 
+    parameters_info() : parameters(0) {}
+
+    ~parameters_info() {
+      fit_parameters_free(parameters);
+      gsl_vector_free(values); 
+    }
+
+    void init(struct fit_parameters *p) {
+      number = p->number;
+      parameters = p;
+      values = gsl_vector_alloc(number);
+      base_ptr = values->data;
+      select.resize(number);
+      for (int k = 0; k < number; k++)
+	select[k] = false;
+    }
+  };
+
+private:
+  FXCanvas *canvas;
+  agg::pod_array<FXTextField*> m_params_text_field;
+
+  bool m_update_mode;
+
+  struct fit_engine *fit_engine;
   plot_info m_plots;
+
+  parameters_info m_parameters;
 
   struct spectrum *spectrum;
 
@@ -62,6 +90,7 @@ public:
 
   long onCmdParamSelect(FXObject*, FXSelector,void*);
   long onCmdParamChange(FXObject*, FXSelector,void*);
+  long onCmdRunFit(FXObject*, FXSelector,void*);
   long onCmdPaint(FXObject*, FXSelector,void*);
 
   enum {

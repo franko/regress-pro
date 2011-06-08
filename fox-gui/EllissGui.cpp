@@ -470,7 +470,7 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
       return 0;
     }
 
-  fit_engine_prepare (fit, this->spectrum);
+  fit_engine_prepare (fit, this->spectrum, 1);
 
   Str fit_error_msgs;
   ProgressInfo progress(this->getApp(), this);
