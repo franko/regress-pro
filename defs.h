@@ -24,4 +24,6 @@
 #define HAVE_VASPRINTF 1
 #endif
 
+/* #define ENABLE_SCRIPT_REL_PATH 1 */
+
 #endif

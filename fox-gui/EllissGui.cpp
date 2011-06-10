@@ -224,9 +224,11 @@ EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
       if (str_loadfile (scriptFile.text(), script_text.str()) != 0)
 	return 0;
 
+#ifdef ENABLE_SCRIPT_REL_PATH
       str_init_from_c (script_file, scriptFile.text());
       str_dirname (this->symtab->env->script_dir, script_file, DIR_SEPARATOR);
       str_free (script_file);
+#endif
 
       scripttext->setText(script_text.cstr());
       setFitStrategy(script_text.cstr());
