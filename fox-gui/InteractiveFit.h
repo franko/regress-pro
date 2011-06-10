@@ -75,7 +75,7 @@ protected:
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
 
-  void updatePlot();
+  void updatePlot(bool freeze_limits = false);
   void drawPlot();
 
 protected:

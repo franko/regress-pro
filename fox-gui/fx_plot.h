@@ -38,6 +38,8 @@ class fx_plot {
 
   agg::pod_bvector<item> m_lines;
 
+  bool m_auto_limits;
+
   bool m_rect_def;
   agg::rect_d m_rect;
 
@@ -49,7 +51,7 @@ class fx_plot {
 
 public:
   fx_plot(FXApp *app, FXColor bg = FXRGB(255,255,255))
-    : m_bgcol(bg), m_rect_def(false)
+    : m_bgcol(bg), m_auto_limits(true), m_rect_def(false)
   {
     m_font = new FXFont(app, "helvetica", 8);
     m_title_font = new FXFont(app, "helvetica", 10, FXFont::Bold);
@@ -72,6 +74,7 @@ public:
   void set_title(const FXString& t) { m_title = t; };
   void add(vertex_source *vs, FXColor col = FXRGB(0,0,0));
   void draw(FXDCWindow *dc, int ww, int hh, int x_offset = 0, int y_offset = 0);
+  void auto_limits(bool active) { m_auto_limits = active; }
 };
 
 template <class VS, class RM>
@@ -80,15 +83,18 @@ void fx_plot<VS,RM>::add(VS *vs, FXColor col)
   item it(vs, col);
   this->m_lines.add(it);
 
-  agg::rect_d r;
-  agg::bounding_rect_single(*vs, 0, &r.x1, &r.y1, &r.x2, &r.y2);
+  if (m_auto_limits)
+    {
+      agg::rect_d r;
+      agg::bounding_rect_single(*vs, 0, &r.x1, &r.y1, &r.x2, &r.y2);
 
-  if (m_rect_def) {
-    this->m_rect = agg::unite_rectangles(r, this->m_rect);
-  } else {
-    this->m_rect = r;
-    m_rect_def = true;
-  }
+      if (m_rect_def) {
+	this->m_rect = agg::unite_rectangles(r, this->m_rect);
+      } else {
+	this->m_rect = r;
+	m_rect_def = true;
+      }
+    }
 }
 
 template <class VS, class RM>
@@ -210,6 +216,7 @@ void fx_plot<VS,RM>::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
       }
 
     dc->setForeground(it.color);
+    dc->setClipRectangle(xoffs + lmarg, yoffs + tmarg, areaw, areah);
     dc->drawLines(fxp, nb);
     delete [] fxp;
   }

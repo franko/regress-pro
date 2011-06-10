@@ -80,7 +80,7 @@ InteractiveFit::InteractiveFit(FXApp *app, struct symtab *s, struct spectrum *us
   unsigned plot_mult = (fit_engine->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
   m_plots.init(app, plot_mult);
 
-  updatePlot();
+  updatePlot(true);
 }
 
 InteractiveFit::~InteractiveFit() {
@@ -100,7 +100,7 @@ InteractiveFit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 }
 
 void
-InteractiveFit::updatePlot()
+InteractiveFit::updatePlot(bool freeze_lmt)
 {
   struct fit_parameters* ps = m_parameters.parameters;
   fit_engine_apply_parameters (fit_engine, ps, m_parameters.values);
@@ -111,6 +111,8 @@ InteractiveFit::updatePlot()
       {
 	plot *p = m_plots[0];
 	refl_spectra_plot (fit_engine, p);
+	if (freeze_lmt)
+	  p->auto_limits(false);
 	break;
       }
     case SYSTEM_ELLISS_AB:
@@ -118,6 +120,11 @@ InteractiveFit::updatePlot()
       {
 	plot *p1 = m_plots[0], *p2 = m_plots[1];
 	elliss_spectra_plot (fit_engine, p1, p2);
+	if (freeze_lmt)
+	  {
+	    p1->auto_limits(false);
+	    p2->auto_limits(false);
+	  }
 	break;
       }
     default:
