@@ -60,13 +60,16 @@ units::get_tick_label (FX::FXString &lab, int tick) const
 {
   bool minus = (inf < 0);
   int asup = (minus ? -inf : sup);
-  char fmt[8];
+  char fmt[16];
 
   if (nb_decimals == 0)
     {
       int space = (int)log10(asup * dmajor) + (minus ? 1 : 0) + 1;
-      sprintf (fmt, "%%%id", space);
-      lab.format (fmt, (int) (tick * dmajor));
+      int nchar = snprintf (fmt, 16, "%%%id", space);
+      if (nchar >= 16)
+	lab.assign("###");
+      else
+	lab.format (fmt, (int) (tick * dmajor));
     }
   else
     {
@@ -74,8 +77,11 @@ units::get_tick_label (FX::FXString &lab, int tick) const
       int base = floor(asup * dmajor);
       int space = dec + (base > 0 ? (int)log10(base): 0) + 1 \
 	+ (minus ? 1 : 0) + 1;
-      sprintf (fmt, "%%%i.%if", space, dec);
-      lab.format (fmt, tick * dmajor);
+      int nchar = snprintf (fmt, 16, "%%%i.%if", space, dec);
+      if (nchar >= 16)
+	lab.assign("###");
+      else
+	lab.format (fmt, tick * dmajor);
     }
 }
 
