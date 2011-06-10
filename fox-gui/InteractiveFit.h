@@ -61,14 +61,14 @@ private:
   FXCanvas *canvas;
   agg::pod_array<FXTextField*> m_params_text_field;
 
-  bool m_update_mode;
-
   struct fit_engine *fit_engine;
   plot_info m_plots;
 
   parameters_info m_parameters;
 
   struct spectrum *spectrum;
+
+  bool m_canvas_is_dirty;
 
 protected:
   FXMenuBar         *menubar;
@@ -92,6 +92,7 @@ public:
   long onCmdParamChange(FXObject*, FXSelector,void*);
   long onCmdRunFit(FXObject*, FXSelector,void*);
   long onCmdPaint(FXObject*, FXSelector,void*);
+  long onUpdCanvas(FXObject*, FXSelector,void*);
 
   enum {
     ID_PARAM_SELECT = FXMainWindow::ID_LAST,

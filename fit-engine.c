@@ -525,16 +525,17 @@ fit_engine_set_parameters (struct fit_engine *fit,
   if (check_fit_parameters (stack, parameters) != 0)
     return 1;
 
+  int old_pn = fit->parameters->number;
+  int new_pn = parameters->number;
+
   fit->parameters = parameters;
 
-  if (fit->initialized)
+  if (fit->initialized && old_pn != new_pn)
     {
-      int np = parameters->number;
-
-      fit->mffun.p = np;
+      fit->mffun.p = new_pn;
 
       gsl_vector_free (fit->results);
-      fit->results = gsl_vector_alloc (np);
+      fit->results = gsl_vector_alloc (new_pn);
     }
 
   return 0;
