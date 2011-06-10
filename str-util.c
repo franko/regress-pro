@@ -16,7 +16,10 @@ str_getcwd (str_t dir)
     {
       str_size_check  (dir, bsize);
       if (getcwd (dir->heap, bsize) == dir->heap)
-	return 0;
+	{
+	  dir->length = strlen (dir->heap);
+	  return 0;
+	}
       if (errno != ERANGE)
 	break;
     }
