@@ -218,6 +218,7 @@ void fx_plot<VS,RM>::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
     dc->setForeground(it.color);
     dc->setClipRectangle(xoffs + lmarg, yoffs + tmarg, areaw, areah);
     dc->drawLines(fxp, nb);
+    dc->clearClipRectangle();
     delete [] fxp;
   }
 }
