@@ -70,8 +70,8 @@ const FXHiliteStyle EllissWindow::tstyles[] = {
 
 
 // Make some windows
-EllissWindow::EllissWindow(FXApp* a) 
- : FXMainWindow(a,"Regress Pro",NULL,NULL,DECOR_ALL,20,20,700,460),
+EllissWindow::EllissWindow(EllissApp* a) 
+ : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
    spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
    spectrFile("untitled"), batchFileId("untitled####.dat") {
 

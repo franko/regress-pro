@@ -8,7 +8,7 @@
 int main(int argc,char *argv[]){
 
   // Make application
-  FXApp app("Regress Pro", FXString::null);
+  EllissApp app;
 
   // Open display
   app.init(argc, argv);

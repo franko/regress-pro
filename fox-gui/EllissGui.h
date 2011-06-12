@@ -15,6 +15,7 @@
 
 #include "str.h"
 
+#include "EllissApp.h"
 #include "fx_plot.h"
 #include "spectra.h"
 #include "symtab.h"
@@ -104,7 +105,7 @@ public:
     ID_LAST
     };
 public:
-  EllissWindow(FXApp *a);
+  EllissWindow(EllissApp *a);
   virtual void create();
   virtual ~EllissWindow();
 };
