@@ -18,12 +18,12 @@ FXDEFMAP(InteractiveFit) InteractiveFitMap[]={
 // Object implementation
 FXIMPLEMENT(InteractiveFit,FXMainWindow,InteractiveFitMap,ARRAYNUMBER(InteractiveFitMap));
 
-InteractiveFit::InteractiveFit(FXApp *app, struct symtab *s, struct spectrum *user_spectr)
-  : FXMainWindow(app, "Interactive Fit", NULL, NULL, DECOR_ALL, 0, 0, 640, 480),
+InteractiveFit::InteractiveFit(EllissApp *app, struct symtab *s, struct spectrum *user_spectr)
+  : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     fit_engine(NULL), spectrum(user_spectr), m_canvas_is_dirty(true)
 {
   // Menubar
-  menubar = new FXMenuBar(this, FRAME_RAISED|LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   statusbar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
 
   // fit menu
@@ -31,7 +31,7 @@ InteractiveFit::InteractiveFit(FXApp *app, struct symtab *s, struct spectrum *us
   new FXMenuCommand(fitmenu,"&Run",NULL,this,ID_RUN_FIT);
   new FXMenuTitle(menubar,"&Fit",NULL,fitmenu);
 
-  FXHorizontalFrame *mf = new FXHorizontalFrame(this, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  FXHorizontalFrame *mf = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXMatrix *matrix = new FXMatrix(mf, 2, LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
 
   struct seeds *seeds;
@@ -53,9 +53,20 @@ InteractiveFit::InteractiveFit(FXApp *app, struct symtab *s, struct spectrum *us
     }
 
   Str pname;
+  int current_layer = 0;
   for (int k = 0; k < m_parameters.number; k++)
     {
       fit_param_t *fp = params->values + k;
+
+      if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer)
+	{
+	  current_layer = fp->layer_nb;
+	  FXString str;
+	  str.format("Layer %i", current_layer);
+	  new FXLabel(matrix, str);
+	  new FXLabel(matrix, "");
+	}
+
       get_param_name(fp, pname.str());
       FXString fxpname((const FXchar *) pname.cstr());
       FXCheckButton *bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);

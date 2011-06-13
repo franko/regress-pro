@@ -72,11 +72,11 @@ const FXHiliteStyle EllissWindow::tstyles[] = {
 // Make some windows
 EllissWindow::EllissWindow(EllissApp* a) 
  : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
-   spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
+   m_elliss_app(a), spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
    spectrFile("untitled"), batchFileId("untitled####.dat") {
 
   // Menubar
-  menubar=new FXMenuBar(this,FRAME_RAISED|LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
 
   // Script menu
@@ -110,7 +110,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
 
   // Container
-  FXHorizontalFrame *cont = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED);
+  FXHorizontalFrame *cont = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
@@ -121,7 +121,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   scripttext = new FXText(bf,NULL,0,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   scripttext->setStyled(TRUE);
   scripttext->setHiliteStyles(tstyles);
-  scriptfont = new FXFont(getApp(), "Monospace", 10);
+  scriptfont = new FXFont(getApp(), "Courier New", 10);
   scripttext->setFont(scriptfont);
 
   new FXTabItem(tabbook,"&Fit Results",NULL);
@@ -580,7 +580,7 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-  InteractiveFit *fitwin = new InteractiveFit(this->getApp(), this->symtab, this->spectrum);
+  InteractiveFit *fitwin = new InteractiveFit(getEllissApp(), symtab, spectrum);
   fitwin->create();
   fitwin->show(FX::PLACEMENT_SCREEN);
   return 1;

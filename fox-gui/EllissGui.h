@@ -22,6 +22,9 @@
 
 class EllissWindow : public FXMainWindow {
   FXDECLARE(EllissWindow)
+  
+  EllissApp* m_elliss_app;
+
 protected:
   struct spectrum *spectrum;
   struct stack *stack_result;
@@ -66,6 +69,8 @@ private:
   EllissWindow(const EllissWindow&);
   EllissWindow &operator=(const EllissWindow&);
 public:
+  EllissApp* getEllissApp() const { return m_elliss_app; }
+
   long onCmdPaint(FXObject*,FXSelector,void*);
   long onUpdCanvas(FXObject*,FXSelector,void*);
   long onCmdLoadScript(FXObject*,FXSelector,void*);

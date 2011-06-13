@@ -7,6 +7,7 @@
 
 #include <gsl/gsl_vector.h>
 
+#include "EllissApp.h"
 #include "agg_array.h"
 #include "symtab.h"
 #include "spectra.h"
@@ -85,7 +86,7 @@ private:
   InteractiveFit &operator=(const InteractiveFit&);
 
 public:
-  InteractiveFit(FXApp *app, struct symtab *symtab, struct spectrum *sp);
+  InteractiveFit(EllissApp *app, struct symtab *symtab, struct spectrum *sp);
   virtual ~InteractiveFit();
 
   long onCmdParamSelect(FXObject*, FXSelector,void*);
