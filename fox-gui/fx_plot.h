@@ -68,6 +68,7 @@ public:
   void clear() {
     this->dispose_elements();
     this->m_lines.clear();
+    m_rect_def = false;
   };
 
   bool is_empty() const { return m_lines.size() == 0; };
