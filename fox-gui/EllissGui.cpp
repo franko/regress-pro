@@ -235,7 +235,7 @@ EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
       scripttext->setModified(FALSE);
     }
 
-  return 0;
+  return 1;
 }
 
 FXbool
@@ -276,6 +276,7 @@ EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
       FXString new_filename = open.getFilename();
       if (saveScriptAs(new_filename))
 	scriptFile = new_filename;
+      return 1;
     }
 
   return 0;
@@ -285,7 +286,7 @@ long
 EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
 {
   saveScriptAs(scriptFile);
-  return 0;
+  return 1;
 }
 
 long
@@ -307,6 +308,8 @@ EllissWindow::onCmdLoadSpectra(FXObject*,FXSelector,void *)
       if (this->spectrum == NULL)
 	FXMessageBox::information(this, MBOX_OK, "Spectra loading",
 				  "Cannot load spectra %s", spectrFile.text());
+
+      return 1;
     }
 
   return 0;
@@ -319,9 +322,9 @@ EllissWindow::onCmdPlotDispers(FXObject*,FXSelector,void*)
     {
       DispersDialog dialog(this, this->stack_result);
       dialog.execute();
+      return 1;
     }
-
-  return 1;
+  return 0;
 }
 
 long
@@ -580,6 +583,13 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
+  if (this->spectrum == NULL)
+    {
+      FXMessageBox::information(this, MBOX_OK, "Fitting",
+				"Please load a spectra before.");
+      return 0;
+    }
+
   InteractiveFit *fitwin = new InteractiveFit(getEllissApp(), symtab, spectrum);
   fitwin->create();
   fitwin->show(FX::PLACEMENT_SCREEN);
