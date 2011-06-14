@@ -22,8 +22,6 @@
 
 class EllissWindow : public FXMainWindow {
   FXDECLARE(EllissWindow)
-  
-  EllissApp* m_elliss_app;
 
 protected:
   struct spectrum *spectrum;
@@ -93,6 +91,7 @@ public:
   void cleanScriptErrors ();
   void plotCanvas(FXDCWindow *dc);
   void reportErrors();
+
 public:
   enum {
     ID_CANVAS = FXMainWindow::ID_LAST,
@@ -109,10 +108,16 @@ public:
     ID_ABOUT,
     ID_LAST
     };
+
 public:
   EllissWindow(EllissApp *a);
   virtual void create();
   virtual ~EllissWindow();
+
+private:
+  bool check_spectrum(const char *context);
+
+  EllissApp* m_elliss_app;
 };
 
 extern "C" {

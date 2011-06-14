@@ -18,9 +18,9 @@ FXDEFMAP(InteractiveFit) InteractiveFitMap[]={
 // Object implementation
 FXIMPLEMENT(InteractiveFit,FXMainWindow,InteractiveFitMap,ARRAYNUMBER(InteractiveFitMap));
 
-InteractiveFit::InteractiveFit(EllissApp *app, struct symtab *s, struct spectrum *user_spectr)
+InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct spectrum *user_spectr)
   : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
-    fit_engine(NULL), spectrum(user_spectr), m_canvas_is_dirty(true)
+    fit_engine(_fit), spectrum(user_spectr), m_canvas_is_dirty(true)
 {
   // Menubar
   menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -34,8 +34,6 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct symtab *s, struct spectrum
   FXHorizontalFrame *mf = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXMatrix *matrix = new FXMatrix(mf, 2, LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
 
-  struct seeds *seeds;
-  fit_engine = build_fit_engine (s, &seeds);
   fit_engine->config->subsampling = 0;
 
   fit_engine_prepare (fit_engine, spectrum, 0);

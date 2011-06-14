@@ -450,15 +450,24 @@ EllissWindow::updateFitStrategy()
     setFitStrategy (scripttext->getText().text());
 }
 
+bool
+EllissWindow::check_spectrum(const char *context)
+{
+  if (spectrum == NULL)
+    {
+      FXMessageBox::information(this, MBOX_OK, context,
+				"Please load a spectra before.");
+      return false;
+    }
+
+  return true;
+}
+
 long
 EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 {
-  if (this->spectrum == NULL)
-    {
-      FXMessageBox::information(this, MBOX_OK, "Fitting",
-				"Please load a spectra before.");
-      return 0;
-    }
+  if (! check_spectrum("Fitting"))
+    return 0;
 
   updateFitStrategy();
 
@@ -583,14 +592,21 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-  if (this->spectrum == NULL)
+  if (! check_spectrum("Fitting"))
+    return 0;
+
+  updateFitStrategy();
+
+  struct seeds *seeds;
+  struct fit_engine *fit = build_fit_engine (symtab, &seeds);
+
+  if (fit == NULL)
     {
-      FXMessageBox::information(this, MBOX_OK, "Fitting",
-				"Please load a spectra before.");
+      reportErrors();
       return 0;
     }
 
-  InteractiveFit *fitwin = new InteractiveFit(getEllissApp(), symtab, spectrum);
+  InteractiveFit *fitwin = new InteractiveFit(getEllissApp(), fit, spectrum);
   fitwin->create();
   fitwin->show(FX::PLACEMENT_SCREEN);
   return 1;

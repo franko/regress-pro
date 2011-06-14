@@ -86,7 +86,7 @@ private:
   InteractiveFit &operator=(const InteractiveFit&);
 
 public:
-  InteractiveFit(EllissApp *app, struct symtab *symtab, struct spectrum *sp);
+  InteractiveFit(EllissApp *app, struct fit_engine *fit, struct spectrum *sp);
   virtual ~InteractiveFit();
 
   long onCmdParamSelect(FXObject*, FXSelector,void*);
