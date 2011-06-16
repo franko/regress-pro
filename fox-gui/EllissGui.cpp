@@ -40,6 +40,7 @@ static float timeval_subtract (struct timeval *x, struct timeval *y);
 FXDEFMAP(EllissWindow) EllissWindowMap[]={
   FXMAPFUNC(SEL_PAINT,   EllissWindow::ID_CANVAS, EllissWindow::onCmdPaint),
   FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_CANVAS, EllissWindow::onUpdCanvas),
+  FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_SCRIPT_TEXT, EllissWindow::onUpdScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_ABOUT,  EllissWindow::onCmdAbout),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SCRIPT, EllissWindow::onCmdLoadScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVE_SCRIPT, EllissWindow::onCmdSaveScript),
@@ -118,7 +119,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   tabscript = new FXTabItem(tabbook,"&Script",NULL);
   FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-  scripttext = new FXText(bf,NULL,0,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   scripttext->setStyled(TRUE);
   scripttext->setHiliteStyles(tstyles);
   scriptfont = new FXFont(getApp(), "Courier New", 10);
@@ -147,6 +148,9 @@ EllissWindow::EllissWindow(EllissApp* a)
   init_class_list ();
 
   dispers_library_init ();
+
+  m_title_dirty = true;
+  m_title_modified = false;
 }
 
 
@@ -209,6 +213,24 @@ EllissWindow::onUpdCanvas(FXObject*, FXSelector, void *)
 }
 
 long
+EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
+{
+  bool is_mod = scripttext->isModified();
+
+  if (m_title_dirty || (is_mod != m_title_modified))
+    {
+      FXString filename = scriptFile.rafter('/');
+      FXString pathname = scriptFile.rbefore('/');
+      FXString flag(is_mod ? "*" : "");
+      this->setTitle(flag + filename + " - " + pathname + " - Regress Pro");
+      m_title_dirty = false;
+      m_title_modified = is_mod;
+      return 1;
+    }
+  return 0;
+}
+
+long
 EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
 {
   FXFileDialog open(this,"Open Script");
@@ -233,6 +255,8 @@ EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
       scripttext->setText(script_text.cstr());
       setFitStrategy(script_text.cstr());
       scripttext->setModified(FALSE);
+
+      m_title_dirty = true;
     }
 
   return 1;
@@ -260,8 +284,12 @@ EllissWindow::saveScriptAs (const FXString& save_as)
 
   fputc ('\n', f);
   fclose (f);
+
+  scripttext->setModified(FALSE);
+
+  m_title_dirty = true;
+
   return true;
-  
 }
 
 long

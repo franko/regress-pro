@@ -82,6 +82,7 @@ public:
   long onCmdRunSimul(FXObject*,FXSelector,void*);
   long onCmdRunBatch(FXObject*,FXSelector,void*);
   long onCmdAbout(FXObject*,FXSelector,void*);
+  long onUpdScript(FXObject*,FXSelector,void*);
 
   FXbool loadfile(const FXString& file, str_t buffer);
   FXbool setFitStrategy(const char *script_text);
@@ -106,6 +107,7 @@ public:
     ID_RUN_BATCH,
     ID_RUN_SIMUL,
     ID_ABOUT,
+    ID_SCRIPT_TEXT,
     ID_LAST
     };
 
@@ -118,6 +120,9 @@ private:
   bool check_spectrum(const char *context);
 
   EllissApp* m_elliss_app;
+
+  bool m_title_dirty;
+  bool m_title_modified;
 };
 
 extern "C" {
