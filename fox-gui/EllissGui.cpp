@@ -219,8 +219,8 @@ EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
 
   if (m_title_dirty || (is_mod != m_title_modified))
     {
-      FXString filename = scriptFile.rafter('/');
-      FXString pathname = scriptFile.rbefore('/');
+      FXString filename = scriptFile.rafter(DIR_SEPARATOR);
+      FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
       FXString flag(is_mod ? "*" : "");
       this->setTitle(flag + filename + " - " + pathname + " - Regress Pro");
       m_title_dirty = false;
