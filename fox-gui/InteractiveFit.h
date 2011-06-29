@@ -65,6 +65,8 @@ private:
   struct fit_engine *fit_engine;
   plot_info m_plots;
 
+  struct fit_parameters *m_fit_parameters;
+
   parameters_info m_parameters;
 
   struct spectrum *spectrum;

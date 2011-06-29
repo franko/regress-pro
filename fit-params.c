@@ -104,6 +104,12 @@ fit_parameters_free (struct fit_parameters *s)
 }
 
 void
+fit_parameters_clear (struct fit_parameters *s)
+{
+  s->number = 0;
+}
+
+void
 fit_parameters_add (struct fit_parameters *lst, fit_param_t const * fp)
 {
   size_t idx = lst->number;

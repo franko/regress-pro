@@ -525,7 +525,7 @@ fit_engine_set_parameters (struct fit_engine *fit,
   if (check_fit_parameters (stack, parameters) != 0)
     return 1;
 
-  int old_pn = fit->parameters->number;
+  int old_pn = fit->results->size;
   int new_pn = parameters->number;
 
   fit->parameters = parameters;

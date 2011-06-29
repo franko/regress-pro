@@ -62,6 +62,7 @@ extern void              strategy_free  (struct strategy *s);
 extern struct fit_parameters * \
                 fit_parameters_new      (void);
 extern void     fit_parameters_free     (struct fit_parameters *s);
+extern void     fit_parameters_clear    (struct fit_parameters *s);
 extern void     fit_parameters_add      (struct fit_parameters *lst,
 					 fit_param_t const * fp);
 

@@ -39,6 +39,9 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct s
 
   fit_engine_prepare (fit_engine, spectrum, 0);
 
+
+  m_fit_parameters = fit_parameters_new ();
+
   struct fit_parameters *params = fit_engine_get_all_parameters (fit_engine);
   m_parameters.init(params);
 
@@ -96,6 +99,7 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct s
 InteractiveFit::~InteractiveFit() {
   fit_engine_disable(fit_engine);
   fit_engine_free(fit_engine);
+  fit_parameters_free(m_fit_parameters);
   delete fitmenu;
 }
 
@@ -193,7 +197,9 @@ InteractiveFit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 long
 InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 {
-  struct fit_parameters* fps = fit_parameters_new ();
+  struct fit_parameters* fps = this->m_fit_parameters;
+
+  fit_parameters_clear (fps);
 
   int fit_params_nb = 0;
   for (int j = 0; j < m_parameters.number; j++)
@@ -233,6 +239,8 @@ InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 	  k ++;
 	}
     }
+
+  gsl_vector_free (seeds);
 
   m_canvas_is_dirty = true;
 
