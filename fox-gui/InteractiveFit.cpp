@@ -197,6 +197,8 @@ InteractiveFit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 long
 InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 {
+  reg_check_point(this);
+
   struct fit_parameters* fps = this->m_fit_parameters;
 
   fit_parameters_clear (fps);

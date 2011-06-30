@@ -233,6 +233,8 @@ EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
 long
 EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   FXFileDialog open(this,"Open Script");
   open.setFilename(scriptFile);
   open.setPatternList(patterns_fit);
@@ -295,6 +297,8 @@ EllissWindow::saveScriptAs (const FXString& save_as)
 long
 EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   FXFileDialog open(this, "Save Script As");
   open.setFilename(scriptFile);
   open.setPatternList(patterns_fit);
@@ -313,6 +317,8 @@ EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   saveScriptAs(scriptFile);
   return 1;
 }
@@ -320,6 +326,8 @@ EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   FXFileDialog open(this,"Open Spectra");
   open.setFilename(spectrFile);
   open.setPatternList(patterns_spectr);
@@ -398,6 +406,8 @@ EllissWindow::onCmdRunBatch(FXObject*,FXSelector,void *)
 {
   struct seeds *seeds;
   struct fit_engine *fit;
+
+  reg_check_point(this);
 
   fit = build_fit_engine (this->symtab, &seeds);
 
@@ -496,6 +506,8 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 {
   if (! check_spectrum("Fitting"))
     return 0;
+
+  reg_check_point(this);
 
   updateFitStrategy();
 
@@ -622,6 +634,8 @@ EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
   if (! check_spectrum("Fitting"))
     return 0;
+
+  reg_check_point(this);
 
   updateFitStrategy();
 

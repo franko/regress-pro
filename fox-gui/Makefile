@@ -24,7 +24,9 @@ endif
 GSL_LIBS = -lgsl -lgslcblas -lm
 GSL_INCLUDES = 
 
-LIBS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
+REG_LIBS = -lmhash -lgmp
+
+LIBS = $(FOX_LIBS) $(GSL_LIBS) $(REG_LIBS) -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   LIBS += -lgdi32 -lwsock32
@@ -34,8 +36,11 @@ INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = units.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp InteractiveFit.cpp main.cpp
+SRC_FILES = units.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp InteractiveFit.cpp registered_app.cpp main.cpp
 PRG = regress.exe
+
+REG_SRC_FILES = registration.c
+REG_OBJ_FILES := $(REG_SRC_FILES:%.c=%.o)
 
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)
 DEP_FILES := $(SRC_FILES:%.cpp=.deps/%.P)
@@ -48,10 +53,10 @@ all: $(PRG)
 
 include $(BASEDIR)/makerules
 
-$(PRG): $(OBJ_FILES) ../libefit.a
-	$(CXX) -o $@ $(OBJ_FILES) ../libefit.a $(LIBS)
+$(PRG): $(OBJ_FILES) $(REG_OBJ_FILES) ../libefit.a
+	$(CXX) -o $@ $(OBJ_FILES) $(REG_OBJ_FILES) ../libefit.a $(LIBS)
 
 clean:
-	rm -f $(OBJ_FILES) $(PRG)
+	rm -f $(OBJ_FILES) $(REG_OBJ_FILES) $(PRG)
 
 -include $(DEP_FILES)

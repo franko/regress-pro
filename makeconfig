@@ -1,4 +1,5 @@
 
+PRODUCT_REGISTRATION = yes
 ENABLE_DEBUG = yes
 
 CC = gcc
@@ -7,4 +8,8 @@ CXXFLAGS = -g
 
 ifeq ($(ENABLE_DEBUG), yes)
   DEFS = -DDEBUG_MEM -DDEBUG_REGRESS
+endif
+
+ifeq ($(PRODUCT_REGISTRATION), yes)
+  DEFS += -DREGPRO_REGISTRATION
 endif
