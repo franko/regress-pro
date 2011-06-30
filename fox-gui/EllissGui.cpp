@@ -42,6 +42,7 @@ FXDEFMAP(EllissWindow) EllissWindowMap[]={
   FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_CANVAS, EllissWindow::onUpdCanvas),
   FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_SCRIPT_TEXT, EllissWindow::onUpdScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_ABOUT,  EllissWindow::onCmdAbout),
+  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_REGISTER,  EllissWindow::onCmdRegister),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SCRIPT, EllissWindow::onCmdLoadScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVE_SCRIPT, EllissWindow::onCmdSaveScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVEAS_SCRIPT, EllissWindow::onCmdSaveAsScript),
@@ -107,6 +108,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
   helpmenu = new FXMenuPane(this);
+  new FXMenuCommand(helpmenu, "&Register", NULL, this, ID_REGISTER);
   new FXMenuCommand(helpmenu, "&About", NULL, this, ID_ABOUT);
   new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
 
@@ -376,6 +378,12 @@ EllissWindow::onCmdAbout(FXObject *, FXSelector, void *)
   button->setFocus();
   about.execute(PLACEMENT_OWNER);
   return 1;
+}
+
+long
+EllissWindow::onCmdRegister(FXObject *, FXSelector, void *)
+{
+  reg_form(this);
 }
 
 // Clean up

@@ -39,7 +39,6 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct s
 
   fit_engine_prepare (fit_engine, spectrum, 0);
 
-
   m_fit_parameters = fit_parameters_new ();
 
   struct fit_parameters *params = fit_engine_get_all_parameters (fit_engine);

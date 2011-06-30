@@ -15,10 +15,14 @@ public:
 
   void check_registration();
 
+  long on_registration_enter(FXObject*,FXSelector,void*);
+  long on_registration_ask(FXObject*,FXSelector,void*);
   long on_registration_mark(FXObject*,FXSelector,void*);
 
   enum {
     ID_REGISTER_MARK = FXApp::ID_LAST,
+    ID_REGISTER_ASK,
+    ID_REGISTER,
     ID_LAST
     };
 
@@ -29,11 +33,17 @@ private:
   registered_app &operator=(const registered_app&);
 
 protected:
-  bool show_registration_message();
+  void show_registration_message();
+  void show_registration_dialog();
 
 private:
   int m_reg_count;
   bool m_registered;
+
+  FXDialogBox *m_dialog;
+  FXTextField *m_user_name_entry;
+  FXTextField *m_user_email_entry;
+  FXTextField *m_key_entry;
 };
 
 #endif

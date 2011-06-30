@@ -27,10 +27,18 @@ inline void reg_check_point (FXId *win)
   app->handle(win, sel, NULL);
 }
 
+inline void reg_form (FXId *win)
+{
+  FXuint sel = FXSEL(SEL_COMMAND, registered_app::ID_REGISTER_ASK);
+  FXApp *app = win->getApp();
+  app->handle(win, sel, NULL);
+}
+
 #else
 typedef elliss_app<FX::FXApp> EllissApp;
 
 inline void reg_check_point (FXId *win) { }
+inline void reg_form (FXId *win) { }
 #endif
 
 #endif
