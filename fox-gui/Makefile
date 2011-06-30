@@ -1,31 +1,12 @@
 
-#
-# $Id: Makefile,v 1.4 2006/07/13 14:32:21 francesco Exp $
-#
+BASEDIR = ..
 
+include $(BASEDIR)/makeconfig
+include $(BASEDIR)/makesystem
 
-include ../makeconfig
+COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-# standard setting
-ifeq ($(BUILD_FLAG), std)
-  CXX = g++
-  CXXFLAGS = -O2 -finline-functions
-endif
-ifeq ($(BUILD_FLAG), pentium)
-# i586 / Pentium optimized settings
-  CXX = g++ -march=i586
-  CXXFLAGS = -O2 -finline-functions
-endif
-ifeq ($(BUILD_FLAG), debug)
-# DEBUG setting
-  CXX = gcc
-#  CXXFLAGS = -g -Wall -W -fno-inline 
-  CXXFLAGS = -g
-  DEFS = -DDEBUG_MEM
-endif
-
-ifeq ($(WIN_FLAG), yes)
-# Option for Windows Platform
+ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
 
   FOX_HOME = c:/fra/src/fox-1.6.43
@@ -43,12 +24,10 @@ endif
 GSL_LIBS = -lgsl -lgslcblas -lm
 GSL_INCLUDES = 
 
-#  -lsupc++ -lgdi32 -mwindows 
+LIBS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
 
-LDFLAGS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
-
-ifeq ($(WIN_FLAG), yes)
-  LDFLAGS += -lgdi32 -lwsock32
+ifeq ($(HOST_SYS),Windows)
+  LIBS += -lgdi32 -lwsock32
 endif
 
 INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I..
@@ -67,17 +46,10 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 all: $(PRG)
 
-$(PRG): $(OBJ_FILES) ../libefit.a
-	$(CXX) -o $@ $(OBJ_FILES) ../libefit.a $(LDFLAGS)
+include $(BASEDIR)/makerules
 
-%.o: %.cpp
-	@echo '$(CXXCOMPILE) -c $<'; \
-	$(CXXCOMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
-	@-cp .deps/$(*F).pp .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-            >> .deps/$(*F).P; \
-	rm .deps/$(*F).pp
+$(PRG): $(OBJ_FILES) ../libefit.a
+	$(CXX) -o $@ $(OBJ_FILES) ../libefit.a $(LIBS)
 
 clean:
 	rm -f $(OBJ_FILES) $(PRG)

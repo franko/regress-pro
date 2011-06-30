@@ -1,45 +1,10 @@
-#
-# $Id: Makefile,v 1.20 2006/12/29 17:47:02 francesco Exp $
-#
 
 include makeconfig
-
-# standard setting
-ifeq ($(BUILD_FLAG), std)
-  CC = gcc
-  CFLAGS = -O2 -fomit-frame-pointer -finline-functions
-endif
-ifeq ($(BUILD_FLAG), pentium)
-# i586 / Pentium optimized settings
-  CC = gcc -march=i586
-#  CFLAGS = -O2 -fomit-frame-pointer -malign-double
-  CFLAGS = -O2 -fomit-frame-pointer
-endif
-ifeq ($(BUILD_FLAG), debug)
-# DEBUG setting
-  CC = gcc
-#  CFLAGS = -g -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wnested-externs -Wno-sign-compare -Wno-unused-parameter -fno-common 
-  CFLAGS = -g
-  DEFS = -DDEBUG_MEM -DDEBUG_REGRESS
-endif
-ifeq ($(BUILD_FLAG), valgrind)
-  CC = gcc -march=i586
-  CFLAGS = -g -O2
-endif
-
-ifeq ($(WIN_FLAG), yes)
-# Option for Windows Platform
-  DEFS += -DWIN32
-endif
-
-# DEFS += -DYYDEBUG=1
+include makesystem
 
 GSL_LIBS = -lgsl -lgslcblas -lm
 GSL_INCLUDES = 
 
-LDFLAGS = $(GSL_LIBS)
-
-LDFLAGS = $(GSL_LIBS)
 INCLUDES = $(GSL_INCLUDES)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
@@ -58,25 +23,19 @@ DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 all: $(EFIT_LIB) $(SUBDIRS)
 
+include makerules
+
 $(SUBDIRS):
 	$(MAKE) -C $@
 
 $(EFIT_LIB): $(ELL_OBJ_FILES)
 	ar r $@ $(ELL_OBJ_FILES)
 
-%.o: %.c
-	@echo '$(COMPILE) -c $<'; \
-	$(COMPILE) -Wp,-MMD,.deps/$(*F).pp -c $<
-	@-cp .deps/$(*F).pp .deps/$(*F).P; \
-	tr ' ' '\012' < .deps/$(*F).pp \
-          | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
-            >> .deps/$(*F).P; \
-	rm .deps/$(*F).pp
-
 descr.c descr.h: descr.y
 	bison -d -o descr.c descr.y
 
 clean:
-	rm -f $(EFIT_LIB) $(ELL_OBJ_FILES)
+	$(MAKE) -C fox-gui clean
+	$(HOST_RM) -f $(ELL_OBJ_FILES) $(EFIT_LIB)
 
 -include $(DEP_FILES)
