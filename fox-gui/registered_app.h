@@ -14,6 +14,7 @@ public:
   virtual void create();
 
   void check_registration();
+  bool is_registered() const { return m_registered; }
 
   long on_registration_enter(FXObject*,FXSelector,void*);
   long on_registration_ask(FXObject*,FXSelector,void*);

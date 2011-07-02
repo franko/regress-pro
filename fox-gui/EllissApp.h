@@ -18,6 +18,7 @@ public:
 };
 
 #ifdef REGPRO_REGISTRATION
+
 typedef elliss_app<registered_app> EllissApp;
 
 inline void reg_check_point (FXId *win)
@@ -35,10 +36,19 @@ inline void reg_form (FXId *win)
 }
 
 #else
-typedef elliss_app<FX::FXApp> EllissApp;
+
+typedef elliss_app<FX::FXApp> base_type;
+
+class EllissApp : public base_type {
+public:
+  EllissApp() : base_type() {};
+
+  bool is_registered() const { return true; }
+};
 
 inline void reg_check_point (FXId *win) { }
 inline void reg_form (FXId *win) { }
+
 #endif
 
 #endif

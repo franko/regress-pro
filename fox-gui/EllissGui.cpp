@@ -221,10 +221,14 @@ EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
 
   if (m_title_dirty || (is_mod != m_title_modified))
     {
+      bool is_reg = getEllissApp()->is_registered();
+
       FXString filename = scriptFile.rafter(DIR_SEPARATOR);
       FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
       FXString flag(is_mod ? "*" : "");
-      this->setTitle(flag + filename + " - " + pathname + " - Regress Pro");
+      FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
+
+      this->setTitle(flag + filename + " - " + pathname + " - " + appname);
       m_title_dirty = false;
       m_title_modified = is_mod;
       return 1;
@@ -384,6 +388,7 @@ long
 EllissWindow::onCmdRegister(FXObject *, FXSelector, void *)
 {
   reg_form(this);
+  m_title_dirty = true;
 }
 
 // Clean up
