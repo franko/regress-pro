@@ -1,9 +1,10 @@
 
-ENABLE_DEBUG = yes
+ENABLE_DEBUG = no
 
 CC = gcc
-CFLAGS = -g -Wall
-CXXFLAGS = -g
+CXX = gcc
+CFLAGS = -O2 -fomit-frame-pointer -ffast-math
+CXXFLAGS = -Os -fno-rtti -fno-exceptions
 
 ifeq ($(ENABLE_DEBUG), yes)
   DEFS = -DDEBUG_MEM -DDEBUG_REGRESS
