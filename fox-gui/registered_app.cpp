@@ -68,12 +68,58 @@ registered_app::on_registration_ask(FXObject*,FXSelector,void*)
   return 1;
 }
 
+static bool
+user_email_is_correct(FXString& email, FXString& errmsg)
+{
+  FXString name = email.before('@'), domain = email.after('@');
+
+  if (name.length() == 0)
+    {
+      if (email.find('@') < 0)
+	errmsg = "does not contail the character '@'";
+      else
+	errmsg = "missing name before '@'";
+
+      return false;
+    }
+
+  if (domain.length() == 0)
+    {
+      errmsg = "missing domain name after '@'";
+      return false;
+    }
+
+  return true;
+}
+
 long
 registered_app::on_registration_enter(FXObject*,FXSelector,void*)
 {
   FXString user_name = m_user_name_entry->getText();
   FXString user_email = m_user_email_entry->getText();
   FXString key = m_key_entry->getText();
+
+  if (user_name.length() < 8)
+    {
+      FXMessageBox::warning(this, MBOX_OK, "Regress Pro Registration",
+			    "User name should be at least 8 character long");
+      return 1;
+    }
+
+  FXString errmsg;
+  if (! user_email_is_correct(user_email, errmsg))
+    {
+      FXMessageBox::warning(this, MBOX_OK, "Regress Pro Registration",
+			    "Invalid email address: %s", errmsg.text());
+      return 1;
+    }
+
+  if (key.length() == 0)
+    {
+      FXMessageBox::warning(this, MBOX_OK, "Regress Pro Registration",
+			    "Please provide a non-empty registration key");
+      return 1;
+    }
 
   bool is_valid = registration_check (user_name.text(), user_email.text(), REGISTRATION_VERSION, key.text());
 
