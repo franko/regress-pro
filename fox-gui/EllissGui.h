@@ -82,6 +82,7 @@ public:
   long onCmdRunSimul(FXObject*,FXSelector,void*);
   long onCmdRunBatch(FXObject*,FXSelector,void*);
   long onCmdAbout(FXObject*,FXSelector,void*);
+  long onCmdRegister(FXObject*,FXSelector,void*);
   long onUpdScript(FXObject*,FXSelector,void*);
 
   FXbool loadfile(const FXString& file, str_t buffer);
@@ -108,6 +109,7 @@ public:
     ID_RUN_SIMUL,
     ID_ABOUT,
     ID_SCRIPT_TEXT,
+    ID_REGISTER,
     ID_LAST
     };
 

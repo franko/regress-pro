@@ -1,4 +1,5 @@
 
+PRODUCT_REGISTRATION = yes
 ENABLE_DEBUG = no
 
 CC = gcc
@@ -6,6 +7,10 @@ CXX = gcc
 CFLAGS = -O2 -fomit-frame-pointer -ffast-math
 CXXFLAGS = -Os -fno-rtti -fno-exceptions
 
-ifeq ($(ENABLE_DEBUG), yes)
+ifeq ($(ENABLE_DEBUG),yes)
   DEFS = -DDEBUG_MEM -DDEBUG_REGRESS
+endif
+
+ifeq ($(PRODUCT_REGISTRATION),yes)
+  DEFS += -DREGPRO_REGISTRATION
 endif

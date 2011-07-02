@@ -24,6 +24,8 @@ endif
 GSL_LIBS = -lgsl -lgslcblas -lm
 GSL_INCLUDES = 
 
+REG_LIBS = -lmhash -lgmp
+
 LIBS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
@@ -37,10 +39,19 @@ CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 SRC_FILES = units.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp InteractiveFit.cpp main.cpp
 PRG = regress.exe
 
+REG_SRC_FILES := registration.c registered_app.cpp
+REG_OBJ_FILEX := $(REG_SRC_FILES:%.cpp=%.o)
+REG_OBJ_FILES := $(REG_OBJ_FILEX:%.c=%.o)
+
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)
 DEP_FILES := $(SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+ifeq ($(PRODUCT_REGISTRATION),yes)
+  OBJ_FILES += $(REG_OBJ_FILES)  
+  LIBS += $(REG_LIBS)
+endif
 
 .PHONY: clean all
 

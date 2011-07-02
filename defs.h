@@ -10,6 +10,8 @@
 #define VERSION_MINOR 3
 #define VERSION_PATCH 4
 
+#define REGISTRATION_VERSION 1
+
 #undef __BEGIN_DECLS
 #undef __END_DECLS
 #ifdef __cplusplus

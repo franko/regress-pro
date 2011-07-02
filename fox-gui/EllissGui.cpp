@@ -42,6 +42,7 @@ FXDEFMAP(EllissWindow) EllissWindowMap[]={
   FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_CANVAS, EllissWindow::onUpdCanvas),
   FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_SCRIPT_TEXT, EllissWindow::onUpdScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_ABOUT,  EllissWindow::onCmdAbout),
+  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_REGISTER,  EllissWindow::onCmdRegister),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SCRIPT, EllissWindow::onCmdLoadScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVE_SCRIPT, EllissWindow::onCmdSaveScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVEAS_SCRIPT, EllissWindow::onCmdSaveAsScript),
@@ -107,6 +108,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
   helpmenu = new FXMenuPane(this);
+  new FXMenuCommand(helpmenu, "&Register", NULL, this, ID_REGISTER);
   new FXMenuCommand(helpmenu, "&About", NULL, this, ID_ABOUT);
   new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
 
@@ -219,10 +221,14 @@ EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
 
   if (m_title_dirty || (is_mod != m_title_modified))
     {
+      bool is_reg = getEllissApp()->is_registered();
+
       FXString filename = scriptFile.rafter(DIR_SEPARATOR);
       FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
       FXString flag(is_mod ? "*" : "");
-      this->setTitle(flag + filename + " - " + pathname + " - Regress Pro");
+      FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
+
+      this->setTitle(flag + filename + " - " + pathname + " - " + appname);
       m_title_dirty = false;
       m_title_modified = is_mod;
       return 1;
@@ -233,6 +239,8 @@ EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
 long
 EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   FXFileDialog open(this,"Open Script");
   open.setFilename(scriptFile);
   open.setPatternList(patterns_fit);
@@ -295,6 +303,8 @@ EllissWindow::saveScriptAs (const FXString& save_as)
 long
 EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   FXFileDialog open(this, "Save Script As");
   open.setFilename(scriptFile);
   open.setPatternList(patterns_fit);
@@ -313,6 +323,8 @@ EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   saveScriptAs(scriptFile);
   return 1;
 }
@@ -320,6 +332,8 @@ EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
 long
 EllissWindow::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
+  reg_check_point(this);
+
   FXFileDialog open(this,"Open Spectra");
   open.setFilename(spectrFile);
   open.setPatternList(patterns_spectr);
@@ -370,6 +384,13 @@ EllissWindow::onCmdAbout(FXObject *, FXSelector, void *)
   return 1;
 }
 
+long
+EllissWindow::onCmdRegister(FXObject *, FXSelector, void *)
+{
+  reg_form(this);
+  m_title_dirty = true;
+}
+
 // Clean up
 EllissWindow::~EllissWindow() {
   delete scriptfont;
@@ -398,6 +419,8 @@ EllissWindow::onCmdRunBatch(FXObject*,FXSelector,void *)
 {
   struct seeds *seeds;
   struct fit_engine *fit;
+
+  reg_check_point(this);
 
   fit = build_fit_engine (this->symtab, &seeds);
 
@@ -496,6 +519,8 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 {
   if (! check_spectrum("Fitting"))
     return 0;
+
+  reg_check_point(this);
 
   updateFitStrategy();
 
@@ -622,6 +647,8 @@ EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
   if (! check_spectrum("Fitting"))
     return 0;
+
+  reg_check_point(this);
 
   updateFitStrategy();
 
