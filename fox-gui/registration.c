@@ -52,6 +52,7 @@ md5 (mpz_t res, const char *msg)
     }
 
   mpz_clear (pw);
+  free (hash);
 
   return true;
 }
