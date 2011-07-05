@@ -17,8 +17,6 @@ ifeq ($(HOST_SYS),Windows)
 else
   FOX_LIBS = $(shell fox-config --libs)
   FOX_INCLUDES = $(shell fox-config --cflags)
-
-  AGG_INCLUDES = -I/usr/include/agg2
 endif
 
 GSL_LIBS = -lgsl -lgslcblas -lm
@@ -36,7 +34,7 @@ INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = units.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp InteractiveFit.cpp main.cpp
+SRC_FILES = units.cpp ProgressInfo.cpp EllissGui.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp InteractiveFit.cpp disp_chooser.cpp disp_fit_window.cpp main.cpp
 PRG = regress.exe
 
 REG_SRC_FILES := registration.c registered_app.cpp

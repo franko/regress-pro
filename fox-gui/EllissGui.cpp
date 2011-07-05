@@ -33,6 +33,9 @@
 #include "str-util.h"
 #include "dispers-library.h"
 #include "spectra-path.h"
+#include "sampling.h"
+#include "disp_chooser.h"
+#include "disp_fit_window.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
@@ -48,6 +51,7 @@ FXDEFMAP(EllissWindow) EllissWindowMap[]={
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVEAS_SCRIPT, EllissWindow::onCmdSaveAsScript),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SPECTRA, EllissWindow::onCmdLoadSpectra),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_DISP_PLOT, EllissWindow::onCmdPlotDispers),
+  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_DISP_OPTIM, EllissWindow::onCmdDispersOptim),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_FIT, EllissWindow::onCmdRunFit),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_INTERACTIVE_FIT, EllissWindow::onCmdInteractiveFit),
   FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_MULTI_FIT, EllissWindow::onCmdRunMultiFit),
@@ -74,8 +78,8 @@ const FXHiliteStyle EllissWindow::tstyles[] = {
 // Make some windows
 EllissWindow::EllissWindow(EllissApp* a) 
  : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
-   m_elliss_app(a), spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
-   spectrFile("untitled"), batchFileId("untitled####.dat") {
+   spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
+   spectrFile("untitled"), batchFileId("untitled####.dat"), m_elliss_app(a) {
 
   // Menubar
   menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -97,6 +101,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   // Dispersion menu
   dispmenu = new FXMenuPane(this);
   new FXMenuCommand(dispmenu, "&Plot Dispersion",NULL,this,ID_DISP_PLOT);
+  new FXMenuCommand(dispmenu, "Dispersion Optimize",NULL,this,ID_DISP_OPTIM);
   new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
 
   // Fit menu
@@ -124,7 +129,7 @@ EllissWindow::EllissWindow(EllissApp* a)
   scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   scripttext->setStyled(TRUE);
   scripttext->setHiliteStyles(tstyles);
-  scriptfont = new FXFont(getApp(), "Courier New", 10);
+  scriptfont = new FXFont(getApp(), "Monospace", 10);
   scripttext->setFont(scriptfont);
 
   new FXTabItem(tabbook,"&Fit Results",NULL);
@@ -247,7 +252,6 @@ EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
 
   if(open.execute())
     {
-      str_t script_file;
       scriptFile = open.getFilename();
       Str script_text;
 
@@ -370,6 +374,49 @@ EllissWindow::onCmdPlotDispers(FXObject*,FXSelector,void*)
 }
 
 long
+EllissWindow::onCmdDispersOptim(FXObject*,FXSelector,void*)
+{
+  reg_check_point(this);
+
+  updateFitStrategy();
+
+  if (! this->symtab)
+    return 1;
+
+  struct disp_fit_engine *fit = disp_fit_engine_new ();
+
+  if (disp_chooser (getApp(), this->symtab, fit))
+    {
+      /*  disp_t *ref = dispers_library_search ("sio2");
+
+	  struct ho_params hop[2] = {{147, 15.7, 0, 1/3.0, 0}, {10, 7, 0.1, 1/3.0, -0.7}};
+	  disp_t *model = disp_new_ho ("HO", 2, hop);
+      */
+      sampling_unif samp(240.0, 780.0, 271);
+
+      gsl_vector *wl = gsl_vector_alloc (samp.size());
+
+      fit->model_der  = NULL;
+      fit->wl         = wl;
+      fit->parameters = NULL;
+
+      for (unsigned j = 0; j < samp.size(); j++)
+	gsl_vector_set (wl, j, samp[j]);
+
+      disp_fit_window *fitwin = new disp_fit_window(getEllissApp(), fit);
+      fitwin->create();
+      fitwin->show(FX::PLACEMENT_SCREEN);
+    }
+  else
+    {
+      disp_fit_engine_free (fit);
+    }
+
+
+  return 1;
+}
+
+long
 EllissWindow::onCmdAbout(FXObject *, FXSelector, void *)
 {
   FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
@@ -389,6 +436,7 @@ EllissWindow::onCmdRegister(FXObject *, FXSelector, void *)
 {
   reg_form(this);
   m_title_dirty = true;
+  return 1;
 }
 
 // Clean up

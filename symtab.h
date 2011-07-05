@@ -67,6 +67,9 @@ extern void    symbol_table_add         (struct symtab *symtab,
 					 str_ptr name, obj_t * val);
 extern obj_t * symbol_table_find        (struct symtab *symtab, str_ptr name);
 
+extern struct assign * symbol_table_next (struct symtab *symtab,
+					  struct assign *iter);
+
 extern obj_t * toplevel_obj_new         (enum toplevel_type kind, void *cont);
 extern obj_t * toplevel_obj_copy        (obj_t *obj);
 extern void    toplevel_obj_free        (obj_t *obj);

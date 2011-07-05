@@ -4,9 +4,9 @@
 #include <fx.h>
 
 #include "units.h"
-#include "agg_array.h"
-#include "agg_bounding_rect.h"
-#include "agg_path_storage.h"
+#include "agg2/agg_array.h"
+#include "agg2/agg_bounding_rect.h"
+#include "agg2/agg_path_storage.h"
 
 class owner_resource_manager {
 public:

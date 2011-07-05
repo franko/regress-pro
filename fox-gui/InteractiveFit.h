@@ -7,9 +7,9 @@
 
 #include <gsl/gsl_vector.h>
 
+#include "agg2/agg_array.h"
+
 #include "EllissApp.h"
-#include "agg_array.h"
-#include "symtab.h"
 #include "spectra.h"
 #include "fit-params.h"
 #include "fx_plot.h"

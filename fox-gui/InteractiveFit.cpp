@@ -166,7 +166,7 @@ InteractiveFit::drawPlot()
 {
   FXDCWindow dc(canvas);
   int ww = canvas->getWidth(), hh = canvas->getHeight();
-  int n = m_plots.size();
+  unsigned n = m_plots.size();
   for (unsigned j = 0; j < n; j++)
     m_plots[j]->draw(&dc, ww, hh/n, 0, hh*j/n);
 

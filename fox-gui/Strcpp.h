@@ -13,7 +13,7 @@ class Str {
 
 public:
   Str() { str_init (_cstr, DEFAULT_SIZE); };
-  Str(int len) { str_init (_cstr, len); };
+  Str(const char *s) { str_init_from_c (_cstr, s); };
   ~Str() { str_free (_cstr); };
 
   int length() { return STR_LENGTH(_cstr); };

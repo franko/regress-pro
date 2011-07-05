@@ -219,7 +219,8 @@ lmfit_iter (gsl_vector *x, gsl_multifit_function_fdf *f,
     memcpy(x->data, s->x->data, f->p * sizeof(double));
 
     *nb_iter = iter;
-    *user_stop = stop_request;
+    if (user_stop)
+      *user_stop = stop_request;
 
     return status;
 }
