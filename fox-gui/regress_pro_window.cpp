@@ -50,7 +50,7 @@
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
 // Map
-FXDEFMAP(regress_pro_window) regress_pro_windowMap[]={
+FXDEFMAP(regress_pro_window) regress_pro_window_map[]={
   FXMAPFUNC(SEL_PAINT,   regress_pro_window::ID_CANVAS, regress_pro_window::onCmdPaint),
   FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_CANVAS, regress_pro_window::onUpdCanvas),
   FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_SCRIPT_TEXT, regress_pro_window::onUpdScript),
@@ -70,7 +70,7 @@ FXDEFMAP(regress_pro_window) regress_pro_windowMap[]={
 
 
 // Object implementation
-FXIMPLEMENT(regress_pro_window,FXMainWindow,regress_pro_windowMap,ARRAYNUMBER(regress_pro_windowMap));
+FXIMPLEMENT(regress_pro_window,FXMainWindow,regress_pro_window_map,ARRAYNUMBER(regress_pro_window_map));
 
 
 const FXchar regress_pro_window::patterns_fit[] =
@@ -201,7 +201,8 @@ regress_pro_window::plotCanvas(FXDCWindow *dc)
 
 // Command from chart
 long
-regress_pro_window::onCmdPaint(FXObject *, FXSelector, void *ptr) {
+regress_pro_window::onCmdPaint(FXObject *, FXSelector, void *ptr)
+{
   if (isPlotModified)
     {
       FXDCWindow dc(plotcanvas);
@@ -397,21 +398,12 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 
   if (disp_chooser (getApp(), this->symtab, fit))
     {
-      /*  disp_t *ref = dispers_library_search ("sio2");
-
-	  struct ho_params hop[2] = {{147, 15.7, 0, 1/3.0, 0}, {10, 7, 0.1, 1/3.0, -0.7}};
-	  disp_t *model = disp_new_ho ("HO", 2, hop);
-      */
       sampling_unif samp(240.0, 780.0, 271);
 
-      gsl_vector *wl = gsl_vector_alloc (samp.size());
-
-      fit->model_der  = NULL;
-      fit->wl         = wl;
-      fit->parameters = NULL;
+      fit->wl = gsl_vector_alloc (samp.size());
 
       for (unsigned j = 0; j < samp.size(); j++)
-	gsl_vector_set (wl, j, samp[j]);
+	gsl_vector_set (fit->wl, j, samp[j]);
 
       disp_fit_window *fitwin = new disp_fit_window(get_elliss_app(), fit);
       fitwin->create();

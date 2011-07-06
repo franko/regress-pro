@@ -81,10 +81,15 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
 
   m_plots.init(app, 2);
 
+  // we take a copy of the model dispersion to avoid the modification
+  // of the original object obtained from the script's parsing
+  m_fit_engine->model_disp = disp_copy (m_fit_engine->model_disp);
+
   updatePlot(true);
 }
 
 disp_fit_window::~disp_fit_window() {
+  disp_free (m_fit_engine->model_disp);
   disp_fit_engine_free (m_fit_engine);
   fit_parameters_free(m_fit_parameters);
   delete fitmenu;
