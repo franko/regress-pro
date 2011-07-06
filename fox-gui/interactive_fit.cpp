@@ -1,24 +1,24 @@
 
-#include "InteractiveFit.h"
+#include "interactive_fit.h"
 #include "Strcpp.h"
 #include "fit-engine.h"
 #include "lmfit-simple.h"
 #include "spectra-path.h"
 
 // Map
-FXDEFMAP(InteractiveFit) InteractiveFitMap[]={
-  FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_PARAM_SELECT, InteractiveFit::onCmdParamSelect),
-  FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_PARAM_VALUE,  InteractiveFit::onCmdParamChange),
-  FXMAPFUNC(SEL_CHANGED, InteractiveFit::ID_PARAM_VALUE,  InteractiveFit::onCmdParamChange),
-  FXMAPFUNC(SEL_PAINT,   InteractiveFit::ID_CANVAS,       InteractiveFit::onCmdPaint),
-  FXMAPFUNC(SEL_UPDATE,  InteractiveFit::ID_CANVAS,       InteractiveFit::onUpdCanvas),
-  FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_RUN_FIT,      InteractiveFit::onCmdRunFit),
+FXDEFMAP(interactive_fit) interactive_fitMap[]={
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_PARAM_SELECT, interactive_fit::onCmdParamSelect),
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_PARAM_VALUE,  interactive_fit::onCmdParamChange),
+  FXMAPFUNC(SEL_CHANGED, interactive_fit::ID_PARAM_VALUE,  interactive_fit::onCmdParamChange),
+  FXMAPFUNC(SEL_PAINT,   interactive_fit::ID_CANVAS,       interactive_fit::onCmdPaint),
+  FXMAPFUNC(SEL_UPDATE,  interactive_fit::ID_CANVAS,       interactive_fit::onUpdCanvas),
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_RUN_FIT,      interactive_fit::onCmdRunFit),
 };
 
 // Object implementation
-FXIMPLEMENT(InteractiveFit,FXMainWindow,InteractiveFitMap,ARRAYNUMBER(InteractiveFitMap));
+FXIMPLEMENT(interactive_fit,FXMainWindow,interactive_fitMap,ARRAYNUMBER(interactive_fitMap));
 
-InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct spectrum *user_spectr)
+interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struct spectrum *user_spectr)
   : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     fit_engine(_fit), spectrum(user_spectr), m_canvas_is_dirty(true)
 {
@@ -95,7 +95,7 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct s
   updatePlot(true);
 }
 
-InteractiveFit::~InteractiveFit() {
+interactive_fit::~interactive_fit() {
   fit_engine_disable(fit_engine);
   fit_engine_free(fit_engine);
   fit_parameters_free(m_fit_parameters);
@@ -103,7 +103,7 @@ InteractiveFit::~InteractiveFit() {
 }
 
 long
-InteractiveFit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
+interactive_fit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 {
   FXCheckButton *cb = (FXCheckButton *) _cb;
   double * paddr = (double *) cb->getUserData();
@@ -113,7 +113,7 @@ InteractiveFit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 }
 
 void
-InteractiveFit::updatePlot(bool freeze_lmt)
+interactive_fit::updatePlot(bool freeze_lmt)
 {
   struct fit_parameters* ps = m_parameters.parameters;
   fit_engine_apply_parameters (fit_engine, ps, m_parameters.values);
@@ -146,7 +146,7 @@ InteractiveFit::updatePlot(bool freeze_lmt)
 }
 
 long
-InteractiveFit::onCmdParamChange(FXObject *_txt, FXSelector, void*)
+interactive_fit::onCmdParamChange(FXObject *_txt, FXSelector, void*)
 {
   FXTextField *txt = (FXTextField *) _txt;
   FXString vstr = txt->getText();
@@ -162,7 +162,7 @@ InteractiveFit::onCmdParamChange(FXObject *_txt, FXSelector, void*)
 }
 
 void
-InteractiveFit::drawPlot()
+interactive_fit::drawPlot()
 {
   FXDCWindow dc(canvas);
   int ww = canvas->getWidth(), hh = canvas->getHeight();
@@ -174,7 +174,7 @@ InteractiveFit::drawPlot()
 }
 
 long
-InteractiveFit::onCmdPaint(FXObject*, FXSelector, void* ptr)
+interactive_fit::onCmdPaint(FXObject*, FXSelector, void* ptr)
 {
   drawPlot();
   return 1;
@@ -182,7 +182,7 @@ InteractiveFit::onCmdPaint(FXObject*, FXSelector, void* ptr)
 
 
 long
-InteractiveFit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
+interactive_fit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 {
   if (m_canvas_is_dirty)
     {
@@ -194,7 +194,7 @@ InteractiveFit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 }
 
 long
-InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
+interactive_fit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 {
   reg_check_point(this);
 

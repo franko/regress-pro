@@ -9,7 +9,7 @@
 
 #include "agg2/agg_array.h"
 
-#include "EllissApp.h"
+#include "elliss_app.h"
 #include "disp-fit-engine.h"
 #include "fit-params.h"
 #include "fx_plot.h"
@@ -67,7 +67,7 @@ private:
   disp_fit_window &operator=(const disp_fit_window&);
 
 public:
-  disp_fit_window(EllissApp *app, struct disp_fit_engine *fit);
+  disp_fit_window(elliss_app *app, struct disp_fit_engine *fit);
   virtual ~disp_fit_window();
 
   long onCmdParamSelect(FXObject*, FXSelector,void*);

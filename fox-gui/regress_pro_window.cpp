@@ -1,12 +1,22 @@
-/******************************************************************************
-*                                                                             *
-*                                  Elliss Gui                                 *
-*                                                                             *
-*******************************************************************************
-* Copyright (C) 2005,2006 by Francesco Abbate.   All Rights Reserved.         *
-*******************************************************************************
-* $Id: EllissGui.cpp,v 1.5 2006/12/29 17:47:08 francesco Exp $                       *
-******************************************************************************/
+
+/* regress_pro_window.cpp
+ * 
+ * Copyright (C) 2007-2011 Francesco Abbate
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,10 +26,10 @@
 
 #include <gsl/gsl_vector.h>
 
-#include "EllissGui.h"
+#include "regress_pro_window.h"
 #include "DispersDialog.h"
 #include "BatchDialog.h"
-#include "InteractiveFit.h"
+#include "interactive_fit.h"
 #include "Strcpp.h"
 #include "error-messages.h"
 #include "fit-engine.h"
@@ -40,43 +50,43 @@
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
 // Map
-FXDEFMAP(EllissWindow) EllissWindowMap[]={
-  FXMAPFUNC(SEL_PAINT,   EllissWindow::ID_CANVAS, EllissWindow::onCmdPaint),
-  FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_CANVAS, EllissWindow::onUpdCanvas),
-  FXMAPFUNC(SEL_UPDATE,  EllissWindow::ID_SCRIPT_TEXT, EllissWindow::onUpdScript),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_ABOUT,  EllissWindow::onCmdAbout),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_REGISTER,  EllissWindow::onCmdRegister),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SCRIPT, EllissWindow::onCmdLoadScript),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVE_SCRIPT, EllissWindow::onCmdSaveScript),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_SAVEAS_SCRIPT, EllissWindow::onCmdSaveAsScript),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_LOAD_SPECTRA, EllissWindow::onCmdLoadSpectra),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_DISP_PLOT, EllissWindow::onCmdPlotDispers),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_DISP_OPTIM, EllissWindow::onCmdDispersOptim),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_FIT, EllissWindow::onCmdRunFit),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_INTERACTIVE_FIT, EllissWindow::onCmdInteractiveFit),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_MULTI_FIT, EllissWindow::onCmdRunMultiFit),
-  FXMAPFUNC(SEL_COMMAND, EllissWindow::ID_RUN_BATCH, EllissWindow::onCmdRunBatch),
+FXDEFMAP(regress_pro_window) regress_pro_windowMap[]={
+  FXMAPFUNC(SEL_PAINT,   regress_pro_window::ID_CANVAS, regress_pro_window::onCmdPaint),
+  FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_CANVAS, regress_pro_window::onUpdCanvas),
+  FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_SCRIPT_TEXT, regress_pro_window::onUpdScript),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
+  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
   };
 
 
 // Object implementation
-FXIMPLEMENT(EllissWindow,FXMainWindow,EllissWindowMap,ARRAYNUMBER(EllissWindowMap));
+FXIMPLEMENT(regress_pro_window,FXMainWindow,regress_pro_windowMap,ARRAYNUMBER(regress_pro_windowMap));
 
 
-const FXchar EllissWindow::patterns_fit[] =
+const FXchar regress_pro_window::patterns_fit[] =
   "Fit Strategy (*.fit)"
   "\nAll Files (*)";
-const FXchar EllissWindow::patterns_spectr[] =
+const FXchar regress_pro_window::patterns_spectr[] =
   "Fit Strategy (*.dat)"
   "\nAll Files (*)";
 
-const FXHiliteStyle EllissWindow::tstyles[] = {
+const FXHiliteStyle regress_pro_window::tstyles[] = {
   {FXRGB(255,255,255), FXRGB(255,0,0), 0, 0, 0, 0, 0, 0}};
   
 
 
 // Make some windows
-EllissWindow::EllissWindow(EllissApp* a) 
+regress_pro_window::regress_pro_window(elliss_app* a) 
  : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
    spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
    spectrFile("untitled"), batchFileId("untitled####.dat"), m_elliss_app(a) {
@@ -163,13 +173,13 @@ EllissWindow::EllissWindow(EllissApp* a)
 
 // Create image
 void
-EllissWindow::create(){
+regress_pro_window::create(){
   FXMainWindow::create();
   scriptfont->create();
 }
 
 void
-EllissWindow::plotCanvas(FXDCWindow *dc)
+regress_pro_window::plotCanvas(FXDCWindow *dc)
 {
   int ww = plotcanvas->getWidth(), hh = plotcanvas->getHeight();
 
@@ -191,7 +201,7 @@ EllissWindow::plotCanvas(FXDCWindow *dc)
 
 // Command from chart
 long
-EllissWindow::onCmdPaint(FXObject *, FXSelector, void *ptr) {
+regress_pro_window::onCmdPaint(FXObject *, FXSelector, void *ptr) {
   if (isPlotModified)
     {
       FXDCWindow dc(plotcanvas);
@@ -207,7 +217,7 @@ EllissWindow::onCmdPaint(FXObject *, FXSelector, void *ptr) {
 }
 
 long
-EllissWindow::onUpdCanvas(FXObject*, FXSelector, void *)
+regress_pro_window::onUpdCanvas(FXObject*, FXSelector, void *)
 {
   if (isPlotModified)
     {
@@ -220,13 +230,13 @@ EllissWindow::onUpdCanvas(FXObject*, FXSelector, void *)
 }
 
 long
-EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
+regress_pro_window::onUpdScript(FXObject*, FXSelector, void *)
 {
   bool is_mod = scripttext->isModified();
 
   if (m_title_dirty || (is_mod != m_title_modified))
     {
-      bool is_reg = getEllissApp()->is_registered();
+      bool is_reg = get_elliss_app()->is_registered();
 
       FXString filename = scriptFile.rafter(DIR_SEPARATOR);
       FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
@@ -242,7 +252,7 @@ EllissWindow::onUpdScript(FXObject*, FXSelector, void *)
 }
 
 long
-EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdLoadScript(FXObject*,FXSelector,void *)
 {
   reg_check_point(this);
 
@@ -275,7 +285,7 @@ EllissWindow::onCmdLoadScript(FXObject*,FXSelector,void *)
 }
 
 FXbool
-EllissWindow::saveScriptAs (const FXString& save_as)
+regress_pro_window::saveScriptAs (const FXString& save_as)
 {
   FILE *f = fopen (save_as.text(), "w");
 
@@ -305,7 +315,7 @@ EllissWindow::saveScriptAs (const FXString& save_as)
 }
 
 long
-EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 {
   reg_check_point(this);
 
@@ -325,7 +335,7 @@ EllissWindow::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 }
 
 long
-EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdSaveScript(FXObject*,FXSelector,void *)
 {
   reg_check_point(this);
 
@@ -334,7 +344,7 @@ EllissWindow::onCmdSaveScript(FXObject*,FXSelector,void *)
 }
 
 long
-EllissWindow::onCmdLoadSpectra(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
   reg_check_point(this);
 
@@ -362,7 +372,7 @@ EllissWindow::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 }
 
 long
-EllissWindow::onCmdPlotDispers(FXObject*,FXSelector,void*)
+regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
 {
   if (this->stack_result)
     {
@@ -374,7 +384,7 @@ EllissWindow::onCmdPlotDispers(FXObject*,FXSelector,void*)
 }
 
 long
-EllissWindow::onCmdDispersOptim(FXObject*,FXSelector,void*)
+regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
   reg_check_point(this);
 
@@ -403,7 +413,7 @@ EllissWindow::onCmdDispersOptim(FXObject*,FXSelector,void*)
       for (unsigned j = 0; j < samp.size(); j++)
 	gsl_vector_set (wl, j, samp[j]);
 
-      disp_fit_window *fitwin = new disp_fit_window(getEllissApp(), fit);
+      disp_fit_window *fitwin = new disp_fit_window(get_elliss_app(), fit);
       fitwin->create();
       fitwin->show(FX::PLACEMENT_SCREEN);
     }
@@ -417,7 +427,7 @@ EllissWindow::onCmdDispersOptim(FXObject*,FXSelector,void*)
 }
 
 long
-EllissWindow::onCmdAbout(FXObject *, FXSelector, void *)
+regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
 {
   FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
 		    0,0,0,0, 0,0);
@@ -432,7 +442,7 @@ EllissWindow::onCmdAbout(FXObject *, FXSelector, void *)
 }
 
 long
-EllissWindow::onCmdRegister(FXObject *, FXSelector, void *)
+regress_pro_window::onCmdRegister(FXObject *, FXSelector, void *)
 {
   reg_form(this);
   m_title_dirty = true;
@@ -440,7 +450,7 @@ EllissWindow::onCmdRegister(FXObject *, FXSelector, void *)
 }
 
 // Clean up
-EllissWindow::~EllissWindow() {
+regress_pro_window::~regress_pro_window() {
   delete scriptfont;
   delete filemenu;
   delete spectrmenu;
@@ -463,7 +473,7 @@ EllissWindow::~EllissWindow() {
 }
 
 long
-EllissWindow::onCmdRunBatch(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 {
   struct seeds *seeds;
   struct fit_engine *fit;
@@ -491,7 +501,7 @@ EllissWindow::onCmdRunBatch(FXObject*,FXSelector,void *)
 }
 
 long
-EllissWindow::onCmdRunMultiFit(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 {
   struct multi_fit_engine *fit;
   Str analysis;
@@ -543,14 +553,14 @@ EllissWindow::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 }
 
 void
-EllissWindow::updateFitStrategy()
+regress_pro_window::updateFitStrategy()
 {
   if (scripttext->isModified())
     setFitStrategy (scripttext->getText().text());
 }
 
 bool
-EllissWindow::check_spectrum(const char *context)
+regress_pro_window::check_spectrum(const char *context)
 {
   if (spectrum == NULL)
     {
@@ -563,7 +573,7 @@ EllissWindow::check_spectrum(const char *context)
 }
 
 long
-EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 {
   if (! check_spectrum("Fitting"))
     return 0;
@@ -691,7 +701,7 @@ EllissWindow::onCmdRunFit(FXObject*,FXSelector,void *)
 }
 
 long
-EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
+regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
   if (! check_spectrum("Fitting"))
     return 0;
@@ -709,14 +719,14 @@ EllissWindow::onCmdInteractiveFit(FXObject*,FXSelector,void*)
       return 0;
     }
 
-  InteractiveFit *fitwin = new InteractiveFit(getEllissApp(), fit, spectrum);
+  interactive_fit *fitwin = new interactive_fit(get_elliss_app(), fit, spectrum);
   fitwin->create();
   fitwin->show(FX::PLACEMENT_SCREEN);
   return 1;
 }
 
 FXbool
-EllissWindow::setFitStrategy(const char *script_text)
+regress_pro_window::setFitStrategy(const char *script_text)
 {
   cleanScriptErrors();
 
@@ -743,7 +753,7 @@ EllissWindow::setFitStrategy(const char *script_text)
 }
 
 void
-EllissWindow::reportErrors()
+regress_pro_window::reportErrors()
 {
   str_t errmsg;
   str_init (errmsg, 128);
@@ -755,13 +765,13 @@ EllissWindow::reportErrors()
 }
 
 void
-EllissWindow::cleanScriptErrors ()
+regress_pro_window::cleanScriptErrors ()
 {
   scripttext->changeStyle(0, scripttext->getLength(), 0);
 }
 
 void
-EllissWindow::setErrorRegion (int sl, int el)
+regress_pro_window::setErrorRegion (int sl, int el)
 {
   int cl = 1, ns = 0, next;
   FXString text(scripttext->getText());

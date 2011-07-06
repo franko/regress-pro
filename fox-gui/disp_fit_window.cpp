@@ -21,7 +21,7 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]={
 // Object implementation
 FXIMPLEMENT(disp_fit_window,FXMainWindow,disp_fit_window_map,ARRAYNUMBER(disp_fit_window_map));
 
-disp_fit_window::disp_fit_window(EllissApp *app, struct disp_fit_engine *_fit)
+disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
   : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     m_fit_engine(_fit), m_canvas_is_dirty(true)
 {

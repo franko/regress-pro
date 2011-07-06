@@ -9,15 +9,15 @@
 
 #include "agg2/agg_array.h"
 
-#include "EllissApp.h"
+#include "elliss_app.h"
 #include "spectra.h"
 #include "fit-params.h"
 #include "fx_plot.h"
 
 typedef agg::pod_auto_vector<plot *, 2> vector_2;
 
-class InteractiveFit : public FXMainWindow {
-  FXDECLARE(InteractiveFit)
+class interactive_fit : public FXMainWindow {
+  FXDECLARE(interactive_fit)
 
   class plot_info : public vector_2 {
   public:
@@ -82,14 +82,14 @@ protected:
   void drawPlot();
 
 protected:
-  InteractiveFit(){};
+  interactive_fit(){};
 private:
-  InteractiveFit(const InteractiveFit&);
-  InteractiveFit &operator=(const InteractiveFit&);
+  interactive_fit(const interactive_fit&);
+  interactive_fit &operator=(const interactive_fit&);
 
 public:
-  InteractiveFit(EllissApp *app, struct fit_engine *fit, struct spectrum *sp);
-  virtual ~InteractiveFit();
+  interactive_fit(elliss_app *app, struct fit_engine *fit, struct spectrum *sp);
+  virtual ~interactive_fit();
 
   long onCmdParamSelect(FXObject*, FXSelector,void*);
   long onCmdParamChange(FXObject*, FXSelector,void*);
