@@ -13,6 +13,7 @@
 #include "disp-fit-engine.h"
 #include "fit-params.h"
 #include "fx_plot.h"
+#include "sampling.h"
 
 typedef agg::pod_auto_vector<plot *, 2> vector_2;
 
@@ -49,16 +50,26 @@ private:
   struct fit_parameters *m_fit_parameters;
 
   bool m_canvas_is_dirty;
+  bool m_resize_plot;
+  bool m_always_freeze_plot;
+
+  sampling_unif m_wl_sampling;
 
 protected:
   FXMenuBar         *menubar;
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
 
+  FXTextField *m_wl_entry;
+
   FXCanvas *canvas;
 
-  void updatePlot(bool freeze_limits = false);
+  void updatePlot();
   void drawPlot();
+
+  bool verify_spectral_range (const char *txt, double ps[]);
+  bool update_spectral_range (const char *txt);
+  void update_fit_engine_sampling ();
 
 protected:
   disp_fit_window(){};
@@ -75,10 +86,13 @@ public:
   long onCmdRunFit(FXObject*, FXSelector,void*);
   long onCmdPaint(FXObject*, FXSelector,void*);
   long onUpdCanvas(FXObject*, FXSelector,void*);
+  long onCmdSpectralRange(FXObject*, FXSelector,void*);
+  long onChangeSpectralRange(FXObject*, FXSelector,void*);
 
   enum {
     ID_PARAM_SELECT = FXMainWindow::ID_LAST,
     ID_PARAM_VALUE,
+    ID_SPECTR_RANGE,
     ID_RUN_FIT,
     ID_CANVAS,
     ID_LAST

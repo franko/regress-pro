@@ -11,10 +11,17 @@ class sampling_unif {
   double m_stride;
   
 public:
-  sampling_unif(double s_start, double s_end, unsigned nsp) :
-    m_nb_points(nsp), m_start(s_start), m_end(s_end)
-  {
-    m_stride = (m_end - m_start) / (m_nb_points - 1);
+  sampling_unif() {}
+
+  sampling_unif(double s_start, double s_end, unsigned nsp) {
+    set (s_start, s_end, nsp);
+  }
+
+  void set(double s_start, double s_end, unsigned nsp) {
+    m_nb_points = nsp;
+    m_start     = s_start;
+    m_end       = s_end;
+    m_stride    = (m_end - m_start) / (m_nb_points - 1);
   }
 
   unsigned size() const { return m_nb_points; }

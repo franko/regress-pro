@@ -1,7 +1,7 @@
 
 /* regress_pro_window.cpp
  * 
- * Copyright (C) 2007-2011 Francesco Abbate
+ * Copyright (C) 2005-2011 Francesco Abbate
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +43,6 @@
 #include "str-util.h"
 #include "dispers-library.h"
 #include "spectra-path.h"
-#include "sampling.h"
 #include "disp_chooser.h"
 #include "disp_fit_window.h"
 
@@ -398,13 +397,6 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 
   if (disp_chooser (getApp(), this->symtab, fit))
     {
-      sampling_unif samp(240.0, 780.0, 271);
-
-      fit->wl = gsl_vector_alloc (samp.size());
-
-      for (unsigned j = 0; j < samp.size(); j++)
-	gsl_vector_set (fit->wl, j, samp[j]);
-
       disp_fit_window *fitwin = new disp_fit_window(get_elliss_app(), fit);
       fitwin->create();
       fitwin->show(FX::PLACEMENT_SCREEN);
