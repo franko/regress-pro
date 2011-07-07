@@ -19,9 +19,9 @@ typedef agg::pod_auto_vector<plot *, 2> vector_2;
 class interactive_fit : public FXMainWindow {
   FXDECLARE(interactive_fit)
 
-  class plot_info : public vector_2 {
+  class plot_array : public vector_2 {
   public:
-    ~plot_info() {
+    ~plot_array() {
       unsigned n = size(), j;
       for (j = 0; j < n; j++)
 	delete value_at(j);
@@ -33,41 +33,21 @@ class interactive_fit : public FXMainWindow {
     }
   };
 
-  struct parameters_info {
-    int number;
-    struct fit_parameters *parameters;
-    gsl_vector* values;
-    agg::pod_array<bool> select;
-    double* base_ptr;
-
-    parameters_info() : parameters(0) {}
-
-    ~parameters_info() {
-      fit_parameters_free(parameters);
-      gsl_vector_free(values); 
-    }
-
-    void init(struct fit_parameters *p) {
-      number = p->number;
-      parameters = p;
-      values = gsl_vector_alloc(number);
-      base_ptr = values->data;
-      select.resize(number);
-      for (int k = 0; k < number; k++)
-	select[k] = false;
-    }
+  struct param_info {
+    FXTextField *text_field;
+    fit_param_t fp;
+    double value;
+    bool selected;
   };
 
 private:
-  FXCanvas *canvas;
-  agg::pod_array<FXTextField*> m_params_text_field;
 
   struct fit_engine *fit_engine;
-  plot_info m_plots;
+  plot_array m_plots;
 
   struct fit_parameters *m_fit_parameters;
 
-  parameters_info m_parameters;
+  agg::pod_array<param_info> m_parameters;
 
   struct spectrum *spectrum;
 
@@ -77,6 +57,8 @@ protected:
   FXMenuBar         *menubar;
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
+
+  FXCanvas *canvas;
 
   void updatePlot(bool freeze_limits = false);
   void drawPlot();

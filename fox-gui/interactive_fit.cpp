@@ -42,22 +42,27 @@ interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struc
   m_fit_parameters = fit_parameters_new ();
 
   struct fit_parameters *params = fit_engine_get_all_parameters (fit_engine);
-  m_parameters.init(params);
 
-  m_params_text_field.resize(m_parameters.number);
+  m_parameters.resize(params->number);
 
-  for (int k = 0; k < m_parameters.number; k++)
+  for (unsigned k = 0; k < m_parameters.size(); k++)
     {
-      fit_param_t *fp = params->values + k;
-      double fpval = fit_engine_get_default_param_value (fit_engine, fp);
-      gsl_vector_set (m_parameters.values, k, fpval);
+      param_info& p = m_parameters[k];
+      p.fp = params->values[k];
+
+      double fpval = fit_engine_get_default_param_value (fit_engine, &p.fp);
+      p.value = fpval;
+
+      p.selected = false;
     }
+  
+  fit_parameters_free (params);
 
   Str pname;
   int current_layer = 0;
-  for (int k = 0; k < m_parameters.number; k++)
+  for (unsigned k = 0; k < m_parameters.size(); k++)
     {
-      fit_param_t *fp = params->values + k;
+      fit_param_t *fp = &m_parameters[k].fp;
 
       if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer)
 	{
@@ -73,18 +78,15 @@ interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struc
       FXCheckButton *bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);
       FXTextField *tf = new FXTextField(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
-      void *offset_ptr = (void *) (m_parameters.base_ptr + k);
-      tf->setUserData(offset_ptr);
-      bt->setUserData(offset_ptr);
+      param_info* p_inf = m_parameters.data() + k;
 
-      m_params_text_field[k] = tf;
+      tf->setUserData(p_inf);
+      bt->setUserData(p_inf);
+
+      p_inf->text_field = tf;
       
-      double fpval = gsl_vector_get (m_parameters.values, k);
-      char fpvalbuf[16];
-      int len = snprintf(fpvalbuf, 16, "%g", fpval);
-      if (len >= 16)
-	fpvalbuf[15] = 0;
-      tf->setText(fpvalbuf, true);
+      FXString fptxt = FXStringFormat("%g", p_inf->value);
+      tf->setText(fptxt, true);
     }
 
   canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -106,17 +108,19 @@ long
 interactive_fit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 {
   FXCheckButton *cb = (FXCheckButton *) _cb;
-  double * paddr = (double *) cb->getUserData();
-  int k = (paddr - m_parameters.base_ptr);
-  m_parameters.select[k] = cb->getCheck();
+  param_info* p_inf = (param_info*) cb->getUserData();
+  p_inf->selected = cb->getCheck();
   return 1;
 }
 
 void
 interactive_fit::updatePlot(bool freeze_lmt)
 {
-  struct fit_parameters* ps = m_parameters.parameters;
-  fit_engine_apply_parameters (fit_engine, ps, m_parameters.values);
+  for (unsigned j = 0; j < m_parameters.size(); j++)
+    {
+      param_info& pi = m_parameters[j];
+      fit_engine_apply_param (fit_engine, &pi.fp, pi.value);
+    }
 
   switch (fit_engine->system_kind)
     {
@@ -150,13 +154,13 @@ interactive_fit::onCmdParamChange(FXObject *_txt, FXSelector, void*)
 {
   FXTextField *txt = (FXTextField *) _txt;
   FXString vstr = txt->getText();
-  double * paddr = (double *) txt->getUserData();
+  param_info* p_inf = (param_info*) txt->getUserData();
   double new_val = strtod (vstr.text(), NULL);
 
-  if (new_val == *paddr)
+  if (new_val == p_inf->value)
     return 0;
 
-  *paddr = new_val;
+  p_inf->value = new_val;
   m_canvas_is_dirty = true;
   return 1;
 }
@@ -203,21 +207,21 @@ interactive_fit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
   fit_parameters_clear (fps);
 
   int fit_params_nb = 0;
-  for (int j = 0; j < m_parameters.number; j++)
+  for (unsigned j = 0; j < m_parameters.size(); j++)
     {
-      if (m_parameters.select[j])
+      if (m_parameters[j].selected)
 	fit_params_nb++;
     }
 
   gsl_vector* seeds = gsl_vector_alloc(fit_params_nb);
 
   int k = 0;
-  for (int j = 0; j < m_parameters.number; j++)
+  for (unsigned j = 0; j < m_parameters.size(); j++)
     {
-      if (m_parameters.select[j])
+      if (m_parameters[j].selected)
 	{
-	  fit_parameters_add (fps, m_parameters.parameters->values + j);
-	  gsl_vector_set (seeds, k, gsl_vector_get (m_parameters.values, j));
+	  fit_parameters_add (fps, &m_parameters[j].fp);
+	  gsl_vector_set (seeds, k, m_parameters[j].value);
 	  k ++;
 	}
     }
@@ -229,14 +233,14 @@ interactive_fit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 
   k = 0;
   FXString ns;
-  for (int j = 0; j < m_parameters.number; j++)
+  for (unsigned j = 0; j < m_parameters.size(); j++)
     {
-      if (m_parameters.select[j])
+      if (m_parameters[j].selected)
 	{
-	  double val = gsl_vector_get(fit_engine->results, k);
+	  double val = gsl_vector_get (fit_engine->results, k);
 	  ns.format("%g", val);
-	  m_params_text_field[j]->setText(ns);
-	  gsl_vector_set(m_parameters.values, j, val);
+	  m_parameters[j].text_field->setText(ns);
+	  m_parameters[j].value = val;
 	  k ++;
 	}
     }
