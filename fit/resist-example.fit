@@ -1,5 +1,7 @@
 
-si = ReadMATFile "dispers/si_paper.mat"
+# we take the Silicon and vacuum dispersion from the library
+si   = Library "si"
+void = Library "vacuum"
 
 pfi_ho = HODispersion {
   parameters = [
@@ -7,8 +9,6 @@ pfi_ho = HODispersion {
     HO {nosc= 0.12607,  en= 4.38545, eg= 0.35442, nu= 0.3333, phi= -0.38607},
     HO {nosc= 1.12551,  en= 5.50586, eg= 0.15388, nu= 0.3333, phi= 0.08032}]
 }
-
-void = CauchyDispersion { n = [1, 0, 0], k = [0, 0, 0] }
 
 pfistack = Stack {
   mediums = [void, pfi_ho, si],

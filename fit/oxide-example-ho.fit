@@ -1,0 +1,38 @@
+
+# we take the Silicon and vacuum dispersion from the library
+si   = Library "si"
+void = Library "vacuum"
+
+# we define the dispersion of SiO2 using an Harmonic Oscillator model
+sio2 = HODispersion {
+  parameters = [
+    HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333, phi= 0.0}]
+}
+
+# We define de film stack by including the environment, the film and
+# the substrate.
+# For the SiO2 film we give the nominal thickness, expressed in nm.
+oxide_on_si = Stack {
+  mediums = [void, sio2, si],
+  thicknesses = [300]
+}
+
+# we define a simple strategy that search the thickness using
+# a grid search plus the Levenberg-Marquardt non-linear fit method
+thfit = Strategy {
+  params = ["Th:1"],
+  seeds = ["100-1000,20"]
+}
+
+# We define a second strategy that fits boths the thickness and the
+# refractive index on the SiO2 film. In order to fit the refractive
+# index we add some parameters of the HO model.
+rifit = Strategy {
+  params = ["Th:1", "RI:1:HO:Nosc:0", "RI:1:HO:En:0"],
+  seeds = ["100-1200,10", 140, 15]
+}
+
+# here we define the film stack and the fit algorithm that we want to use
+use stack oxide_on_si
+use strategy rifit
+
