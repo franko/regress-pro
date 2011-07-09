@@ -14,24 +14,8 @@
 #include "fit-params.h"
 #include "fx_plot.h"
 
-typedef agg::pod_auto_vector<plot *, 2> vector_2;
-
 class interactive_fit : public FXMainWindow {
   FXDECLARE(interactive_fit)
-
-  class plot_array : public vector_2 {
-  public:
-    ~plot_array() {
-      unsigned n = size(), j;
-      for (j = 0; j < n; j++)
-	delete value_at(j);
-    };
-
-    void init(FXApp *app, unsigned n) {
-      for (unsigned j = size(); j < n; j++)
-	add(new plot(app));
-    }
-  };
 
   struct param_info {
     FXTextField *text_field;
@@ -42,8 +26,9 @@ class interactive_fit : public FXMainWindow {
 
 private:
 
-  struct fit_engine *fit_engine;
-  plot_array m_plots;
+  struct fit_engine* fit_engine;
+
+  fx_plot_vector<2> m_plot;
 
   struct fit_parameters *m_fit_parameters;
 

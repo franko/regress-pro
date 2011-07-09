@@ -15,24 +15,8 @@
 #include "fx_plot.h"
 #include "sampling.h"
 
-typedef agg::pod_auto_vector<plot *, 2> vector_2;
-
 class disp_fit_window : public FXMainWindow {
   FXDECLARE(disp_fit_window)
-
-  class plot_array : public vector_2 {
-  public:
-    ~plot_array() {
-      unsigned n = size(), j;
-      for (j = 0; j < n; j++)
-	delete value_at(j);
-    };
-
-    void init(FXApp *app, unsigned n) {
-      for (unsigned j = size(); j < n; j++)
-	add(new plot(app));
-    }
-  };
 
   struct param_info {
     FXTextField *text_field;
@@ -45,7 +29,8 @@ private:
   agg::pod_array<param_info> m_parameters;
 
   struct disp_fit_engine *m_fit_engine;
-  plot_array m_plots;
+
+  fx_plot_array<2> m_plot;
 
   struct fit_parameters *m_fit_parameters;
 

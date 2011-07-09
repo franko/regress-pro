@@ -25,7 +25,8 @@ FXIMPLEMENT(disp_fit_window,FXMainWindow,disp_fit_window_map,ARRAYNUMBER(disp_fi
 
 disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
   : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
-    m_fit_engine(_fit), m_canvas_is_dirty(true), m_resize_plot(true), m_always_freeze_plot(true)
+    m_fit_engine(_fit), m_plot(app), m_canvas_is_dirty(true),
+    m_resize_plot(true), m_always_freeze_plot(true)
 {
   // Menubar
   menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -88,8 +89,6 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
 
   canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  m_plots.init(app, 2);
-
   // we take a copy of the model dispersion to avoid the modification
   // of the original object obtained from the script's parsing
   m_fit_engine->model_disp = disp_copy (m_fit_engine->model_disp);
@@ -97,7 +96,8 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
   updatePlot();
 }
 
-disp_fit_window::~disp_fit_window() {
+disp_fit_window::~disp_fit_window() 
+{
   disp_free (m_fit_engine->model_disp);
   disp_fit_engine_free (m_fit_engine);
   fit_parameters_free(m_fit_parameters);
@@ -127,7 +127,7 @@ disp_fit_window::updatePlot()
 
   sampling_unif& samp = m_wl_sampling;
   
-  plot *p1 = m_plots[0], *p2 = m_plots[1];
+  plot *p1 = m_plot[0], *p2 = m_plot[1];
 
   p1->auto_limits(m_resize_plot);
   p2->auto_limits(m_resize_plot);
@@ -247,11 +247,7 @@ disp_fit_window::drawPlot()
 {
   FXDCWindow dc(canvas);
   int ww = canvas->getWidth(), hh = canvas->getHeight();
-
-  unsigned n = m_plots.size();
-  for (unsigned j = 0; j < n; j++)
-    m_plots[j]->draw(&dc, ww, hh/n, 0, hh*j/n);
-
+  draw(m_plot, &dc, ww, hh);
   m_canvas_is_dirty = false;
 }
 

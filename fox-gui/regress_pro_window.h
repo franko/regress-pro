@@ -65,19 +65,13 @@ protected:
 
   static const FXHiliteStyle tstyles[];
   
-  bool isPlotModified;
-
-  enum system_kind plotkind;
-  plot *spectrPlot1;
-  plot *spectrPlot2;
-
 protected:
   regress_pro_window(){};
 private:
   regress_pro_window(const regress_pro_window&);
   regress_pro_window &operator=(const regress_pro_window&);
 public:
-  elliss_app* get_elliss_app() const { return m_elliss_app; }
+  elliss_app* get_elliss_app() const { return (elliss_app*) getApp(); }
 
   long onCmdPaint(FXObject*,FXSelector,void*);
   long onUpdCanvas(FXObject*,FXSelector,void*);
@@ -133,10 +127,13 @@ public:
 private:
   bool check_spectrum(const char *context);
 
-  elliss_app* m_elliss_app;
-
   bool m_title_dirty;
   bool m_title_modified;
+
+  bool m_canvas_is_dirty;
+
+  enum system_kind m_plotkind;
+  fx_plot_array<2> m_plot;
 };
 
 extern "C" {

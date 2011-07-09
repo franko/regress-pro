@@ -65,7 +65,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]={
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
-  };
+};
 
 
 // Object implementation
@@ -88,7 +88,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(elliss_app* a) 
  : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
    spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
-   spectrFile("untitled"), batchFileId("untitled####.dat"), m_elliss_app(a) {
+   spectrFile("untitled"), batchFileId("untitled####.dat"), m_plot(a) {
 
   // Menubar
   menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -152,12 +152,9 @@ regress_pro_window::regress_pro_window(elliss_app* a)
   bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
   plotcanvas = new FXCanvas(bf,this,ID_CANVAS,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  plotkind = SYSTEM_UNDEFINED;
+  m_plotkind = SYSTEM_UNDEFINED;
 
-  spectrPlot1 = new plot(a);
-  spectrPlot2 = new plot(a);
-
-  isPlotModified = true;
+  m_canvas_is_dirty = true;
 
   symbol_table_init (this->symtab);
 
@@ -182,19 +179,14 @@ regress_pro_window::plotCanvas(FXDCWindow *dc)
 {
   int ww = plotcanvas->getWidth(), hh = plotcanvas->getHeight();
 
-  switch (plotkind)
+  if (m_plotkind == SYSTEM_UNDEFINED)
     {
-    case SYSTEM_REFLECTOMETER:
-      spectrPlot1->draw(dc, ww, hh);
-      break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-      spectrPlot1->draw(dc, ww, hh / 2);
-      spectrPlot2->draw(dc, ww, hh / 2, 0, hh / 2);
-      break;
-    default:
       dc->setForeground(FXRGB(255,255,255));
       dc->fillRectangle(0, 0, ww, hh);
+    }
+  else
+    {
+      draw (m_plot, dc, ww, hh);
     }
 }
 
@@ -202,7 +194,7 @@ regress_pro_window::plotCanvas(FXDCWindow *dc)
 long
 regress_pro_window::onCmdPaint(FXObject *, FXSelector, void *ptr)
 {
-  if (isPlotModified)
+  if (m_canvas_is_dirty)
     {
       FXDCWindow dc(plotcanvas);
       plotCanvas(&dc);
@@ -212,18 +204,18 @@ regress_pro_window::onCmdPaint(FXObject *, FXSelector, void *ptr)
       FXDCWindow dc(plotcanvas, (FXEvent*) ptr);
       plotCanvas(&dc);
     }
-  isPlotModified = false;
+  m_canvas_is_dirty = false;
   return 1;
 }
 
 long
 regress_pro_window::onUpdCanvas(FXObject*, FXSelector, void *)
 {
-  if (isPlotModified)
+  if (m_canvas_is_dirty)
     {
       FXDCWindow dc(plotcanvas);
       plotCanvas(&dc);
-      isPlotModified = false;
+      m_canvas_is_dirty = false;
       return 1;
     }
   return 0;
@@ -441,8 +433,6 @@ regress_pro_window::~regress_pro_window() {
   delete dispmenu;
   delete fitmenu;
   delete helpmenu;
-  delete spectrPlot1;
-  delete spectrPlot2;
 
   if (this->spectrum)
     spectra_free (this->spectrum);
@@ -621,48 +611,20 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 
   fit_engine_restore_spectr (fit);
 
-  this->plotkind = fit->system_kind;
+  m_plotkind = fit->system_kind;
 
   struct spectrum *gensp = generate_spectrum (fit);
   switch (fit->system_kind)
     {
     case SYSTEM_REFLECTOMETER:
-      {
-	agg::path_storage *esp = new agg::path_storage;
-	agg::path_storage *gsp = new agg::path_storage;
-	refl_spectrum_path (fit->spectr, esp);
-	refl_spectrum_path (gensp, gsp);
-
-	spectrPlot1->clear();
-	spectrPlot1->add(esp, FXRGB(255,0,0));
-	spectrPlot1->add(gsp);
-	spectrPlot1->set_title("Reflectivity");
-	break;
-      }
+      m_plot.layout().resize(1);
+      refl_spectra_plot (fit, m_plot[0]);
+      break;
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
-      {
-	agg::path_storage *esp1 = new agg::path_storage;
-	agg::path_storage *esp2 = new agg::path_storage;
-	agg::path_storage *gsp1 = new agg::path_storage;
-	agg::path_storage *gsp2 = new agg::path_storage;
-
-	elliss_spectrum_path (fit->spectr, esp1, esp2);
-	elliss_spectrum_path (gensp, gsp1, gsp2);
-
-	spectrPlot1->clear();
-	spectrPlot1->add(esp1, FXRGB(255,0,0));
-	spectrPlot1->add(gsp1);
-	spectrPlot1->set_title(fit->system_kind == SYSTEM_ELLISS_AB ?	\
-			       "SE alpha" : "Tan(Psi)");
-
-	spectrPlot2->clear();
-	spectrPlot2->add(esp2, FXRGB(255,0,0));
-	spectrPlot2->add(gsp2);
-	spectrPlot2->set_title(fit->system_kind == SYSTEM_ELLISS_AB ?	\
-			       "SE beta" : "Cos(Delta)");
-	break;
-      }
+      m_plot.layout().resize(2);
+      elliss_spectra_plot (fit, m_plot[0], m_plot[1]);
+      break;
     default:
       /* */;
     }
@@ -677,7 +639,7 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
   fit_engine_disable (fit);
   fit_engine_free (fit);
 
-  isPlotModified = true;
+  m_canvas_is_dirty = true;
 
   getApp()->endWaitCursor();
 

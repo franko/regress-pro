@@ -92,7 +92,7 @@ interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struc
   canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   unsigned plot_mult = (fit_engine->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
-  m_plots.init(app, plot_mult);
+  m_plot.init(app, plot_mult);
 
   updatePlot(true);
 }
@@ -126,7 +126,7 @@ interactive_fit::updatePlot(bool freeze_lmt)
     {
     case SYSTEM_REFLECTOMETER:
       {
-	plot *p = m_plots[0];
+	plot *p = m_plot[0];
 	refl_spectra_plot (fit_engine, p);
 	if (freeze_lmt)
 	  p->auto_limits(false);
@@ -135,7 +135,7 @@ interactive_fit::updatePlot(bool freeze_lmt)
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
       {
-	plot *p1 = m_plots[0], *p2 = m_plots[1];
+	plot *p1 = m_plot[0], *p2 = m_plot[1];
 	elliss_spectra_plot (fit_engine, p1, p2);
 	if (freeze_lmt)
 	  {
@@ -170,10 +170,7 @@ interactive_fit::drawPlot()
 {
   FXDCWindow dc(canvas);
   int ww = canvas->getWidth(), hh = canvas->getHeight();
-  unsigned n = m_plots.size();
-  for (unsigned j = 0; j < n; j++)
-    m_plots[j]->draw(&dc, ww, hh/n, 0, hh*j/n);
-
+  draw (m_plot, &dc, ww, hh);
   m_canvas_is_dirty = false;
 }
 
