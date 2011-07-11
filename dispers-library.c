@@ -46,13 +46,15 @@ add_dispersion_node (struct disp_list_node *curr, struct disp_list_node *prev,
 void
 dispers_library_init ()
 {
-#define NB_LIBRARY_DISPERS 3
+#define NB_LIBRARY_DISPERS 4
   static struct disp_list_node node_prealloc[NB_LIBRARY_DISPERS];
   static struct ho_params sio2_ho_params[] = {
     {145.0, 15.78839, 0.0, 0.3333, 0.0}};
   struct disp_table *dt;
   double vac_cauchy_n[3] = {1, 0, 0};
   double vac_cauchy_k[3] = {0, 0, 0};
+  double water_cauchy_n[3] = {1.31970012187958, 4677.3115234375, -108020320};
+  double *water_cauchy_k = vac_cauchy_k;
   struct disp_list_node *node, *prev;
   disp_t *current;
   int idx = 0;
@@ -79,6 +81,14 @@ dispers_library_init ()
 
   node = node_prealloc + idx;
   add_dispersion_node (node, prev, "vacuum", current);
+  prev = node;
+  idx ++;
+
+  /* water dispersion */
+  current = disp_new_cauchy ("H2O", water_cauchy_n, water_cauchy_k);
+
+  node = node_prealloc + idx;
+  add_dispersion_node (node, prev, "H2O", current);
   prev = node;
   idx ++;
 
