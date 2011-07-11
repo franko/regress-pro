@@ -1,6 +1,7 @@
 
 #include "disp_fit_window.h"
 
+#include "fx_numeric_field.h"
 #include "Strcpp.h"
 #include "disp-fit-engine.h"
 #include "spectra-path.h"
@@ -24,7 +25,7 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]={
 FXIMPLEMENT(disp_fit_window,FXMainWindow,disp_fit_window_map,ARRAYNUMBER(disp_fit_window_map));
 
 disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
-  : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
+  : FXMainWindow(app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     m_fit_engine(_fit), m_plot(app), m_canvas_is_dirty(true),
     m_resize_plot(true), m_always_freeze_plot(true)
 {
@@ -74,7 +75,7 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
       get_param_name(fp, pname.str());
       FXString fxpname((const FXchar *) pname.cstr());
       FXCheckButton* bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);
-      FXTextField* tf = new FXTextField(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+      FXTextField* tf = new fx_numeric_field(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
       param_info* p_inf = m_parameters.data() + k;
 

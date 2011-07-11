@@ -4,6 +4,7 @@
 #include "fit-engine.h"
 #include "lmfit-simple.h"
 #include "spectra-path.h"
+#include "fx_numeric_field.h"
 
 // Map
 FXDEFMAP(interactive_fit) interactive_fitMap[]={
@@ -76,7 +77,7 @@ interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struc
       get_param_name(fp, pname.str());
       FXString fxpname((const FXchar *) pname.cstr());
       FXCheckButton *bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);
-      FXTextField *tf = new FXTextField(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+      FXTextField *tf = new fx_numeric_field(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
       param_info* p_inf = m_parameters.data() + k;
 
