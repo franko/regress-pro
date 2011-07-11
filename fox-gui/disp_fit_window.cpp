@@ -27,7 +27,7 @@ FXIMPLEMENT(disp_fit_window,FXMainWindow,disp_fit_window_map,ARRAYNUMBER(disp_fi
 disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
   : FXMainWindow(app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     m_fit_engine(_fit), m_plot(app), m_canvas_is_dirty(true),
-    m_resize_plot(true), m_always_freeze_plot(true)
+    m_resize_plot(true), m_always_freeze_plot(true), m_plot_buffer(0)
 {
   // Menubar
   menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -88,13 +88,13 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
       tf->setText(fptxt, true);
     }
 
-  canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  m_canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   // we take a copy of the model dispersion to avoid the modification
   // of the original object obtained from the script's parsing
   m_fit_engine->model_disp = disp_copy (m_fit_engine->model_disp);
 
-  updatePlot();
+  update_plot();
 }
 
 disp_fit_window::~disp_fit_window() 
@@ -102,6 +102,7 @@ disp_fit_window::~disp_fit_window()
   disp_free (m_fit_engine->model_disp);
   disp_fit_engine_free (m_fit_engine);
   fit_parameters_free(m_fit_parameters);
+  delete m_plot_buffer;
   delete fitmenu;
 }
 
@@ -115,7 +116,7 @@ disp_fit_window::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 }
 
 void
-disp_fit_window::updatePlot()
+disp_fit_window::update_plot()
 {
   disp_t *model = m_fit_engine->model_disp;
   disp_t *ref   = m_fit_engine->ref_disp;
@@ -244,18 +245,42 @@ disp_fit_window::onCmdSpectralRange(FXObject *, FXSelector, void*)
 }
 
 void
-disp_fit_window::drawPlot()
+disp_fit_window::draw_plot(FXEvent* event)
 {
-  FXDCWindow dc(canvas);
-  int ww = canvas->getWidth(), hh = canvas->getHeight();
+  int ww = m_canvas->getWidth(), hh = m_canvas->getHeight();
+  if (! m_plot_buffer)
+    {
+      m_plot_buffer = new FXBMPImage(getApp(), NULL, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+      m_plot_buffer->create();
+    }
+  else if (m_plot_buffer->getWidth() != ww || m_plot_buffer->getHeight() != hh)
+    {
+      FXImage *img = new FXBMPImage(getApp(), NULL, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+      img->create();
+      delete m_plot_buffer;
+      m_plot_buffer = img;
+    }
+
+  FXDCWindow dc(m_plot_buffer);
   draw(m_plot, &dc, ww, hh);
+
+  FXDCWindow *dcwin;
+  if (event)
+    dcwin = new FXDCWindow(m_canvas, event);
+  else
+    dcwin = new FXDCWindow(m_canvas);
+
+  dcwin->drawImage(m_plot_buffer, 0, 0);
+
+  delete dcwin;
+
   m_canvas_is_dirty = false;
 }
 
 long
 disp_fit_window::onCmdPaint(FXObject*, FXSelector, void* ptr)
 {
-  drawPlot();
+  draw_plot((FXEvent*) ptr);
   return 1;
 }
 
@@ -265,8 +290,8 @@ disp_fit_window::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 {
   if (m_canvas_is_dirty)
     {
-      updatePlot();
-      drawPlot();
+      update_plot();
+      draw_plot();
       return 1;
     }
   return 0;

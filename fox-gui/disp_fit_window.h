@@ -47,10 +47,11 @@ protected:
 
   FXTextField *m_wl_entry;
 
-  FXCanvas *canvas;
+  FXCanvas *m_canvas;
+  FXImage *m_plot_buffer;
 
-  void updatePlot();
-  void drawPlot();
+  void update_plot();
+  void draw_plot(FXEvent* event = 0);
 
   bool verify_spectral_range (const char *txt, double ps[]);
   bool update_spectral_range (const char *txt);
