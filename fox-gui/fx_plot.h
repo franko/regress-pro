@@ -3,10 +3,12 @@
 
 #include <fx.h>
 
+#include <agg2/agg_array.h>
+#include <agg2/agg_bounding_rect.h>
+#include <agg2/agg_path_storage.h>
+
 #include "units.h"
-#include "agg_array.h"
-#include "agg_bounding_rect.h"
-#include "agg_path_storage.h"
+#include "plot_array.h"
 
 class owner_resource_manager {
 public:
@@ -75,6 +77,7 @@ public:
   void set_title(const FXString& t) { m_title = t; };
   void add(vertex_source *vs, FXColor col = FXRGB(0,0,0));
   void draw(FXDCWindow *dc, int ww, int hh, int x_offset = 0, int y_offset = 0);
+  void draw(FXDCWindow *dc, agg::rect_i& r);
   void auto_limits(bool active) { m_auto_limits = active; }
 };
 
@@ -224,6 +227,63 @@ void fx_plot<VS,RM>::draw(FXDCWindow *dc, int ww, int hh, int xoffs, int yoffs)
   }
 }
 
+template <class VS, class RM>
+void fx_plot<VS,RM>::draw(FXDCWindow *dc, agg::rect_i& r)
+{
+  int w = r.x2 - r.x1, h = r.y2 - r.y1;
+  int x = r.x1, y = r.y1;
+  draw (dc, w, h, x, y);
+}
+
 typedef fx_plot<agg::path_storage, owner_resource_manager> plot;
+
+template <unsigned Size>
+class fx_plot_array : public plot_auto_array<plot, vertical_layout, Size> {
+public:
+  fx_plot_array() { }
+
+  fx_plot_array(FXApp *app) {
+    for (unsigned k = 0; k < this->size(); k++)
+      this->at(k) = new plot(app);
+  }
+
+  ~fx_plot_array() {
+    for (unsigned k = 0; k < this->size(); k++)
+      delete this->at(k);
+  }
+};
+
+template <unsigned Size>
+class fx_plot_vector : public plot_auto_vector<plot, vertical_layout, Size> {
+public:
+  fx_plot_vector() { }
+
+  ~fx_plot_vector() { clear_plots (); }
+
+  void init(FXApp *app, unsigned n) {
+    for (unsigned k = 0; k < n; k++)
+      {
+	plot* p = new plot(app);
+	this->add(p);
+      }
+
+    this->layout().resize(n);
+  }
+
+  void resize(FXApp *app, unsigned n) {
+    clear_plots();
+    init(app, n);
+  }
+
+protected:
+  void clear_plots() {
+    for (unsigned k = 0; k < this->size(); k++)
+      {
+	delete this->at(k);
+      }
+
+    this->remove_all();
+  }
+};
 
 #endif

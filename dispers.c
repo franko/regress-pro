@@ -55,7 +55,7 @@ n_value_cpp (const disp_t *mat, double lam, double *nr, double *ni)
 }
 
 int
-disp_get_number_of_params (disp_t *d)
+disp_get_number_of_params (const disp_t *d)
 {
   assert (d->dclass != NULL);
   return d->dclass->fp_number(d);
@@ -71,13 +71,17 @@ disp_get_model_id (disp_t *d)
 int
 dispers_apply_param (disp_t *d, const fit_param_t *fp, double val)
 {
-  int res = 1;
-
   if (fp->id != PID_LAYER_N)
-    return res;
-
+    return 1;
   assert (d->dclass != NULL);
   return d->dclass->apply_param(d, fp, val);
+}
+
+void
+n_value_deriv (const disp_t *disp, cmpl_vector *der, double lambda)
+{
+  assert (disp->dclass != NULL);
+  disp->dclass->n_value_deriv(disp, lambda, der);
 }
 
 void
@@ -87,7 +91,7 @@ get_model_param_deriv (const disp_t *disp, struct deriv_info *deriv_info,
 {
   enum disp_type disp_type;
   const struct disp_lookup * lookup;
-  cmpl val = 0.0 + I * 0.0;
+  cmpl val;
 
   assert (disp->dclass != NULL);
 
@@ -138,7 +142,7 @@ disp_base_copy (const disp_t *src)
   return res;
 }
 
-disp_t *
+void
 disp_base_free (disp_t *d)
 {
   str_free (d->name);

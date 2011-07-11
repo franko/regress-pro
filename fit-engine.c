@@ -15,9 +15,6 @@
 #include "minsampling.h"
 
 
-static int fit_engine_apply_param (struct fit_engine *fit,
-				   const fit_param_t *fp, double val);
-
 static void build_fit_engine_cache (struct fit_engine *f);
 
 static void dispose_fit_engine_cache (struct fit_engine *f);

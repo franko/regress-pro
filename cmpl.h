@@ -4,9 +4,18 @@
 #include <math.h>
 
 #ifdef __cplusplus
-#define complex _Complex
+
+struct cmpl {
+  double data[2];
+};
+
+inline double creal(cmpl z) { return z.data[0]; }
+inline double cimag(cmpl z) { return z.data[1]; }
+
 #else
 #include <complex.h>
+
+typedef double complex cmpl;
 #endif /* C++ */
 
 #include "common.h"
@@ -15,8 +24,6 @@ __BEGIN_DECLS
 
 #define CMPL_VECTOR_TERM(v,i) (v)->data[i]
 #define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
-
-typedef double complex cmpl;
 
 struct cmpl_vector_struct {
   int size; /* number of cmpl elements */

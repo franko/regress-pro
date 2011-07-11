@@ -1,24 +1,25 @@
 
-#include "InteractiveFit.h"
+#include "interactive_fit.h"
 #include "Strcpp.h"
 #include "fit-engine.h"
 #include "lmfit-simple.h"
 #include "spectra-path.h"
+#include "fx_numeric_field.h"
 
 // Map
-FXDEFMAP(InteractiveFit) InteractiveFitMap[]={
-  FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_PARAM_SELECT, InteractiveFit::onCmdParamSelect),
-  FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_PARAM_VALUE,  InteractiveFit::onCmdParamChange),
-  FXMAPFUNC(SEL_CHANGED, InteractiveFit::ID_PARAM_VALUE,  InteractiveFit::onCmdParamChange),
-  FXMAPFUNC(SEL_PAINT,   InteractiveFit::ID_CANVAS,       InteractiveFit::onCmdPaint),
-  FXMAPFUNC(SEL_UPDATE,  InteractiveFit::ID_CANVAS,       InteractiveFit::onUpdCanvas),
-  FXMAPFUNC(SEL_COMMAND, InteractiveFit::ID_RUN_FIT,      InteractiveFit::onCmdRunFit),
+FXDEFMAP(interactive_fit) interactive_fitMap[]={
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_PARAM_SELECT, interactive_fit::onCmdParamSelect),
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_PARAM_VALUE,  interactive_fit::onCmdParamChange),
+  FXMAPFUNC(SEL_CHANGED, interactive_fit::ID_PARAM_VALUE,  interactive_fit::onCmdParamChange),
+  FXMAPFUNC(SEL_PAINT,   interactive_fit::ID_CANVAS,       interactive_fit::onCmdPaint),
+  FXMAPFUNC(SEL_UPDATE,  interactive_fit::ID_CANVAS,       interactive_fit::onUpdCanvas),
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_RUN_FIT,      interactive_fit::onCmdRunFit),
 };
 
 // Object implementation
-FXIMPLEMENT(InteractiveFit,FXMainWindow,InteractiveFitMap,ARRAYNUMBER(InteractiveFitMap));
+FXIMPLEMENT(interactive_fit,FXMainWindow,interactive_fitMap,ARRAYNUMBER(interactive_fitMap));
 
-InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct spectrum *user_spectr)
+interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struct spectrum *user_spectr)
   : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     fit_engine(_fit), spectrum(user_spectr), m_canvas_is_dirty(true)
 {
@@ -42,22 +43,27 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct s
   m_fit_parameters = fit_parameters_new ();
 
   struct fit_parameters *params = fit_engine_get_all_parameters (fit_engine);
-  m_parameters.init(params);
 
-  m_params_text_field.resize(m_parameters.number);
+  m_parameters.resize(params->number);
 
-  for (int k = 0; k < m_parameters.number; k++)
+  for (unsigned k = 0; k < m_parameters.size(); k++)
     {
-      fit_param_t *fp = params->values + k;
-      double fpval = fit_engine_get_default_param_value (fit_engine, fp);
-      gsl_vector_set (m_parameters.values, k, fpval);
+      param_info& p = m_parameters[k];
+      p.fp = params->values[k];
+
+      double fpval = fit_engine_get_default_param_value (fit_engine, &p.fp);
+      p.value = fpval;
+
+      p.selected = false;
     }
+  
+  fit_parameters_free (params);
 
   Str pname;
   int current_layer = 0;
-  for (int k = 0; k < m_parameters.number; k++)
+  for (unsigned k = 0; k < m_parameters.size(); k++)
     {
-      fit_param_t *fp = params->values + k;
+      fit_param_t *fp = &m_parameters[k].fp;
 
       if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer)
 	{
@@ -71,31 +77,28 @@ InteractiveFit::InteractiveFit(EllissApp *app, struct fit_engine *_fit, struct s
       get_param_name(fp, pname.str());
       FXString fxpname((const FXchar *) pname.cstr());
       FXCheckButton *bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);
-      FXTextField *tf = new FXTextField(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+      FXTextField *tf = new fx_numeric_field(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
-      void *offset_ptr = (void *) (m_parameters.base_ptr + k);
-      tf->setUserData(offset_ptr);
-      bt->setUserData(offset_ptr);
+      param_info* p_inf = m_parameters.data() + k;
 
-      m_params_text_field[k] = tf;
+      tf->setUserData(p_inf);
+      bt->setUserData(p_inf);
+
+      p_inf->text_field = tf;
       
-      double fpval = gsl_vector_get (m_parameters.values, k);
-      char fpvalbuf[16];
-      int len = snprintf(fpvalbuf, 16, "%g", fpval);
-      if (len >= 16)
-	fpvalbuf[15] = 0;
-      tf->setText(fpvalbuf, true);
+      FXString fptxt = FXStringFormat("%g", p_inf->value);
+      tf->setText(fptxt, true);
     }
 
   canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
   unsigned plot_mult = (fit_engine->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
-  m_plots.init(app, plot_mult);
+  m_plot.init(app, plot_mult);
 
   updatePlot(true);
 }
 
-InteractiveFit::~InteractiveFit() {
+interactive_fit::~interactive_fit() {
   fit_engine_disable(fit_engine);
   fit_engine_free(fit_engine);
   fit_parameters_free(m_fit_parameters);
@@ -103,26 +106,28 @@ InteractiveFit::~InteractiveFit() {
 }
 
 long
-InteractiveFit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
+interactive_fit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 {
   FXCheckButton *cb = (FXCheckButton *) _cb;
-  double * paddr = (double *) cb->getUserData();
-  int k = (paddr - m_parameters.base_ptr);
-  m_parameters.select[k] = cb->getCheck();
+  param_info* p_inf = (param_info*) cb->getUserData();
+  p_inf->selected = cb->getCheck();
   return 1;
 }
 
 void
-InteractiveFit::updatePlot(bool freeze_lmt)
+interactive_fit::updatePlot(bool freeze_lmt)
 {
-  struct fit_parameters* ps = m_parameters.parameters;
-  fit_engine_apply_parameters (fit_engine, ps, m_parameters.values);
+  for (unsigned j = 0; j < m_parameters.size(); j++)
+    {
+      param_info& pi = m_parameters[j];
+      fit_engine_apply_param (fit_engine, &pi.fp, pi.value);
+    }
 
   switch (fit_engine->system_kind)
     {
     case SYSTEM_REFLECTOMETER:
       {
-	plot *p = m_plots[0];
+	plot *p = m_plot[0];
 	refl_spectra_plot (fit_engine, p);
 	if (freeze_lmt)
 	  p->auto_limits(false);
@@ -131,7 +136,7 @@ InteractiveFit::updatePlot(bool freeze_lmt)
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
       {
-	plot *p1 = m_plots[0], *p2 = m_plots[1];
+	plot *p1 = m_plot[0], *p2 = m_plot[1];
 	elliss_spectra_plot (fit_engine, p1, p2);
 	if (freeze_lmt)
 	  {
@@ -146,35 +151,32 @@ InteractiveFit::updatePlot(bool freeze_lmt)
 }
 
 long
-InteractiveFit::onCmdParamChange(FXObject *_txt, FXSelector, void*)
+interactive_fit::onCmdParamChange(FXObject *_txt, FXSelector, void*)
 {
   FXTextField *txt = (FXTextField *) _txt;
   FXString vstr = txt->getText();
-  double * paddr = (double *) txt->getUserData();
+  param_info* p_inf = (param_info*) txt->getUserData();
   double new_val = strtod (vstr.text(), NULL);
 
-  if (new_val == *paddr)
+  if (new_val == p_inf->value)
     return 0;
 
-  *paddr = new_val;
+  p_inf->value = new_val;
   m_canvas_is_dirty = true;
   return 1;
 }
 
 void
-InteractiveFit::drawPlot()
+interactive_fit::drawPlot()
 {
   FXDCWindow dc(canvas);
   int ww = canvas->getWidth(), hh = canvas->getHeight();
-  int n = m_plots.size();
-  for (unsigned j = 0; j < n; j++)
-    m_plots[j]->draw(&dc, ww, hh/n, 0, hh*j/n);
-
+  draw (m_plot, &dc, ww, hh);
   m_canvas_is_dirty = false;
 }
 
 long
-InteractiveFit::onCmdPaint(FXObject*, FXSelector, void* ptr)
+interactive_fit::onCmdPaint(FXObject*, FXSelector, void* ptr)
 {
   drawPlot();
   return 1;
@@ -182,7 +184,7 @@ InteractiveFit::onCmdPaint(FXObject*, FXSelector, void* ptr)
 
 
 long
-InteractiveFit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
+interactive_fit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 {
   if (m_canvas_is_dirty)
     {
@@ -194,7 +196,7 @@ InteractiveFit::onUpdCanvas(FXObject*, FXSelector, void* ptr)
 }
 
 long
-InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
+interactive_fit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 {
   reg_check_point(this);
 
@@ -203,21 +205,21 @@ InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
   fit_parameters_clear (fps);
 
   int fit_params_nb = 0;
-  for (int j = 0; j < m_parameters.number; j++)
+  for (unsigned j = 0; j < m_parameters.size(); j++)
     {
-      if (m_parameters.select[j])
+      if (m_parameters[j].selected)
 	fit_params_nb++;
     }
 
   gsl_vector* seeds = gsl_vector_alloc(fit_params_nb);
 
   int k = 0;
-  for (int j = 0; j < m_parameters.number; j++)
+  for (unsigned j = 0; j < m_parameters.size(); j++)
     {
-      if (m_parameters.select[j])
+      if (m_parameters[j].selected)
 	{
-	  fit_parameters_add (fps, m_parameters.parameters->values + j);
-	  gsl_vector_set (seeds, k, gsl_vector_get (m_parameters.values, j));
+	  fit_parameters_add (fps, &m_parameters[j].fp);
+	  gsl_vector_set (seeds, k, m_parameters[j].value);
 	  k ++;
 	}
     }
@@ -229,14 +231,14 @@ InteractiveFit::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 
   k = 0;
   FXString ns;
-  for (int j = 0; j < m_parameters.number; j++)
+  for (unsigned j = 0; j < m_parameters.size(); j++)
     {
-      if (m_parameters.select[j])
+      if (m_parameters[j].selected)
 	{
-	  double val = gsl_vector_get(fit_engine->results, k);
+	  double val = gsl_vector_get (fit_engine->results, k);
 	  ns.format("%g", val);
-	  m_params_text_field[j]->setText(ns);
-	  gsl_vector_set(m_parameters.values, j, val);
+	  m_parameters[j].text_field->setText(ns);
+	  m_parameters[j].value = val;
 	  k ++;
 	}
     }

@@ -49,6 +49,13 @@ symbol_table_free (struct symtab symtab[])
   str_free (symtab->env->script_dir);
 }
 
+struct assign *
+symbol_table_next (struct symtab *symtab, struct assign *iter)
+{
+  struct assign *next = (iter ? iter->next : symtab->assign_start);
+  return next;
+}
+
 obj_t *
 toplevel_obj_new (enum toplevel_type kind, void *content)
 {
@@ -260,7 +267,6 @@ retrieve_parsed_object (struct symtab *symtab, enum toplevel_type tp,
 
   if (obj == NULL)
     {
-      
       notify_error_msg (SCRIPT_ERROR, "default %s not defined",
 			tl_type_name[tp]);
       return NULL;
@@ -268,7 +274,6 @@ retrieve_parsed_object (struct symtab *symtab, enum toplevel_type tp,
 
   if (obj->type != tp)
     {
-      
       notify_error_msg (SCRIPT_ERROR, "default %s is invalid",
 			tl_type_name[tp]);
       return NULL;

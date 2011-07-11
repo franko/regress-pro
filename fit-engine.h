@@ -69,6 +69,9 @@ extern int  check_fit_parameters            (struct stack *stack,
 extern void fit_engine_commit_parameters    (struct fit_engine *fit,
 					     const gsl_vector *x);
 
+extern int fit_engine_apply_param           (struct fit_engine *fit,
+					     const fit_param_t *fp, double val);
+
 extern void fit_engine_apply_parameters     (struct fit_engine *fit,
 					     const struct fit_parameters *fps, 
 					     const gsl_vector *x);
