@@ -7,13 +7,12 @@ include $(BASEDIR)/makesystem
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
 ifeq ($(HOST_SYS),Windows)
-  DEFS += -DWIN32
+  INCLUDES += -Ic:/fra/apps/include
+  LIBS += -Lc:/fra/apps/lib
 
   FOX_HOME = c:/fra/src/fox-1.6.43
   FOX_LIBS = -L$(FOX_HOME)/src -lfox
   FOX_INCLUDES = -I$(FOX_HOME)/include
-
-  AGG_INCLUDES = -Ic:/fra/src/agg-2.5/include
 else
   FOX_LIBS = $(shell fox-config --libs)
   FOX_INCLUDES = $(shell fox-config --cflags)
@@ -24,13 +23,13 @@ GSL_INCLUDES =
 
 REG_LIBS = -lmhash -lgmp
 
-LIBS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
+LIBS += $(FOX_LIBS) $(GSL_LIBS) -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   LIBS += -lgdi32 -lwsock32
 endif
 
-INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I..
+INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
