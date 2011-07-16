@@ -1,5 +1,5 @@
 
-/* units.h
+/* plot_units.h
  * 
  * Copyright (C) 2009, 2010 Francesco Abbate
  * 
@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef AGGPLOT_UNITS_H
-#define AGGPLOT_UNITS_H
+#ifndef PLOT_UNITS_H
+#define PLOT_UNITS_H
 
 class plot_units {
 private:

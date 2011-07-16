@@ -12,8 +12,9 @@
 #include "elliss_app.h"
 #include "disp-fit-engine.h"
 #include "fit-params.h"
-#include "fx_plot.h"
 #include "sampling.h"
+#include "agg_plot_array.h"
+#include "plot_canvas.h"
 
 class disp_fit_window : public FXMainWindow {
   FXDECLARE(disp_fit_window)
@@ -27,17 +28,8 @@ class disp_fit_window : public FXMainWindow {
 
 private:
   agg::pod_array<param_info> m_parameters;
-
   struct disp_fit_engine *m_fit_engine;
-
-  fx_plot_array<2> m_plot;
-
   struct fit_parameters *m_fit_parameters;
-
-  bool m_canvas_is_dirty;
-  bool m_resize_plot;
-  bool m_always_freeze_plot;
-
   sampling_unif m_wl_sampling;
 
 protected:
@@ -45,12 +37,13 @@ protected:
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
 
-  FXTextField *m_wl_entry;
+  FXTextField* m_wl_entry;
 
-  FXCanvas *m_canvas;
-  FXImage *m_plot_buffer;
+  plot_canvas* m_canvas;
 
-  void update_plot();
+  void init_engine();
+  void config_plot();
+  void update_disp();
   void draw_plot(FXEvent* event = 0);
 
   bool verify_spectral_range (const char *txt, double ps[]);
@@ -70,8 +63,6 @@ public:
   long onCmdParamSelect(FXObject*, FXSelector,void*);
   long onCmdParamChange(FXObject*, FXSelector,void*);
   long onCmdRunFit(FXObject*, FXSelector,void*);
-  long onCmdPaint(FXObject*, FXSelector,void*);
-  long onUpdCanvas(FXObject*, FXSelector,void*);
   long onCmdSpectralRange(FXObject*, FXSelector,void*);
   long onChangeSpectralRange(FXObject*, FXSelector,void*);
 
@@ -80,7 +71,6 @@ public:
     ID_PARAM_VALUE,
     ID_SPECTR_RANGE,
     ID_RUN_FIT,
-    ID_CANVAS,
     ID_LAST
   };
 };

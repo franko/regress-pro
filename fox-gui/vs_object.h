@@ -23,6 +23,7 @@ struct vs_object {
   virtual ~vs_object() { }
 };
 
+/*
 template <class VertexSource>
 class vs_scaling_gen : public vs_object {
   agg::trans_affine m_mtx;
@@ -37,7 +38,7 @@ public:
   virtual void rewind(unsigned path_id) { m_source->rewind(path_id); }
   virtual unsigned vertex(double* x, double* y) { return m_trans.vertex(x, y); }
 
-  virtual void apply_transform(const agg::trans_affine& m, double as)
+   virtual void apply_transform(const agg::trans_affine& m, double as)
   {
     m_trans.transformer(m);
   }
@@ -53,5 +54,6 @@ vs_object* vs_scaling (VertexSource* src)
 {
   return new vs_scaling_gen<VertexSource>(src);
 }
+*/
 
 #endif

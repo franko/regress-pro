@@ -134,7 +134,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
   tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
   // First item is a list
-  tabscript = new FXTabItem(tabbook,"&Script",NULL);
+  tabscript = new FXTabItem(tabbook,"Script",NULL);
   FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
   scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -143,13 +143,13 @@ regress_pro_window::regress_pro_window(elliss_app* a)
   scriptfont = new FXFont(getApp(), "Monospace", 10);
   scripttext->setFont(scriptfont);
 
-  new FXTabItem(tabbook,"&Fit Results",NULL);
+  new FXTabItem(tabbook,"Fit Results",NULL);
   lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
   resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   resulttext->setFont(scriptfont);
 
-  tabplot = new FXTabItem(tabbook,"&Plot Result",NULL);
+  tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
   lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
   plotcanvas = new FXCanvas(bf,this,ID_CANVAS,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -404,51 +404,9 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
   return 1;
 }
 
-void
-regress_pro_window::testing_fake_dialog_box ()
-{
-  FXDialogBox about(this, "Testing", DECOR_TITLE|DECOR_BORDER, 0, 0, 640, 480);
-
-  FXVerticalFrame* frm = new FXVerticalFrame(&about, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  FXHorizontalFrame* cfrm = new FXHorizontalFrame(frm, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-
-  plot_canvas* pcanvas = new plot_canvas(cfrm, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-  disp_t* si = dispers_library_search ("si");
-  sampling_unif samp(240.0, 780.0, 271);
-  disp_vs<sampling_unif>* si_n = new disp_vs<sampling_unif>(si, cmpl::real_part, samp);
-  
-  agg::rgba8 red(220,0,0);
-  agg::rgba8 blue(0,0,220);
-
-  {
-    plot_canvas::plot_type* plot = new plot_canvas::plot_type();
-    plot->add(vs_scaling(si_n), red, true);
-    plot->commit_pending_draw();
-    plot->set_title("refractive index");
-    pcanvas->add(plot);
-  }
-
-  disp_vs<sampling_unif>* si_k = new disp_vs<sampling_unif>(si, cmpl::imag_part, samp); 
-  {
-    plot_canvas::plot_type* plot = new plot_canvas::plot_type();
-    plot->add(vs_scaling(si_k), blue, true);
-    plot->commit_pending_draw();
-    pcanvas->add(plot);
-  }
-
-  // Bottom buttons
-  FXHorizontalFrame * buttons= new FXHorizontalFrame(frm, FRAME_NONE|LAYOUT_FILL_X|PACK_UNIFORM_WIDTH);
-  FXButton *button=new FXButton(buttons, "&OK", NULL, &about, FXDialogBox::ID_ACCEPT, BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
-  button->setFocus();
-  about.execute(PLACEMENT_OWNER);
-}
-
 long
 regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
 {
-  testing_fake_dialog_box ();
-
   FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
 		    0,0,0,0, 0,0);
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);

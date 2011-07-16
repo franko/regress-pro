@@ -22,7 +22,7 @@
 #include <math.h>
 
 #include "utils.h"
-#include "agg_units.h"
+#include "plot_units.h"
 
 void plot_units::init(double yinf, double ysup, double spacefact)
 {

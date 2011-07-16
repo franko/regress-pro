@@ -1,3 +1,5 @@
+#ifndef AGG_PLOT_ARRAY_H
+#define AGG_PLOT_ARRAY_H
 
 #include <agg2/agg_array.h>
 #include <agg2/agg_trans_affine.h>
@@ -15,6 +17,8 @@ namespace newplot
       for (unsigned i = 0; i < m_plot.size(); i++)
 	delete m_plot[i];
     }
+
+    unsigned size() const { return m_plot.size(); }
 
     Plot* plot(unsigned i) { return m_plot[i]; }
 
@@ -70,3 +74,5 @@ namespace newplot
     unsigned m_size;
   };
 }
+
+#endif

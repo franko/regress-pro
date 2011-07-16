@@ -6,6 +6,7 @@
 #include "disp-fit-engine.h"
 #include "spectra-path.h"
 #include "sampling.h"
+#include "disp_vs.h"
 
 static struct fit_parameters * disp_get_all_parameters (const disp_t *d);
 
@@ -14,8 +15,6 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]={
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_PARAM_SELECT, disp_fit_window::onCmdParamSelect),
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_PARAM_VALUE,  disp_fit_window::onCmdParamChange),
   FXMAPFUNC(SEL_CHANGED, disp_fit_window::ID_PARAM_VALUE,  disp_fit_window::onCmdParamChange),
-  FXMAPFUNC(SEL_PAINT,   disp_fit_window::ID_CANVAS,       disp_fit_window::onCmdPaint),
-  FXMAPFUNC(SEL_UPDATE,  disp_fit_window::ID_CANVAS,       disp_fit_window::onUpdCanvas),
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_RUN_FIT,      disp_fit_window::onCmdRunFit),
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SPECTR_RANGE, disp_fit_window::onCmdSpectralRange),
   FXMAPFUNC(SEL_CHANGED, disp_fit_window::ID_SPECTR_RANGE, disp_fit_window::onChangeSpectralRange),
@@ -26,9 +25,10 @@ FXIMPLEMENT(disp_fit_window,FXMainWindow,disp_fit_window_map,ARRAYNUMBER(disp_fi
 
 disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
   : FXMainWindow(app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
-    m_fit_engine(_fit), m_plot(app), m_canvas_is_dirty(true),
-    m_resize_plot(true), m_always_freeze_plot(true), m_plot_buffer(0)
+    m_fit_engine(_fit), m_canvas(0)
 {
+  init_engine();
+
   // Menubar
   menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   statusbar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
@@ -45,27 +45,12 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
 
   new FXLabel(matrix, "Range");
   m_wl_entry = new FXTextField(matrix, 10, this, ID_SPECTR_RANGE, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
-  m_wl_entry->setText("240-780,2");
-  m_wl_sampling.set(240.0, 780.0, 271);
-  update_fit_engine_sampling ();
 
-  m_fit_parameters = fit_parameters_new ();
-
-  struct fit_parameters *params = disp_get_all_parameters (m_fit_engine->model_disp);
-
-  m_parameters.resize(params->number);
-  for (unsigned j = 0; j < params->number; j++)
-    {
-      param_info& p = m_parameters[j];
-      p.fp = params->values[j];
-
-      double fpval = disp_get_param_value (m_fit_engine->model_disp, &p.fp);
-      p.value = fpval;
-
-      p.selected = false;
-    }
-  
-  fit_parameters_free (params);
+  {
+    const sampling_unif& s = m_wl_sampling;
+    double wls = s.start(), wle = s.end(), wlstr = s.stride();
+    m_wl_entry->setText(FXStringFormat("%g-%g,%g", wls, wle, wlstr));
+  }
 
   Str pname;
   for (unsigned k = 0; k < m_parameters.size(); k++)
@@ -88,13 +73,35 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
       tf->setText(fptxt, true);
     }
 
-  m_canvas = new FXCanvas(mf, this, ID_CANVAS, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  m_canvas = new plot_canvas(mf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
+  config_plot();
+}
+
+void
+disp_fit_window::init_engine()
+{
   // we take a copy of the model dispersion to avoid the modification
   // of the original object obtained from the script's parsing
   m_fit_engine->model_disp = disp_copy (m_fit_engine->model_disp);
 
-  update_plot();
+  m_wl_sampling.set(240.0, 780.0, 271);
+  update_fit_engine_sampling ();
+
+  m_fit_parameters = fit_parameters_new ();
+
+  struct fit_parameters *params = disp_get_all_parameters (m_fit_engine->model_disp);
+
+  m_parameters.resize(params->number);
+  for (unsigned j = 0; j < params->number; j++)
+    {
+      param_info& p = m_parameters[j];
+      p.fp       = params->values[j];
+      p.value    = disp_get_param_value (m_fit_engine->model_disp, &p.fp);
+      p.selected = false;
+    }
+  
+  fit_parameters_free (params);
 }
 
 disp_fit_window::~disp_fit_window() 
@@ -102,7 +109,6 @@ disp_fit_window::~disp_fit_window()
   disp_free (m_fit_engine->model_disp);
   disp_fit_engine_free (m_fit_engine);
   fit_parameters_free(m_fit_parameters);
-  delete m_plot_buffer;
   delete fitmenu;
 }
 
@@ -116,10 +122,53 @@ disp_fit_window::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 }
 
 void
-disp_fit_window::update_plot()
+disp_fit_window::config_plot()
 {
   disp_t *model = m_fit_engine->model_disp;
   disp_t *ref   = m_fit_engine->ref_disp;
+
+  sampling_unif& samp = m_wl_sampling;
+
+  agg::rgba8 red(220,0,0);
+  agg::rgba8 blue(0,0,220);
+
+  {
+    plot_canvas::plot_type *p = new plot_canvas::plot_type();
+    p->set_title("abs coefficient");
+    p->pad_mode(true);
+    
+    disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, samp);
+    disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, samp);
+
+    p->add(ref_k, red, true);
+    p->add(mod_k, blue, true);
+    p->commit_pending_draw();
+
+    m_canvas->add(p);
+  }
+
+  {
+    plot_canvas::plot_type *p = new plot_canvas::plot_type();
+    p->set_title("refractive index");
+    p->pad_mode(true);
+    
+    disp_vs<sampling_unif>* ref_n = new disp_vs<sampling_unif>(ref,   cmpl::real_part, samp);
+    disp_vs<sampling_unif>* mod_n = new disp_vs<sampling_unif>(model, cmpl::real_part, samp);
+
+    p->add(ref_n, red, true);
+    p->add(mod_n, blue, true);
+    p->commit_pending_draw();
+
+    m_canvas->add(p);
+  }
+
+  m_canvas->set_dirty(true);
+}
+
+void
+disp_fit_window::update_disp()
+{
+  disp_t *model = m_fit_engine->model_disp;
 
   for (unsigned j = 0; j < m_parameters.size(); j++)
     {
@@ -127,17 +176,8 @@ disp_fit_window::update_plot()
       dispers_apply_param (model, &pi.fp, pi.value);
     }
 
-  sampling_unif& samp = m_wl_sampling;
-  
-  plot *p1 = m_plot[0], *p2 = m_plot[1];
-
-  p1->auto_limits(m_resize_plot);
-  p2->auto_limits(m_resize_plot);
-
-  disp_plot (ref, model, samp, p1, p2);
-
-  if (m_always_freeze_plot)
-    m_resize_plot = false;
+  if (m_canvas)
+    m_canvas->set_dirty(true);
 }
 
 long
@@ -152,7 +192,9 @@ disp_fit_window::onCmdParamChange(FXObject *_txt, FXSelector, void*)
     return 0;
 
   p_inf->value = new_val;
-  m_canvas_is_dirty = true;
+
+  update_disp();
+
   return 1;
 }
 
@@ -220,8 +262,8 @@ disp_fit_window::onChangeSpectralRange(FXObject *, FXSelector, void*_txt)
   if (update_spectral_range (txt))
     {
       m_wl_entry->setTextColor(FXRGB(0,0,0));
-      m_canvas_is_dirty = true;
-      m_resize_plot = true;
+      m_canvas->update_limits();
+      m_canvas->set_dirty(true);
     }
   else
     {
@@ -237,61 +279,8 @@ disp_fit_window::onCmdSpectralRange(FXObject *, FXSelector, void*)
   FXString s = m_wl_entry->getText();
   if (update_spectral_range (s.text()))
     {
-      m_canvas_is_dirty = true;
-      m_resize_plot = true;
-      return 1;
-    }
-  return 0;
-}
-
-void
-disp_fit_window::draw_plot(FXEvent* event)
-{
-  int ww = m_canvas->getWidth(), hh = m_canvas->getHeight();
-  if (! m_plot_buffer)
-    {
-      m_plot_buffer = new FXBMPImage(getApp(), NULL, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
-      m_plot_buffer->create();
-    }
-  else if (m_plot_buffer->getWidth() != ww || m_plot_buffer->getHeight() != hh)
-    {
-      FXImage *img = new FXBMPImage(getApp(), NULL, IMAGE_SHMI|IMAGE_SHMP, ww, hh);
-      img->create();
-      delete m_plot_buffer;
-      m_plot_buffer = img;
-    }
-
-  FXDCWindow dc(m_plot_buffer);
-  draw(m_plot, &dc, ww, hh);
-
-  FXDCWindow *dcwin;
-  if (event)
-    dcwin = new FXDCWindow(m_canvas, event);
-  else
-    dcwin = new FXDCWindow(m_canvas);
-
-  dcwin->drawImage(m_plot_buffer, 0, 0);
-
-  delete dcwin;
-
-  m_canvas_is_dirty = false;
-}
-
-long
-disp_fit_window::onCmdPaint(FXObject*, FXSelector, void* ptr)
-{
-  draw_plot((FXEvent*) ptr);
-  return 1;
-}
-
-
-long
-disp_fit_window::onUpdCanvas(FXObject*, FXSelector, void* ptr)
-{
-  if (m_canvas_is_dirty)
-    {
-      update_plot();
-      draw_plot();
+      m_canvas->update_limits();
+      m_canvas->set_dirty(true);
       return 1;
     }
   return 0;
@@ -352,7 +341,7 @@ disp_fit_window::onCmdRunFit(FXObject*, FXSelector, void* ptr)
 
   gsl_vector_free (x);
 
-  m_canvas_is_dirty = true;
+  update_disp();
 
   return 1;
 }

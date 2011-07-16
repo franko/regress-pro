@@ -1,3 +1,5 @@
+#ifndef AGG_PLOT_CANVAS_H
+#define AGG_PLOT_CANVAS_H
 
 #include <fx.h>
 
@@ -18,7 +20,8 @@ public:
 	      FXObject* tgt=NULL, FXSelector sel=0, 
 	      FXuint opts=FRAME_NORMAL,
 	      FXint x=0, FXint y=0, FXint w=0, FXint h=0) :
-    FXCanvas(p, tgt, sel, opts, x, y, w, h), m_canvas(0), m_img(0)
+    FXCanvas(p, tgt, sel, opts, x, y, w, h),
+    m_canvas(0), m_img(0), m_dirty_flag(true)
   {}
 
   virtual ~plot_canvas() { 
@@ -26,9 +29,19 @@ public:
     delete m_canvas;
   }
 
+  plot_type* plot(unsigned i) { return m_plots.plot(i); }
+
   void add(plot_type* plot) { m_plots.add(plot); }
 
+  void update_limits() {
+    for (unsigned i = 0; i < m_plots.size(); i++)
+      m_plots.plot(i)->update_limits();
+  }
+
+  void set_dirty(bool flag) { m_dirty_flag = true; }
+
   long on_cmd_paint(FXObject *, FXSelector, void *);
+  long on_update(FXObject *, FXSelector, void *);
 
 protected:
   plot_canvas(){};
@@ -47,4 +60,8 @@ private:
 
   canvas* m_canvas;
   FXImage* m_img;
+
+  bool m_dirty_flag;
 };
+
+#endif

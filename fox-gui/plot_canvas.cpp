@@ -5,6 +5,7 @@
 // Map
 FXDEFMAP(plot_canvas) plot_canvas_map[]={
   FXMAPFUNC(SEL_PAINT,  0, plot_canvas::on_cmd_paint),
+  FXMAPFUNC(SEL_UPDATE, 0, plot_canvas::on_update),
 };
 
 // Object implementation
@@ -53,6 +54,19 @@ plot_canvas::draw_plot(FXEvent* event)
       dcwin->drawImage(m_img, 0, 0);
       delete dcwin;
     }
+
+  m_dirty_flag = false;
+}
+
+long
+plot_canvas::on_update(FXObject *, FXSelector, void *)
+{
+  if (m_dirty_flag)
+    {
+      draw_plot(NULL);
+      return 1;
+    }
+  return 0;
 }
 
 long

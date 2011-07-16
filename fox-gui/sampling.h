@@ -26,6 +26,10 @@ public:
 
   unsigned size() const { return m_nb_points; }
 
+  double  start() const { return m_start; }
+  double    end() const { return m_end; }
+  double stride() const { return m_stride; }
+
   const double operator [] (unsigned i) const { return m_start + i * m_stride; }
         double operator [] (unsigned i)       { return m_start + i * m_stride; }
   const double at(unsigned i) const           { return m_start + i * m_stride; }

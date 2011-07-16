@@ -44,8 +44,14 @@ namespace newplot {
 
     virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
     virtual void before_draw() { check_bounding_box(); };
+    virtual void clear_current_layer();
 
     virtual bool pop_layer();
+
+    void update_limits() {
+      m_bbox_updated = false;
+      check_bounding_box();
+    }
 
   private:
     void calc_layer_bounding_box(item_list& layer, opt_rect<double>& rect);
@@ -95,8 +101,7 @@ namespace newplot {
   }
 
   template<class VS, class RM>
-  void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer, 
-						 opt_rect<double>& rect)
+  void plot_auto<VS,RM>::calc_layer_bounding_box(plot_auto<VS,RM>::item_list& layer, opt_rect<double>& rect)
   {
     for (unsigned j = 0; j < layer.size(); j++)
       {
@@ -151,6 +156,12 @@ namespace newplot {
     return retval;
   }
 
+  template <class VS, class RM>
+  void plot_auto<VS,RM>::clear_current_layer() 
+  {
+    this->plot<VS,RM>::clear_current_layer();
+    this->m_bbox_updated = false;
+  }
 }
 
 #endif

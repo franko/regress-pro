@@ -26,7 +26,7 @@
 #include "utils.h"
 #include "list.h"
 #include "canvas.h"
-#include "agg_units.h"
+#include "plot_units.h"
 #include "colors.h"
 #include "rect.h"
 
@@ -110,10 +110,11 @@ namespace newplot
     virtual bool push_layer();
     virtual bool pop_layer();
 
+    virtual void clear_current_layer();
+
     /* drawing queue related methods */
     void push_drawing_queue();
     void clear_drawing_queue();
-    void clear_current_layer();
     int current_layer_index();
 
     bool clip_is_active() const { return m_clip_flag; };
