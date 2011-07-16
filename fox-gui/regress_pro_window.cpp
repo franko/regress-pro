@@ -45,6 +45,7 @@
 #include "spectra-path.h"
 #include "disp_chooser.h"
 #include "disp_fit_window.h"
+#include "plot_canvas.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
@@ -402,9 +403,66 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
   return 1;
 }
 
+template <class Sampling>
+class disp_vs {
+public:
+  disp_vs(const disp_t* d, Sampling& samp) : 
+    m_disp(d), m_sampling(samp), m_index(0)
+  {}
+
+  void rewind(unsigned path_id) { m_index = 0; }
+
+  unsigned vertex(double* x, double* y) {
+    if (m_index >= m_sampling.size()) 
+      return agg::path_cmd_stop;
+
+    bool first = (m_index == 0);
+    cmpl n = n_value (m_disp, m_sampling[m_index++]);
+    *x =  creal(n);
+    *y = -cimag(n);
+    return (first ? agg::path_cmd_move_to : agg::path_cmd_line_to);
+  }
+  
+private:
+  const disp_t* m_disp;
+  Sampling m_sampling;
+  unsigned m_index;
+};
+
+void
+regress_pro_window::testing_fake_dialog_box ()
+{
+  FXDialogBox about(this, "Testing", DECOR_TITLE|DECOR_BORDER, 0, 0, 640, 480);
+
+  FXVerticalFrame* frm = new FXVerticalFrame(&about, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  FXHorizontalFrame* cfrm = new FXHorizontalFrame(frm, FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+
+  plot_canvas* pcanvas = new plot_canvas(cfrm, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+  disp_t* si = dispers_library_search ("si");
+  sampling_unif samp(240.0, 780.0, 271);
+  disp_vs<sampling_unif>* si_vs = new disp_vs<sampling_unif>(si, samp);
+
+  typedef vs_scaling_gen<disp_vs<sampling_unif> > disp_vs_type;
+  disp_vs_type* si_svs = new disp_vs_type(si_vs);
+
+  agg::rgba8 red(255,0,0);
+  
+  pcanvas->plot().add(si_svs, red, true);
+  pcanvas->plot().commit_pending_draw();
+
+  // Bottom buttons
+  FXHorizontalFrame * buttons= new FXHorizontalFrame(frm, FRAME_NONE|LAYOUT_FILL_X|PACK_UNIFORM_WIDTH);
+  FXButton *button=new FXButton(buttons, "&OK", NULL, &about, FXDialogBox::ID_ACCEPT, BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
+  button->setFocus();
+  about.execute(PLACEMENT_OWNER);
+}
+
 long
 regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
 {
+  testing_fake_dialog_box ();
+
   FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
 		    0,0,0,0, 0,0);
   FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);

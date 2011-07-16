@@ -125,6 +125,8 @@ public:
   virtual ~regress_pro_window();
 
 private:
+  void testing_fake_dialog_box ();
+
   bool check_spectrum(const char *context);
 
   bool m_title_dirty;

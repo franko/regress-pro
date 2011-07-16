@@ -24,7 +24,7 @@ GSL_INCLUDES =
 
 REG_LIBS = -lmhash -lgmp
 
-LIBS = $(FOX_LIBS) $(GSL_LIBS) -lsupc++
+LIBS = $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   LIBS += -lgdi32 -lwsock32
@@ -34,7 +34,7 @@ INCLUDES = $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = units.cpp ProgressInfo.cpp regress_pro_window.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp fx_numeric_field.cpp interactive_fit.cpp disp_chooser.cpp disp_fit_window.cpp main.cpp
+SRC_FILES = units.cpp ProgressInfo.cpp regress_pro_window.cpp BatchDialog.cpp DispersDialog.cpp DispersWin.cpp SpectrRangeWin.cpp spectra-path.cpp fx_numeric_field.cpp interactive_fit.cpp disp_chooser.cpp disp_fit_window.cpp colors.cpp plot_units.cpp plot_canvas.cpp utils.cpp main.cpp
 PRG = regress.exe
 
 REG_SRC_FILES := registration.c registered_app.cpp
