@@ -15,16 +15,16 @@ public:
   static void dispose(T* p) { delete p; };
 };
 
-struct vs_scaling_object {
+struct vs_object {
   virtual void rewind(unsigned path_id) = 0;
   virtual unsigned vertex(double* x, double* y) = 0;
   virtual void apply_transform(const agg::trans_affine& m, double as) = 0;
   virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) = 0;
-  virtual ~vs_scaling_object() { }
+  virtual ~vs_object() { }
 };
 
 template <class VertexSource>
-class vs_scaling_gen : public vs_scaling_object  {
+class vs_scaling_gen : public vs_object {
   agg::trans_affine m_mtx;
   VertexSource *m_source;
   agg::conv_transform<VertexSource> m_trans;
@@ -47,5 +47,11 @@ public:
     agg::bounding_rect_single (*m_source, 0, x1, y1, x2, y2);
   }
 };
+
+template <class VertexSource>
+vs_object* vs_scaling (VertexSource* src)
+{
+  return new vs_scaling_gen<VertexSource>(src);
+}
 
 #endif

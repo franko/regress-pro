@@ -46,6 +46,7 @@
 #include "disp_chooser.h"
 #include "disp_fit_window.h"
 #include "plot_canvas.h"
+#include "disp_vs.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
@@ -403,32 +404,6 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
   return 1;
 }
 
-template <class Sampling>
-class disp_vs {
-public:
-  disp_vs(const disp_t* d, Sampling& samp) : 
-    m_disp(d), m_sampling(samp), m_index(0)
-  {}
-
-  void rewind(unsigned path_id) { m_index = 0; }
-
-  unsigned vertex(double* x, double* y) {
-    if (m_index >= m_sampling.size()) 
-      return agg::path_cmd_stop;
-
-    bool first = (m_index == 0);
-    cmpl n = n_value (m_disp, m_sampling[m_index++]);
-    *x =  creal(n);
-    *y = -cimag(n);
-    return (first ? agg::path_cmd_move_to : agg::path_cmd_line_to);
-  }
-  
-private:
-  const disp_t* m_disp;
-  Sampling m_sampling;
-  unsigned m_index;
-};
-
 void
 regress_pro_window::testing_fake_dialog_box ()
 {
@@ -441,15 +416,26 @@ regress_pro_window::testing_fake_dialog_box ()
 
   disp_t* si = dispers_library_search ("si");
   sampling_unif samp(240.0, 780.0, 271);
-  disp_vs<sampling_unif>* si_vs = new disp_vs<sampling_unif>(si, samp);
-
-  typedef vs_scaling_gen<disp_vs<sampling_unif> > disp_vs_type;
-  disp_vs_type* si_svs = new disp_vs_type(si_vs);
-
-  agg::rgba8 red(255,0,0);
+  disp_vs<sampling_unif>* si_n = new disp_vs<sampling_unif>(si, cmpl::real_part, samp);
   
-  pcanvas->plot().add(si_svs, red, true);
-  pcanvas->plot().commit_pending_draw();
+  agg::rgba8 red(220,0,0);
+  agg::rgba8 blue(0,0,220);
+
+  {
+    plot_canvas::plot_type* plot = new plot_canvas::plot_type();
+    plot->add(vs_scaling(si_n), red, true);
+    plot->commit_pending_draw();
+    plot->set_title("refractive index");
+    pcanvas->add(plot);
+  }
+
+  disp_vs<sampling_unif>* si_k = new disp_vs<sampling_unif>(si, cmpl::imag_part, samp); 
+  {
+    plot_canvas::plot_type* plot = new plot_canvas::plot_type();
+    plot->add(vs_scaling(si_k), blue, true);
+    plot->commit_pending_draw();
+    pcanvas->add(plot);
+  }
 
   // Bottom buttons
   FXHorizontalFrame * buttons= new FXHorizontalFrame(frm, FRAME_NONE|LAYOUT_FILL_X|PACK_UNIFORM_WIDTH);

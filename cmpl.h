@@ -5,7 +5,13 @@
 
 #ifdef __cplusplus
 
+
 struct cmpl {
+  enum part_e {
+    real_part = 0,
+    imag_part = 1,
+  };
+
   double data[2];
 };
 

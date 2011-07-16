@@ -2,18 +2,6 @@
 #include "plot_canvas.h"
 #include "colors.h"
 
-void fx_canvas::create()
-{
-  FXImage::create();
-
-  agg::int8u* buf = (agg::int8u*) this->getData();
-  unsigned width = getWidth(), height = getHeight();
-  unsigned stride = - width * sizeof(FXColor);
-
-  m_rbuf = new agg::rendering_buffer(buf, width, height, stride);
-  m_canvas = new canvas(*m_rbuf, width, height, colors::white);
-}
-
 // Map
 FXDEFMAP(plot_canvas) plot_canvas_map[]={
   FXMAPFUNC(SEL_PAINT,  0, plot_canvas::on_cmd_paint),
@@ -22,19 +10,29 @@ FXDEFMAP(plot_canvas) plot_canvas_map[]={
 // Object implementation
 FXIMPLEMENT(plot_canvas,FXCanvas,plot_canvas_map,ARRAYNUMBER(plot_canvas_map));
 
+void plot_canvas::prepare_image_buffer(int ww, int hh)
+{
+  delete m_img;
+  m_img = new FXImage(getApp(), NULL, IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+  m_img->create();
+
+  agg::int8u* buf = (agg::int8u*) m_img->getData();
+  unsigned width = ww, height = hh;
+  unsigned stride = - width * sizeof(FXColor);
+
+  m_rbuf.attach(buf, width, height, stride);
+  m_canvas = new canvas(m_rbuf, width, height, colors::white);
+}
+
 void plot_canvas::ensure_canvas_size(int ww, int hh)
 {
   if (! m_img)
     {
-      m_img = new fx_canvas(getApp(), ww, hh);
-      m_img->create();
+      prepare_image_buffer (ww, hh);
     }
   else if (m_img->getWidth() != ww || m_img->getHeight() != hh)
     {
-      fx_canvas *new_img = new fx_canvas(getApp(), ww, hh);
-      new_img->create();
-      delete m_img;
-      m_img = new_img;
+      prepare_image_buffer (ww, hh);
     }
 }
 
@@ -45,19 +43,14 @@ plot_canvas::draw_plot(FXEvent* event)
 
   ensure_canvas_size(ww, hh);
 
-  canvas* canvas = m_img->get_canvas();
-  if (canvas)
+  if (m_canvas)
     {
-      agg::trans_affine mt(double(ww), 0.0, 0.0, double(hh), 0.0, 0.0);
-      canvas->clear();
-      m_plot.draw(*canvas, mt);
-
+      m_canvas->clear();
+      m_plots.draw(m_canvas, ww, hh);
       m_img->render();
 
       FXDCWindow *dcwin = (event ? new FXDCWindow(this, event) : new FXDCWindow(this));
-
       dcwin->drawImage(m_img, 0, 0);
-
       delete dcwin;
     }
 }
