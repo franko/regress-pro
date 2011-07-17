@@ -110,10 +110,9 @@ namespace newplot
     virtual bool push_layer();
     virtual bool pop_layer();
 
-    virtual void clear_current_layer();
-
     /* drawing queue related methods */
     void push_drawing_queue();
+    void clear_current_layer();
     void clear_drawing_queue();
     int current_layer_index();
 
@@ -186,7 +185,8 @@ namespace newplot
 
   static double 
   compute_scale(agg::trans_affine& m) { 
-    return min(m.sy, m.sx) / 480.0; 
+    //    return min(m.sy, m.sx) / 480.0; 
+    return sqrt(m.sy * m.sx) / 480.0;
   }
 
   static double
@@ -273,7 +273,7 @@ namespace newplot
     agg::gsv_text title;
     agg::conv_stroke<agg::gsv_text> titlestroke(title);
 
-    title.size(18.0 * scale);
+    title.size(12.0 * scale);
     title.text(m_title);
 
     titlestroke.width(std_line_width(scale));
@@ -441,14 +441,14 @@ namespace newplot
 	      char lab_text[32];
 	      double xlab = 0, ylab = y;
 
-	      lab.size(18.0 * scale);
+	      lab.size(12.0 * scale);
 	      m_uy.mark_label(lab_text, 32, j);
 	      lab.text(lab_text);
 	      labs.width(std_line_width(scale));
 
 	      m.transform(&xlab, &ylab);
 
-	      xlab += -lab.text_width() - 18.0 * scale;
+	      xlab += -lab.text_width() - 10.0 * scale;
 	      ylab += -5.0 * scale;
 
 	      lab.start_point(xlab, ylab);
@@ -479,7 +479,7 @@ namespace newplot
 	      char lab_text[32];
 	      double xlab = x, ylab = 0;
 
-	      lab.size(18.0 * scale);
+	      lab.size(12.0 * scale);
 	      m_ux.mark_label(lab_text, 32, j);
 	      lab.text(lab_text);
 	      labs.width(std_line_width(scale));
@@ -487,7 +487,7 @@ namespace newplot
 	      m.transform(&xlab, &ylab);
 
 	      xlab += -lab.text_width()/2.0;
-	      ylab += -36.0 * scale;
+	      ylab += -24.0 * scale;
 
 	      lab.start_point(xlab, ylab);
 	      canvas.draw(labs, agg::rgba(0, 0, 0));
@@ -532,8 +532,8 @@ namespace newplot
   template<class VS, class RM>
   void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
   {
-    const double xoffs = 0.09375, yoffs = 0.09375;
-    static agg::trans_affine rsz(1-2*xoffs, 0.0, 0.0, 1-2*yoffs, xoffs, yoffs);
+    const double xoffs = 0.09375, yoffs_d = 0.09375, yoffs_u = 1.5*0.09375;
+    static agg::trans_affine rsz(1-2*xoffs, 0.0, 0.0, 1-(yoffs_d+yoffs_u), xoffs, yoffs_d);
     trans_affine_compose (m, rsz);
   }
 

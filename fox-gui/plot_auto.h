@@ -44,7 +44,6 @@ namespace newplot {
 
     virtual void add(VertexSource* vs, agg::rgba8& color, bool outline);
     virtual void before_draw() { check_bounding_box(); };
-    virtual void clear_current_layer();
 
     virtual bool pop_layer();
 
@@ -154,13 +153,6 @@ namespace newplot {
     bool retval = this->plot<VS,RM>::pop_layer();
     this->m_bbox_updated = false;
     return retval;
-  }
-
-  template <class VS, class RM>
-  void plot_auto<VS,RM>::clear_current_layer() 
-  {
-    this->plot<VS,RM>::clear_current_layer();
-    this->m_bbox_updated = false;
   }
 }
 
