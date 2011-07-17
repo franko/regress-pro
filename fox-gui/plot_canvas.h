@@ -64,4 +64,7 @@ private:
   bool m_dirty_flag;
 };
 
+extern void add_new_plot (plot_canvas* canvas, vs_object* ref, vs_object* model,
+			  const char *title);
+
 #endif

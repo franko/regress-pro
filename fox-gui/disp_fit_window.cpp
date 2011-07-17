@@ -4,7 +4,6 @@
 #include "fx_numeric_field.h"
 #include "Strcpp.h"
 #include "disp-fit-engine.h"
-#include "spectra-path.h"
 #include "sampling.h"
 #include "disp_vs.h"
 
@@ -129,38 +128,13 @@ disp_fit_window::config_plot()
 
   sampling_unif& samp = m_wl_sampling;
 
-  agg::rgba8 red(220,0,0);
-  agg::rgba8 blue(0,0,220);
+  disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, samp);
+  disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, samp);
+  add_new_plot(m_canvas, ref_k, mod_k, "abs coefficient");
 
-  {
-    plot_canvas::plot_type *p = new plot_canvas::plot_type();
-    p->set_title("abs coefficient");
-    p->pad_mode(true);
-    
-    disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, samp);
-    disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, samp);
-
-    p->add(ref_k, red, true);
-    p->add(mod_k, blue, true);
-    p->commit_pending_draw();
-
-    m_canvas->add(p);
-  }
-
-  {
-    plot_canvas::plot_type *p = new plot_canvas::plot_type();
-    p->set_title("refractive index");
-    p->pad_mode(true);
-    
-    disp_vs<sampling_unif>* ref_n = new disp_vs<sampling_unif>(ref,   cmpl::real_part, samp);
-    disp_vs<sampling_unif>* mod_n = new disp_vs<sampling_unif>(model, cmpl::real_part, samp);
-
-    p->add(ref_n, red, true);
-    p->add(mod_n, blue, true);
-    p->commit_pending_draw();
-
-    m_canvas->add(p);
-  }
+  disp_vs<sampling_unif>* ref_n = new disp_vs<sampling_unif>(ref,   cmpl::real_part, samp);
+  disp_vs<sampling_unif>* mod_n = new disp_vs<sampling_unif>(model, cmpl::real_part, samp);
+  add_new_plot(m_canvas, ref_n, mod_n, "refractive index");
 
   m_canvas->set_dirty(true);
 }

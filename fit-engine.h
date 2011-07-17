@@ -78,7 +78,6 @@ extern void fit_engine_apply_parameters     (struct fit_engine *fit,
 
 extern void fit_engine_restore_spectr       (struct fit_engine *fit);
 
-
 extern void build_stack_cache               (struct stack_cache *cache,
 					     stack_t *stack,
 					     struct spectrum *spectr,
@@ -90,6 +89,11 @@ extern struct fit_engine * build_fit_engine (struct symtab *symtab,
 					     struct seeds **seeds);
 
 extern void set_default_extra_param         (struct extra_params *extra);
+
+extern struct spectrum * fit_engine_alloc_spectrum (struct fit_engine *fit);
+
+extern void fit_engine_generate_spectrum (struct fit_engine *fit,
+					  struct spectrum *synth);
 
 extern struct spectrum * generate_spectrum  (struct fit_engine *fit);
 

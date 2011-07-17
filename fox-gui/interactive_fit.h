@@ -12,7 +12,7 @@
 #include "elliss_app.h"
 #include "spectra.h"
 #include "fit-params.h"
-#include "fx_plot.h"
+#include "plot_canvas.h"
 
 class interactive_fit : public FXMainWindow {
   FXDECLARE(interactive_fit)
@@ -26,33 +26,28 @@ class interactive_fit : public FXMainWindow {
 
 private:
 
-  struct fit_engine* fit_engine;
-
-  fx_plot_vector<2> m_plot;
-
+  struct fit_engine* m_fit_engine;
+  struct spectrum* m_model_spectr;
   struct fit_parameters *m_fit_parameters;
-
   agg::pod_array<param_info> m_parameters;
-
-  struct spectrum *spectrum;
-
-  bool m_canvas_is_dirty;
 
 protected:
   FXMenuBar         *menubar;
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
 
-  FXCanvas *canvas;
-
-  void updatePlot(bool freeze_limits = false);
-  void drawPlot();
+  plot_canvas *m_canvas;
 
 protected:
   interactive_fit(){};
 private:
   interactive_fit(const interactive_fit&);
   interactive_fit &operator=(const interactive_fit&);
+
+protected:
+  void init_engine(struct spectrum* user_spectr);
+  void config_plot();
+  void update_stack();
 
 public:
   interactive_fit(elliss_app *app, struct fit_engine *fit, struct spectrum *sp);
@@ -61,14 +56,11 @@ public:
   long onCmdParamSelect(FXObject*, FXSelector,void*);
   long onCmdParamChange(FXObject*, FXSelector,void*);
   long onCmdRunFit(FXObject*, FXSelector,void*);
-  long onCmdPaint(FXObject*, FXSelector,void*);
-  long onUpdCanvas(FXObject*, FXSelector,void*);
 
   enum {
     ID_PARAM_SELECT = FXMainWindow::ID_LAST,
     ID_PARAM_VALUE,
     ID_RUN_FIT,
-    ID_CANVAS,
     ID_LAST
   };
 };

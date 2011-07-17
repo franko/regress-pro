@@ -75,3 +75,21 @@ plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
   draw_plot((FXEvent*) ptr);
   return 1;
 }
+
+
+void add_new_plot (plot_canvas* canvas, vs_object* ref, vs_object* model,
+		   const char *title)
+{
+  agg::rgba8 red(220,0,0);
+  agg::rgba8 blue(0,0,220);
+
+  plot_canvas::plot_type *p = new plot_canvas::plot_type();
+  p->set_title(title);
+  p->pad_mode(true);
+
+  p->add(ref,   red, true);
+  p->add(model, blue, true);
+  p->commit_pending_draw();
+
+  canvas->add(p);
+}

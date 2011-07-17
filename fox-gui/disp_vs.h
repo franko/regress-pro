@@ -26,10 +26,7 @@ public:
     double c = n.data[m_comp];
     *y = (m_comp == cmpl::real_part ? c : -c);
 
-    int cmd = (m_index == 0 ? agg::path_cmd_move_to : agg::path_cmd_line_to);
-
-    m_index ++;
-    return cmd;
+    return (m_index++ == 0 ? agg::path_cmd_move_to : agg::path_cmd_line_to);
   }
   
 private:

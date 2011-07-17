@@ -409,21 +409,18 @@ fit_engine_get_default_param_value (const struct fit_engine *fit,
   return 0.0;
 }
 
-struct spectrum *
-generate_spectrum (struct fit_engine *fit)
+void
+fit_engine_generate_spectrum (struct fit_engine *fit, struct spectrum* synth)
 {
-  struct spectrum *synth;
   size_t nb_med = fit->stack->nb;
-  struct data_table *table;
+  struct data_table *table = synth->table[0].table;
   struct { double const * ths; cmpl * ns; } actual;
   int j, npt = spectra_points (fit->spectr);
   const enum se_type se_type = GET_SE_TYPE(fit->system_kind);
 
-  synth = emalloc (sizeof(struct spectrum));
+  assert (spectra_points (fit->spectr) == spectra_points (synth));
 
   memcpy (&synth->config, &fit->spectr->config, sizeof(struct system_config));
-
-  table = data_table_new (npt, 3);
 
   actual.ths = stack_get_ths_list (fit->stack);
 
@@ -464,9 +461,23 @@ generate_spectrum (struct fit_engine *fit)
 	  /* */;
 	}
     }
+}
 
+struct spectrum *
+fit_engine_alloc_spectrum (struct fit_engine *fit)
+{
+  struct spectrum *synth = malloc (sizeof(struct spectrum));
+  int npt = spectra_points (fit->spectr);
+  struct data_table *table = data_table_new (npt, 3);
   data_view_init (synth->table, table);
+  return synth;
+}
 
+struct spectrum *
+generate_spectrum (struct fit_engine *fit)
+{
+  struct spectrum *synth = fit_engine_alloc_spectrum (fit);
+  fit_engine_generate_spectrum (fit, synth);
   return synth;
 }
 
