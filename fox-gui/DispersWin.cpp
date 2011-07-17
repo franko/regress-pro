@@ -1,17 +1,11 @@
 
-/*
-  $Id: DispersWin.cpp,v 1.1 2006/07/12 22:57:48 francesco Exp $
- */
-
 #include "DispersWin.h"
 #include "SpectrRangeWin.h"
 #include "disp-util.h"
-#include "spectra-path.h"
+#include "disp_vs.h"
 
 // Map
 FXDEFMAP(DispersWin) DispersWinMap[]={
-  FXMAPFUNC(SEL_PAINT,   DispersWin::ID_CANVAS,       DispersWin::onCmdPaint),
-  FXMAPFUNC(SEL_UPDATE,  DispersWin::ID_CANVAS,       DispersWin::onCmdUpdate),
   FXMAPFUNC(SEL_COMMAND, DispersWin::ID_SPECTR_RANGE, DispersWin::onCmdSetRange),
   FXMAPFUNC(SEL_COMMAND, DispersWin::ID_SAVE_DISPERS, DispersWin::onCmdSaveDisp),
 };
@@ -19,10 +13,11 @@ FXDEFMAP(DispersWin) DispersWinMap[]={
 // Object implementation
 FXIMPLEMENT(DispersWin,FXDialogBox,DispersWinMap,ARRAYNUMBER(DispersWinMap));
 
-DispersWin::DispersWin(FXWindow* w, disp_t *disp)
+DispersWin::DispersWin(FXWindow* w, disp_t* disp)
   : FXDialogBox(w, "Dispersion Plot", DECOR_ALL, 0, 0, 480, 360),
-    dispers(disp)
+    m_dispers(disp), m_sampling(240.0, 780.0, 271)
 {
+
   FXMenuBar *menubar = new FXMenuBar(this,FRAME_RAISED|LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // Dispersion menu
@@ -32,98 +27,40 @@ DispersWin::DispersWin(FXWindow* w, disp_t *disp)
   new FXMenuCommand(dispmenu,"&Close",NULL,this,ID_CANCEL);
   new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
 
-  FXVerticalFrame *topfr = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  canvas = new FXCanvas(topfr,this,ID_CANVAS,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+  FXVerticalFrame *topfr = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+  m_canvas = new plot_canvas(topfr, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
   new FXHorizontalSeparator(topfr,SEPARATOR_GROOVE|LAYOUT_FILL_X);
   FXHorizontalFrame *buttonfr = new FXHorizontalFrame(topfr,LAYOUT_FILL_X|LAYOUT_RIGHT);
   new FXButton(buttonfr,"&Close",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 
-  const double wlinf = 200, wlsup = 800, wlstep = 2;
-  range = SpectrRange(wlinf, wlsup, wlstep);
-
-  nplot = new plot(getApp());
-  kplot = new plot(getApp());
-
-  nplot->set_title("Refractive index, n");
-  kplot->set_title("Absorption coeff, k");
-
-  setupNKPlot();
-}
-
-DispersWin::~DispersWin()
-{
-  delete dispmenu;
-  delete nplot;
-  delete kplot;
+  config_plot();
 }
 
 void
-DispersWin::setupNKPlot()
+DispersWin::config_plot()
 {
-  agg::path_storage *n_path = new agg::path_storage;
-  agg::path_storage *k_path = new agg::path_storage;
+  disp_t* d = m_dispers;
+  sampling_unif& samp = m_sampling;
 
-  int npt = (int) ((range.sup - range.inf) / range.step) + 1;
-  
-  for (int j = 0; j < npt; j++)
-    {
-      double lambda = range.inf + range.step * j;
-      double n, k;
-  
-      n_value_cpp (dispers, lambda, &n, &k);
+  disp_vs<sampling_unif>* disp_k = new disp_vs<sampling_unif>(d, cmpl::imag_part, samp);
+  add_new_simple_plot(m_canvas, disp_k, "absoption coeff");
 
-      n_path->line_to(lambda, n);
-      k_path->line_to(lambda, k);
-    }
+  disp_vs<sampling_unif>* disp_n = new disp_vs<sampling_unif>(d, cmpl::real_part, samp);
+  add_new_simple_plot(m_canvas, disp_n, "refractive index");
 
-  nplot->clear();
-  nplot->add(n_path);
-
-  kplot->clear();
-  kplot->add(k_path);
-  
-  plotNeedRedraw = TRUE;
-}
-
-long
-DispersWin::onCmdUpdate(FXObject *, FXSelector, void *)
-{
-  if (plotNeedRedraw == FALSE)
-    return 0;
-
-  FXDCWindow dc(canvas);
-
-  int ww = canvas->getWidth(), hh = canvas->getHeight();
-
-  nplot->draw(&dc, ww, hh / 2);
-  kplot->draw(&dc, ww, hh / 2, 0, hh / 2);
-
-  plotNeedRedraw = FALSE;
-
-  return 1;
-}
-
-long
-DispersWin::onCmdPaint(FXObject *, FXSelector, void *ptr)
-{
-  FXDCWindow dc(canvas, (FXEvent*) ptr);
-
-  int ww = canvas->getWidth(), hh = canvas->getHeight();
-
-  nplot->draw(&dc, ww, hh / 2);
-  kplot->draw(&dc, ww, hh / 2, 0, hh / 2);
-
-  return 1;
+  m_canvas->set_dirty(true);
 }
 
 long
 DispersWin::onCmdSetRange(FXObject*,FXSelector,void*)
 {
-  SpectrRangeWin rangewin(this, range);
+  SpectrRangeWin rangewin(this, &m_sampling);
   if (rangewin.execute())
     {
-      rangewin.getSpectrRange(this->range);
-      setupNKPlot();
+      m_canvas->update_limits();
+      m_canvas->set_dirty(true);
       return 1;
     }
   return 0;
@@ -138,8 +75,8 @@ DispersWin::onCmdSaveDisp(FXObject*,FXSelector,void*)
   if(save.execute())
     {
       FXString fname = save.getFilename();
-      write_mat_file (fname.text(), this->dispers,
-		      range.inf, range.sup, range.step);
+      write_mat_file (fname.text(), m_dispers,
+		      m_sampling.start(), m_sampling.end(), m_sampling.stride());
     }
 
   return 0;

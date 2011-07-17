@@ -76,9 +76,9 @@ plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
   return 1;
 }
 
-
-void add_new_plot (plot_canvas* canvas, vs_object* ref, vs_object* model,
-		   const char *title)
+static void
+add_new_plot_raw (plot_canvas* canvas, vs_object* ref, vs_object* model,
+	      const char *title)
 {
   agg::rgba8 red(220,0,0);
   agg::rgba8 blue(0,0,220);
@@ -87,9 +87,21 @@ void add_new_plot (plot_canvas* canvas, vs_object* ref, vs_object* model,
   p->set_title(title);
   p->pad_mode(true);
 
-  p->add(ref,   red, true);
-  p->add(model, blue, true);
+  if (ref)   p->add(ref,   red, true);
+  if (model) p->add(model, blue, true);
   p->commit_pending_draw();
 
   canvas->add(p);
 }
+
+void add_new_simple_plot (plot_canvas* canvas, vs_object* v, const char *title)
+{
+  add_new_plot_raw (canvas, v, 0, title);
+}
+
+void add_new_plot (plot_canvas* canvas, vs_object* v1, vs_object* v2,
+		   const char *title)
+{
+  add_new_plot_raw (canvas, v1, v2, title);
+}
+
