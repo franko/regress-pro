@@ -19,6 +19,16 @@
 /* size of a char buffer to hold the signature plus the terminating zero */
 #define SIGNSIZE 172
 
+#ifdef WIN32
+static char * stpcpy (char *dst, const char *src)
+{
+  dst += strlen (dst);
+  for ( ; *src; dst++, src++)
+    *dst = *src;
+  return dst;
+}
+#endif
+
 /* public key */
 const char * const e_str = "10001";
 const char * const n_str = "820e35bbf1b0b429de97078e4d56839f09438ad05faaa2bec1e7a278ec86ed45";
