@@ -14,11 +14,11 @@ FXDEFMAP(DispersWin) DispersWinMap[]={
 FXIMPLEMENT(DispersWin,FXDialogBox,DispersWinMap,ARRAYNUMBER(DispersWinMap));
 
 DispersWin::DispersWin(FXWindow* w, disp_t* disp)
-  : FXDialogBox(w, "Dispersion Plot", DECOR_ALL, 0, 0, 480, 360),
+  : FXDialogBox(w, "Dispersion Plot", DECOR_ALL, 0, 0, 480, 360, 0,0,0,0,0,0),
     m_dispers(disp), m_sampling(240.0, 780.0, 271)
 {
 
-  FXMenuBar *menubar = new FXMenuBar(this,FRAME_RAISED|LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+  FXMenuBar *menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
 
   // Dispersion menu
   dispmenu = new FXMenuPane(this);
