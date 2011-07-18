@@ -72,7 +72,8 @@ plot_canvas::on_update(FXObject *, FXSelector, void *)
 long
 plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
-  draw_plot((FXEvent*) ptr);
+  FXEvent* ev = (FXEvent*) ptr;
+  draw_plot(dirty() ? NULL : ev);
   return 1;
 }
 

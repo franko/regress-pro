@@ -39,6 +39,7 @@ public:
   }
 
   void set_dirty(bool flag) { m_dirty_flag = true; }
+  bool dirty() const { return m_dirty_flag; }
 
   long on_cmd_paint(FXObject *, FXSelector, void *);
   long on_update(FXObject *, FXSelector, void *);
