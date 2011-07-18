@@ -8,18 +8,18 @@
 #include "sampling.h"
 #include "plot_canvas.h"
 
-class DispersWin : public FXDialogBox {
-  FXDECLARE(DispersWin)
+class dispers_win : public FXDialogBox {
+  FXDECLARE(dispers_win)
 
 public:
-  DispersWin(FXWindow* w, disp_t *disp);
+  dispers_win(FXWindow* w, disp_t *disp);
 
-  ~DispersWin() { delete dispmenu; };
+  ~dispers_win() { delete dispmenu; };
 
   void config_plot();
 
-  long onCmdSetRange(FXObject*,FXSelector,void*);
-  long onCmdSaveDisp(FXObject*,FXSelector,void*);
+  long on_cmd_set_range(FXObject*,FXSelector,void*);
+  long on_cmd_save_disp(FXObject*,FXSelector,void*);
 
   enum {
     ID_SAVE_DISPERS = FXDialogBox::ID_LAST,
@@ -28,10 +28,10 @@ public:
     };
 
 protected:
-  DispersWin(){};
+  dispers_win(){};
 private:
-  DispersWin(const DispersWin&);
-  DispersWin &operator=(const DispersWin&);
+  dispers_win(const dispers_win&);
+  dispers_win &operator=(const dispers_win&);
 
   disp_t* m_dispers;
   sampling_unif m_sampling;

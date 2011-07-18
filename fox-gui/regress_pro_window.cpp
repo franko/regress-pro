@@ -27,7 +27,7 @@
 #include <gsl/gsl_vector.h>
 
 #include "regress_pro_window.h"
-#include "DispersDialog.h"
+#include "dispers_dialog.h"
 #include "BatchDialog.h"
 #include "interactive_fit.h"
 #include "Strcpp.h"
@@ -370,7 +370,7 @@ regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
 {
   if (this->stack_result)
     {
-      DispersDialog dialog(this, this->stack_result);
+      dispers_dialog dialog(this, this->stack_result);
       dialog.execute();
       return 1;
     }

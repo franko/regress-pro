@@ -5,8 +5,8 @@
 #include <fx.h>
 #include "sampling.h"
 
-class SpectrRangeWin : public FXDialogBox {
-  FXDECLARE(SpectrRangeWin)
+class sampling_win : public FXDialogBox {
+  FXDECLARE(sampling_win)
 
 private:
   sampling_unif* m_sampling;
@@ -16,13 +16,13 @@ private:
   FXTextField *m_stride;
 
 protected:
-  SpectrRangeWin() {};
+  sampling_win() {};
 private:
-  SpectrRangeWin(const SpectrRangeWin&);
-  SpectrRangeWin &operator=(const SpectrRangeWin&);
+  sampling_win(const sampling_win&);
+  sampling_win &operator=(const sampling_win&);
 
 public:
-  SpectrRangeWin(FXWindow *win, sampling_unif* s);
+  sampling_win(FXWindow *win, sampling_unif* s);
 
   long on_cmd_accept(FXObject*,FXSelector,void*);
 };

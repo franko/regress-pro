@@ -1,19 +1,19 @@
 
-#include "DispersWin.h"
-#include "SpectrRangeWin.h"
+#include "dispers_win.h"
+#include "sampling_win.h"
 #include "disp-util.h"
 #include "disp_vs.h"
 
 // Map
-FXDEFMAP(DispersWin) DispersWinMap[]={
-  FXMAPFUNC(SEL_COMMAND, DispersWin::ID_SPECTR_RANGE, DispersWin::onCmdSetRange),
-  FXMAPFUNC(SEL_COMMAND, DispersWin::ID_SAVE_DISPERS, DispersWin::onCmdSaveDisp),
+FXDEFMAP(dispers_win) dispers_win_map[]={
+  FXMAPFUNC(SEL_COMMAND, dispers_win::ID_SPECTR_RANGE, dispers_win::on_cmd_set_range),
+  FXMAPFUNC(SEL_COMMAND, dispers_win::ID_SAVE_DISPERS, dispers_win::on_cmd_save_disp),
 };
 
 // Object implementation
-FXIMPLEMENT(DispersWin,FXDialogBox,DispersWinMap,ARRAYNUMBER(DispersWinMap));
+FXIMPLEMENT(dispers_win,FXDialogBox,dispers_win_map,ARRAYNUMBER(dispers_win_map));
 
-DispersWin::DispersWin(FXWindow* w, disp_t* disp)
+dispers_win::dispers_win(FXWindow* w, disp_t* disp)
   : FXDialogBox(w, "Dispersion Plot", DECOR_ALL, 0, 0, 480, 360, 0,0,0,0,0,0),
     m_dispers(disp), m_sampling(240.0, 780.0, 271)
 {
@@ -39,7 +39,7 @@ DispersWin::DispersWin(FXWindow* w, disp_t* disp)
 }
 
 void
-DispersWin::config_plot()
+dispers_win::config_plot()
 {
   disp_t* d = m_dispers;
   sampling_unif& samp = m_sampling;
@@ -54,10 +54,10 @@ DispersWin::config_plot()
 }
 
 long
-DispersWin::onCmdSetRange(FXObject*,FXSelector,void*)
+dispers_win::on_cmd_set_range(FXObject*,FXSelector,void*)
 {
-  SpectrRangeWin rangewin(this, &m_sampling);
-  if (rangewin.execute())
+  sampling_win win(this, &m_sampling);
+  if (win.execute())
     {
       m_canvas->update_limits();
       m_canvas->set_dirty(true);
@@ -67,7 +67,7 @@ DispersWin::onCmdSetRange(FXObject*,FXSelector,void*)
 }
 
 long
-DispersWin::onCmdSaveDisp(FXObject*,FXSelector,void*)
+dispers_win::on_cmd_save_disp(FXObject*,FXSelector,void*)
 {
   FXFileDialog save(this, "Save Dispersion Card");
   save.setFilename("untitled.mat");

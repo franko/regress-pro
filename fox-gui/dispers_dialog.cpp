@@ -1,20 +1,16 @@
-/*
-  $Id: DispersDialog.cpp,v 1.1 2006/07/12 22:57:48 francesco Exp $
- */
-
-#include "DispersDialog.h"
-#include "DispersWin.h"
+#include "dispers_dialog.h"
+#include "dispers_win.h"
 
 // Map
-FXDEFMAP(DispersDialog) DispersDialogMap[]={
-  FXMAPFUNC(SEL_COMMAND, DispersDialog::ID_PLOT, DispersDialog::onCmdPlot),
-  FXMAPFUNC(SEL_COMMAND, DispersDialog::ID_LAYER_CHANGE, DispersDialog::onCmdLayerChange),
+FXDEFMAP(dispers_dialog) dispers_dialog_map[]={
+  FXMAPFUNC(SEL_COMMAND, dispers_dialog::ID_PLOT, dispers_dialog::on_cmd_plot),
+  FXMAPFUNC(SEL_COMMAND, dispers_dialog::ID_LAYER_CHANGE, dispers_dialog::on_cmd_layer_change),
 };
 
 // Object implementation
-FXIMPLEMENT(DispersDialog,FXDialogBox,DispersDialogMap,ARRAYNUMBER(DispersDialogMap));
+FXIMPLEMENT(dispers_dialog,FXDialogBox,dispers_dialog_map,ARRAYNUMBER(dispers_dialog_map));
 
-DispersDialog::DispersDialog(FXWindow *w, struct stack *s)
+dispers_dialog::dispers_dialog(FXWindow *w, struct stack *s)
   : FXDialogBox(w,"Select Dispersion", DECOR_ALL, 0, 0, 320, 100)
 {
   this->stack = s;
@@ -29,11 +25,11 @@ DispersDialog::DispersDialog(FXWindow *w, struct stack *s)
   new FXButton(btframe,"&Plot",NULL,this,ID_PLOT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 
   layerSpinner->setRange(0, s->nb - 1);
-  onCmdLayerChange(NULL, 0, NULL);
+  on_cmd_layer_change(NULL, 0, NULL);
 }
 
 long
-DispersDialog::onCmdLayerChange(FXObject*, FXSelector, void *)
+dispers_dialog::on_cmd_layer_change(FXObject*, FXSelector, void *)
 {
   layer = layerSpinner->getValue();
 
@@ -54,12 +50,12 @@ DispersDialog::onCmdLayerChange(FXObject*, FXSelector, void *)
 }
 
 long
-DispersDialog::onCmdPlot(FXObject*, FXSelector, void *)
+dispers_dialog::on_cmd_plot(FXObject*, FXSelector, void *)
 {
   if (layer < 0 || layer >= this->stack->nb)
     return 0;
 
-  DispersWin dwin(this, this->stack->disp[layer]);
+  dispers_win dwin(this, this->stack->disp[layer]);
   dwin.execute();
 
   return 1;

@@ -1,15 +1,15 @@
 
-#include "SpectrRangeWin.h"
+#include "sampling_win.h"
 
 // Map
-FXDEFMAP(SpectrRangeWin) SpectrRangeWinMap[]={
-  FXMAPFUNC(SEL_COMMAND, FXDialogBox::ID_ACCEPT, SpectrRangeWin::on_cmd_accept),
+FXDEFMAP(sampling_win) sampling_win_map[]={
+  FXMAPFUNC(SEL_COMMAND, FXDialogBox::ID_ACCEPT, sampling_win::on_cmd_accept),
 };
 
 // Object implementation
-FXIMPLEMENT(SpectrRangeWin,FXDialogBox,SpectrRangeWinMap,ARRAYNUMBER(SpectrRangeWinMap));
+FXIMPLEMENT(sampling_win,FXDialogBox,sampling_win_map,ARRAYNUMBER(sampling_win_map));
 
-SpectrRangeWin::SpectrRangeWin(FXWindow *win, sampling_unif* samp)
+sampling_win::sampling_win(FXWindow *win, sampling_unif* samp)
   : FXDialogBox(win, "Select Spectral Range"), m_sampling(samp)
 {
   FXVerticalFrame *mfr  = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -39,7 +39,7 @@ SpectrRangeWin::SpectrRangeWin(FXWindow *win, sampling_unif* samp)
 }
 
 long
-SpectrRangeWin::on_cmd_accept(FXObject* sender,FXSelector sel,void*)
+sampling_win::on_cmd_accept(FXObject* sender,FXSelector sel,void*)
 {
   double wls, wle, wlp;
   char* tail;
