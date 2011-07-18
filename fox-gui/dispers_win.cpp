@@ -44,11 +44,11 @@ dispers_win::config_plot()
   disp_t* d = m_dispers;
   sampling_unif& samp = m_sampling;
 
-  disp_vs<sampling_unif>* disp_k = new disp_vs<sampling_unif>(d, cmpl::imag_part, samp);
-  add_new_simple_plot(m_canvas, disp_k, "absoption coeff");
-
   disp_vs<sampling_unif>* disp_n = new disp_vs<sampling_unif>(d, cmpl::real_part, samp);
   add_new_simple_plot(m_canvas, disp_n, "refractive index");
+
+  disp_vs<sampling_unif>* disp_k = new disp_vs<sampling_unif>(d, cmpl::imag_part, samp);
+  add_new_simple_plot(m_canvas, disp_k, "absoption coeff");
 
   m_canvas->set_dirty(true);
 }

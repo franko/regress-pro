@@ -42,18 +42,14 @@
 #include "str.h"
 #include "str-util.h"
 #include "dispers-library.h"
-#include "spectra-path.h"
 #include "disp_chooser.h"
 #include "disp_fit_window.h"
-#include "plot_canvas.h"
-#include "disp_vs.h"
+#include "spectrum_vs.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
 // Map
 FXDEFMAP(regress_pro_window) regress_pro_window_map[]={
-  FXMAPFUNC(SEL_PAINT,   regress_pro_window::ID_CANVAS, regress_pro_window::onCmdPaint),
-  FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_CANVAS, regress_pro_window::onUpdCanvas),
   FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_SCRIPT_TEXT, regress_pro_window::onUpdScript),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
@@ -90,8 +86,9 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(elliss_app* a) 
  : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
    spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
-   spectrFile("untitled"), batchFileId("untitled####.dat"), m_plot(a) {
-
+   spectrFile("untitled"), batchFileId("untitled####.dat"),
+   m_model_spectr(0) 
+{
   // Menubar
   menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
   statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
@@ -152,11 +149,6 @@ regress_pro_window::regress_pro_window(elliss_app* a)
   tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
   lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
   bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-  plotcanvas = new FXCanvas(bf,this,ID_CANVAS,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-  m_plotkind = SYSTEM_UNDEFINED;
-
-  m_canvas_is_dirty = true;
 
   symbol_table_init (this->symtab);
 
@@ -164,63 +156,17 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
   dispers_library_init ();
 
+  m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
   m_title_dirty = true;
   m_title_modified = false;
 }
 
 
-// Create image
 void
 regress_pro_window::create(){
   FXMainWindow::create();
   scriptfont->create();
-}
-
-void
-regress_pro_window::plotCanvas(FXDCWindow *dc)
-{
-  int ww = plotcanvas->getWidth(), hh = plotcanvas->getHeight();
-
-  if (m_plotkind == SYSTEM_UNDEFINED)
-    {
-      dc->setForeground(FXRGB(255,255,255));
-      dc->fillRectangle(0, 0, ww, hh);
-    }
-  else
-    {
-      draw (m_plot, dc, ww, hh);
-    }
-}
-
-// Command from chart
-long
-regress_pro_window::onCmdPaint(FXObject *, FXSelector, void *ptr)
-{
-  if (m_canvas_is_dirty)
-    {
-      FXDCWindow dc(plotcanvas);
-      plotCanvas(&dc);
-    }
-  else
-    {
-      FXDCWindow dc(plotcanvas, (FXEvent*) ptr);
-      plotCanvas(&dc);
-    }
-  m_canvas_is_dirty = false;
-  return 1;
-}
-
-long
-regress_pro_window::onUpdCanvas(FXObject*, FXSelector, void *)
-{
-  if (m_canvas_is_dirty)
-    {
-      FXDCWindow dc(plotcanvas);
-      plotCanvas(&dc);
-      m_canvas_is_dirty = false;
-      return 1;
-    }
-  return 0;
 }
 
 long
@@ -350,14 +296,22 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
     {
       spectrFile = open.getFilename();
 
-      if (this->spectrum)
-	spectra_free (this->spectrum);
+      struct spectrum *new_spectrum = load_gener_spectrum (spectrFile.text());
 
-      this->spectrum = load_gener_spectrum (spectrFile.text());
+      if (new_spectrum == NULL)
+	{
+	  FXMessageBox::information(this, MBOX_OK, "Spectra loading",
+				    "Cannot load spectra %s", spectrFile.text());
+	}
+      else
+	{
+	  m_canvas->clear_plots();
 
-      if (this->spectrum == NULL)
-	FXMessageBox::information(this, MBOX_OK, "Spectra loading",
-				  "Cannot load spectra %s", spectrFile.text());
+	  if (this->spectrum)
+	    spectra_free (this->spectrum);
+
+	  this->spectrum = new_spectrum;
+	}
 
       return 1;
     }
@@ -441,6 +395,9 @@ regress_pro_window::~regress_pro_window() {
 
   if (this->stack_result)
     stack_free (this->stack_result);
+
+  if (m_model_spectr)
+    spectra_free (m_model_spectr);
 
   symbol_table_clean (this->symtab);
   symbol_table_free  (this->symtab);
@@ -613,25 +570,31 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 
   fit_engine_restore_spectr (fit);
 
-  m_plotkind = fit->system_kind;
+  if (m_model_spectr)
+    spectra_free (m_model_spectr);
 
-  struct spectrum *gensp = generate_spectrum (fit);
-  switch (fit->system_kind)
+  m_model_spectr = fit_engine_alloc_spectrum (fit);
+
+  fit_engine_generate_spectrum (fit, m_model_spectr);
+
+  m_canvas->clear_plots();
+
+  if (fit->system_kind == SYSTEM_REFLECTOMETER)
     {
-    case SYSTEM_REFLECTOMETER:
-      m_plot.layout().resize(1);
-      refl_spectra_plot (fit, m_plot[0]);
-      break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-      m_plot.layout().resize(2);
-      elliss_spectra_plot (fit, m_plot[0], m_plot[1]);
-      break;
-    default:
-      /* */;
+      spectrum_vs *ref_r = new spectrum_vs(fit->spectr);
+      spectrum_vs *mod_r = new spectrum_vs(m_model_spectr);
+      add_new_plot (m_canvas, ref_r, mod_r, "reflectance");
     }
+  else
+    {
+      spectrum_vs *ref_c0 = new spectrum_vs(fit->spectr,    0);
+      spectrum_vs *mod_c0 = new spectrum_vs(m_model_spectr, 0);
+      add_new_plot (m_canvas, ref_c0, mod_c0, "SE tan(psi)");
 
-  spectra_free (gensp);
+      spectrum_vs *ref_c1 = new spectrum_vs(fit->spectr,    1);
+      spectrum_vs *mod_c1 = new spectrum_vs(m_model_spectr, 1);
+      add_new_plot (m_canvas, ref_c1, mod_c1, "SE cos(delta)");
+    }
 
   if (this->stack_result)
     stack_free (this->stack_result);
@@ -640,8 +603,6 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 
   fit_engine_disable (fit);
   fit_engine_free (fit);
-
-  m_canvas_is_dirty = true;
 
   getApp()->endWaitCursor();
 

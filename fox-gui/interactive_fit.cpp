@@ -123,8 +123,6 @@ void interactive_fit::config_plot()
       spectrum_vs *mod_c1 = new spectrum_vs(m_model_spectr,       1);
       add_new_plot (m_canvas, ref_c1, mod_c1, "SE cos(delta)");
     }
-
-  m_canvas->set_dirty(true);
 }
 
 long

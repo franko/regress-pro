@@ -13,9 +13,14 @@ namespace newplot
   public:
     plot_array() { }
 
-    virtual ~plot_array() { 
+    virtual ~plot_array() { clear(); }
+
+    void clear() { 
       for (unsigned i = 0; i < m_plot.size(); i++)
 	delete m_plot[i];
+
+      m_plot.clear();
+      m_layout.reset();
     }
 
     unsigned size() const { return m_plot.size(); }
@@ -51,6 +56,7 @@ namespace newplot
     vertical_layout() : m_size(0) {}
 
     void add() { m_size++; }
+    void reset() { m_size = 0; }
 
     void get_matrix(agg::trans_affine& mt, int width, int height, unsigned i) {
       unsigned n = m_size;
@@ -62,7 +68,7 @@ namespace newplot
 	  mt.shx = 0.0;
 	  mt.sy  = h;
 	  mt.tx  = 0.0;
-	  mt.ty  = h * i;
+	  mt.ty  = h * (n-i-1);
 	}
       else
 	{

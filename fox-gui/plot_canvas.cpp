@@ -50,9 +50,9 @@ plot_canvas::draw_plot(FXEvent* event)
       m_plots.draw(m_canvas, ww, hh);
       m_img->render();
 
-      FXDCWindow *dcwin = (event ? new FXDCWindow(this, event) : new FXDCWindow(this));
-      dcwin->drawImage(m_img, 0, 0);
-      delete dcwin;
+      FXDCWindow *dc = (event ? new FXDCWindow(this, event) : new FXDCWindow(this));
+      dc->drawImage(m_img, 0, 0);
+      delete dc;
     }
 
   m_dirty_flag = false;

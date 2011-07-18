@@ -31,11 +31,20 @@ public:
 
   plot_type* plot(unsigned i) { return m_plots.plot(i); }
 
-  void add(plot_type* plot) { m_plots.add(plot); }
+  void add(plot_type* plot) { 
+    m_plots.add(plot);
+    m_dirty_flag = true;
+  }
 
   void update_limits() {
     for (unsigned i = 0; i < m_plots.size(); i++)
       m_plots.plot(i)->update_limits();
+    m_dirty_flag = true;
+  }
+
+  void clear_plots() { 
+    m_plots.clear(); 
+    m_dirty_flag = true;
   }
 
   void set_dirty(bool flag) { m_dirty_flag = true; }

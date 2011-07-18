@@ -26,7 +26,7 @@
 #include "str.h"
 
 #include "elliss_app.h"
-#include "fx_plot.h"
+#include "plot_canvas.h"
 #include "spectra.h"
 #include "symtab.h"
 
@@ -56,7 +56,6 @@ protected:
   FXTabItem         *tabscript, *tabplot;
   FXText            *scripttext;
   FXText            *resulttext;
-  FXCanvas          *plotcanvas;
 
   FXFont            *scriptfont;
 
@@ -73,8 +72,6 @@ private:
 public:
   elliss_app* get_elliss_app() const { return (elliss_app*) getApp(); }
 
-  long onCmdPaint(FXObject*,FXSelector,void*);
-  long onUpdCanvas(FXObject*,FXSelector,void*);
   long onCmdLoadScript(FXObject*,FXSelector,void*);
   long onCmdSaveScript(FXObject*,FXSelector,void*);
   long onCmdSaveAsScript(FXObject*,FXSelector,void *);
@@ -96,13 +93,11 @@ public:
   void updateFitStrategy();
   void setErrorRegion (int sl, int el);
   void cleanScriptErrors ();
-  void plotCanvas(FXDCWindow *dc);
   void reportErrors();
 
 public:
   enum {
-    ID_CANVAS = FXMainWindow::ID_LAST,
-    ID_LOAD_SCRIPT,
+    ID_LOAD_SCRIPT = FXMainWindow::ID_LAST,
     ID_SAVE_SCRIPT,
     ID_SAVEAS_SCRIPT,
     ID_LOAD_SPECTRA,
@@ -127,13 +122,12 @@ public:
 private:
   bool check_spectrum(const char *context);
 
+  struct spectrum* m_model_spectr;
+
+  plot_canvas* m_canvas;
+
   bool m_title_dirty;
   bool m_title_modified;
-
-  bool m_canvas_is_dirty;
-
-  enum system_kind m_plotkind;
-  fx_plot_array<2> m_plot;
 };
 
 extern "C" {

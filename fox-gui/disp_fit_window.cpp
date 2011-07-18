@@ -128,15 +128,13 @@ disp_fit_window::config_plot()
 
   sampling_unif& samp = m_wl_sampling;
 
-  disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, samp);
-  disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, samp);
-  add_new_plot(m_canvas, ref_k, mod_k, "abs coefficient");
-
   disp_vs<sampling_unif>* ref_n = new disp_vs<sampling_unif>(ref,   cmpl::real_part, samp);
   disp_vs<sampling_unif>* mod_n = new disp_vs<sampling_unif>(model, cmpl::real_part, samp);
   add_new_plot(m_canvas, ref_n, mod_n, "refractive index");
 
-  m_canvas->set_dirty(true);
+  disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, samp);
+  disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, samp);
+  add_new_plot(m_canvas, ref_k, mod_k, "absorption coeff");
 }
 
 void
@@ -237,7 +235,6 @@ disp_fit_window::onChangeSpectralRange(FXObject *, FXSelector, void*_txt)
     {
       m_wl_entry->setTextColor(FXRGB(0,0,0));
       m_canvas->update_limits();
-      m_canvas->set_dirty(true);
     }
   else
     {
@@ -254,7 +251,6 @@ disp_fit_window::onCmdSpectralRange(FXObject *, FXSelector, void*)
   if (update_spectral_range (s.text()))
     {
       m_canvas->update_limits();
-      m_canvas->set_dirty(true);
       return 1;
     }
   return 0;
