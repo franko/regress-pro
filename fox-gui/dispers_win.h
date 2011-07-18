@@ -3,7 +3,6 @@
 
 #include <fx.h>
 
-#include "fx_plot.h"
 #include "dispers.h"
 #include "sampling.h"
 #include "plot_canvas.h"
