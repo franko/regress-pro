@@ -181,23 +181,9 @@ spectr_cut_range (struct spectrum *s, float inf, float sup)
 struct spectrum *
 spectra_copy (struct spectrum *src)
 {
-  struct spectrum *copy;
-  struct data_view *view;
-
-  copy = emalloc (sizeof(struct spectrum));
-  memcpy (copy, src, sizeof(struct spectrum));
-
-  view = copy->table;
-
-  if (view->map != NULL)
-    {
-      int *new_map = emalloc (view->rows * sizeof(int));
-      memcpy (new_map, view->map, view->rows * sizeof(int));
-      view->map = new_map;
-    }
-
-  data_table_ref (view->table);
-
+  struct spectrum *copy = emalloc (sizeof(struct spectrum));
+  memcpy (&copy->config, &src->config, sizeof(struct system_config));
+  data_view_copy (copy->table, src->table);
   return copy;
 }
 

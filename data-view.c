@@ -33,7 +33,6 @@ data_view_copy (struct data_view *dest, const struct data_view *src)
 
   if (src->map)
     {
-#warning potential memory leakage
       dest->map = emalloc (src->rows * sizeof(int));
       memcpy (dest->map, src->map, src->rows * sizeof(int));
     }

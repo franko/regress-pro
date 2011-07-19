@@ -27,6 +27,7 @@ class interactive_fit : public FXMainWindow {
 private:
 
   struct fit_engine* m_fit_engine;
+  struct spectrum* m_ref_spectr;
   struct spectrum* m_model_spectr;
   struct fit_parameters *m_fit_parameters;
   agg::pod_array<param_info> m_parameters;

@@ -17,7 +17,7 @@ FXDEFMAP(interactive_fit) interactive_fitMap[]={
 // Object implementation
 FXIMPLEMENT(interactive_fit,FXMainWindow,interactive_fitMap,ARRAYNUMBER(interactive_fitMap));
 
-interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struct spectrum *user_spectr)
+interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struct spectrum* user_spectr)
   : FXMainWindow(app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480),
     m_fit_engine(_fit), m_canvas(0)
 {
@@ -76,15 +76,18 @@ interactive_fit::~interactive_fit() {
   fit_engine_disable(m_fit_engine);
   fit_engine_free(m_fit_engine);
   fit_parameters_free(m_fit_parameters);
+  spectra_free(m_ref_spectr);
   spectra_free(m_model_spectr);
   delete fitmenu;
 }
 
 void interactive_fit::init_engine(struct spectrum* user_spectr)
 {
+  m_ref_spectr = spectra_copy (user_spectr);
+
   m_fit_engine->config->subsampling = 0;
 
-  fit_engine_prepare (m_fit_engine, user_spectr, 0);
+  fit_engine_prepare (m_fit_engine, m_ref_spectr, 0);
 
   struct fit_parameters *params = fit_engine_get_all_parameters (m_fit_engine);
 
