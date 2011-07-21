@@ -1,15 +1,25 @@
 
 #include <assert.h>
 
-#include "Strcpp.h"
+#include "dispers-library.h"
+
 #include "disp_chooser.h"
 
 class disp_iter {
   struct symtab *m_symtab;
-  struct assign *m_iter;
 
-  const char *iter(struct assign *it) {
-    m_iter = it;
+  enum iter_class_e {
+    iter_symtab,
+    iter_library,
+  };
+
+  str_t m_name_buffer;
+
+  enum iter_class_e m_iter_sel;
+  struct assign *m_iter;
+  int m_lib_iter;
+
+  const char *assign_iter() {
     while (m_iter = symbol_table_next (m_symtab, m_iter))
       {
 	if (m_iter->value->type == TL_TYPE_DISP)
@@ -18,16 +28,66 @@ class disp_iter {
     return (m_iter ? CSTR(m_iter->name) : 0);
   }
 
+  const char *library_iter() {
+    const char* name;
+    if (dispers_library_get(m_lib_iter ++, &name))
+      {
+	str_printf (m_name_buffer, "lib:%s", name);
+	return CSTR(m_name_buffer);
+      }
+    return NULL;
+  }
+
 public:
-  disp_iter(struct symtab *s) : m_symtab(s), m_iter(0) {};
+  disp_iter(struct symtab *s) : m_symtab(s) {
+    str_init (m_name_buffer, 32);
+  }
 
-  const char *start() { return iter(0); }
-  const char *next()  { return iter(m_iter); }
+  ~disp_iter() {
+    str_free (m_name_buffer);
+  }
 
-  disp_t* get(FXString& disp_name)
+  void reset() { 
+    m_iter_sel = iter_symtab;
+    m_iter = 0;
+  }
+
+  const char *start() {
+    reset();
+    return next();
+  }
+
+  const char *next()  {
+    if (m_iter_sel == iter_symtab)
+      {
+	const char* name = assign_iter();
+	if (name)
+	  return name;
+
+	m_iter_sel = iter_library;
+	m_lib_iter = 0;
+
+	return library_iter();
+      }
+    else if (m_iter_sel == iter_library)
+      {
+	return library_iter();
+      }
+
+    return 0;
+  }
+
+  disp_t* get(const char* name)
   {
-    Str s((const char *) disp_name.text());
-    return (disp_t*) retrieve_parsed_object (m_symtab, TL_TYPE_DISP, s.str());
+    if (strncmp (name, "lib:", 4) == 0)
+      {
+	const char* disp_name = name + 4;
+	return dispers_library_search (disp_name);
+      }
+
+    str_t name_view;
+    str_init_view (name_view, name);
+    return (disp_t*) retrieve_parsed_object (m_symtab, TL_TYPE_DISP, name_view);
   }
 
   int length()
@@ -115,8 +175,8 @@ disp_chooser_win::onCmdAccept(FXObject *, FXSelector, void *ptr)
   FXString ref_name = m_ref_combo->getText();
   FXString mod_name = m_mod_combo->getText();
 
-  m_ref   = m_disp_list->get(ref_name);
-  m_model = m_disp_list->get(mod_name);
+  m_ref   = m_disp_list->get (ref_name.text());
+  m_model = m_disp_list->get (mod_name.text());
 
   assert (m_ref && m_model);
 

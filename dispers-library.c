@@ -119,3 +119,18 @@ dispers_library_search (const char *id)
 
   return result;
 }
+
+disp_t *
+dispers_library_get (int index, char const ** lname)
+{
+  struct disp_list_node *n;
+  for (n = dispers_library_list; n; n = n->next, index--)
+    {
+      if (index == 0)
+	{
+	  *lname = n->id;
+	  return n->content;
+	}
+    }
+  return NULL;
+}
