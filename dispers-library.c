@@ -72,7 +72,7 @@ dispers_library_init ()
   dt->table_ref     = (struct data_table *) & si_data_table;
 
   node = node_prealloc + idx;
-  add_dispersion_node (node, prev, "Si", current);
+  add_dispersion_node (node, prev, "si", current);
   prev = node;
   idx ++;
 
@@ -85,17 +85,17 @@ dispers_library_init ()
   idx ++;
 
   /* water dispersion */
-  current = disp_new_cauchy ("H2O", water_cauchy_n, water_cauchy_k);
+  current = disp_new_cauchy ("water", water_cauchy_n, water_cauchy_k);
 
   node = node_prealloc + idx;
-  add_dispersion_node (node, prev, "H2O", current);
+  add_dispersion_node (node, prev, "water", current);
   prev = node;
   idx ++;
 
   current = disp_new_ho ("Thermal SiO2", 1, sio2_ho_params);
 
   node = node_prealloc + idx;
-  add_dispersion_node (node, prev, "SiO2", current);
+  add_dispersion_node (node, prev, "sio2", current);
   prev = node;
   idx ++;
 
