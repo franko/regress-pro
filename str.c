@@ -45,6 +45,14 @@ str_init (str_ptr s, int len)
   s->length = 0;
 }
 
+void
+str_init_view (str_ptr s, const char *data)
+{
+  s->heap = (char *) data;
+  s->length = strlen (data);
+  s->size = 0;
+}
+
 str_ptr
 str_new (void)
 {
@@ -88,6 +96,8 @@ void
 str_size_check (str_t s, size_t reqlen)
 {
   char *old_heap;
+
+  assert (s->size > 0);
 
   if (reqlen+1 < s->size)
     return;

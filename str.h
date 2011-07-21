@@ -36,6 +36,7 @@ typedef struct _str const *const_str_ptr;
 
 extern str_ptr  str_new           (void);
 extern void     str_init          (str_ptr s, int len);
+extern void     str_init_view     (str_ptr s, const char *data);
 extern void     str_free          (str_ptr s);
 extern void     str_size_check    (str_t s, size_t reqlen);
 extern void     str_init_from_c   (str_ptr s, const char *sf);
