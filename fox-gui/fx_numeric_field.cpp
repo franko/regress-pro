@@ -90,9 +90,6 @@ parse_number (const char* txt, int& int_part, int& frac_part, int& sign,
     }
 
   int_part = parse_simple_int (ptr, &tail);
-
-  if (tail == ptr)
-    return -1;
   
   int dot_pos = tail - txt;
   
@@ -101,15 +98,16 @@ parse_number (const char* txt, int& int_part, int& frac_part, int& sign,
     {
       ptr ++;
       frac_part = parse_simple_int (ptr, tail_f);
-      if (*tail_f == ptr)
-	return -1;
       pow_exp = *tail_f - ptr;
+      ptr = *tail_f;
     }
   else
     {
       frac_part = 0;
       pow_exp = 0;
     }
+
+  if (*ptr != 0) return -1;
 
   return dot_pos;
 }
@@ -120,6 +118,7 @@ get_normalized_int (const char* txt, int& pow_exp, int& dot_pos)
   char const *tail;
   int int_part, frac_part, sign;
   dot_pos = parse_number (txt, int_part, frac_part, sign, pow_exp, &tail);
+  if (dot_pos < 0) return 0;
   int_part *= ipow10 (pow_exp);
   return sign * (int_part + frac_part);
 }
@@ -146,9 +145,11 @@ long fx_numeric_field::change_on_digit(int sign)
 {
   FXString txt = getText();
   int pos = getCursorPos();
-
+  
   int pow_exp, dot_pos;
   int norm = get_normalized_int (txt.text(), pow_exp, dot_pos);
+
+  if (dot_pos < 0) return 0;
   
   int pos_exp = dot_pos - pos;
   if (pos_exp < 0)
@@ -167,7 +168,7 @@ long fx_numeric_field::change_on_digit(int sign)
 
   if (target) 
     target->tryHandle(this, FXSEL(SEL_CHANGED,message), (void*)new_txt.text());
-
+    
   return 1;
 }
 
