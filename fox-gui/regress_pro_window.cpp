@@ -311,6 +311,22 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 	    spectra_free (this->spectrum);
 
 	  this->spectrum = new_spectrum;
+
+	  enum system_kind spectr_kind = this->spectrum->config.system;
+
+	  if (spectr_kind == SYSTEM_REFLECTOMETER)
+	    {
+	      spectrum_vs *ref_r = new spectrum_vs(this->spectrum);
+	      add_new_simple_plot (m_canvas, ref_r, "reflectance");
+	    }
+	  else
+	    {
+	      spectrum_vs *ref_c0 = new spectrum_vs(this->spectrum, 0);
+	      add_new_simple_plot (m_canvas, ref_c0, "SE tan(psi)");
+
+	      spectrum_vs *ref_c1 = new spectrum_vs(this->spectrum, 1);
+	      add_new_simple_plot (m_canvas, ref_c1, "SE cos(delta)");
+	    }
 	}
 
       return 1;
