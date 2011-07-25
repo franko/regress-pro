@@ -4,7 +4,7 @@
 #include "fit-engine.h"
 #include "lmfit-simple.h"
 #include "fx_numeric_field.h"
-#include "spectrum_vs.h"
+#include "spectrum_plot.h"
 
 // Map
 FXDEFMAP(interactive_fit) interactive_fitMap[]={
@@ -109,23 +109,7 @@ void interactive_fit::init_engine(struct spectrum* user_spectr)
 
 void interactive_fit::config_plot()
 {
-
-  if (m_fit_engine->system_kind == SYSTEM_REFLECTOMETER)
-    {
-      spectrum_vs *ref_r = new spectrum_vs(m_fit_engine->spectr);
-      spectrum_vs *mod_r = new spectrum_vs(m_model_spectr);
-      add_new_plot (m_canvas, ref_r, mod_r, "reflectance");
-    }
-  else
-    {
-      spectrum_vs *ref_c0 = new spectrum_vs(m_fit_engine->spectr, 0);
-      spectrum_vs *mod_c0 = new spectrum_vs(m_model_spectr,       0);
-      add_new_plot (m_canvas, ref_c0, mod_c0, "SE tan(psi)");
-
-      spectrum_vs *ref_c1 = new spectrum_vs(m_fit_engine->spectr, 1);
-      spectrum_vs *mod_c1 = new spectrum_vs(m_model_spectr,       1);
-      add_new_plot (m_canvas, ref_c1, mod_c1, "SE cos(delta)");
-    }
+  spectra_plot (m_canvas, m_fit_engine->spectr, m_model_spectr);
 }
 
 long

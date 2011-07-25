@@ -44,7 +44,7 @@
 #include "dispers-library.h"
 #include "disp_chooser.h"
 #include "disp_fit_window.h"
-#include "spectrum_vs.h"
+#include "spectrum_plot.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
@@ -312,21 +312,7 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 
 	  this->spectrum = new_spectrum;
 
-	  enum system_kind spectr_kind = this->spectrum->config.system;
-
-	  if (spectr_kind == SYSTEM_REFLECTOMETER)
-	    {
-	      spectrum_vs *ref_r = new spectrum_vs(this->spectrum);
-	      add_new_simple_plot (m_canvas, ref_r, "reflectance");
-	    }
-	  else
-	    {
-	      spectrum_vs *ref_c0 = new spectrum_vs(this->spectrum, 0);
-	      add_new_simple_plot (m_canvas, ref_c0, "SE tan(psi)");
-
-	      spectrum_vs *ref_c1 = new spectrum_vs(this->spectrum, 1);
-	      add_new_simple_plot (m_canvas, ref_c1, "SE cos(delta)");
-	    }
+	  spectra_plot_simple (m_canvas, this->spectrum);
 	}
 
       return 1;
@@ -593,24 +579,7 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 
   fit_engine_generate_spectrum (fit, m_model_spectr);
 
-  m_canvas->clear_plots();
-
-  if (fit->system_kind == SYSTEM_REFLECTOMETER)
-    {
-      spectrum_vs *ref_r = new spectrum_vs(fit->spectr);
-      spectrum_vs *mod_r = new spectrum_vs(m_model_spectr);
-      add_new_plot (m_canvas, ref_r, mod_r, "reflectance");
-    }
-  else
-    {
-      spectrum_vs *ref_c0 = new spectrum_vs(fit->spectr,    0);
-      spectrum_vs *mod_c0 = new spectrum_vs(m_model_spectr, 0);
-      add_new_plot (m_canvas, ref_c0, mod_c0, "SE tan(psi)");
-
-      spectrum_vs *ref_c1 = new spectrum_vs(fit->spectr,    1);
-      spectrum_vs *mod_c1 = new spectrum_vs(m_model_spectr, 1);
-      add_new_plot (m_canvas, ref_c1, mod_c1, "SE cos(delta)");
-    }
+  spectra_plot (m_canvas, fit->spectr, m_model_spectr);
 
   if (this->stack_result)
     stack_free (this->stack_result);
