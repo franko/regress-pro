@@ -31,6 +31,7 @@ static void add_dispersion_node (struct disp_list_node *curr,
 				 const char *id, disp_t *disp);
 
 #include "si-paper-table.h"
+#include "poly-table.h"
 
 static struct disp_list_node *dispers_library_list;
 
@@ -43,10 +44,40 @@ add_dispersion_node (struct disp_list_node *curr, struct disp_list_node *prev,
   curr->next = prev;
 }
 
+static disp_t *
+make_poly_dispers ()
+{
+  disp_t *lookup_disp;
+  const int nb_comp = 5;
+  struct lookup_comp *comp_data = malloc (nb_comp * sizeof(struct lookup_comp));
+  int j = 0;
+
+  for (j = 0; j < nb_comp; j++)
+    {
+      struct lookup_comp *comp = comp_data + j;
+      struct disp_table *dt;
+
+      comp->p = poly_p_value[j];
+
+      comp->disp = disp_new_with_name (DISP_TABLE, poly_comp_name[j]);
+      dt = &comp->disp->disp.table;
+
+      dt->points_number = 271;
+      dt->lambda_min    = 240.0;
+      dt->lambda_max    = 780.0;
+      dt->lambda_stride = 2.0;
+      dt->table_ref     = (struct data_table *) &poly_comp[j];
+    }
+
+  lookup_disp = disp_new_lookup ("Poly", 5, comp_data, 0.5);
+
+  return lookup_disp;
+}
+
 void
 dispers_library_init ()
 {
-#define NB_LIBRARY_DISPERS 4
+#define NB_LIBRARY_DISPERS 5
   static struct disp_list_node node_prealloc[NB_LIBRARY_DISPERS];
   static struct ho_params sio2_ho_params[] = {
     {145.0, 15.78839, 0.0, 0.3333, 0.0}};
@@ -96,6 +127,13 @@ dispers_library_init ()
 
   node = node_prealloc + idx;
   add_dispersion_node (node, prev, "sio2", current);
+  prev = node;
+  idx ++;
+
+  current = make_poly_dispers ();
+
+  node = node_prealloc + idx;
+  add_dispersion_node (node, prev, "poly", current);
   prev = node;
   idx ++;
 
