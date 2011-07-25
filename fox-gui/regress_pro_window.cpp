@@ -48,6 +48,12 @@
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
+#ifdef WIN32
+#define SCRIPT_FONT_NAME "Courier New"
+#else
+#define SCRIPT_FONT_NAME "Monospace"
+#endif
+
 // Map
 FXDEFMAP(regress_pro_window) regress_pro_window_map[]={
   FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_SCRIPT_TEXT, regress_pro_window::onUpdScript),
@@ -137,7 +143,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
   scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
   scripttext->setStyled(TRUE);
   scripttext->setHiliteStyles(tstyles);
-  scriptfont = new FXFont(getApp(), "Monospace", 10);
+  scriptfont = new FXFont(getApp(), SCRIPT_FONT_NAME, 10);
   scripttext->setFont(scriptfont);
 
   new FXTabItem(tabbook,"Fit Results",NULL);
