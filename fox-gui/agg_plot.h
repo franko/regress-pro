@@ -185,8 +185,7 @@ namespace newplot
 
   static double 
   compute_scale(agg::trans_affine& m) { 
-    //    return min(m.sy, m.sx) / 480.0; 
-    return sqrt(m.sy * m.sx) / 480.0;
+    return min(m.sy / 320.0, m.sx / 640.0); 
   }
 
   static double
