@@ -22,9 +22,9 @@
 #ifdef WIN32
 static char * stpcpy (char *dst, const char *src)
 {
-  dst += strlen (dst);
   for ( ; *src; dst++, src++)
     *dst = *src;
+  *dst = 0;
   return dst;
 }
 #endif
