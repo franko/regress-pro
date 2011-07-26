@@ -12,6 +12,7 @@ FXDEFMAP(interactive_fit) interactive_fitMap[]={
   FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_PARAM_VALUE,  interactive_fit::onCmdParamChange),
   FXMAPFUNC(SEL_CHANGED, interactive_fit::ID_PARAM_VALUE,  interactive_fit::onCmdParamChange),
   FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_RUN_FIT,      interactive_fit::onCmdRunFit),
+  FXMAPFUNC(SEL_COMMAND, interactive_fit::ID_PLOT_SCALE,   interactive_fit::onCmdPlotAutoScale),
 };
 
 // Object implementation
@@ -29,8 +30,13 @@ interactive_fit::interactive_fit(elliss_app *app, struct fit_engine *_fit, struc
 
   // fit menu
   fitmenu = new FXMenuPane(this);
-  new FXMenuCommand(fitmenu,"&Run",NULL,this,ID_RUN_FIT);
-  new FXMenuTitle(menubar,"&Fit",NULL,fitmenu);
+  new FXMenuCommand(fitmenu, "&Run", NULL, this, ID_RUN_FIT);
+  new FXMenuTitle(menubar, "&Fit", NULL, fitmenu);
+
+  // plot menu
+  plotmenu = new FXMenuPane(this);
+  new FXMenuCommand(plotmenu, "&Auto Scale", NULL, this, ID_PLOT_SCALE);
+  new FXMenuTitle(menubar, "&Plot", NULL, plotmenu);
 
   FXHorizontalFrame *mf = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXScrollWindow *iw = new FXScrollWindow(mf, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
@@ -79,6 +85,7 @@ interactive_fit::~interactive_fit() {
   spectra_free(m_ref_spectr);
   spectra_free(m_model_spectr);
   delete fitmenu;
+  delete plotmenu;
 }
 
 void interactive_fit::init_engine(struct spectrum* user_spectr)
@@ -118,6 +125,13 @@ interactive_fit::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
   FXCheckButton *cb = (FXCheckButton *) _cb;
   param_info* p_inf = (param_info*) cb->getUserData();
   p_inf->selected = cb->getCheck();
+  return 1;
+}
+
+long
+interactive_fit::onCmdPlotAutoScale(FXObject*, FXSelector, void*)
+{
+  m_canvas->update_limits();
   return 1;
 }
 

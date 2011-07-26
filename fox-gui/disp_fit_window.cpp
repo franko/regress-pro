@@ -15,6 +15,7 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]={
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_PARAM_VALUE,  disp_fit_window::onCmdParamChange),
   FXMAPFUNC(SEL_CHANGED, disp_fit_window::ID_PARAM_VALUE,  disp_fit_window::onCmdParamChange),
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_RUN_FIT,      disp_fit_window::onCmdRunFit),
+  FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_PLOT_SCALE,   disp_fit_window::onCmdPlotAutoScale),
   FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SPECTR_RANGE, disp_fit_window::onCmdSpectralRange),
   FXMAPFUNC(SEL_CHANGED, disp_fit_window::ID_SPECTR_RANGE, disp_fit_window::onChangeSpectralRange),
 };
@@ -34,8 +35,13 @@ disp_fit_window::disp_fit_window(elliss_app *app, struct disp_fit_engine *_fit)
 
   // fit menu
   fitmenu = new FXMenuPane(this);
-  new FXMenuCommand(fitmenu,"&Run",NULL,this,ID_RUN_FIT);
-  new FXMenuTitle(menubar,"&Fit",NULL,fitmenu);
+  new FXMenuCommand(fitmenu, "&Run", NULL, this, ID_RUN_FIT);
+  new FXMenuTitle(menubar, "&Fit", NULL, fitmenu);
+
+  // plot menu
+  plotmenu = new FXMenuPane(this);
+  new FXMenuCommand(plotmenu, "&Auto Scale", NULL, this, ID_PLOT_SCALE);
+  new FXMenuTitle(menubar, "&Plot", NULL, plotmenu);
 
   FXHorizontalFrame *mf = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
   FXScrollWindow *iw = new FXScrollWindow(mf, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
@@ -109,6 +115,7 @@ disp_fit_window::~disp_fit_window()
   disp_fit_engine_free (m_fit_engine);
   fit_parameters_free(m_fit_parameters);
   delete fitmenu;
+  delete plotmenu;
 }
 
 long
@@ -117,6 +124,13 @@ disp_fit_window::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
   FXCheckButton *cb = (FXCheckButton *) _cb;
   param_info* p_inf = (param_info*) cb->getUserData();
   p_inf->selected = cb->getCheck();
+  return 1;
+}
+
+long
+disp_fit_window::onCmdPlotAutoScale(FXObject*, FXSelector, void*)
+{
+  m_canvas->update_limits();
   return 1;
 }
 

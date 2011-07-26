@@ -36,6 +36,7 @@ protected:
   FXMenuBar         *menubar;
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
+  FXMenuPane        *plotmenu;
 
   FXTextField* m_wl_entry;
 
@@ -63,6 +64,7 @@ public:
   long onCmdParamSelect(FXObject*, FXSelector,void*);
   long onCmdParamChange(FXObject*, FXSelector,void*);
   long onCmdRunFit(FXObject*, FXSelector,void*);
+  long onCmdPlotAutoScale(FXObject*, FXSelector,void*);
   long onCmdSpectralRange(FXObject*, FXSelector,void*);
   long onChangeSpectralRange(FXObject*, FXSelector,void*);
 
@@ -71,6 +73,7 @@ public:
     ID_PARAM_VALUE,
     ID_SPECTR_RANGE,
     ID_RUN_FIT,
+    ID_PLOT_SCALE,
     ID_LAST
   };
 };

@@ -36,6 +36,7 @@ protected:
   FXMenuBar         *menubar;
   FXStatusBar       *statusbar;
   FXMenuPane        *fitmenu;
+  FXMenuPane        *plotmenu;
 
   plot_canvas *m_canvas;
 
@@ -57,11 +58,13 @@ public:
   long onCmdParamSelect(FXObject*, FXSelector,void*);
   long onCmdParamChange(FXObject*, FXSelector,void*);
   long onCmdRunFit(FXObject*, FXSelector,void*);
+  long onCmdPlotAutoScale(FXObject*, FXSelector,void*);
 
   enum {
     ID_PARAM_SELECT = FXMainWindow::ID_LAST,
     ID_PARAM_VALUE,
     ID_RUN_FIT,
+    ID_PLOT_SCALE,
     ID_LAST
   };
 };
