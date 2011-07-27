@@ -43,7 +43,8 @@
 #include "str-util.h"
 #include "dispers-library.h"
 #include "disp_chooser.h"
-#include "disp_fit_window.h"
+#include "disp_fit_manager.h"
+#include "fit_window.h"
 #include "spectrum_plot.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
@@ -353,7 +354,9 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 
   if (disp_chooser (getApp(), this->symtab, fit))
     {
-      disp_fit_window *fitwin = new disp_fit_window(get_elliss_app(), fit);
+      elliss_app *app = get_elliss_app();
+      disp_fit_manager *mgr = new disp_fit_manager(fit);
+      fit_window *fitwin = new fit_window(mgr, app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
       fitwin->create();
       fitwin->show(FX::PLACEMENT_SCREEN);
     }
