@@ -26,7 +26,7 @@ REG_LIBS = -lmhash -lgmp
 LIBS += $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
-  LIBS += -lgdi32 -lwsock32
+  LIBS += -lgdi32 -lwsock32 -mwindows
 endif
 
 INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
