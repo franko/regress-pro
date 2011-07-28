@@ -28,6 +28,6 @@ private:
   int m_index;
 };
 
-typedef vs_scaling_gen<spectrum_base_vs, const struct spectrum*> spectrum_vs;
+typedef vs_scaling_gen<spectrum_base_vs> spectrum_vs;
 
 #endif

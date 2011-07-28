@@ -23,16 +23,16 @@ struct vs_object {
   virtual ~vs_object() { }
 };
 
-template <class VertexSource, class InitType>
+template <class VertexSource>
 class vs_scaling_gen : public vs_object {
-
   typedef VertexSource base_type;
-
 public:
+  template <class InitType>
   vs_scaling_gen(InitType init0) : 
     m_source(init0), m_mtx(), m_trans(m_source, m_mtx)
   {}
 
+  template <class InitType>
   vs_scaling_gen(InitType init0, int index) : 
     m_source(init0, index), m_mtx(), m_trans(m_source, m_mtx)
   {}
