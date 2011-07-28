@@ -467,6 +467,7 @@ struct spectrum *
 fit_engine_alloc_spectrum (struct fit_engine *fit)
 {
   struct spectrum *synth = malloc (sizeof(struct spectrum));
+  synth->config = fit->spectr->config;
   int npt = spectra_points (fit->spectr);
   struct data_table *table = data_table_new (npt, 3);
   data_view_init (synth->table, table);

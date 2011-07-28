@@ -45,7 +45,7 @@
 #include "disp_chooser.h"
 #include "disp_fit_manager.h"
 #include "fit_window.h"
-#include "spectrum_plot.h"
+#include "interactive_fit.h"
 
 static float timeval_subtract (struct timeval *x, struct timeval *y);
 
@@ -622,7 +622,9 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
       return 0;
     }
 
-  interactive_fit *fitwin = new interactive_fit(get_elliss_app(), fit, spectrum);
+  interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
+  elliss_app *app = get_elliss_app();
+  fit_window *fitwin = new fit_window(fitmgr, app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
   fitwin->create();
   fitwin->show(FX::PLACEMENT_SCREEN);
   return 1;
