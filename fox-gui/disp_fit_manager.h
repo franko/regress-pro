@@ -17,6 +17,12 @@ public:
     set_fit_param (&m_fp_template, 0);
   }
 
+  virtual ~disp_fit_manager() 
+  {
+    disp_free (m_fit_engine->model_disp);
+    disp_fit_engine_free (m_fit_engine);
+  }
+
   virtual unsigned parameters_number()
   { 
     return disp_get_number_of_params (m_fit_engine->model_disp); 
@@ -114,11 +120,6 @@ public:
     disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, m_sampling);
     disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, m_sampling);
     add_new_plot(canvas, ref_k, mod_k, "absorption coeff");
-  }
-
-  virtual ~disp_fit_manager() 
-  {
-    disp_fit_engine_free (m_fit_engine);
   }
 
 private:
