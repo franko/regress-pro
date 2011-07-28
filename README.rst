@@ -21,24 +21,34 @@ Regress pro features:
  * simultaneous fit of multiple spectra with common and individual parameters
  * user-friendly graphical user interface
 
+In version 1.4 the following features have been added:
+
+ * ability to perform regression on dispersion curves based on a given model
+ * interactive fit of experimental data
+
+alongside with many other improvements in usability and the introduction of a new plotting style based on the anti-grain library of Maxim Shemarev.
+
 Current Plans
 -------------
 
 It is planned to add new features in Regress Pro. Most notably :
 
-  * ability to perform regression on dispersion curves based on a given model
   * multiple step regressions
-  * interactive fitting of spectra
   * more accurate fitting by taking into account the numerical aperture of the light beam
 
 License
 -------
 
-Regress Pro is distributed under the GNU General Public License (GPL). The program use two libraries provided under the GNU Lesser General Public License (LGPL): 
+Regress Pro is distributed under the GNU General Public License (GPL). The application uses different libraries provided under the GPL or LGPL license:
 
-  GNU Scientific Library, version 1.7. The library is used mainly for the Levenberg-Marquardt algorythm for non-linear fitting.
+  * GNU Scientific Library, version 1.4. The library is used mainly for the Levenberg-Marquardt algorythm for non-linear fitting.
+  * The FOX toolkit, version 1.6. This excellent library is used to provide a Graphical User Interface on Linux and Windows platforms.
+  * The anti-grain library of Maxi Shemarev
 
-  The FOX toolkit, version 1.4.33. This excellent library is used to provide a Graphical User Interface on Linux and Windows platforms.
+The following libraries are also used to implement the RSA algorithm for the registration code signature:
+
+  * The GNU Multiple Precision Arithmetic Library (GMP)
+  * libmhash
 
 Downloads
 ---------
@@ -50,10 +60,9 @@ Requirements
 
 The program can be compiled both on Windows and Linux/UNIX platforms using the GCC compiler. The following libraries are needed to compile the program
 
-  * GNU Scientific Library, version >= 1.7
-  * FOX toolkit library, either 1.4 or 1.6 
-    (recently tested with 1.6.37)
-
-The provided windows binary doesn't need any external library.
-
+  * GNU Scientific Library, version >= 1.14
+  * FOX toolkit library, version 1.6 
+  * AGG library, version 2.5
+  * GMP library
+  * libmhash
 

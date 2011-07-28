@@ -9,6 +9,7 @@ The following libraries are needed to compile Regress Pro:
 - GSL library, should work with any recent version. Tested with version
   1.14 and 1.15.
 - FOX toolkit library, version 1.6
+- AGG library, verison 2.5
 
 The following libraries are needed only when the product registration is enabled:
 - libmhash
@@ -34,8 +35,9 @@ The registration is not meant as a restriction over the software itself, this
 latter is available without restriction accordingly to the GNU GPL license.
 The registration is meant for the optimized binary package produced by the
 author itself and proposed to the users. It should be seen as a facility to
-avoid the difficulties of the software compilation and as a contribution to
-the project itself and its development.
+avoid the difficulties of the software compilation and the user should consider
+to register the software to contribute to the development of the project and
+to reward the author for his work.
 
 If you compile the software by yourself feel free to disable the product
 registrations in the file 'makeconfig' but please consider also that the

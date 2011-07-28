@@ -1,14 +1,10 @@
 
-/*
-  $Id: defs.h,v 1.3 2006/10/30 22:55:13 francesco Exp $
- */
-
 #ifndef DEFS_H
 #define DEFS_H
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 3
-#define VERSION_PATCH 4
+#define VERSION_MINOR 4
+#define VERSION_PATCH 0
 
 #define REGISTRATION_VERSION 1
 
