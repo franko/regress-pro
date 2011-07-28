@@ -33,7 +33,7 @@ public:
   virtual double get_parameter(unsigned k, fit_param_t* fp)
   {
     *fp = m_all_parameters->values[k];
-    return fit_engine_get_default_param_value(m_fit_engine, fp);
+    return fit_engine_get_parameter_value(m_fit_engine, fp);
   }
 
   virtual void set_parameter_value(unsigned k, double val)
@@ -46,7 +46,7 @@ public:
   virtual double get_parameter_value(unsigned k)
   {
     fit_param_t* fp = &m_all_parameters->values[k];
-    return fit_engine_get_default_param_value(m_fit_engine, fp);
+    return fit_engine_get_parameter_value(m_fit_engine, fp);
   }
 
   virtual void get_sampling(double& s_start, double& s_end, double& s_step)
@@ -70,7 +70,7 @@ public:
     for (unsigned k = 0; k < fps->number; k++)
     {
       fit_param_t* fp = fps->values + k;
-      double val = fit_engine_get_default_param_value(m_fit_engine, fp);
+      double val = fit_engine_get_parameter_value(m_fit_engine, fp);
       gsl_vector_set (x, k, val);
     }
 

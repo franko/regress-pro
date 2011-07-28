@@ -382,8 +382,8 @@ fit_engine_get_all_parameters (struct fit_engine *fit)
 }
 
 double
-fit_engine_get_default_param_value (const struct fit_engine *fit, 
-				    const fit_param_t *fp)
+fit_engine_get_parameter_value (const struct fit_engine *fit, 
+				const fit_param_t *fp)
 {
   if (fp->id == PID_FIRSTMUL)
     {
@@ -471,14 +471,6 @@ fit_engine_alloc_spectrum (struct fit_engine *fit)
   int npt = spectra_points (fit->spectr);
   struct data_table *table = data_table_new (npt, 3);
   data_view_init (synth->table, table);
-  return synth;
-}
-
-struct spectrum *
-generate_spectrum (struct fit_engine *fit)
-{
-  struct spectrum *synth = fit_engine_alloc_spectrum (fit);
-  fit_engine_generate_spectrum (fit, synth);
   return synth;
 }
 
