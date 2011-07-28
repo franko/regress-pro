@@ -1,7 +1,7 @@
 
-/* plot-auto.h
+/* plot_auto.h
  * 
- * Copyright (C) 2009, 2010 Francesco Abbate
+ * Copyright (C) 2005-2011 Francesco Abbate
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
