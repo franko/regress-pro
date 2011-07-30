@@ -65,13 +65,13 @@ public:
   fit_window(fit_manager* fit,FXApp* a,const FXString& name,FXIcon *ic=NULL,FXIcon *mi=NULL,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
   virtual ~fit_window();
 
-  long onCmdParamSelect(FXObject*, FXSelector,void*);
-  long onCmdParamChange(FXObject*, FXSelector,void*);
-  long onUpdParam(FXObject*, FXSelector,void*);
-  long onCmdRunFit(FXObject*, FXSelector,void*);
-  long onCmdPlotAutoScale(FXObject*, FXSelector,void*);
-  long onCmdSpectralRange(FXObject*, FXSelector,void*);
-  long onChangeSpectralRange(FXObject*, FXSelector,void*);
+  long on_cmd_param_select(FXObject*, FXSelector,void*);
+  long on_cmd_param_change(FXObject*, FXSelector,void*);
+  long on_update_param(FXObject*, FXSelector,void*);
+  long on_cmd_plot_autoscale(FXObject*, FXSelector,void*);
+  long on_cmd_spectral_range(FXObject*, FXSelector,void*);
+  long on_change_spectral_range(FXObject*, FXSelector,void*);
+  long on_cmd_run_fit(FXObject*, FXSelector,void*);
 
   enum {
     ID_PARAM_SELECT = FXMainWindow::ID_LAST,

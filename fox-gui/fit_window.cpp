@@ -26,14 +26,14 @@
 
 // Map
 FXDEFMAP(fit_window) fit_window_map[]={
-  FXMAPFUNC(SEL_COMMAND, fit_window::ID_PARAM_SELECT, fit_window::onCmdParamSelect),
-  FXMAPFUNC(SEL_COMMAND, fit_window::ID_PARAM_VALUE,  fit_window::onCmdParamChange),
-  FXMAPFUNC(SEL_CHANGED, fit_window::ID_PARAM_VALUE,  fit_window::onCmdParamChange),
-  FXMAPFUNC(SEL_UPDATE,  fit_window::ID_PARAM_VALUE,  fit_window::onUpdParam),
-  FXMAPFUNC(SEL_COMMAND, fit_window::ID_RUN_FIT,      fit_window::onCmdRunFit),
-  FXMAPFUNC(SEL_COMMAND, fit_window::ID_PLOT_SCALE,   fit_window::onCmdPlotAutoScale),
-  FXMAPFUNC(SEL_COMMAND, fit_window::ID_SPECTR_RANGE, fit_window::onCmdSpectralRange),
-  FXMAPFUNC(SEL_CHANGED, fit_window::ID_SPECTR_RANGE, fit_window::onChangeSpectralRange),
+  FXMAPFUNC(SEL_COMMAND, fit_window::ID_PARAM_SELECT, fit_window::on_cmd_param_select),
+  FXMAPFUNC(SEL_COMMAND, fit_window::ID_PARAM_VALUE,  fit_window::on_cmd_param_change),
+  FXMAPFUNC(SEL_CHANGED, fit_window::ID_PARAM_VALUE,  fit_window::on_cmd_param_change),
+  FXMAPFUNC(SEL_UPDATE,  fit_window::ID_PARAM_VALUE,  fit_window::on_update_param),
+  FXMAPFUNC(SEL_COMMAND, fit_window::ID_RUN_FIT,      fit_window::on_cmd_run_fit),
+  FXMAPFUNC(SEL_COMMAND, fit_window::ID_PLOT_SCALE,   fit_window::on_cmd_plot_autoscale),
+  FXMAPFUNC(SEL_COMMAND, fit_window::ID_SPECTR_RANGE, fit_window::on_cmd_spectral_range),
+  FXMAPFUNC(SEL_CHANGED, fit_window::ID_SPECTR_RANGE, fit_window::on_change_spectral_range),
 };
 
 // Object implementation
@@ -105,7 +105,7 @@ fit_window::~fit_window()
 }
 
 long
-fit_window::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
+fit_window::on_cmd_param_select(FXObject* _cb, FXSelector, void*)
 {
   FXCheckButton *cb = (FXCheckButton *) _cb;
   param_info* p_inf = (param_info*) cb->getUserData();
@@ -114,7 +114,7 @@ fit_window::onCmdParamSelect(FXObject* _cb, FXSelector, void*)
 }
 
 long
-fit_window::onUpdParam(FXObject *_txt, FXSelector, void*)
+fit_window::on_update_param(FXObject *_txt, FXSelector, void*)
 {
   FXTextField *txt = (FXTextField *) _txt;
   param_info* p = (param_info*) txt->getUserData();
@@ -130,7 +130,7 @@ fit_window::onUpdParam(FXObject *_txt, FXSelector, void*)
 }
 
 long
-fit_window::onCmdParamChange(FXObject *_txt, FXSelector, void*)
+fit_window::on_cmd_param_change(FXObject *_txt, FXSelector, void*)
 {
   FXTextField *txt = (FXTextField *) _txt;
   param_info* p = (param_info*) txt->getUserData();
@@ -143,7 +143,7 @@ fit_window::onCmdParamChange(FXObject *_txt, FXSelector, void*)
 }
 
 long
-fit_window::onCmdPlotAutoScale(FXObject*, FXSelector, void*)
+fit_window::on_cmd_plot_autoscale(FXObject*, FXSelector, void*)
 {
   m_canvas->update_limits();
   return 1;
@@ -180,7 +180,7 @@ fit_window::update_spectral_range (const char *txt)
 }
 
 long
-fit_window::onChangeSpectralRange(FXObject *, FXSelector, void*_txt)
+fit_window::on_change_spectral_range(FXObject *, FXSelector, void*_txt)
 {
   const char * txt = (const char *) _txt;
 
@@ -198,7 +198,7 @@ fit_window::onChangeSpectralRange(FXObject *, FXSelector, void*_txt)
 }
 
 long
-fit_window::onCmdSpectralRange(FXObject *, FXSelector, void*)
+fit_window::on_cmd_spectral_range(FXObject *, FXSelector, void*)
 {
   FXString s = m_wl_entry->getText();
   if (update_spectral_range (s.text()))
@@ -209,35 +209,32 @@ fit_window::onCmdSpectralRange(FXObject *, FXSelector, void*)
   return 0;
 }
 
-long
-fit_window::onCmdRunFit(FXObject*, FXSelector, void* ptr)
-{
+long fit_window::on_cmd_run_fit(FXObject*, FXSelector, void* ptr) {
   reg_check_point(this);
 
   struct fit_parameters* fps = fit_parameters_new();
 
-  int fit_params_nb = 0;
-  for (unsigned j = 0; j < m_parameters.size(); j++)
-    {
-      if (m_parameters[j].selected)
-	{
-	  fit_parameters_add (fps, &m_parameters[j].fp);
-	  fit_params_nb++;
-	}
+  for (unsigned j = 0; j < m_parameters.size(); j++) {
+    if (m_parameters[j].selected) {
+      fit_parameters_add (fps, &m_parameters[j].fp);
     }
+  }
 
-  m_fit->run(fps);
+  if (fps->number > 0) {
 
-  for (unsigned k = 0; k < m_parameters.size(); k++)
-    {
+    m_fit->run(fps);
+
+    for (unsigned k = 0; k < m_parameters.size(); k++) {
       param_info& p = m_parameters[k];
       FXString s = FXStringFormat("%g", m_fit->get_parameter_value(k));
       p.text_field->setText(s);
       p.is_dirty = true;
     }
 
+    m_canvas->update_limits();
+  }
+
   fit_parameters_free(fps);
 
-  m_canvas->update_limits();
   return 1;
 }
