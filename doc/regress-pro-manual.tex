@@ -1,9 +1,4 @@
 % -*- mode Latex; -*-
-%
-% $Id$
-%
-
-
 \documentclass[a4paper]{report}
 \usepackage{amsmath}
 \usepackage{graphicx}
@@ -50,32 +45,36 @@ script provided with Regress Pro.
 Before defining the film stack you have to define each of the involved
 materials. Let's suppose that you want to define a simple oxide on
 silicon film stack. Then you declare the material in the following way
+
 \begin{verbatim}
-void = CauchyDispersion { n = [1, 0, 0], k = [0, 0, 0] }
-
-sio2 = ReadNKFile "dispers/thermal-sio2.nk"
-
-si = ReadMATFile "dispers/si_paper.mat"
+void = Library "vacuum"
+sio2 = Library "sio2"
+si   = Library "si"
 \end{verbatim}
-In the first row we define the ``void'' material to describe the air
-of the environment. Since we can approximate the air as having a
-refractive index of 1 at all the wavelengths we can describe it with a
-trivial Cauchy model, as indicated. Then, to describe the oxide we
-have used the ``ReadNKFile'' function in order to load a dispersion
-curve in nk format. The same thing has been done for the silicon with
-the difference that in this case the table is in ``MAT''
-format. Regress Pro is able to load both dispersion curve in nk format
-and in MAT format.
 
-In this case we can do something more interesting to describe the
-oxide, we can describe it with an harmonic oscillators model. In this
-case our definition will look like
+What we have done is to load some pre-defined dispersion model from the library using the ``Library'' function.
+This latter takes just a string as argument, it does perform a lookup in the library and return the appropriate model if it was found.
+
+You can also load a dispersion table from a file.
+Regress Pro accept files in the format ``.nk'' and ``.mat''.
+These are two simple human-readable format that just gives the n and k (refractive index and absorption coefficient) at some sampling values of wavelength.
+To load NK or MAT fil you can use the following instructions:
+
+\begin{verbatim}
+  sio2 = ReadNKFile "dispers/thermal-sio2.nk"
+
+  si = ReadMATFile "dispers/si_paper.mat"
+\end{verbatim}
+
+If we use a table model for the oxide (sio2) you will not be able to fit any parameter because the values of n and k are fixed.
+In this case we can do something more interesting and describe the oxide with an harmonic oscillators model.
+In this case our definition will look like
 \begin{verbatim}
 sio2 = HODispersion {
-  parameters = [HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333,
-                    phi= 0.0}]
+  parameters = [HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333, phi= 0.0}]
 }
 \end{verbatim}
+
 The definition is quite self-explanatory. We are using the
 ``HODispersion'' tag to define an Harmonic Oscillator model. Then in
 the field ``parameters'' we define all the parameters of the harmonicl
@@ -97,6 +96,22 @@ provide 5 parameters:
 \end{itemize}
 In this case we can keep ``eg'' and ``phi'' at 0 since the silicon
 oxide is a non-absorbing dielectric.
+
+Another possible model for the oxide is the Cauchy model.
+Here an example where we define the dispersion model of an oxise using the Cauchy model:
+\begin{verbatim}
+sio2 = CauchyDispersion { 
+  n = [1.45, 3.17e+03, 0], 
+  k = [0,0,0]
+}
+\end{verbatim}
+The definition above corresponds to the following mathematical definition:
+\begin{equation}
+  n = n_0 + \frac{n_1}{\lambda^2} + \frac{n_2}{\lambda^4}
+\end{equation}
+where the coefficients $n_0$, $n_1$ and $n_2$ are those given above in the second line of the definition.
+The coefficients should be given in unit of $\textrm{nm}^2$ and $\textrm{nm}^4$ for $n_1$ and $n_2$ respectively ($n_0$ is adimensional).
+For the k the same mathematical law is used even if, strictly speaking, the Cauchy model is for a non-absorbing dielectric wirh $k = 0$ in all the spectral range.
 
 Once we have defined all the materials we can easily describe the film
 stack as follows
@@ -231,6 +246,35 @@ fit like ``max\_iterations'', ``chisq\_thresold'', ``range'' and
 ``subsampling''. The parameter ``chisq\_thresold'', in particular, is
 useful because it determines when a point evaluated during the grid
 search should be considered good enough to start the actual fit.
+
+\chapter{Dispersion Models}
+
+The Harmonic Oscillator model can be defined in the following form:
+\begin{verbatim}
+HODispersion {
+  parameters = [
+    HO {nosc= 145, en= 15.78, eg= 0.0, nu= 0.3333, phi=  0.0},
+    HO {nosc= 10,  en= 6.5,   eg= 0.1, nu= 0.3333, phi= -0.7}]
+}
+\end{verbatim}
+Each harmonic oscillator is identified by the tag ``HO'' with the parameters enclosed with braces.
+You can define as many oscillator has you want but tipical model will have one up to six oscillator.
+
+The mathematical definition of the harmonic oscillator is given by:
+\begin{equation}
+  \epsilon = 1 + \frac{\sum_i H_i}{1 - \sum_i \nu_i H_i}
+\end{equation}
+where $\epsilon$ is the dielectric constant.
+The terms $H_i$ are the contributions of each harmonic oscillator and its defined by the following equation:
+\begin{equation}
+  H_i = A \frac{N_i \, e^{i \Phi_i}}{E_{n,i}^2 - E^2 + i E_{g,i} E}
+\end{equation}
+where $N_i$, $E_{n,i}$, $E_{g,i}$ and $\Phi_i$ are the parameters of the i-th harmonic oscillator, respectively Nosc, En, Eg and Phi.
+The parameter $\nu_i$ takes into account the local field effect and is usually fixed to the theoretical value of $1/3$.
+The constant $A$ is a normalization value fixed to 1.3732.
+
+For the fit stategy the parameter of the HO model can be expressend in the form Nosc:i, En:i, Eg:i, Phi:i where i is a value that identifies the harmonic oscillator starting form zero for the first one.
+
 
 \chapter{Running a Fit}
 To actual running a fit you have to
