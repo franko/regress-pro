@@ -2,6 +2,10 @@
 \documentclass[a4paper]{report}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage{pslatex}
+% \usepackage{palatino}
+% \usepackage{ae,aecompl}
 \begin{document}
 \title{Manual for the use of Regress Pro Ellipsometry}
 \author{F. Abbate}
@@ -105,13 +109,8 @@ sio2 = CauchyDispersion {
   k = [0,0,0]
 }
 \end{verbatim}
-The definition above corresponds to the following mathematical definition:
-\begin{equation}
-  n = n_0 + \frac{n_1}{\lambda^2} + \frac{n_2}{\lambda^4}
-\end{equation}
-where the coefficients $n_0$, $n_1$ and $n_2$ are those given above in the second line of the definition.
-The coefficients should be given in unit of $\textrm{nm}^2$ and $\textrm{nm}^4$ for $n_1$ and $n_2$ respectively ($n_0$ is adimensional).
-For the k the same mathematical law is used even if, strictly speaking, the Cauchy model is for a non-absorbing dielectric wirh $k = 0$ in all the spectral range.
+
+The definition of the Cauchy model can be found in the chapter about dispersion models.
 
 Once we have defined all the materials we can easily describe the film
 stack as follows
@@ -249,6 +248,12 @@ search should be considered good enough to start the actual fit.
 
 \chapter{Dispersion Models}
 
+In this chapter we describe the different dispersions model available in Regress Pro.
+Dispersion models are useful to describe the refractive index and the absorption coefficient of a material as a function of the wavelength.
+Each kind of dispersion model can have different parameters that determines the behaviour of the refractive index with the wavelength.
+When performing a fit of the experimental data the parameters of the dispersion model can be kept fixed or they can be given to the fit procedure to find the values of best fit.
+
+\section{Harmonic Oscillator Model}
 The Harmonic Oscillator model can be defined in the following form:
 \begin{verbatim}
 HODispersion {
@@ -275,6 +280,66 @@ The constant $A$ is a normalization value fixed to 1.3732.
 
 For the fit stategy the parameter of the HO model can be expressend in the form Nosc:i, En:i, Eg:i, Phi:i where i is a value that identifies the harmonic oscillator starting form zero for the first one.
 
+You can therefore designate a complete parameter name using something like ``RI:2:HO:Nosc:0'' or ``RI:2:HO:En:1''.
+
+\section{Cauchy Model}
+
+The Cauchy model defines a refractive index that varies with the wavelength accordingly to the following equation:
+\begin{equation}
+  n = n_0 + \frac{n_1}{\lambda^2} + \frac{n_2}{\lambda^4}
+\end{equation}
+where the coefficients $n_0$, $n_1$ and $n_2$ are those given above in the second line of the definition.
+The coefficients should be given in unit of $\textrm{nm}^2$ and $\textrm{nm}^4$ for $n_1$ and $n_2$ respectively ($n_0$ is adimensional).
+For the k the same mathematical law is used even if, strictly speaking, the Cauchy model is for a non-absorbing dielectric wirh $k = 0$ in all the spectral range.
+
+A Cauchy model can be declared in the following form:
+\begin{verbatim}
+sio2 = CauchyDispersion { 
+  n = [1.45, 3.17e+03, 0], 
+  k = [0,0,0]
+}
+\end{verbatim}
+The coefficients ``n'' are given in the order $n_0$, $n_1$ and $n_2$. The field ``k'', similarly, describes the coefficient $k_0$, $k_1$ and $k_2$ in the given order.
+
+When defining a fit strategy you can refer to the Cauchy coefficients ``n'' as ``N0'', ``N1'' and ``N2''. For the coefficients ``k'' the logic is the same and the parameters are named ``K0'', ``K1'' and ``K2''.
+
+You can therefore designate a complete parameter name using something like ``RI:2:Cauchy:N0''.
+
+\section{Lookup Model}
+
+The lookup model can be used whenever the material can have different refractive index depending on a single numeric parameter.
+Usually the parameter is related to a physical or chemical property of the film so that the value of the parameter is directly related to the state of the material.
+A tipical example is a material that incorporate a percentage of a different atomic element.
+In such case you can assume that for each atomic percentage the material will have a specific refractive index that varies regularly with the parameter itself.
+
+The main idea behind the lookup model is that you identify a single physical parameter that determine the optical properties of the film.
+Then you should identify a range of variability of such parameter.
+In the interval of variation of the parameter you should identify some values for which you provide a known curve of refractive index.
+In this way, when you use the lookup model, the refractive index can be calculated for any value of the parameter by using a linear interpolation of the closest samples available.
+
+To make everything more clear let us suppose that we have a SiGe film that is produced under controlled conditions.
+Let us assume that the only parameter that determine the optical properties of the film is the atomic percentage of the Ge.
+In this case we can choose the Ge\% as a parameter for the lookup model.
+Then we can provide the dispersion curves of n and k for some given values of Ge\%.
+Let us suppose, for example, that we know the curve at Ge = 0\%, 5\%, 10\%, and 15\%.
+In this case we can define a lookup model with a parameter that can goes from 0 up to 15 to cover all the known interval.
+Then if we cant to know the n and k at Ge = 7\% the values will be calculated by linear interpolation from the closest sample at 5\% and 10\%.
+
+The lookup model can be described as follows:
+\begin{verbatim}
+sige = LookupDispersion { 
+  name = "Pseudo-amorphe SiGe",
+  values = [0, 5, 10, 15],
+  dispersions = [sige0, sige5, sige10, sige15],
+  predef = 8.5
+}
+\end{verbatim}
+using the fields ``values'' and ``dispersions'' we define, in the order, the sampling values of the parameter and the corresponding dispersion curves.
+In the example above we assume that we have previously defined ``sige0'', ``sige5'', etc and that they corresponds to the dispersion curve of SiGe for the Ge\% at 0, 5, 10\% etc.
+The field ``predef'' declares what should be the default value of the parameters and is a mandatory field.
+
+When you define a fit strategy you can refer to the parameter of the lookup model by just using the letter ``P''.
+So, for example, the complete name of the parameter could be something like ``RI:2:Lookup:P''.
 
 \chapter{Running a Fit}
 To actual running a fit you have to
