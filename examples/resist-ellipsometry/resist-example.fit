@@ -1,0 +1,44 @@
+
+# we take the Silicon and vacuum dispersion from the library
+si   = Library "si"
+void = Library "vacuum"
+
+pfi_ho = HODispersion {
+  parameters = [
+    HO {nosc= 145, en= 15.7, eg= 0.0, nu= 0.3333, phi= 0.0},
+    HO {nosc= 0.1, en= 4.0,  eg= 0.1, nu= 0.3333, phi= 0.0},
+    HO {nosc= 0.1, en= 5.0,  eg= 0.1, nu= 0.3333, phi= 0.0}]
+}
+
+pfistack = Stack {
+  mediums = [void, pfi_ho, si],
+  thicknesses = [325.0]
+}
+
+thfit = Strategy {
+  params = ["Th:1"],
+  seeds = ["100-600,10"]
+}
+
+# The following strategy keeps fixed the film thickness and perform a fit on the
+# parameters of the resist HO model.
+# In order to place the position of the absorption peaks a grid search is
+# performed oven the "En" parameters.
+rifit = Strategy {
+  params = ["RI:1:HO:Nosc:0", "RI:1:HO:En:0",
+            "RI:1:HO:Nosc:1", "RI:1:HO:En:1", "RI:1:HO:Eg:1", "RI:1:HO:Phi:1",
+            "RI:1:HO:Nosc:2", "RI:1:HO:En:2", "RI:1:HO:Eg:2", "RI:1:HO:Phi:2"],
+  seeds = [100, 11.4,
+           0.02, "4-5,0.05", 0.3, 0,
+           1.1, "5.2-6.2,0.05", 0.15, 0.08]
+}
+
+# We choose a very low chi square thresold to be sure that the selected point from
+# the search grid is actually a good starting point
+set chisq_thresold 100
+
+use stack pfistack
+use strategy rifit
+
+
+

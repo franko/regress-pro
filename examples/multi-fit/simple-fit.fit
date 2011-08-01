@@ -1,0 +1,31 @@
+si   = Library "Si"
+sio2 = Library "SiO2"
+void = Library "vacuum"
+
+sin_opt = HODispersion {
+  name = "SiN Optimized",
+  parameters = [
+    HO {nosc= 141.226, en= 11.4522, eg= 0.810065, nu= 0.3333, phi=-0.0104188}]
+}
+
+dti = Stack {
+  mediums = [void, sio2, sin_opt, sio2, si],
+  thicknesses = [400, 90,7.5]
+}
+
+rifit = Strategy {
+  params = ["Th:1", "Th:2", 
+            "RI:2:HO:Nosc:0", "RI:2:HO:En:0", "RI:2:HO:Eg:0",  "RI:2:HO:Phi:0"],
+  seeds = [ "300-500,10", 89, 74, 8, 0.4, 0]
+}
+
+thfit = Strategy {
+  params = ["Th:1", "Th:2"],
+  seeds = [ "300-500,10", 89]
+}
+
+set max_iterations 200
+
+use stack dti
+use strategy thfit
+

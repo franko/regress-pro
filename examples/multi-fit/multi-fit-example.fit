@@ -1,0 +1,64 @@
+# this script should be executed with Fit->Run Multiple Fit
+
+si   = Library "Si"
+sio2 = Library "SiO2"
+
+sin_simple = HODispersion {
+  name = "SiN",
+  parameters = [
+    HO {nosc= 74.3444, en= 8.35617, eg= 0.474468, nu= 0.3333, phi=-0.0120003}]
+}
+
+void = CauchyDispersion { n = [1, 0, 0], k = [0, 0, 0] }
+
+dti= Stack {
+  mediums = [void, sio2, sin_simple, sio2, si],
+  thicknesses = [422.6003,90.51597,7.5]
+  }
+
+sample00 = Sample {
+  spectrum = "examples/multi-fit/samples/test2787.dat",
+  constraints = [],
+  individual = [328, 89]
+
+}
+
+sample01 = Sample {
+  spectrum = "examples/multi-fit/samples/test2771.dat",
+  constraints = [],
+  individual = [422, 89]
+
+}
+
+sample02 = Sample {
+  spectrum = "examples/multi-fit/samples/test2783.dat",
+  constraints = [],
+  individual = [291, 89]
+
+}
+
+sample03 = Sample {
+  spectrum = "examples/multi-fit/samples/test2784.dat",
+  constraints = [],
+  individual = [353, 89]
+
+}
+
+rifit = Strategy {
+  params = [ "RI:2:HO:Nosc:0", "RI:2:HO:En:0", "RI:2:HO:Eg:0",  "RI:2:HO:Phi:0" ],
+  seeds = [ 74, 8, 0.4, 0]
+}
+
+mfit = MultiFit {
+  samples = [sample00, sample01, sample02, sample03],
+  contraints = [],
+  individual = [ "Th:1", "Th:2" ]    
+}
+
+set max_iterations 200
+
+use stack dti
+use strategy rifit
+use multi_fit mfit
+
+
