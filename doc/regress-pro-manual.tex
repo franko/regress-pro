@@ -340,6 +340,133 @@ The field ``predef'' declares what should be the default value of the parameters
 When you define a fit strategy you can refer to the parameter of the lookup model by just using the letter ``P''.
 So, for example, the complete name of the parameter could be something like ``RI:2:Lookup:P''.
 
+\chapter{Multiple Fit}
+
+In some cases you can have multiple experimental acquisition of spectra caming from samples prepared under different conditions.
+If all these samples can be modelized using the same film stack you can take advantage of the ``Multiple Fit'' function offered by Regress Pro.
+The multiple fit let you load several samples to perform a simultaneous fit af all of them.
+
+When performing a simultaneous fit you can have two category of fitting parameters, that is:
+\begin{itemize}
+  \item common parameters
+  \item individual sample's parameters.
+\end{itemize}
+The difference is that common parameters are applied with the same value to all the samples while individual parameters are specific of each sample.
+
+The multiple fit function is particularly useful in same cases when a simple fit could led to a systematic error in the determination of some of the fitting parameters.
+In this case you can use a multiple fit with same samples prepared under different condition in order to eliminate or greatly reduce the systematic errors.
+The reason why it works is that the algorithm have more indipendent data (experimental spectra) to check the proposed value of the fit parameters reducing therefore the possibility of ``false solutions''.
+
+In order to use the multiple fit feature you should prepare a specific script that provides some additional informations about the samples.
+
+Let us give an example to illustrate more easily how it works. First we define our materials and film stack as usually:
+\begin{verbatim}
+si   = Library "si"
+sio2 = Library "sio2"
+void = Library "vacuum"
+
+sin = HODispersion {
+  name = "SiN",
+  parameters = [
+    HO {nosc= 74.3444, en= 8.35617, eg= 0.474468, nu= 0.3333, phi=-0.0120003}]
+}
+
+dti= Stack {
+  mediums = [void, sio2, sin, sio2, si],
+  thicknesses = [423, 91, 7.5]
+  }
+\end{verbatim}
+Once we have defined the film stack we can proceed to define the sample specific informations. Here an example:
+
+\begin{verbatim}
+
+sample00 = Sample {
+  spectrum = "examples/multi-fit/samples/test2787.dat",
+  constraints = [],
+  individual = [328, 89]
+
+}
+
+sample01 = Sample {
+  spectrum = "examples/multi-fit/samples/test2771.dat",
+  constraints = [],
+  individual = [422, 89]
+
+}
+
+sample02 = Sample {
+  spectrum = "examples/multi-fit/samples/test2783.dat",
+  constraints = [],
+  individual = [291, 89]
+
+}
+
+sample03 = Sample {
+  spectrum = "examples/multi-fit/samples/test2784.dat",
+  constraints = [],
+  individual = [353, 89]
+
+}
+
+rifit = Strategy {
+  params = [ "RI:2:HO:Nosc:0", "RI:2:HO:En:0", "RI:2:HO:Eg:0",
+             "RI:2:HO:Phi:0" ],
+  seeds = [ 74, 8, 0.4, 0]
+}
+
+mfit = MultiFit {
+  samples = [sample00, sample01, sample02, sample03],
+  contraints = [],
+  individual = [ "Th:1", "Th:2" ]    
+}
+\end{verbatim}
+
+In order to better understand let as look first at the end of the snippet above wheres we define an object of type \texttt{MultiFit}. This object is very important for the multiple fit and it does defines:
+\begin{itemize}
+  \item the list of samples to be used
+  \item the list of the constraint parameters
+  \item the list of the individual parameters
+\end{itemize}
+
+The constraints are parameters that you can set to some specific values for each sample.
+Then you give the list of the individual parameters.
+These latter will be fitted by the algorithm by using a different value for each sample.
+
+You may also note that we did not define the list of the common parameters.
+The reason is very simple, the common parameters are those defined in the \texttt{Strategy} as you do normally for a simple fit.
+The common parameters are common to all the samples and their values are applied to all the samples by the fitting algorithm.
+
+Now we can go back to the definition of the ``samples''. As you can see we define multiple \texttt{samples} to describe all the experimental samples that we want to use.
+For each sample we give the values of the constraints and the seed values of the individual parameters.
+The list for the constraints and individual parameters should be simple list of numbers and their lengths should match the number of parameters or constraints that you have declared in the \texttt{MultipleFit} object.
+
+So the complete definition of the \texttt{Sample} includes:
+\begin{itemize}
+  \item \texttt{spectrum}, the spectrum file to be loaded
+  \item \texttt{constraints}, the value of the parameters setted to a fixed different value for each sample
+  \item \texttt{individual}, the seed value to be used for the sample's individual parameters
+\end{itemize}
+
+At this point we can just terminate the script as follow:
+\begin{verbatim}
+set max_iterations 200
+
+use stack dti
+use strategy rifit
+use multi_fit mfit
+\end{verbatim}
+
+You can see that it is just like a simple fit with the only difference that we have declared the multiple fit object that should be used.
+The declaration is for the case you may have defined several multiple fit objects in the script.
+In this case you just specify which one to use by using the \texttt{use} directive.
+
+Once you have defined the script strategy the most difficult part of the work is done.
+Now you have just to choose \textsf{Fitting $\rightarrow$ Run Multiple Fit} from the menu to start the fitting of the data.
+
+Please note that the multiple fit will *not* produce any plot but the results will be shown in the ``Fit Results'' sheet.
+You will find the values obtained for the common and individual parameters and the residual $\chi^2$ for each sample.
+It is very important to verify the residual $\chi^2$ of each sample to be sure that nothing went wrong during the multiple fit.
+
 \chapter{Running a Fit}
 To actual running a fit you have to
 \begin{enumerate}
