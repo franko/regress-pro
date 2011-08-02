@@ -3,9 +3,10 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
-\usepackage{pslatex}
-% \usepackage{palatino}
+% \usepackage{pslatex}
+\usepackage{palatino}
 % \usepackage{ae,aecompl}
+\usepackage[scaled=0.85]{beramono}
 \begin{document}
 \title{Manual for the use of Regress Pro Ellipsometry}
 \author{F. Abbate}
@@ -75,7 +76,8 @@ In this case we can do something more interesting and describe the oxide with an
 In this case our definition will look like
 \begin{verbatim}
 sio2 = HODispersion {
-  parameters = [HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333, phi= 0.0}]
+  parameters = [
+    HO {nosc= 145, en= 15.78839, eg= 0.0, nu= 0.3333, phi= 0.0}]
 }
 \end{verbatim}
 
@@ -368,7 +370,7 @@ void = Library "vacuum"
 sin = HODispersion {
   name = "SiN",
   parameters = [
-    HO {nosc= 74.3444, en= 8.35617, eg= 0.474468, nu= 0.3333, phi=-0.0120003}]
+    HO {nosc= 74.34, en= 8.356, eg= 0.474, nu= 0.3333, phi=-0.012}]
 }
 
 dti= Stack {
