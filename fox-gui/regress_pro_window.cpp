@@ -222,7 +222,7 @@ regress_pro_window::onCmdLoadScript(FXObject*,FXSelector,void *)
 #endif
 
       scripttext->setText(script_text.cstr());
-      setFitStrategy(script_text.cstr());
+      set_fit_strategy(script_text.cstr());
       scripttext->setModified(FALSE);
 
       m_title_dirty = true;
@@ -345,10 +345,7 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
   reg_check_point(this);
 
-  updateFitStrategy();
-
-  if (! this->symtab)
-    return 1;
+  if (! update_fit_strategy()) return 1;
 
   struct disp_fit_engine *fit = disp_fit_engine_new ();
 
@@ -454,13 +451,11 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     struct seeds *individual;
   } seeds;
 
-  updateFitStrategy();
+  if (! update_fit_strategy()) return 1;
 
-  fit = build_multi_fit_engine (this->symtab,
-				&seeds.common, &seeds.individual);
+  fit = build_multi_fit_engine (this->symtab, &seeds.common, &seeds.individual);
 
-  if (fit == NULL)
-    return 0;
+  if (fit == NULL) return 1;
 
   Str fit_error_msgs;
   ProgressInfo progress(this->getApp(), this);
@@ -496,11 +491,13 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
   return 1;
 }
 
-void
-regress_pro_window::updateFitStrategy()
+bool
+regress_pro_window::update_fit_strategy()
 {
-  if (scripttext->isModified())
-    setFitStrategy (scripttext->getText().text());
+  if (scripttext->isModified()) {
+    return set_fit_strategy (scripttext->getText().text());
+  }
+  return true;
 }
 
 bool
@@ -524,7 +521,7 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 
   reg_check_point(this);
 
-  updateFitStrategy();
+  if (! update_fit_strategy()) return 1;
 
   double chisq;
   Str analysis;
@@ -536,7 +533,7 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
   if (fit == NULL)
     {
       reportErrors();
-      return 0;
+      return 1;
     }
 
   fit_engine_prepare (fit, this->spectrum, 1);
@@ -611,7 +608,7 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 
   reg_check_point(this);
 
-  updateFitStrategy();
+  if (! update_fit_strategy()) return 1;
 
   struct seeds *seeds;
   struct fit_engine *fit = build_fit_engine (symtab, &seeds);
@@ -619,7 +616,7 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
   if (fit == NULL)
     {
       reportErrors();
-      return 0;
+      return 1;
     }
 
   interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
@@ -630,8 +627,8 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
   return 1;
 }
 
-FXbool
-regress_pro_window::setFitStrategy(const char *script_text)
+bool
+regress_pro_window::set_fit_strategy(const char *script_text)
 {
   cleanScriptErrors();
 

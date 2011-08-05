@@ -88,9 +88,9 @@ public:
   long onUpdScript(FXObject*,FXSelector,void*);
 
   FXbool loadfile(const FXString& file, str_t buffer);
-  FXbool setFitStrategy(const char *script_text);
   FXbool saveScriptAs (const FXString& save_as);
-  void updateFitStrategy();
+  bool set_fit_strategy(const char *script_text);
+  bool update_fit_strategy();
   void setErrorRegion (int sl, int el);
   void cleanScriptErrors ();
   void reportErrors();
