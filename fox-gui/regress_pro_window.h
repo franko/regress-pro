@@ -85,7 +85,7 @@ public:
   long onCmdRunBatch(FXObject*,FXSelector,void*);
   long onCmdAbout(FXObject*,FXSelector,void*);
   long onCmdRegister(FXObject*,FXSelector,void*);
-  long onUpdScript(FXObject*,FXSelector,void*);
+  long onUpdate(FXObject*,FXSelector,void*);
 
   FXbool loadfile(const FXString& file, str_t buffer);
   FXbool saveScriptAs (const FXString& save_as);

@@ -57,7 +57,7 @@ static float timeval_subtract (struct timeval *x, struct timeval *y);
 
 // Map
 FXDEFMAP(regress_pro_window) regress_pro_window_map[]={
-  FXMAPFUNC(SEL_UPDATE,  regress_pro_window::ID_SCRIPT_TEXT, regress_pro_window::onUpdScript),
+  FXMAPFUNC(SEL_UPDATE,  0, regress_pro_window::onUpdate),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
   FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
@@ -177,8 +177,10 @@ regress_pro_window::create(){
 }
 
 long
-regress_pro_window::onUpdScript(FXObject*, FXSelector, void *)
+regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
 {
+  FXMainWindow::onUpdate(sender, sel, ptr);
+
   bool is_mod = scripttext->isModified();
 
   if (m_title_dirty || (is_mod != m_title_modified))
@@ -191,10 +193,13 @@ regress_pro_window::onUpdScript(FXObject*, FXSelector, void *)
       FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
 
       this->setTitle(flag + filename + " - " + pathname + " - " + appname);
+
       m_title_dirty = false;
       m_title_modified = is_mod;
+
       return 1;
     }
+
   return 0;
 }
 
