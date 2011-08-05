@@ -33,13 +33,10 @@ public:
   disp_fit_manager(struct disp_fit_engine* fit) :
     m_fit_engine(fit), m_sampling(240.0, 780.0, 271) 
   { 
-    m_fit_engine->model_disp = disp_copy (m_fit_engine->model_disp);
     set_fit_param (&m_fp_template, 0);
   }
 
-  virtual ~disp_fit_manager() 
-  {
-    disp_free (m_fit_engine->model_disp);
+  virtual ~disp_fit_manager() {
     disp_fit_engine_free (m_fit_engine);
   }
 

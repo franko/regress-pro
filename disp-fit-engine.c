@@ -25,6 +25,12 @@ disp_fit_engine_free (struct disp_fit_engine *fit)
 {
   if (fit->wl)
     gsl_vector_free (fit->wl);
+
+  if (fit->model_disp)
+    disp_free (fit->model_disp);
+  if (fit->ref_disp)
+    disp_free (fit->ref_disp);
+
   free (fit);
 }
 

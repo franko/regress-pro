@@ -175,19 +175,12 @@ disp_chooser_win::onCmdAccept(FXObject *, FXSelector, void *ptr)
   FXString ref_name = m_ref_combo->getText();
   FXString mod_name = m_mod_combo->getText();
 
-  m_ref   = m_disp_list->get (ref_name.text());
-  m_model = m_disp_list->get (mod_name.text());
+  m_ref   = m_disp_list->get(ref_name.text());
+  m_model = m_disp_list->get(mod_name.text());
 
   assert (m_ref && m_model);
 
-  if (m_ref == m_model)
-    {
-      FXMessageBox::warning(getApp(), MBOX_OK, "Dispersion choice",
-			    "Please select two different dispersions");
-      return 1;
-    }
-
-  if (disp_get_number_of_params (m_model) == 0)
+  if (disp_get_number_of_params(m_model) == 0)
     {
       FXMessageBox::warning(getApp(), MBOX_OK, "Dispersion choice",
 			    "The dispersion '%s' does not contain any parameter",
@@ -216,8 +209,8 @@ disp_chooser (FXApp *app, struct symtab *symtab, struct disp_fit_engine *fit)
 
   if (dialog.execute(PLACEMENT_OWNER))
     {
-      fit->ref_disp   = dialog.ref_disp();
-      fit->model_disp = dialog.model_disp();
+      fit->ref_disp   = disp_copy(dialog.ref_disp());
+      fit->model_disp = disp_copy(dialog.model_disp());
       return true;
     }
 
