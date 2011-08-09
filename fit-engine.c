@@ -402,7 +402,7 @@ fit_engine_get_parameter_value (const struct fit_engine *fit,
 {
   if (fp->id == PID_FIRSTMUL)
     {
-      return 1.0;
+      return fit->extra->rmult;
     }
   else if (fp->id == PID_THICKNESS)
     {
