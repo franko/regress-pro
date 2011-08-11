@@ -236,8 +236,8 @@ regress_pro_window::onCmdLoadScript(FXObject*,FXSelector,void *)
   return 1;
 }
 
-FXbool
-regress_pro_window::saveScriptAs (const FXString& save_as)
+bool
+regress_pro_window::save_script_as (const FXString& save_as)
 {
   FILE *f = fopen (save_as.text(), "w");
 
@@ -259,6 +259,8 @@ regress_pro_window::saveScriptAs (const FXString& save_as)
   fputc ('\n', f);
   fclose (f);
 
+  update_fit_strategy();
+
   scripttext->setModified(FALSE);
 
   m_title_dirty = true;
@@ -278,7 +280,7 @@ regress_pro_window::onCmdSaveAsScript(FXObject*,FXSelector,void *)
   if(open.execute())
     {
       FXString new_filename = open.getFilename();
-      if (saveScriptAs(new_filename))
+      if (save_script_as(new_filename))
 	scriptFile = new_filename;
       return 1;
     }
@@ -291,7 +293,7 @@ regress_pro_window::onCmdSaveScript(FXObject*,FXSelector,void *)
 {
   reg_check_point(this);
 
-  saveScriptAs(scriptFile);
+  save_script_as(scriptFile);
   return 1;
 }
 
