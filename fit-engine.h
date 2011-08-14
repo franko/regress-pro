@@ -63,7 +63,7 @@ struct fit_engine {
   struct stack *stack;
   struct fit_parameters *parameters;
 
-  struct fit_run *run;
+  struct fit_run run[1];
 };
 
 #define GET_SE_TYPE(sk) (sk == SYSTEM_ELLISS_AB ? SE_ALPHA_BETA : SE_PSI_DEL)

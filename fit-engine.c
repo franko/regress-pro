@@ -198,8 +198,6 @@ fit_engine_prepare (struct fit_engine *fit, struct spectrum *s)
   struct fit_config *cfg = fit->config;
   enum system_kind syskind = s->config.system;
 
-  fit->run = emalloc (sizeof(struct fit_run));
-
   fit->run->system_kind = syskind;
   fit->run->spectr = spectra_copy (s);
 
@@ -254,14 +252,9 @@ fit_engine_prepare (struct fit_engine *fit, struct spectrum *s)
 void
 fit_engine_disable (struct fit_engine *fit)
 {
-  assert (fit->run);
-
   dispose_fit_engine_cache (fit->run);
   spectra_free (fit->run->spectr);
   gsl_vector_free (fit->run->results);
-
-  free (fit->run);
-  fit->run = NULL;
 }
 
 int
@@ -488,8 +481,6 @@ build_fit_engine (struct symtab *symtab, struct seeds **seeds)
   fit->parameters = strategy->parameters;
 
   fit->stack = stack_copy (stack);
-
-  fit->run = NULL;
 
   return fit;
 }
