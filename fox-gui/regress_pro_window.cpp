@@ -543,7 +543,7 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
       return 1;
     }
 
-  fit_engine_prepare (fit, this->spectrum, 1);
+  fit_engine_prepare (fit, this->spectrum);
 
   Str fit_error_msgs;
   ProgressInfo progress(this->getApp(), this);
@@ -583,16 +583,14 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
   resulttext->setText(fitresult);
   resulttext->setModified(TRUE);
 
-  fit_engine_restore_spectr (fit);
-
   if (m_model_spectr)
     spectra_free (m_model_spectr);
 
-  m_model_spectr = fit_engine_alloc_spectrum (fit);
+  m_model_spectr = spectra_alloc (this->spectrum);
 
-  fit_engine_generate_spectrum (fit, m_model_spectr);
+  fit_engine_generate_spectrum (fit, this->spectrum, m_model_spectr);
 
-  spectra_plot (m_canvas, fit->spectr, m_model_spectr);
+  spectra_plot (m_canvas, this->spectrum, m_model_spectr);
 
   if (this->stack_result)
     stack_free (this->stack_result);

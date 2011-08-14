@@ -1,8 +1,3 @@
-
-/*
-  $Id: BatchDialog.cpp,v 1.3 2006/12/29 17:47:08 francesco Exp $
- */
-
 #include "BatchDialog.h"
 #include "Strcpp.h"
 #include "batch.h"
@@ -145,7 +140,7 @@ BatchDialog::onCmdRun(FXObject*,FXSelector,void*)
       if (bname)
 	bname++;
 
-      fit_engine_prepare (fit, spectr, 1);
+      fit_engine_prepare (fit, spectr);
 
       lmfit_grid (fit, this->seeds, &chisq, NULL, NULL, LMFIT_PRESERVE_STACK,
 		  batch_foxgui_hook, this);

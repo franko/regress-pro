@@ -32,7 +32,7 @@
 
 static void build_fit_engine_cache (struct fit_engine *f);
 
-static void dispose_fit_engine_cache (struct fit_engine *f);
+static void dispose_fit_engine_cache (struct fit_run *run);
 
 
 void
@@ -101,61 +101,51 @@ dispose_stack_cache (struct stack_cache *cache)
     free (cache->ns_full_spectr);
 
   cache->is_valid = 0;
-
-  /* in principle the following instruction is not required:
-     it could be removed once we are sure the program is bug free. */
-  /* PS: in other words, this instruction will be never removed! :) */
-  memset (cache, 0, sizeof(struct stack_cache));
 }
 
 void
 build_fit_engine_cache (struct fit_engine *f)
 {
+  size_t dmultipl = (f->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
+  int RI_fixed = fit_parameters_are_RI_fixed (f->parameters);
   size_t nb = f->stack->nb;
   int nblyr = nb - 2;
-  size_t dmultipl = (f->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
-  int RI_fixed = fit_parameters_are_RI_fixed (f->parameters);
-  int th_only_optimize = RI_fixed && f->fixed_parameters;
 
-  build_stack_cache (&f->cache, f->stack, f->spectr, th_only_optimize);
+  build_stack_cache (&f->run->cache, f->stack, f->run->spectr, RI_fixed);
 
-  f->jac_th = gsl_vector_alloc (dmultipl * nblyr);
+  f->run->jac_th = gsl_vector_alloc (dmultipl * nblyr);
 
-  switch (f->system_kind)
+  switch (f->run->system_kind)
     {
     case SYSTEM_REFLECTOMETER:
-      f->jac_n.refl = gsl_vector_alloc (2 * nb);
+      f->run->jac_n.refl = gsl_vector_alloc (2 * nb);
       break;
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
-      f->jac_n.ell = cmpl_vector_alloc (2 * nb);
+      f->run->jac_n.ell = cmpl_vector_alloc (2 * nb);
     default:
       /* */;
     }
 }
 
 void
-dispose_fit_engine_cache (struct fit_engine *f)
+dispose_fit_engine_cache (struct fit_run *run)
 {
-  gsl_vector_free (f->jac_th);
+  gsl_vector_free (run->jac_th);
 
-  switch (f->system_kind)
+  switch (run->system_kind)
     {
     case SYSTEM_REFLECTOMETER:
-      gsl_vector_free (f->jac_n.refl);
-      f->jac_n.refl = NULL;
+      gsl_vector_free (run->jac_n.refl);
       break;
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
-      cmpl_vector_free (f->jac_n.ell);
-      f->jac_n.ell = NULL;
+      cmpl_vector_free (run->jac_n.ell);
     default:
       /* */;
     }
 
-  f->jac_th = NULL;
-
-  dispose_stack_cache (& f->cache);
+  dispose_stack_cache (&run->cache);
 }
 
 int
@@ -203,66 +193,58 @@ fit_engine_commit_parameters (struct fit_engine *fit, const gsl_vector *x)
 }
 
 int
-fit_engine_prepare (struct fit_engine *fit, struct spectrum *s,
-		    int fixed_parameters)
+fit_engine_prepare (struct fit_engine *fit, struct spectrum *s)
 {
   struct fit_config *cfg = fit->config;
+  enum system_kind syskind = s->config.system;
 
-  if (s == NULL)
-    return 1;
+  fit->run = emalloc (sizeof(struct fit_run));
 
-  fit->system_kind = s->config.system;
-
-  fit->spectr = s;
+  fit->run->system_kind = syskind;
+  fit->run->spectr = spectra_copy (s);
 
   if (fit->config->spectr_range.active)
-    spectr_cut_range (fit->spectr, 
-		      fit->config->spectr_range.min,
-		      fit->config->spectr_range.max);
+    spectr_cut_range (fit->run->spectr,
+		      cfg->spectr_range.min, cfg->spectr_range.max);
 
   if (cfg->subsampling)
     {
-      if (fit->system_kind == SYSTEM_ELLISS_AB ||
-	  fit->system_kind == SYSTEM_ELLISS_PSIDEL)
-	elliss_sample_minimize (fit->spectr, 0.05);
+      if (syskind == SYSTEM_ELLISS_AB || syskind == SYSTEM_ELLISS_PSIDEL)
+	elliss_sample_minimize (fit->run->spectr, 0.05);
     }
-
-  fit->fixed_parameters = fixed_parameters;
 
   build_fit_engine_cache (fit);
 
-  switch (fit->system_kind)
+  switch (syskind)
     {
     case SYSTEM_REFLECTOMETER:
-      fit->mffun.f      = & refl_fit_f;
-      fit->mffun.df     = & refl_fit_df;
-      fit->mffun.fdf    = & refl_fit_fdf;
-      fit->mffun.n      = spectra_points (s);
-      fit->mffun.p      = fit->parameters->number;
-      fit->mffun.params = fit;
+      fit->run->mffun.f      = & refl_fit_f;
+      fit->run->mffun.df     = & refl_fit_df;
+      fit->run->mffun.fdf    = & refl_fit_fdf;
+      fit->run->mffun.n      = spectra_points (fit->run->spectr);
+      fit->run->mffun.p      = fit->parameters->number;
+      fit->run->mffun.params = fit;
       break;
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
-      fit->mffun.f      = & elliss_fit_f;
-      fit->mffun.df     = & elliss_fit_df;
-      fit->mffun.fdf    = & elliss_fit_fdf;
-      fit->mffun.n      = 2 * spectra_points (s);
-      fit->mffun.p      = fit->parameters->number;
-      fit->mffun.params = fit;
+      fit->run->mffun.f      = & elliss_fit_f;
+      fit->run->mffun.df     = & elliss_fit_df;
+      fit->run->mffun.fdf    = & elliss_fit_fdf;
+      fit->run->mffun.n      = 2 * spectra_points (fit->run->spectr);
+      fit->run->mffun.p      = fit->parameters->number;
+      fit->run->mffun.params = fit;
       break;
     default:
       return 1;
     }
 
   if (! cfg->thresold_given)
-    cfg->chisq_thresold = (fit->system_kind == SYSTEM_REFLECTOMETER ? 150 : 3000);
+    cfg->chisq_thresold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
 
-  fit->results = gsl_vector_alloc (fit->parameters->number);
-
-  fit->initialized = 1;
+  fit->run->results = gsl_vector_alloc (fit->parameters->number);
 
 #ifdef DEBUG_REGRESS
-  if (fit->system_kind != SYSTEM_REFLECTOMETER)
+  if (syskind != SYSTEM_REFLECTOMETER)
     elliss_fit_test_deriv (fit);
 #endif
 
@@ -272,20 +254,14 @@ fit_engine_prepare (struct fit_engine *fit, struct spectrum *s,
 void
 fit_engine_disable (struct fit_engine *fit)
 {
-  dispose_fit_engine_cache (fit);
-  fit->spectr = NULL;
+  assert (fit->run);
 
-  gsl_vector_free (fit->results);
-  fit->results = NULL;
+  dispose_fit_engine_cache (fit->run);
+  spectra_free (fit->run->spectr);
+  gsl_vector_free (fit->run->results);
 
-  fit->initialized = 0;
-  fit->system_kind = SYSTEM_UNDEFINED;
-}
-
-void
-fit_engine_restore_spectr (struct fit_engine *fit)
-{
-  data_view_reset (fit->spectr->table);
+  free (fit->run);
+  fit->run = NULL;
 }
 
 int
@@ -425,68 +401,60 @@ fit_engine_get_parameter_value (const struct fit_engine *fit,
 }
 
 void
-fit_engine_generate_spectrum (struct fit_engine *fit, struct spectrum* synth)
+fit_engine_generate_spectrum (struct fit_engine *fit, struct spectrum *ref,
+			      struct spectrum *synth)
 {
+  enum system_kind syskind = ref->config.system;
   size_t nb_med = fit->stack->nb;
   struct data_table *table = synth->table[0].table;
-  struct { double const * ths; cmpl * ns; } actual;
-  int j, npt = spectra_points (fit->spectr);
-  const enum se_type se_type = GET_SE_TYPE(fit->system_kind);
+  int j, npt = spectra_points (ref);
+  cmpl *ns = emalloc (sizeof(cmpl) * nb_med);
+  double const * ths;
 
-  assert (spectra_points (fit->spectr) == spectra_points (synth));
+  assert (spectra_points (ref) == spectra_points (synth));
 
-  memcpy (&synth->config, &fit->spectr->config, sizeof(struct system_config));
+  synth->config = ref->config;
 
-  actual.ths = stack_get_ths_list (fit->stack);
+  ths = stack_get_ths_list (fit->stack);
 
   for (j = 0; j < npt; j++)
     {
-      double lambda = get_lambda_by_index (fit->spectr, j);
+      double lambda = get_lambda_by_index (ref, j);
 
       data_table_set (table, j, 0, lambda);
 
-      actual.ns = fit->cache.ns;
-      stack_get_ns_list (fit->stack, actual.ns, lambda);
+      stack_get_ns_list (fit->stack, ns, lambda);
       
-      switch (fit->system_kind)
+      switch (syskind)
 	{
-	  double phi0;
-	  double anlz;
-	  double r_raw;
-	  ell_ab_t ell;
-
 	case SYSTEM_REFLECTOMETER:
-	  r_raw = mult_layer_refl_ni (nb_med, actual.ns, actual.ths, lambda,
-				      NULL, NULL);
-	  data_table_set (table, j, 1, fit->extra->rmult * r_raw);
-	  break;
+	  {
+	    double r_raw = mult_layer_refl_ni (nb_med, ns, ths, lambda,
+					       NULL, NULL);
+	    data_table_set (table, j, 1, fit->extra->rmult * r_raw);
+	    break;
+	  }
 	case SYSTEM_ELLISS_AB:
 	case SYSTEM_ELLISS_PSIDEL:
+	  {
+	    const enum se_type se_type = GET_SE_TYPE(syskind);
+	    double phi0 = ref->config.aoi;
+	    double anlz = ref->config.analyzer;
+	    ell_ab_t ell;
 
-	  phi0 = fit->spectr->config.aoi;
-	  anlz = fit->spectr->config.analyzer;
+	    mult_layer_se_jacob (se_type, nb_med, ns, phi0,
+				 ths, lambda, anlz, ell, NULL, NULL);
 
-	  mult_layer_se_jacob (se_type, nb_med, actual.ns, phi0,
-			       actual.ths, lambda, anlz, ell, NULL, NULL);
-
-	  data_table_set (table, j, 1, ell->alpha);
-	  data_table_set (table, j, 2, ell->beta);
-	  break;
+	    data_table_set (table, j, 1, ell->alpha);
+	    data_table_set (table, j, 2, ell->beta);
+	    break;
+	  }
 	default:
 	  /* */;
 	}
     }
-}
 
-struct spectrum *
-fit_engine_alloc_spectrum (struct fit_engine *fit)
-{
-  struct spectrum *synth = malloc (sizeof(struct spectrum));
-  synth->config = fit->spectr->config;
-  int npt = spectra_points (fit->spectr);
-  struct data_table *table = data_table_new (npt, 3);
-  data_view_init (synth->table, table);
-  return synth;
+  free (ns);
 }
 
 struct fit_engine *
@@ -514,47 +482,16 @@ build_fit_engine (struct symtab *symtab, struct seeds **seeds)
 
   set_default_extra_param (fit->extra);
 
-  memcpy (fit->config, symtab->config_table, sizeof(struct fit_config));
+  fit->config[0] = symtab->config_table[0];
 
   /* fit is not the owner of the "parameters", we just keep a reference */
   fit->parameters = strategy->parameters;
 
   fit->stack = stack_copy (stack);
 
-  fit->spectr = NULL;
-
-  fit->system_kind = SYSTEM_UNDEFINED;
-  fit->initialized = 0;
-  fit->cache.is_valid = 0;
-
-  fit->results = NULL;
+  fit->run = NULL;
 
   return fit;
-}
-
-int
-fit_engine_set_parameters (struct fit_engine *fit,
-			   struct fit_parameters *parameters)
-{
-  struct stack *stack = fit->stack;
-
-  if (check_fit_parameters (stack, parameters) != 0)
-    return 1;
-
-  int old_pn = fit->results->size;
-  int new_pn = parameters->number;
-
-  fit->parameters = parameters;
-
-  if (fit->initialized && old_pn != new_pn)
-    {
-      fit->mffun.p = new_pn;
-
-      gsl_vector_free (fit->results);
-      fit->results = gsl_vector_alloc (new_pn);
-    }
-
-  return 0;
 }
 
 void
@@ -586,13 +523,13 @@ fit_engine_print_fit_results (struct fit_engine *fit, str_t text, int tabular)
       get_param_name (fp, pname);
       if (tabular)
 	{
-	  str_printf (value, "%.6g", gsl_vector_get (fit->results, j));
+	  str_printf (value, "%.6g", gsl_vector_get (fit->run->results, j));
 	  str_pad (value, 12, ' ');
 	  str_append (text, value, 0);
 	}
       else
 	str_printf_add (text, "%9s : %.6g\n", CSTR(pname),
-			gsl_vector_get (fit->results, j));
+			gsl_vector_get (fit->run->results, j));
     }
 
   str_free (value);

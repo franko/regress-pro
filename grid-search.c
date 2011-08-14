@@ -20,7 +20,7 @@ lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
 {
   const gsl_multifit_fdfsolver_type *T;
   gsl_multifit_fdfsolver *s;
-  gsl_multifit_function_fdf *f = & fit->mffun;
+  gsl_multifit_function_fdf *f;
   struct fit_config *cfg = fit->config;
   int nb, j, iter, nb_grid_pts, j_grid_pts;
   gsl_vector *x, *xbest;
@@ -31,8 +31,9 @@ lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
   stack_t *initial_stack;
   seed_t *vseed;
 
-  if (! fit->initialized)
-    return 1;
+  assert (fit->run);
+
+  f = &fit->run->mffun;
 
   vseed = seeds->values;
   nb    = fit->parameters->number;
@@ -40,7 +41,6 @@ lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
   assert (fit->parameters->number == seeds->number);
 
   x     = gsl_vector_alloc (nb);
-  //  xtry  = gsl_vector_alloc (nb);
   xbest = gsl_vector_alloc (nb);
 
   if (preserve_init_stack)
@@ -50,8 +50,6 @@ lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
 
   for (j = 0; j < nb; j++)
     xarr[j] = (vseed[j].type == SEED_RANGE ? vseed[j].min : vseed[j].seed);
-
-  //  gsl_vector_memcpy (xbest, x);
 
   nb_grid_pts = 1;
   for (j = nb-1; j >= 0; j--)
@@ -74,10 +72,7 @@ lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
     {
       const int search_max_iters = 3;
 
-      //      gsl_vector_memcpy (x, xtry);
-
       gsl_multifit_fdfsolver_set (s, f, x);
-      //      f->f (x, f->params, y);
     
       for (j = 0; j < search_max_iters; j++)
 	{
@@ -195,11 +190,9 @@ lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
       fit_engine_commit_parameters (fit, x);
     }
 
-  assert (fit->results != NULL);
-  gsl_vector_memcpy (fit->results, x);
+  gsl_vector_memcpy (fit->run->results, x);
 
   gsl_vector_free (x);
-  //  gsl_vector_free (xtry);
   gsl_vector_free (xbest);
 
   gsl_multifit_fdfsolver_free (s);

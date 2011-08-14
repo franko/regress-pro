@@ -1,7 +1,3 @@
-/* 
-  $Id: refl-fit.c,v 1.7 2006/07/12 22:48:55 francesco Exp $
- */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -61,9 +57,11 @@ refl_fit_fdf (const gsl_vector *x, void *params,
               gsl_vector *f, gsl_matrix * jacob)
 {
   struct fit_engine *fit = params;
+  struct spectrum *s = fit->run->spectr;
   size_t nb_med = fit->stack->nb;
-  struct { double const * ths; cmpl * ns; } actual;
   gsl_vector *r_th_jacob, *r_n_jacob;
+  double const * ths;
+  cmpl * ns;
   size_t j;
 
   /* STEP 1 : We apply the actual values of the fit parameters
@@ -74,30 +72,30 @@ refl_fit_fdf (const gsl_vector *x, void *params,
   /* STEP 2 : From the stack we retrive the thicknesses and RIs
               informations. */
 
-  actual.ths = stack_get_ths_list (fit->stack);
+  ths = stack_get_ths_list (fit->stack);
 
-  r_th_jacob = (jacob ? fit->jac_th : NULL);
-  r_n_jacob  = (jacob ? fit->jac_n.refl : NULL);
+  r_th_jacob = (jacob ? fit->run->jac_th : NULL);
+  r_n_jacob  = (jacob ? fit->run->jac_n.refl : NULL);
 
-  for (j = 0; j < spectra_points (fit->spectr); j++)
+  for (j = 0; j < spectra_points (s); j++)
     {
-      float const * spectr_data = spectra_get_values (fit->spectr, j);
+      float const * spectr_data = spectra_get_values (s, j);
       const double lambda = spectr_data[0];
       const double r_meas = spectr_data[1];
       double r_raw, r_theory;
       double rmult = fit->extra->rmult;
 
-      if (fit->cache.th_only)
-	actual.ns = fit->cache.ns_full_spectr + j * nb_med;
+      if (fit->run->cache.th_only)
+	ns = fit->run->cache.ns_full_spectr + j * nb_med;
       else
 	{
-	  actual.ns = fit->cache.ns;
-	  stack_get_ns_list (fit->stack, actual.ns, lambda);
+	  ns = fit->run->cache.ns;
+	  stack_get_ns_list (fit->stack, ns, lambda);
 	}
       
       /* STEP 3 : We call the procedure mult_layer_refl_ni */
 
-      r_raw = mult_layer_refl_ni (nb_med, actual.ns, actual.ths, lambda,
+      r_raw = mult_layer_refl_ni (nb_med, ns, ths, lambda,
 				  r_th_jacob, r_n_jacob);
 
       r_theory = rmult * r_raw;
@@ -108,9 +106,9 @@ refl_fit_fdf (const gsl_vector *x, void *params,
       if (jacob)
 	{
 	  size_t kp, ic;
-	  struct deriv_info * ideriv = fit->cache.deriv_info;
+	  struct deriv_info * ideriv = fit->run->cache.deriv_info;
 
-	  if (! fit->cache.th_only)
+	  if (! fit->run->cache.th_only)
 	    {
 	      for (ic = 0; ic < nb_med; ic++)
 		ideriv[ic].is_valid = 0;

@@ -16,7 +16,7 @@ lmfit_simple (struct fit_engine *fit, gsl_vector *x,
 {
   const gsl_multifit_fdfsolver_type *T;
   gsl_multifit_fdfsolver *s;
-  gsl_multifit_function_fdf *f = & fit->mffun;
+  gsl_multifit_function_fdf *f;
   struct fit_config *cfg = fit->config;
   int nb, j, iter;
   double chi;
@@ -24,8 +24,9 @@ lmfit_simple (struct fit_engine *fit, gsl_vector *x,
   stack_t *initial_stack;
   int stop_request;
 
-  if (! fit->initialized)
-    return 1;
+  assert (fit->run);
+
+  f = &fit->run->mffun;
 
   nb = fit->parameters->number;
 
@@ -88,8 +89,7 @@ lmfit_simple (struct fit_engine *fit, gsl_vector *x,
       fit_engine_commit_parameters (fit, x);
     }
 
-  assert (fit->results != NULL);
-  gsl_vector_memcpy (fit->results, x);
+  gsl_vector_memcpy (fit->run->results, x);
 
   gsl_multifit_fdfsolver_free (s);
 

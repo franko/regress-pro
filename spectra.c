@@ -1,8 +1,3 @@
-
-/*
-  $Id: spectra.c,v 1.7 2006/12/29 17:47:02 francesco Exp $
-*/
-
 #include <assert.h>
 #include <string.h>
 
@@ -182,10 +177,22 @@ struct spectrum *
 spectra_copy (struct spectrum *src)
 {
   struct spectrum *copy = emalloc (sizeof(struct spectrum));
-  memcpy (&copy->config, &src->config, sizeof(struct system_config));
+  copy->config = src->config;
   data_view_copy (copy->table, src->table);
   return copy;
 }
+
+struct spectrum *
+spectra_alloc (struct spectrum *s)
+{
+  struct spectrum *synth = emalloc (sizeof(struct spectrum));
+  int rows = spectra_points (s), cols = s->table->columns;
+  struct data_table *table = data_table_new (rows, cols);
+  synth->config = s->config;
+  data_view_init (synth->table, table);
+  return synth;
+}
+
 
 float const *
 spectra_get_values (struct spectrum const *s, int idx)

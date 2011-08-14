@@ -1,7 +1,3 @@
-/*
-  $Id: spectra.h,v 1.5 2006/12/26 18:15:51 francesco Exp $
-*/
-
 #ifndef SPECTRA_H
 #define SPECTRA_H
 
@@ -41,13 +37,13 @@ struct spectrum {
 typedef struct spectrum spectr_t[1];
 typedef struct spectrum *spectr_ptr;
 
+extern struct spectrum * spectra_copy        (struct spectrum *s);
+extern struct spectrum * spectra_alloc       (struct spectrum *s);
+extern void              spectra_free        (struct spectrum *s);
+
 extern float             get_lambda_by_index (struct spectrum *s, int idx);
 
 extern float const *     spectra_get_values  (struct spectrum const *s, int j);
-
-extern struct spectrum * spectra_copy        (struct spectrum *s);
-
-extern void              spectra_free        (struct spectrum *s);
 
 extern struct spectrum * load_gener_spectrum (const char *filename);
 

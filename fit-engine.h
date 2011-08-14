@@ -38,20 +38,10 @@ struct extra_params {
   double rmult;
 };
 
-struct fit_engine {
-
+struct fit_run {
   enum system_kind system_kind;
 
-  struct stack *stack;
-  struct fit_parameters *parameters;
-
   struct spectrum *spectr;
-
-  struct extra_params extra[1];
-  struct fit_config config[1];
-
-  int initialized;
-  int fixed_parameters;
 
   gsl_multifit_function_fdf mffun;
 
@@ -66,6 +56,16 @@ struct fit_engine {
   } jac_n;
 };
 
+struct fit_engine {
+  struct extra_params extra[1];
+  struct fit_config config[1];
+
+  struct stack *stack;
+  struct fit_parameters *parameters;
+
+  struct fit_run *run;
+};
+
 #define GET_SE_TYPE(sk) (sk == SYSTEM_ELLISS_AB ? SE_ALPHA_BETA : SE_PSI_DEL)
 
 struct seeds;
@@ -74,8 +74,7 @@ struct symtab;
 extern void fit_engine_free                 (struct fit_engine *fit);
 
 extern int  fit_engine_prepare              (struct fit_engine *f,
-					     struct spectrum *s,
-					     int fixed_parameters);
+					     struct spectrum *s);
 
 extern void fit_engine_disable              (struct fit_engine *f);
 
@@ -92,8 +91,6 @@ extern void fit_engine_apply_parameters     (struct fit_engine *fit,
 					     const struct fit_parameters *fps, 
 					     const gsl_vector *x);
 
-extern void fit_engine_restore_spectr       (struct fit_engine *fit);
-
 extern void build_stack_cache               (struct stack_cache *cache,
 					     stack_t *stack,
 					     struct spectrum *spectr,
@@ -106,9 +103,8 @@ extern struct fit_engine * build_fit_engine (struct symtab *symtab,
 
 extern void set_default_extra_param         (struct extra_params *extra);
 
-extern struct spectrum * fit_engine_alloc_spectrum (struct fit_engine *fit);
-
 extern void fit_engine_generate_spectrum (struct fit_engine *fit,
+					  struct spectrum *ref,
 					  struct spectrum *synth);
 
 extern void fit_engine_print_fit_results    (struct fit_engine *fit,
@@ -120,10 +116,6 @@ fit_engine_get_all_parameters (struct fit_engine *fit);
 extern double
 fit_engine_get_parameter_value (const struct fit_engine *fit, 
 				const fit_param_t *fp);
-
-extern int
-fit_engine_set_parameters (struct fit_engine *fit,
-			   struct fit_parameters *parameters);
 
 __END_DECLS
 

@@ -1,8 +1,3 @@
-
-/*
-  $Id: elliss-fit.c,v 1.5 2006/10/30 22:55:13 francesco Exp $
-*/
-
 #include "elliss-fit.h"
 #include "fit-engine.h"
 #include "elliss.h"
@@ -15,27 +10,28 @@
 void
 elliss_fit_test_deriv (struct fit_engine *fit)
 {
+  struct spectrum *s = fit->run->spectr;
   size_t nb_med = fit->stack->nb;
   struct { double const * ths; cmpl * ns; } actual;
   int j;
 
   actual.ths = stack_get_ths_list (fit->stack);
 
-  for (j = 0; j < spectra_points (fit->spectr); j += 10)
+  for (j = 0; j < spectra_points (s); j += 10)
     {
-      double lambda = get_lambda_by_index (fit->spectr, j);
-      const double phi0 = fit->spectr->config.aoi;
-      const double anlz = fit->spectr->config.analyzer;
+      double lambda = get_lambda_by_index (s, j);
+      const double phi0 = s->config.aoi;
+      const double anlz = s->config.analyzer;
 
-      if (fit->cache.th_only)
-	actual.ns = fit->cache.ns_full_spectr + j * nb_med;
+      if (fit->run->cache.th_only)
+	actual.ns = fit->run->cache.ns_full_spectr + j * nb_med;
       else
 	{
-	  actual.ns = fit->cache.ns;
+	  actual.ns = fit->run->cache.ns;
 	  stack_get_ns_list (fit->stack, actual.ns, lambda);
 	}
 
-      test_elliss_deriv (fit->spectr->config.system,
+      test_elliss_deriv (s->config.system,
 			 nb_med, actual.ns, phi0, actual.ths, lambda, anlz);
     }
 }
@@ -80,11 +76,12 @@ elliss_fit_fdf (const gsl_vector *x, void *params, gsl_vector *f,
 		gsl_matrix * jacob)
 {
   struct fit_engine *fit = params;
+  struct spectrum *s = fit->run->spectr;
   size_t nb_med = fit->stack->nb;
   struct { double const * ths; cmpl * ns; } actual;
   struct { gsl_vector *th; cmpl_vector *n; } wjacob;
-  size_t npt = spectra_points (fit->spectr);
-  const enum se_type se_type = GET_SE_TYPE(fit->system_kind);
+  size_t npt = spectra_points (s);
+  const enum se_type se_type = GET_SE_TYPE(fit->run->system_kind);
   size_t j;
 
   /* STEP 1 : We apply the actual values of the fit parameters
@@ -97,24 +94,24 @@ elliss_fit_fdf (const gsl_vector *x, void *params, gsl_vector *f,
 
   actual.ths = stack_get_ths_list (fit->stack);
 
-  wjacob.th = (jacob ? fit->jac_th : NULL);
-  wjacob.n  = (jacob && !fit->cache.th_only ? fit->jac_n.ell : NULL);
+  wjacob.th = (jacob ? fit->run->jac_th : NULL);
+  wjacob.n  = (jacob && !fit->run->cache.th_only ? fit->run->jac_n.ell : NULL);
 
   for (j = 0; j < npt; j++)
     {
-      float const * spectr_data = spectra_get_values (fit->spectr, j);
+      float const * spectr_data = spectra_get_values (s, j);
       const double lambda     = spectr_data[0];
       const double meas_alpha = spectr_data[1];
       const double meas_beta  = spectr_data[2];
-      const double phi0 = fit->spectr->config.aoi;
-      const double anlz = fit->spectr->config.analyzer;
+      const double phi0 = s->config.aoi;
+      const double anlz = s->config.analyzer;
       struct elliss_ab theory[1];
 
-      if (fit->cache.th_only)
-	actual.ns = fit->cache.ns_full_spectr + j * nb_med;
+      if (fit->run->cache.th_only)
+	actual.ns = fit->run->cache.ns_full_spectr + j * nb_med;
       else
 	{
-	  actual.ns = fit->cache.ns;
+	  actual.ns = fit->run->cache.ns;
 	  stack_get_ns_list (fit->stack, actual.ns, lambda);
 	}
       
@@ -133,11 +130,11 @@ elliss_fit_fdf (const gsl_vector *x, void *params, gsl_vector *f,
 
       if (jacob)
 	{
-	  struct deriv_info * ideriv = fit->cache.deriv_info;
+	  struct deriv_info * ideriv = fit->run->cache.deriv_info;
 	  struct elliss_ab jac[1];
 	  size_t kp, ic;
 
-	  if (! fit->cache.th_only)
+	  if (! fit->run->cache.th_only)
 	    {
 	      for (ic = 0; ic < nb_med; ic++)
 		ideriv[ic].is_valid = 0;
