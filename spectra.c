@@ -157,6 +157,8 @@ spectr_cut_range (struct spectrum *s, float inf, float sup)
 {
   int j, jmin = -1, npt = 0;
 
+  data_view_reset (s->table);
+
   for (j = 0; j < spectra_points (s); j++)
     {
       float lam = get_lambda_by_index (s, j);

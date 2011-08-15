@@ -69,13 +69,20 @@ public:
 
   virtual void get_sampling(double& s_start, double& s_end, double& s_step)
   {
-    s_start = 240.0;
-    s_end   = 780.0;
-    s_step  = 2.0;
+    int n = spectra_points(m_ref_spectr);
+    s_start = data_view_get(m_ref_spectr->table, 0,   0);
+    s_end   = data_view_get(m_ref_spectr->table, n-1, 0);
+    s_step  = 0.0;
   }
 
   virtual bool set_sampling(double s_start, double s_end, double s_step)
   {
+    spectr_cut_range(m_ref_spectr, s_start, s_end);
+
+    spectra_free (m_model_spectr);
+    m_model_spectr = spectra_alloc (m_ref_spectr);
+    fit_engine_generate_spectrum (m_fit_engine, m_ref_spectr, m_model_spectr);
+
     return true;
   }
 

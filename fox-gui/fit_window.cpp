@@ -68,7 +68,11 @@ fit_window::fit_window(fit_manager* fit, FXApp* a,const FXString& name,FXIcon *i
   {
     double wls, wle, wld;
     m_fit->get_sampling(wls, wle, wld);
-    m_wl_entry->setText(FXStringFormat("%g-%g,%g", wls, wle, wld));
+
+    if (wld == 0.0)
+      m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
+    else
+      m_wl_entry->setText(FXStringFormat("%.3g-%.3g,%g", wls, wle, wld));
   }
 
   m_parameters.resize(m_fit->parameters_number());
@@ -154,16 +158,23 @@ fit_window::verify_spectral_range (const char *txt, double ps[])
 {
   int nass = sscanf(txt, "%lf-%lf,%lf", ps, ps+1, ps+2);
 
-  if (nass < 3) 
+  if (nass < 2)
     return false;
 
-  if (ps[2] < 0.1 || ps[0] < 50.0 || ps[1] > 5000.0 || ps[1] < ps[0])
-    return false;
+  if (nass == 2)
+    {
+      ps[2] = 0.0;
+    } 
+  else
+    {
+      if (ps[2] < 0.1)
+	return false;
 
-  if (int((ps[1]-ps[0])/ps[2]) < 2)
-    return false;
+      if (int((ps[1]-ps[0])/ps[2]) < 2)
+	return false;
+    }
 
-  return true;
+  return (ps[0] >= 50.0 && ps[1] <= 5000.0 && ps[1] > ps[0]);
 }
 
 bool
