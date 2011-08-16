@@ -71,8 +71,8 @@ public:
   virtual void get_sampling(double& s_start, double& s_end, double& s_step)
   {
     int n = spectra_points(m_ref_spectr);
-    s_start = data_view_get(m_ref_spectr->table, 0,   0);
-    s_end   = data_view_get(m_ref_spectr->table, n-1, 0);
+    s_start = floor(data_view_get(m_ref_spectr->table, 0, 0));
+    s_end   = ceil(data_view_get(m_ref_spectr->table, n-1, 0));
     s_step  = 0.0;
   }
 
