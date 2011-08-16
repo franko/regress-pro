@@ -37,6 +37,7 @@ public:
 
     m_all_parameters = fit_engine_get_all_parameters (m_fit_engine);
 
+    m_fit_engine->config->spectr_range.active = 0;
     m_fit_engine->config->subsampling = 0;
     
     m_model_spectr = spectra_alloc (m_ref_spectr);
