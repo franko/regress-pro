@@ -385,7 +385,7 @@ fit_engine_get_parameter_value (const struct fit_engine *fit,
       const struct stack *st = fit->stack;
       int layer_nb = fp->layer_nb;
       const disp_t *d = st->disp[layer_nb];
-      assert(layer_nb > 0 && layer_nb < st->nb - 1);
+      assert(layer_nb > 0 && layer_nb <= st->nb - 1);
       return disp_get_param_value (d, fp);
     }
 
