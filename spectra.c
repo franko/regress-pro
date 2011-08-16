@@ -195,6 +195,22 @@ spectra_alloc (struct spectrum *s)
   return synth;
 }
 
+void
+spectra_resize (struct spectrum *s, int nr)
+{
+  struct data_view *dv = s->table;
+  data_view_reset (dv);
+  if (nr <= dv->table->rows)
+    {
+      data_view_set_mask_offset (dv, 0, nr);
+    }
+  else
+    {
+      data_view_dealloc (dv);
+      dv->rows  = nr;
+      dv->table = data_table_new (nr, dv->columns);
+    }
+}
 
 float const *
 spectra_get_values (struct spectrum const *s, int idx)

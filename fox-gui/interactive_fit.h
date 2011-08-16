@@ -80,8 +80,7 @@ public:
   {
     spectr_cut_range(m_ref_spectr, s_start, s_end);
 
-    spectra_free (m_model_spectr);
-    m_model_spectr = spectra_alloc (m_ref_spectr);
+    spectra_resize(m_model_spectr, m_ref_spectr->table->rows);
     fit_engine_generate_spectrum (m_fit_engine, m_ref_spectr, m_model_spectr);
 
     return true;

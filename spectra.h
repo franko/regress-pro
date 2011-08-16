@@ -40,7 +40,7 @@ typedef struct spectrum *spectr_ptr;
 extern struct spectrum * spectra_copy        (struct spectrum *s);
 extern struct spectrum * spectra_alloc       (struct spectrum *s);
 extern void              spectra_free        (struct spectrum *s);
-
+extern void              spectra_resize      (struct spectrum *s, int nr);
 extern float             get_lambda_by_index (struct spectrum *s, int idx);
 
 extern float const *     spectra_get_values  (struct spectrum const *s, int j);
