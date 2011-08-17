@@ -8,7 +8,7 @@
 
 
 struct step_data {
-  struct data_table *table;
+  struct data_view *table;
   float epsilon;
   int size;
   int idx_max;
@@ -21,9 +21,9 @@ static int * minsampling_stepper (struct step_data *info, int idx, int idx_red);
 int *
 minsampling_stepper (struct step_data *info, int idx, int idx_red)
 {
-#define LAMBDA(idx) data_table_get(info->table, idx, 0)
-#define ALPHA(idx)  data_table_get(info->table, idx, 1)
-#define BETA(idx)   data_table_get(info->table, idx, 2)
+#define LAMBDA(idx) data_view_get(info->table, idx, 0)
+#define ALPHA(idx)  data_view_get(info->table, idx, 1)
+#define BETA(idx)   data_view_get(info->table, idx, 2)
   int *map = NULL;
   int j;
 
@@ -75,12 +75,12 @@ elliss_sample_minimize (struct spectrum *s, float dlmt)
   struct step_data info[1];
   int *map;
 
-  info->idx_max = s->table->idx_end;
-  info->table   = s->table->table;
+  info->idx_max = s->table->rows;
+  info->table   = s->table;
   info->epsilon = dlmt;
 
   map = minsampling_stepper (info, s->table->idx_start, 1);
-  map[0] = s->table->idx_start;
+  map[0] = 0;
 
   data_view_set_map (s->table, info->size, map);
 }

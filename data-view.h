@@ -9,7 +9,7 @@
 
 __BEGIN_DECLS
 
-#define DATA_VIEW_IDX(d,r,c) (d->map ? (d)->table->columns * (d)->map[(d)->idx_start + (r)] + (c) : (d)->table->columns * ((d)->idx_start + (r)) + (c))
+#define DATA_VIEW_IDX(d,r,c) (d->map ? (d)->table->columns * ((d)->idx_start + (d)->map[r]) + (c) : (d)->table->columns * ((d)->idx_start + (r)) + (c))
 #define data_view_get(d,r,c) (d)->table->heap[DATA_VIEW_IDX(d,r,c)]
 #define data_view_get_row(d,r) ((d)->table->heap + DATA_VIEW_IDX(d,r,0))
 
