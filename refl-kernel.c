@@ -1,8 +1,3 @@
-
-/*
-  $Id: refl-kernel.c,v 1.2 2006/07/12 22:48:55 francesco Exp $
-*/
-
 #include <assert.h>
 
 #include "refl-kernel.h"

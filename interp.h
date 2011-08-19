@@ -1,8 +1,3 @@
-
-/*
-  $Id: interp.h,v 1.3 2006/05/12 15:03:14 af27 Exp $
- */
-
 #ifndef INTERP_H
 #define INTERP_H
 

@@ -1,7 +1,3 @@
-/*
- $Id: fit-params.c,v 1.6 2006/07/12 22:48:54 francesco Exp $
- */
-
 #include <stdio.h>
 #include <string.h>
 #include "fit-params.h"

@@ -1,8 +1,3 @@
-
-/*
-  $Id: elliss-fit.h,v 1.4 2006/10/30 22:55:13 francesco Exp $
-*/
-
 #ifndef ELLIS_FIT_H
 #define ELLIS_FIT_H
 

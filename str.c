@@ -1,7 +1,3 @@
-/*
-  $Id: str.c,v 1.8 2006/12/26 18:15:51 francesco Exp $
- */
-
 #define _GNU_SOURCE 1
 
 #include <stdlib.h>

@@ -1,8 +1,3 @@
-
-/*
-  $Id: model-interp.c,v 1.4 2006/05/12 15:03:15 af27 Exp $
- */
-
 #include <string.h>
 #include "model-interp.h"
 #include "dispers.h"

@@ -1,8 +1,3 @@
-
-/*
-  $Id: batch.h,v 1.1 2006/07/12 22:57:45 francesco Exp $
- */
-
 #ifndef BATCH_H
 #define BATCH_H
 

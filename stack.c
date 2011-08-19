@@ -1,7 +1,3 @@
-/*
-  $Id: stack.c,v 1.6 2006/07/12 22:48:55 francesco Exp $
- */
-
 #include <string.h>
 #include "stack.h"
 #include "str.h"

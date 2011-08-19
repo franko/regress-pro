@@ -1,7 +1,3 @@
-/*
-  $Id: stack.h,v 1.6 2006/07/12 22:48:55 francesco Exp $
- */
-
 #ifndef STACK_H
 #define STACK_H
 

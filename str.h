@@ -1,7 +1,3 @@
-/*
-  $Id: str.h,v 1.8 2006/12/26 18:15:51 francesco Exp $
- */
-
 #ifndef STR_H
 #define STR_H
 

@@ -1,8 +1,3 @@
-
-/*
-  $Id: refl-utils.c,v 1.4 2006/12/29 17:47:02 francesco Exp $
- */
-
 #include "refl-utils.h"
 #include "error-messages.h"
 #include "data-table.h"

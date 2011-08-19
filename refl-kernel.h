@@ -1,8 +1,3 @@
-
-/*
-  $Id: refl-kernel.h,v 1.1 2006/04/07 11:59:52 af27 Exp $
-*/
-
 #ifndef REFL_KERNEL_H
 #define REFL_KERNEL_H
 

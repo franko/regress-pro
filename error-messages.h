@@ -1,8 +1,3 @@
-
-/*
-  $Id: error-messages.h,v 1.1 2006/07/12 22:57:45 francesco Exp $
- */
-
 #ifndef ERROR_MESSAGES_H
 #define ERROR_MESSAGES_H
 

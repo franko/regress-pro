@@ -1,8 +1,3 @@
-
-/*
-  $Id: test-deriv.h,v 1.1 2006/10/30 22:55:13 francesco Exp $
- */
-
 #ifndef TEST_DERIV_H
 #define TEST_DERIV_H
 

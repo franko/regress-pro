@@ -1,8 +1,3 @@
-
-/*
-  $Id: lmfit.h,v 1.8 2006/12/29 17:47:02 francesco Exp $
- */
-
 #ifndef __LMFIT_H
 #define __LMFIT_H
 

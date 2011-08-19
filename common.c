@@ -1,7 +1,3 @@
-/*
-  $Id: common.c,v 1.10 2006/07/13 14:32:12 francesco Exp $
- */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

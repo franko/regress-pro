@@ -1,8 +1,3 @@
-
-/*
-  $Id: fitlexer.h,v 1.4 2006/12/26 18:15:50 francesco Exp $
- */
-
 #ifndef FITLEXER_H
 #define FITLEXER_H
 

@@ -1,7 +1,3 @@
-/* 
-  $Id: refl-fit.h,v 1.7 2006/07/12 22:48:55 francesco Exp $
- */
-
 #ifndef REFL_FIT_H
 #define REFL_FIT_H
 

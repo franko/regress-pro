@@ -1,8 +1,3 @@
-
-/*
-  $Id: error-messages.c,v 1.2 2006/12/26 18:15:50 francesco Exp $
- */
-
 #include "error-messages.h"
 #include "common.h"
 

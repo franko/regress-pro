@@ -1,8 +1,3 @@
-
-/*
-  $Id: elliss-util.c,v 1.4 2006/10/30 22:55:13 francesco Exp $
- */
-
 #include <stdio.h>
 #include <string.h>
 

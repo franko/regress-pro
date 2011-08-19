@@ -1,8 +1,3 @@
-
-/* 
-  $Id: disp-util.h,v 1.3 2006/07/12 22:48:54 francesco Exp $
- */
-
 #ifndef DISP_UTIL_H
 #define DISP_UTIL_H
 

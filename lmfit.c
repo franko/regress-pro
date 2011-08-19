@@ -1,7 +1,3 @@
-/*
-  $Id: lmfit.c,v 1.13 2006/12/29 17:47:02 francesco Exp $
- */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

@@ -1,8 +1,3 @@
-
-/*
-  $Id: descr-util.c,v 1.3 2006/12/26 18:15:50 francesco Exp $
- */
-
 #include "descr-util.h"
 #include "fitlexer.h"
 

@@ -1,7 +1,3 @@
-/*
-  $Id: symtab.h,v 1.6 2006/12/26 18:15:51 francesco Exp $
- */
-
 #ifndef SYMTAB_H
 #define SYMTAB_H
 

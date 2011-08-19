@@ -1,7 +1,3 @@
-/*
- $Id: disp-util.c,v 1.4 2006/07/12 22:48:54 francesco Exp $
- */
-
 #include <stdio.h>
 #include <math.h>
 #include "common.h"

@@ -1,8 +1,3 @@
-
-/*
-  $Id: fitlexer.c,v 1.6 2006/12/26 18:15:50 francesco Exp $
- */
-
 #include <string.h>
 #include <assert.h>
 #include "fitlexer.h"

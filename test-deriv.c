@@ -1,8 +1,3 @@
-
-/*
-  $Id: test-deriv.c,v 1.1 2006/10/30 22:55:13 francesco Exp $
- */
-
 #ifdef DEBUG_REGRESS
 
 #include <stdio.h>
