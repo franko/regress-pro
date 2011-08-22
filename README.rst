@@ -28,14 +28,6 @@ In version 1.4 the following features have been added:
 
 alongside with many other improvements in usability and the introduction of a new plotting style based on the anti-grain library of Maxim Shemarev.
 
-Current Plans
--------------
-
-It is planned to add new features in Regress Pro. Most notably :
-
-  * multiple step regressions
-  * more accurate fitting by taking into account the numerical aperture of the light beam
-
 License
 -------
 
@@ -50,10 +42,12 @@ The following libraries are also used to implement the RSA algorithm for the reg
   * The GNU Multiple Precision Arithmetic Library (GMP)
   * libmhash
 
-Downloads
----------
+The binary packages available from the `website <http://www.regresspro.org/>`_ require a registration code for continued use.
 
-`Regress Pro 1.3.2 for windows <http://github.com/downloads/franko/Regress-Pro/regress-pro-132-win.zip>`_
+Download
+--------
+
+The download section is available at `Regress Pro website <http://www.regresspro.org/>`_. Please check also the `registration section <http://www.regresspro.org/register.html>`_ to obtain a registration code.
 
 Requirements
 ------------
