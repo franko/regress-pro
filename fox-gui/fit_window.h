@@ -44,6 +44,8 @@ class fit_window : public FXMainWindow {
   FXMenuPane        *fitmenu;
   FXMenuPane        *plotmenu;
 
+  FXFont* m_bold_font;
+
   FXTextField* m_wl_entry;
   plot_canvas* m_canvas;
 

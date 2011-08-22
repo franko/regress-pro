@@ -77,11 +77,24 @@ fit_window::fit_window(fit_manager* fit, FXApp* a,const FXString& name,FXIcon *i
 
   m_parameters.resize(m_fit->parameters_number());
 
+  m_bold_font = new FXFont(getApp(), "helvetica", 9, FXFont::Bold, FXFont::Italic);
+
   Str pname;
+  FXString label_text;
+  int current_layer = 0;
   for (unsigned k = 0; k < m_parameters.size(); k++)
     {
       param_info* p = this->get_parameter_pointer(k);
       m_fit->get_parameter(k, &p->fp);
+
+      if (p->fp.id == PID_LAYER_N && p->fp.layer_nb != current_layer)
+        {
+          current_layer = p->fp.layer_nb;
+          label_text.format("Layer %i", current_layer);
+          FXLabel *lab = new FXLabel(matrix, label_text);
+	  lab->setFont(m_bold_font);
+          new FXLabel(matrix, "");
+        }
 
       get_param_name(&p->fp, pname.str());
       FXString fxpname((const FXchar *) pname.cstr());
@@ -104,6 +117,7 @@ fit_window::fit_window(fit_manager* fit, FXApp* a,const FXString& name,FXIcon *i
 fit_window::~fit_window() 
 {
   delete m_fit;
+  delete m_bold_font;
   delete fitmenu;
   delete plotmenu;
 }
