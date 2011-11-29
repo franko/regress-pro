@@ -98,8 +98,9 @@ disp_sample_table_new_from_mat_file (const char * filename)
   FILE * f;
   str_t row;
   disp_t *disp = NULL;
-  double unit_factor = 1.0;
   enum disp_type dtype;
+  int convert_ev = 0;
+  int provide_diel_k = 0;
 
   f = fopen (filename, "r");
 
@@ -118,18 +119,32 @@ disp_sample_table_new_from_mat_file (const char * filename)
     {
       dtype = DISP_CAUCHY;
     }
-  else if (strncasecmp (CSTR(row), "angstroms", 9) == 0)
+  else if (strncasecmp (CSTR(row), "ev", 2) == 0)
     {
-      str_getline (row, f);
-      unit_factor = 0.1;
-      if (strncasecmp (CSTR(row), "NK", 2) == 0)
-	dtype = DISP_SAMPLE_TABLE;
+      convert_ev = 1;
     }
-  else if (strncasecmp (CSTR(row), "nm", 2) == 0)
+  else if (strncasecmp (CSTR(row), "nm", 2) != 0)
     {
-      str_getline (row, f);
-      if (strncasecmp (CSTR(row), "NK", 2) == 0)
-	dtype = DISP_SAMPLE_TABLE;
+      notify_error_msg (LOADING_FILE_ERROR, "Invalide MAT format: %s",
+			filename);
+      goto close_exit;
+    }
+
+  str_getline (row, f);
+  if (strncasecmp (CSTR(row), "nk", 2) == 0)
+    {
+      dtype = DISP_SAMPLE_TABLE;
+    }
+  else if (strncasecmp (CSTR(row), "e1e2", 4) == 0)
+    {
+      dtype = DISP_SAMPLE_TABLE;
+      provide_diel_k = 1;
+    }
+  else
+    {
+      notify_error_msg (LOADING_FILE_ERROR, "Invalide MAT format: %s",
+			filename);
+      goto close_exit;
     }
     
   switch (dtype)
@@ -178,6 +193,17 @@ disp_sample_table_new_from_mat_file (const char * filename)
 	      read_status = fscanf (f, "%f %f %f\n", dptr, dptr+1, dptr+2);
 	    while (read_status < 3 && read_status != EOF);
 
+	    if (convert_ev)
+	      dptr[0] = 1239.8 / dptr[0];
+
+	    if (provide_diel_k)
+	      {
+		double e1 = dptr[1], e2 = dptr[2];
+		double ne = sqrt(e1*e1 + e2*e2);
+		dptr[1] = sqrt((ne + e1) / 2.0);
+		dptr[2] = sqrt((ne - e1) / 2.0);
+	      }
+
 	    if (read_status == EOF)
 	      break;
 	  }
@@ -201,6 +227,7 @@ disp_sample_table_new_from_mat_file (const char * filename)
       break;
     }
 
+ close_exit:
   fclose (f);
   str_free (row);
   return disp;
