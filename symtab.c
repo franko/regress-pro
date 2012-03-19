@@ -355,6 +355,14 @@ set_config_value_raw (struct symtab *symtab, lex_string_t *id, val_t *v)
 	  return 0;
 	}
     }
+  else if (LEX_STRING_EQUAL(id, "wavelength_integ"))
+    {
+      if (v->type == VAL_TP_DOUBLE)
+	{
+	  cfg->wavelength_integ = (int) v->cont.real;
+	  return 0;
+	}
+    }
 
   notify_error_msg (SCRIPT_ERROR, "Invalid value.");
   return 1;
@@ -372,6 +380,7 @@ set_config_value (struct symtab *symtab, lex_string_t *id, val_t *v)
 void
 config_set_default (struct fit_config *cfg)
 {
+  cfg-> wavelength_integ = 0;
   cfg->thresold_given = 0;
   cfg->nb_max_iters = 30;
   cfg->subsampling = 1;

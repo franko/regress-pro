@@ -25,6 +25,7 @@ struct system_config {
   double aoi;
   double analyzer;
   double numap;
+  double wl_delta;
 };
 
 struct spectrum {

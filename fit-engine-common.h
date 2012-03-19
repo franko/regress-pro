@@ -23,6 +23,7 @@ struct stack_cache {
 
 struct fit_config {
   double chisq_thresold;
+  int wavelength_integ;
   int thresold_given;
   int nb_max_iters;
   int subsampling;

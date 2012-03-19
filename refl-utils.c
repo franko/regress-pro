@@ -85,6 +85,24 @@ read_nova_spectrum (FILE *f, str_ptr ln)
   return table;
 }
 
+void
+update_wavelength_step (struct spectrum *s)
+{
+  int k, n = s->table[0].rows;
+  double wl_prev, wl;
+  double wl_step = 0.0;
+
+  for (k = 0; k < n; k++)
+    {
+      wl = data_view_get (s->table, k, 0);
+      if (k > 0)
+	wl_step += (wl - wl_prev) / (n - 1);
+      wl_prev = wl;
+    }
+
+  s->config.wl_delta = 2 * wl_step;
+}
+
 struct spectrum *
 load_refl_data (const char *filename)
 {
@@ -124,6 +142,7 @@ load_refl_data (const char *filename)
     goto invalid_s;
 
   data_view_init (s->table, table);
+  update_wavelength_step (s);
 
   str_free (ln);
   fclose (f);
