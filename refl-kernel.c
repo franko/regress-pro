@@ -169,8 +169,8 @@ mult_layer_refl_ni_jacob (int nb, const cmpl ns[], const double ds[],
   return R;
 }
 
-double
-mult_layer_refl_ni (size_t _nb, const cmpl ns[], const double ds[],
+static double
+mult_layer_refl_sw (size_t _nb, const cmpl ns[], const double ds[],
 		    double lambda,
 		    gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
 {
@@ -228,4 +228,58 @@ mult_layer_refl_ni (size_t _nb, const cmpl ns[], const double ds[],
 
   return CSQABS(r);
 #undef NB_JAC_STATIC
+}
+
+double
+mult_layer_refl_ni (size_t _nb, const cmpl ns[], const double ths[],
+		    double lambda,
+		    gsl_vector *r_th_jacob, gsl_vector *r_n_jacob,
+		    int n_wavelength_integ, double wl_delta)
+{
+  int nb = _nb;
+#define NB_MAX_LAYER 16
+  double jx_static[NB_MAX_LAYER + 2*(NB_MAX_LAYER+2)];
+  gsl_vector_view jx_th = gsl_vector_view_array (jx_static, nb - 2);
+  gsl_vector_view jx_ns = gsl_vector_view_array (jx_static + (nb - 2), 2*nb);
+  gsl_vector *r_th_jacob_x, *r_ns_jacob_x;
+  const int nlmt = n_wavelength_integ;
+  const double wl_step = wl_delta / (2 * nlmt + 1);
+  const double weight = 1.0 / (2 * nlmt + 1);
+  double r_raw;
+
+  r_th_jacob_x = (r_th_jacob ? &jx_th.vector : NULL);
+  r_ns_jacob_x = (r_n_jacob  ? &jx_ns.vector : NULL);
+
+  if (n_wavelength_integ > 0)
+    {
+      int k;
+
+      r_raw = 0.0;
+      if (r_th_jacob)
+	gsl_vector_set_zero (r_th_jacob);
+      if (r_n_jacob)
+	gsl_vector_set_zero (r_n_jacob);
+
+      for (k = -nlmt; k <= nlmt; k++)
+	{
+	  double lambda_x = lambda + k * wl_step;
+	  double r_x;
+
+	  r_x = mult_layer_refl_sw (nb, ns, ths, lambda_x,
+				    r_th_jacob_x, r_ns_jacob_x);
+
+	  r_raw += weight * r_x;
+
+	  if (r_th_jacob)
+	    gsl_blas_daxpy (weight, r_th_jacob_x, r_th_jacob);
+	  if (r_n_jacob)
+	    gsl_blas_daxpy (weight, r_ns_jacob_x, r_n_jacob);
+	}
+    }
+  else
+    {
+      r_raw = mult_layer_refl_sw (nb, ns, ths, lambda, r_th_jacob, r_n_jacob);
+    }
+
+  return r_raw;
 }

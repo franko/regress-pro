@@ -7,7 +7,6 @@
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
-#include <gsl/gsl_blas.h>
 
 #include "refl-fit.h"
 #include "refl-kernel.h"
@@ -15,7 +14,7 @@
 #include "refl-get-jacobian.h"
 
 double
-get_parameter_jacob_r (fit_param_t const *fp, stack_t const *stack,
+get_parameter_jacob_r (fit_param_t const *fp, stack_t const *stack, 
 		       struct deriv_info *ideriv, double lambda,
 		       gsl_vector *stack_jacob_th,
 		       gsl_vector *stack_jacob_n,
@@ -54,19 +53,15 @@ get_parameter_jacob_r (fit_param_t const *fp, stack_t const *stack,
 }
 
 int
-refl_fit_fdf (const gsl_vector *x, void *params,
+refl_fit_fdf (const gsl_vector *x, void *params, 
               gsl_vector *f, gsl_matrix * jacob)
 {
-#define NB_MAX_LAYER 16
-  double r_jac_static[NB_MAX_LAYER + 2*(NB_MAX_LAYER+2)];
   struct fit_engine *fit = params;
   struct spectrum *s = fit->run->spectr;
   size_t nb_med = fit->stack->nb;
   gsl_vector *r_th_jacob, *r_n_jacob;
   const int n_wavelength_integ = fit->config[0].wavelength_integ;
-  gsl_vector_view jx_th = gsl_vector_view_array (r_jac_static, nb_med - 2);
-  gsl_vector_view jx_ns = gsl_vector_view_array (r_jac_static + (nb_med - 2), 2*nb_med);
-  gsl_vector *r_th_jacob_x, *r_ns_jacob_x;
+  const double wl_delta = s->config.wl_delta;
   double const * ths;
   cmpl * ns;
   size_t j;
@@ -84,9 +79,6 @@ refl_fit_fdf (const gsl_vector *x, void *params,
   r_th_jacob = (jacob ? fit->run->jac_th : NULL);
   r_n_jacob  = (jacob ? fit->run->jac_n.refl : NULL);
 
-  r_th_jacob_x = (jacob ? &jx_th.vector : NULL);
-  r_ns_jacob_x = (jacob ? &jx_ns.vector : NULL);
-
   for (j = 0; j < spectra_points (s); j++)
     {
       float const * spectr_data = spectra_get_values (s, j);
@@ -102,48 +94,15 @@ refl_fit_fdf (const gsl_vector *x, void *params,
 	  ns = fit->run->cache.ns;
 	  stack_get_ns_list (fit->stack, ns, lambda);
 	}
-
+      
       /* STEP 3 : We call the procedure mult_layer_refl_ni */
 
-      if (n_wavelength_integ > 0)
-	{
-	  const int nlmt = n_wavelength_integ;
-	  const double wl_step = s->config.wl_delta / (2 * nlmt + 1);
-	  const double weight = 1.0 / (2 * nlmt + 1);
-	  int k;
-
-	  r_raw = 0.0;
-	  if (jacob)
-	    {
-	      gsl_vector_set_zero (r_th_jacob);
-	      gsl_vector_set_zero (r_n_jacob);
-	    }
-
-	  for (k = -nlmt; k <= nlmt; k++)
-	    {
-	      double lambda_x = lambda + k * wl_step;
-	      double r_x;
-
-	      r_x = mult_layer_refl_ni (nb_med, ns, ths, lambda_x,
-					r_th_jacob_x, r_ns_jacob_x);
-
-	      r_raw += weight * r_x;
-
-	      if (jacob)
-		{
-		  gsl_blas_daxpy (weight, r_th_jacob_x, r_th_jacob);
-		  gsl_blas_daxpy (weight, r_ns_jacob_x, r_n_jacob);
-		}
-	    }
-	}
-      else
-	{
-	  r_raw = mult_layer_refl_ni (nb_med, ns, ths, lambda,
-				      r_th_jacob, r_n_jacob);
-	}
+      r_raw = mult_layer_refl_ni (nb_med, ns, ths, lambda,
+				  r_th_jacob, r_n_jacob,
+				  n_wavelength_integ, wl_delta);
 
       r_theory = rmult * r_raw;
-
+        
       if (f != NULL)
 	gsl_vector_set (f, j, r_theory - r_meas);
 

@@ -400,6 +400,8 @@ fit_engine_generate_spectrum (struct fit_engine *fit, struct spectrum *ref,
   enum system_kind syskind = ref->config.system;
   size_t nb_med = fit->stack->nb;
   struct data_table *table = synth->table[0].table;
+  const int n_wavelength_integ = fit->config[0].wavelength_integ;
+  const double wl_delta = ref->config.wl_delta;
   int j, npt = spectra_points (ref);
   cmpl *ns = emalloc (sizeof(cmpl) * nb_med);
   double const * ths;
@@ -423,7 +425,9 @@ fit_engine_generate_spectrum (struct fit_engine *fit, struct spectrum *ref,
 	case SYSTEM_REFLECTOMETER:
 	  {
 	    double r_raw = mult_layer_refl_ni (nb_med, ns, ths, lambda,
-					       NULL, NULL);
+					       NULL, NULL,
+					       n_wavelength_integ, wl_delta);
+
 	    data_table_set (table, j, 1, fit->extra->rmult * r_raw);
 	    break;
 	  }

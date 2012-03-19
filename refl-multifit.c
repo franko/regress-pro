@@ -57,8 +57,9 @@ refl_multifit_fdf (const gsl_vector *x, void *params,
       
 	  /* STEP 3 : We call the procedure mult_layer_refl_ni */
 
+#warning TO BE CORRECTED LATER
 	  r_raw = mult_layer_refl_ni (nb_med, actual.ns, actual.ths, lambda,
-				      r_th_jacob, r_n_jacob);
+				      r_th_jacob, r_n_jacob, 0, 0.0);
 
 	  r_theory = rmult * r_raw;
         

@@ -100,7 +100,7 @@ update_wavelength_step (struct spectrum *s)
       wl_prev = wl;
     }
 
-  s->config.wl_delta = 2 * wl_step;
+  s->config.wl_delta = 4 * wl_step;
 }
 
 struct spectrum *
