@@ -10,8 +10,8 @@
 
 __BEGIN_DECLS
 
-extern obj_t * sample_interp    (struct symtab *symtab, struct gen_record *r);
-extern obj_t * multi_fit_interp (struct symtab *symtab, struct gen_record *r);
+extern obj_t * sample_interp(struct symtab *symtab, struct gen_record *r);
+extern obj_t * multi_fit_interp(struct symtab *symtab, struct gen_record *r);
 
 __END_DECLS
 

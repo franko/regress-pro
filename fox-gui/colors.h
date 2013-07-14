@@ -6,10 +6,10 @@
 
 namespace colors {
 
-  extern agg::rgba white;
-  extern agg::rgba black;
+extern agg::rgba white;
+extern agg::rgba black;
 
-  extern agg::rgba8 cdefault;
+extern agg::rgba8 cdefault;
 };
 
 #endif

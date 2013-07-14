@@ -4,44 +4,47 @@
 #include "cmpl.h"
 
 cmpl_vector *
-cmpl_vector_alloc (int nb)
+cmpl_vector_alloc(int nb)
 {
-  cmpl_vector *v = emalloc (sizeof(cmpl_vector));
+    cmpl_vector *v = emalloc(sizeof(cmpl_vector));
 
-  v->data = (cmpl *) emalloc (nb * sizeof(cmpl));
-  v->size = nb;
-  v->owner = 1;
+    v->data = (cmpl *) emalloc(nb * sizeof(cmpl));
+    v->size = nb;
+    v->owner = 1;
 
-  return v;
+    return v;
 }
 
 void
-cmpl_vector_free (cmpl_vector *v)
+cmpl_vector_free(cmpl_vector *v)
 {
-  assert (v != NULL);
-  if (v->data && v->owner)
-    free (v->data);
-  free (v);
+    assert(v != NULL);
+    if(v->data && v->owner) {
+        free(v->data);
+    }
+    free(v);
 }
 
 void
-cmpl_vector_set (cmpl_vector *v, int idx, cmpl val)
+cmpl_vector_set(cmpl_vector *v, int idx, cmpl val)
 {
-  if (idx < v->size)
-    v->data[idx] = val;
-  else
-    assert (0);
+    if(idx < v->size) {
+        v->data[idx] = val;
+    } else {
+        assert(0);
+    }
 }
 
 cmpl
-cmpl_vector_get (cmpl_vector *v, int idx)
+cmpl_vector_get(cmpl_vector *v, int idx)
 {
-  cmpl val;
+    cmpl val;
 
-  if (idx < v->size)
-    val = v->data[idx];
-  else
-    assert (0);
+    if(idx < v->size) {
+        val = v->data[idx];
+    } else {
+        assert(0);
+    }
 
-  return val;
+    return val;
 }

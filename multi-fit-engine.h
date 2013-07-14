@@ -19,52 +19,52 @@
 __BEGIN_DECLS
 
 struct multi_fit_engine {
-  enum system_kind system_kind;
+    enum system_kind system_kind;
 
-  int samples_number;
-  struct stack **stack_list;
-  struct spectrum **spectra_list;
+    int samples_number;
+    struct stack **stack_list;
+    struct spectrum **spectra_list;
 
-  struct fit_parameters *common_parameters;
-  struct fit_parameters *private_parameters;
+    struct fit_parameters *common_parameters;
+    struct fit_parameters *private_parameters;
 
-  struct extra_params extra;
-  struct fit_config config;
+    struct extra_params extra;
+    struct fit_config config;
 
-  int initialized;
+    int initialized;
 
-  gsl_multifit_function_fdf mffun;
+    gsl_multifit_function_fdf mffun;
 
-  gsl_vector *results;
-  gsl_vector *chisq;
+    gsl_vector *results;
+    gsl_vector *chisq;
 
-  struct stack_cache cache;
+    struct stack_cache cache;
 
-  gsl_vector *jac_th;
-  union {
-    gsl_vector *refl;
-    cmpl_vector *ell;
-  } jac_n;
+    gsl_vector *jac_th;
+    union {
+        gsl_vector *refl;
+        cmpl_vector *ell;
+    } jac_n;
 };
 
 extern struct multi_fit_engine * \
-            multi_fit_engine_new            (struct fit_config const *cfg,
-					     int samples_number);
-extern void multi_fit_engine_free           (struct multi_fit_engine *f);
-extern int  multi_fit_engine_prepare        (struct multi_fit_engine *f);
+multi_fit_engine_new(struct fit_config const *cfg,
+                     int samples_number);
+extern void multi_fit_engine_free(struct multi_fit_engine *f);
+extern int  multi_fit_engine_prepare(struct multi_fit_engine *f);
 
-extern void multi_fit_engine_disable        (struct multi_fit_engine *f);
+extern void multi_fit_engine_disable(struct multi_fit_engine *f);
 
-extern int  multi_fit_engine_commit_parameters (struct multi_fit_engine *fit,
-						const gsl_vector *x);
+extern int  multi_fit_engine_commit_parameters(struct multi_fit_engine *fit,
+        const gsl_vector *x);
 
 extern struct multi_fit_engine *			\
-            build_multi_fit_engine          (struct symtab *symtab,
-					     struct seeds **comm,
-					     struct seeds **indiv);
+build_multi_fit_engine(struct symtab *symtab,
+                       struct seeds **comm,
+                       struct seeds **indiv);
 
-extern void multi_fit_engine_print_fit_results (struct multi_fit_engine *fit,
-						str_t text);
+extern void multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
+        str_t text);
 
 __END_DECLS
 

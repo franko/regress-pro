@@ -7,6 +7,6 @@
 #include "symtab.h"
 #include "disp-fit-engine.h"
 
-bool disp_chooser (FXApp *app, struct symtab *symtab, struct disp_fit_engine *fit);
+bool disp_chooser(FXApp *app, struct symtab *symtab, struct disp_fit_engine *fit);
 
 #endif

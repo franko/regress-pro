@@ -4,7 +4,7 @@
 #include "elliss.h"
 #include "spectra.h"
 
-extern struct spectrum * load_ellips_spectrum (const char *filename,
-					       struct extra_param *einf);
+extern struct spectrum * load_ellips_spectrum(const char *filename,
+        struct extra_param *einf);
 
 #endif

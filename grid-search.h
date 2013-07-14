@@ -15,10 +15,10 @@
 __BEGIN_DECLS
 
 /* returns NULL if not successfull */
-int lmfit_grid (struct fit_engine *fit, struct seeds *seeds,
-		double * chisq, str_ptr analysis,
-		str_ptr error_msg, int preserve_init_stack,
-		gui_hook_func_t hfun, void *hdata);
+int lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
+               double * chisq, str_ptr analysis,
+               str_ptr error_msg, int preserve_init_stack,
+               gui_hook_func_t hfun, void *hdata);
 
 __END_DECLS
 

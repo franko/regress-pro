@@ -5,7 +5,7 @@
 
 __BEGIN_DECLS
 
-extern void elliss_sample_minimize (struct spectrum *s, float dlmt);
+extern void elliss_sample_minimize(struct spectrum *s, float dlmt);
 
 __END_DECLS
 

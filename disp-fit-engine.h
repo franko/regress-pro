@@ -12,34 +12,34 @@ __BEGIN_DECLS
 
 struct disp_fit_engine {
 
-  disp_t *ref_disp;
-  disp_t *model_disp;
+    disp_t *ref_disp;
+    disp_t *model_disp;
 
-  cmpl_vector *model_der;
+    cmpl_vector *model_der;
 
-  /* wavelength's sampling points */
-  gsl_vector *wl;
+    /* wavelength's sampling points */
+    gsl_vector *wl;
 
-  const struct fit_parameters *parameters;
+    const struct fit_parameters *parameters;
 };
 
 struct disp_fit_config {
-  int nb_max_iters;
-  double chisq_norm_factor;
-  double epsabs;
-  double epsrel;
+    int nb_max_iters;
+    double chisq_norm_factor;
+    double epsabs;
+    double epsrel;
 };
 
-extern void disp_fit_config_init (struct disp_fit_config *fit);
+extern void disp_fit_config_init(struct disp_fit_config *fit);
 
-extern struct disp_fit_engine * disp_fit_engine_new ();
-extern void disp_fit_engine_free (struct disp_fit_engine *fit);
-extern void disp_fit_engine_set_parameters (struct disp_fit_engine *fit,
-					    const struct fit_parameters *fps);
+extern struct disp_fit_engine * disp_fit_engine_new();
+extern void disp_fit_engine_free(struct disp_fit_engine *fit);
+extern void disp_fit_engine_set_parameters(struct disp_fit_engine *fit,
+        const struct fit_parameters *fps);
 
-extern int lmfit_disp (struct disp_fit_engine *fit, struct disp_fit_config *cfg,
-		       gsl_vector *x, double * chisq, str_ptr analysis, 
-		       str_ptr error_msg);
+extern int lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
+                      gsl_vector *x, double * chisq, str_ptr analysis,
+                      str_ptr error_msg);
 
 __END_DECLS
 

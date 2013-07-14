@@ -11,37 +11,41 @@
 #include "ProgressInfo.h"
 
 class BatchDialog : public FXDialogBox {
-  FXDECLARE(BatchDialog)
+    FXDECLARE(BatchDialog)
 private:
-  FXTextField *tfName;
-  FXTextField *tfStart;
-  FXTextField *tfEnd;
-  FXTextField *tfStep;
+    FXTextField *tfName;
+    FXTextField *tfStart;
+    FXTextField *tfEnd;
+    FXTextField *tfStep;
 
-  struct fit_engine *fit;
-  struct seeds *seeds;
-  FXString result;
+    struct fit_engine *fit;
+    struct seeds *seeds;
+    FXString result;
 
 protected:
-  BatchDialog(){};
+    BatchDialog() {};
 private:
-  BatchDialog(const BatchDialog&);
-  BatchDialog &operator=(const BatchDialog&);
+    BatchDialog(const BatchDialog&);
+    BatchDialog &operator=(const BatchDialog&);
 
 public:
-  BatchDialog(FXWindow *w, struct fit_engine *fit, struct seeds *seeds);
-  void execute(FXString &res);
+    BatchDialog(FXWindow *w, struct fit_engine *fit, struct seeds *seeds);
+    void execute(FXString &res);
 
-  long onCmdRun(FXObject* sender,FXSelector,void*);
-  long onCmdBrowse(FXObject* sender,FXSelector,void*);
+    long onCmdRun(FXObject* sender,FXSelector,void*);
+    long onCmdBrowse(FXObject* sender,FXSelector,void*);
 
-  inline void setFilename(const FXString &fn) { tfName->setText(fn); };
-  inline FXString getFilename() { return tfName->getText(); };
+    inline void setFilename(const FXString &fn) {
+        tfName->setText(fn);
+    };
+    inline FXString getFilename() {
+        return tfName->getText();
+    };
 
-  enum {
-    ID_BROWSE = FXDialogBox::ID_LAST,
-    ID_LAST
-  };
+    enum {
+        ID_BROWSE = FXDialogBox::ID_LAST,
+        ID_LAST
+    };
 };
 
 

@@ -15,18 +15,18 @@ __BEGIN_DECLS
 #define data_table_ref(d) if ((d)->ref_count >= 0) { (d)->ref_count++; }
 
 struct data_table {
-  int rows;
-  int columns;
-  int ref_count;
-  float heap[1];
+    int rows;
+    int columns;
+    int ref_count;
+    float heap[1];
 };
 
-struct data_table * data_table_new        (int row, int columns);
+struct data_table * data_table_new(int row, int columns);
 
-void                data_table_unref      (struct data_table *dt);
+void                data_table_unref(struct data_table *dt);
 
-struct data_table * data_table_read_lines (FILE *f, const char *fmt,
-					   int row_start, int columns);
+struct data_table * data_table_read_lines(FILE *f, const char *fmt,
+        int row_start, int columns);
 
 extern struct data_table empty_data_table[1];
 

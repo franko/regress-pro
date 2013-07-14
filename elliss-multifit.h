@@ -13,12 +13,12 @@
 
 __BEGIN_DECLS
 
-extern int      elliss_multifit_fdf     (const gsl_vector *x, void *params,
-					 gsl_vector *f, gsl_matrix * jacob);
-extern int      elliss_multifit_f       (const gsl_vector *x, void *params,
-					 gsl_vector * f);
-extern int      elliss_multifit_df      (const gsl_vector *x,
-					 void *params, gsl_matrix *jacob);
+extern int      elliss_multifit_fdf(const gsl_vector *x, void *params,
+                                    gsl_vector *f, gsl_matrix * jacob);
+extern int      elliss_multifit_f(const gsl_vector *x, void *params,
+                                  gsl_vector * f);
+extern int      elliss_multifit_df(const gsl_vector *x,
+                                   void *params, gsl_matrix *jacob);
 
 __END_DECLS
 

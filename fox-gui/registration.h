@@ -8,7 +8,7 @@
 __BEGIN_DECLS
 
 bool registration_check(const char *user_name, const char *user_email,
-			int product_version, const char *key);
+                        int product_version, const char *key);
 
 __END_DECLS
 

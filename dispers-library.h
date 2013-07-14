@@ -10,9 +10,9 @@
 
 __BEGIN_DECLS
 
-extern void     dispers_library_init      (void);
-extern disp_t * dispers_library_search    (const char *id);
-extern disp_t * dispers_library_get       (int index, char const ** lname);
+extern void     dispers_library_init(void);
+extern disp_t * dispers_library_search(const char *id);
+extern disp_t * dispers_library_get(int index, char const ** lname);
 
 __END_DECLS
 

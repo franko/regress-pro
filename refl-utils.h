@@ -6,7 +6,7 @@
 
 __BEGIN_DECLS
 
-extern struct spectrum * load_refl_data (const char *filename);
+extern struct spectrum * load_refl_data(const char *filename);
 
 __END_DECLS
 

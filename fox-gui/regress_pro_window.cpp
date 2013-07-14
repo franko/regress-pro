@@ -1,18 +1,18 @@
 
 /* regress_pro_window.cpp
- * 
+ *
  * Copyright (C) 2005-2011 Francesco Abbate
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -47,7 +47,7 @@
 #include "fit_window.h"
 #include "interactive_fit.h"
 
-static float timeval_subtract (struct timeval *x, struct timeval *y);
+static float timeval_subtract(struct timeval *x, struct timeval *y);
 
 #ifdef WIN32
 #define SCRIPT_FONT_NAME "Courier New"
@@ -56,20 +56,20 @@ static float timeval_subtract (struct timeval *x, struct timeval *y);
 #endif
 
 // Map
-FXDEFMAP(regress_pro_window) regress_pro_window_map[]={
-  FXMAPFUNC(SEL_UPDATE,  0, regress_pro_window::onUpdate),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
-  FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
+FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
+    FXMAPFUNC(SEL_UPDATE,  0, regress_pro_window::onUpdate),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
 };
 
 
@@ -78,696 +78,704 @@ FXIMPLEMENT(regress_pro_window,FXMainWindow,regress_pro_window_map,ARRAYNUMBER(r
 
 
 const FXchar regress_pro_window::patterns_fit[] =
-  "Fit Strategy (*.fit)"
-  "\nAll Files (*)";
+    "Fit Strategy (*.fit)"
+    "\nAll Files (*)";
 const FXchar regress_pro_window::patterns_spectr[] =
-  "Fit Strategy (*.dat)"
-  "\nAll Files (*)";
+    "Fit Strategy (*.dat)"
+    "\nAll Files (*)";
 
 const FXHiliteStyle regress_pro_window::tstyles[] = {
-  {FXRGB(255,255,255), FXRGB(255,0,0), 0, 0, 0, 0, 0, 0}};
-  
+    {FXRGB(255,255,255), FXRGB(255,0,0), 0, 0, 0, 0, 0, 0}
+};
+
 
 
 // Make some windows
-regress_pro_window::regress_pro_window(elliss_app* a) 
- : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
-   spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
-   spectrFile("untitled"), batchFileId("untitled####.dat"),
-   m_model_spectr(0) 
+regress_pro_window::regress_pro_window(elliss_app* a)
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
+      spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
+      spectrFile("untitled"), batchFileId("untitled####.dat"),
+      m_model_spectr(0)
 {
-  // Menubar
-  menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-  statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
+    // Menubar
+    menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
+    statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
 
-  // Script menu
-  filemenu=new FXMenuPane(this);
-  new FXMenuCommand(filemenu,"&Load",NULL,this,ID_LOAD_SCRIPT);
-  new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
-  new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
-  new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
-  new FXMenuTitle(menubar,"&Script",NULL,filemenu);
+    // Script menu
+    filemenu=new FXMenuPane(this);
+    new FXMenuCommand(filemenu,"&Load",NULL,this,ID_LOAD_SCRIPT);
+    new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
+    new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
+    new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
+    new FXMenuTitle(menubar,"&Script",NULL,filemenu);
 
-  // Script menu
-  spectrmenu = new FXMenuPane(this);
-  new FXMenuCommand(spectrmenu,"&Load Spectra",NULL,this,ID_LOAD_SPECTRA);
-  new FXMenuTitle(menubar,"S&pectra",NULL,spectrmenu);
+    // Script menu
+    spectrmenu = new FXMenuPane(this);
+    new FXMenuCommand(spectrmenu,"&Load Spectra",NULL,this,ID_LOAD_SPECTRA);
+    new FXMenuTitle(menubar,"S&pectra",NULL,spectrmenu);
 
-  // Dispersion menu
-  dispmenu = new FXMenuPane(this);
-  new FXMenuCommand(dispmenu, "&Plot Dispersion",NULL,this,ID_DISP_PLOT);
-  new FXMenuCommand(dispmenu, "Dispersion Optimize",NULL,this,ID_DISP_OPTIM);
-  new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
+    // Dispersion menu
+    dispmenu = new FXMenuPane(this);
+    new FXMenuCommand(dispmenu, "&Plot Dispersion",NULL,this,ID_DISP_PLOT);
+    new FXMenuCommand(dispmenu, "Dispersion Optimize",NULL,this,ID_DISP_OPTIM);
+    new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
 
-  // Fit menu
-  fitmenu = new FXMenuPane(this);
-  new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
-  new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
-  new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
-  new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
-  new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
+    // Fit menu
+    fitmenu = new FXMenuPane(this);
+    new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
+    new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
+    new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
+    new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
-  helpmenu = new FXMenuPane(this);
-  new FXMenuCommand(helpmenu, "&Register", NULL, this, ID_REGISTER);
-  new FXMenuCommand(helpmenu, "&About", NULL, this, ID_ABOUT);
-  new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
+    helpmenu = new FXMenuPane(this);
+    new FXMenuCommand(helpmenu, "&Register", NULL, this, ID_REGISTER);
+    new FXMenuCommand(helpmenu, "&About", NULL, this, ID_ABOUT);
+    new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
 
-  // Container
-  FXHorizontalFrame *cont = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    // Container
+    FXHorizontalFrame *cont = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+    tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
-  // First item is a list
-  tabscript = new FXTabItem(tabbook,"Script",NULL);
-  FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-  FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-  scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  scripttext->setStyled(TRUE);
-  scripttext->setHiliteStyles(tstyles);
-  scriptfont = new FXFont(getApp(), SCRIPT_FONT_NAME, 10);
-  scripttext->setFont(scriptfont);
+    // First item is a list
+    tabscript = new FXTabItem(tabbook,"Script",NULL);
+    FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
+    FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+    scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    scripttext->setStyled(TRUE);
+    scripttext->setHiliteStyles(tstyles);
+    scriptfont = new FXFont(getApp(), SCRIPT_FONT_NAME, 10);
+    scripttext->setFont(scriptfont);
 
-  new FXTabItem(tabbook,"Fit Results",NULL);
-  lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-  bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-  resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  resulttext->setFont(scriptfont);
+    new FXTabItem(tabbook,"Fit Results",NULL);
+    lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
+    bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+    resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    resulttext->setFont(scriptfont);
 
-  tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
-  lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-  bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+    tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
+    lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
+    bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
 
-  symbol_table_init (this->symtab);
+    symbol_table_init(this->symtab);
 
-  init_class_list ();
+    init_class_list();
 
-  dispers_library_init ();
+    dispers_library_init();
 
-  m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-  m_title_dirty = true;
-  m_title_modified = false;
+    m_title_dirty = true;
+    m_title_modified = false;
 }
 
 
 void
-regress_pro_window::create(){
-  FXMainWindow::create();
-  scriptfont->create();
+regress_pro_window::create()
+{
+    FXMainWindow::create();
+    scriptfont->create();
 }
 
 long
 regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
 {
-  FXMainWindow::onUpdate(sender, sel, ptr);
+    FXMainWindow::onUpdate(sender, sel, ptr);
 
-  bool is_mod = scripttext->isModified();
+    bool is_mod = scripttext->isModified();
 
-  if (m_title_dirty || (is_mod != m_title_modified))
-    {
-      bool is_reg = get_elliss_app()->is_registered();
+    if(m_title_dirty || (is_mod != m_title_modified)) {
+        bool is_reg = get_elliss_app()->is_registered();
 
-      FXString filename = scriptFile.rafter(DIR_SEPARATOR);
-      FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
-      FXString flag(is_mod ? "*" : "");
-      FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
+        FXString filename = scriptFile.rafter(DIR_SEPARATOR);
+        FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
+        FXString flag(is_mod ? "*" : "");
+        FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
 
-      this->setTitle(flag + filename + " - " + pathname + " - " + appname);
+        this->setTitle(flag + filename + " - " + pathname + " - " + appname);
 
-      m_title_dirty = false;
-      m_title_modified = is_mod;
+        m_title_dirty = false;
+        m_title_modified = is_mod;
 
-      return 1;
+        return 1;
     }
 
-  return 0;
+    return 0;
 }
 
 long
 regress_pro_window::onCmdLoadScript(FXObject*,FXSelector,void *)
 {
-  reg_check_point(this);
+    reg_check_point(this);
 
-  FXFileDialog open(this,"Open Script");
-  open.setFilename(scriptFile);
-  open.setPatternList(patterns_fit);
+    FXFileDialog open(this,"Open Script");
+    open.setFilename(scriptFile);
+    open.setPatternList(patterns_fit);
 
-  if(open.execute())
-    {
-      scriptFile = open.getFilename();
-      Str script_text;
+    if(open.execute()) {
+        scriptFile = open.getFilename();
+        Str script_text;
 
-      if (str_loadfile (scriptFile.text(), script_text.str()) != 0)
-	return 0;
+        if(str_loadfile(scriptFile.text(), script_text.str()) != 0) {
+            return 0;
+        }
 
 #ifdef ENABLE_SCRIPT_REL_PATH
-      str_init_from_c (script_file, scriptFile.text());
-      str_dirname (this->symtab->env->script_dir, script_file, DIR_SEPARATOR);
-      str_free (script_file);
+        str_init_from_c(script_file, scriptFile.text());
+        str_dirname(this->symtab->env->script_dir, script_file, DIR_SEPARATOR);
+        str_free(script_file);
 #endif
 
-      scripttext->setText(script_text.cstr());
-      set_fit_strategy(script_text.cstr());
-      scripttext->setModified(FALSE);
+        scripttext->setText(script_text.cstr());
+        set_fit_strategy(script_text.cstr());
+        scripttext->setModified(FALSE);
 
-      m_title_dirty = true;
+        m_title_dirty = true;
     }
 
-  return 1;
+    return 1;
 }
 
 bool
-regress_pro_window::save_script_as (const FXString& save_as)
+regress_pro_window::save_script_as(const FXString& save_as)
 {
-  FILE *f = fopen (save_as.text(), "w");
+    FILE *f = fopen(save_as.text(), "w");
 
-  if (f == NULL)
-    {
-      FXMessageBox::information(this, MBOX_OK, "Script save",
-				"Cannot write file %s\n", scriptFile.text());
-      return false;
+    if(f == NULL) {
+        FXMessageBox::information(this, MBOX_OK, "Script save",
+                                  "Cannot write file %s\n", scriptFile.text());
+        return false;
     }
 
-  if (fputs (scripttext->getText().text(), f) == EOF)
-    {
-      FXMessageBox::information(this, MBOX_OK, "Script save",
-				"Cannot write file %s\n", scriptFile.text());
-      fclose (f);
-      return false;
+    if(fputs(scripttext->getText().text(), f) == EOF) {
+        FXMessageBox::information(this, MBOX_OK, "Script save",
+                                  "Cannot write file %s\n", scriptFile.text());
+        fclose(f);
+        return false;
     }
 
-  fputc ('\n', f);
-  fclose (f);
+    fputc('\n', f);
+    fclose(f);
 
-  update_fit_strategy();
+    update_fit_strategy();
 
-  scripttext->setModified(FALSE);
+    scripttext->setModified(FALSE);
 
-  m_title_dirty = true;
+    m_title_dirty = true;
 
-  return true;
+    return true;
 }
 
 long
 regress_pro_window::onCmdSaveAsScript(FXObject*,FXSelector,void *)
 {
-  reg_check_point(this);
+    reg_check_point(this);
 
-  FXFileDialog open(this, "Save Script As");
-  open.setFilename(scriptFile);
-  open.setPatternList(patterns_fit);
+    FXFileDialog open(this, "Save Script As");
+    open.setFilename(scriptFile);
+    open.setPatternList(patterns_fit);
 
-  if(open.execute())
-    {
-      FXString new_filename = open.getFilename();
-      if (save_script_as(new_filename))
-	scriptFile = new_filename;
-      return 1;
+    if(open.execute()) {
+        FXString new_filename = open.getFilename();
+        if(save_script_as(new_filename)) {
+            scriptFile = new_filename;
+        }
+        return 1;
     }
 
-  return 0;
+    return 0;
 }
 
 long
 regress_pro_window::onCmdSaveScript(FXObject*,FXSelector,void *)
 {
-  reg_check_point(this);
+    reg_check_point(this);
 
-  save_script_as(scriptFile);
-  return 1;
+    save_script_as(scriptFile);
+    return 1;
 }
 
 long
 regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
-  reg_check_point(this);
+    reg_check_point(this);
 
-  FXFileDialog open(this,"Open Spectra");
-  open.setFilename(spectrFile);
-  open.setPatternList(patterns_spectr);
+    FXFileDialog open(this,"Open Spectra");
+    open.setFilename(spectrFile);
+    open.setPatternList(patterns_spectr);
 
-  if(open.execute())
-    {
-      spectrFile = open.getFilename();
+    if(open.execute()) {
+        spectrFile = open.getFilename();
 
-      struct spectrum *new_spectrum = load_gener_spectrum (spectrFile.text());
+        struct spectrum *new_spectrum = load_gener_spectrum(spectrFile.text());
 
-      if (new_spectrum == NULL)
-	{
-	  FXMessageBox::information(this, MBOX_OK, "Spectra loading",
-				    "Cannot load spectra %s", spectrFile.text());
-	}
-      else
-	{
-	  m_canvas->clear_plots();
+        if(new_spectrum == NULL) {
+            FXMessageBox::information(this, MBOX_OK, "Spectra loading",
+                                      "Cannot load spectra %s", spectrFile.text());
+        } else {
+            m_canvas->clear_plots();
 
-	  if (this->spectrum)
-	    spectra_free (this->spectrum);
+            if(this->spectrum) {
+                spectra_free(this->spectrum);
+            }
 
-	  this->spectrum = new_spectrum;
+            this->spectrum = new_spectrum;
 
-	  spectra_plot_simple (m_canvas, this->spectrum);
-	}
+            spectra_plot_simple(m_canvas, this->spectrum);
+        }
 
-      return 1;
+        return 1;
     }
 
-  return 0;
+    return 0;
 }
 
 long
 regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
 {
-  if (this->stack_result)
-    {
-      dispers_dialog dialog(this, this->stack_result);
-      dialog.execute();
-      return 1;
+    if(this->stack_result) {
+        dispers_dialog dialog(this, this->stack_result);
+        dialog.execute();
+        return 1;
     }
-  return 0;
+    return 0;
 }
 
 long
 regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
-  reg_check_point(this);
+    reg_check_point(this);
 
-  if (! update_fit_strategy()) return 1;
-
-  struct disp_fit_engine *fit = disp_fit_engine_new ();
-
-  if (disp_chooser (getApp(), this->symtab, fit))
-    {
-      elliss_app *app = get_elliss_app();
-      disp_fit_manager *mgr = new disp_fit_manager(fit);
-      fit_window *fitwin = new fit_window(mgr, app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
-      fitwin->create();
-      fitwin->show(FX::PLACEMENT_SCREEN);
-    }
-  else
-    {
-      disp_fit_engine_free (fit);
+    if(! update_fit_strategy()) {
+        return 1;
     }
 
+    struct disp_fit_engine *fit = disp_fit_engine_new();
 
-  return 1;
+    if(disp_chooser(getApp(), this->symtab, fit)) {
+        elliss_app *app = get_elliss_app();
+        disp_fit_manager *mgr = new disp_fit_manager(fit);
+        fit_window *fitwin = new fit_window(mgr, app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
+        fitwin->create();
+        fitwin->show(FX::PLACEMENT_SCREEN);
+    } else {
+        disp_fit_engine_free(fit);
+    }
+
+
+    return 1;
 }
 
 long
 regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
 {
-  FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
-		    0,0,0,0, 0,0);
-  FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
-  new FXLabel(side,"R e g r e s s   P r o",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
-  new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-  new FXLabel(side,FXStringFormat("\nRegress Pro, version %d.%d.%d.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2011 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-  FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
-  button->setFocus();
-  about.execute(PLACEMENT_OWNER);
-  return 1;
+    FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
+                      0,0,0,0, 0,0);
+    FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
+    new FXLabel(side,"R e g r e s s   P r o",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
+    new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
+    new FXLabel(side,FXStringFormat("\nRegress Pro, version %d.%d.%d.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2011 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
+    button->setFocus();
+    about.execute(PLACEMENT_OWNER);
+    return 1;
 }
 
 long
 regress_pro_window::onCmdRegister(FXObject *, FXSelector, void *)
 {
-  reg_form(this);
-  m_title_dirty = true;
-  return 1;
+    reg_form(this);
+    m_title_dirty = true;
+    return 1;
 }
 
 // Clean up
-regress_pro_window::~regress_pro_window() {
-  delete scriptfont;
-  delete filemenu;
-  delete spectrmenu;
-  delete dispmenu;
-  delete fitmenu;
-  delete helpmenu;
+regress_pro_window::~regress_pro_window()
+{
+    delete scriptfont;
+    delete filemenu;
+    delete spectrmenu;
+    delete dispmenu;
+    delete fitmenu;
+    delete helpmenu;
 
-  if (this->spectrum)
-    spectra_free (this->spectrum);
+    if(this->spectrum) {
+        spectra_free(this->spectrum);
+    }
 
-  if (this->stack_result)
-    stack_free (this->stack_result);
+    if(this->stack_result) {
+        stack_free(this->stack_result);
+    }
 
-  if (m_model_spectr)
-    spectra_free (m_model_spectr);
+    if(m_model_spectr) {
+        spectra_free(m_model_spectr);
+    }
 
-  symbol_table_clean (this->symtab);
-  symbol_table_free  (this->symtab);
+    symbol_table_clean(this->symtab);
+    symbol_table_free(this->symtab);
 
-  clean_error_msgs ();
+    clean_error_msgs();
 }
 
 long
 regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 {
-  struct seeds *seeds;
-  struct fit_engine *fit;
+    struct seeds *seeds;
+    struct fit_engine *fit;
 
-  reg_check_point(this);
+    reg_check_point(this);
 
-  fit = build_fit_engine (this->symtab, &seeds);
+    fit = build_fit_engine(this->symtab, &seeds);
 
-  if (fit == NULL)
-    return 0;
+    if(fit == NULL) {
+        return 0;
+    }
 
-  BatchDialog batch(this, fit, seeds);
-  batch.setFilename(batchFileId);
+    BatchDialog batch(this, fit, seeds);
+    batch.setFilename(batchFileId);
 
-  FXString result;
-  batch.execute(result);
-  resulttext->setText(result);
-  resulttext->setModified(TRUE);
+    FXString result;
+    batch.execute(result);
+    resulttext->setText(result);
+    resulttext->setModified(TRUE);
 
-  batchFileId = batch.getFilename();
+    batchFileId = batch.getFilename();
 
-  fit_engine_free (fit);
+    fit_engine_free(fit);
 
-  return 1;
+    return 1;
 }
 
 long
 regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 {
-  struct multi_fit_engine *fit;
-  Str analysis;
-  struct {
-    struct seeds *common;
-    struct seeds *individual;
-  } seeds;
+    struct multi_fit_engine *fit;
+    Str analysis;
+    struct {
+        struct seeds *common;
+        struct seeds *individual;
+    } seeds;
 
-  if (! update_fit_strategy()) return 1;
-
-  fit = build_multi_fit_engine (this->symtab, &seeds.common, &seeds.individual);
-
-  if (fit == NULL) return 1;
-
-  Str fit_error_msgs;
-  ProgressInfo progress(this->getApp(), this);
-
-  lmfit_multi (fit, seeds.common, seeds.individual,
-	       analysis.str(), fit_error_msgs.str(),
-	       LMFIT_GET_RESULTING_STACK, 
-	       process_foxgui_events, &progress);
-
-  progress.hide();
-
-  if (fit_error_msgs.length() > 0)
-    {
-      FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages",
-				fit_error_msgs.cstr());
-      clean_error_msgs ();
+    if(! update_fit_strategy()) {
+        return 1;
     }
 
-  FXString text_fit_result;
+    fit = build_multi_fit_engine(this->symtab, &seeds.common, &seeds.individual);
 
-  Str fp_results;
-  multi_fit_engine_print_fit_results (fit, fp_results.str());
-  text_fit_result.append(fp_results.cstr());
+    if(fit == NULL) {
+        return 1;
+    }
 
-  text_fit_result.append(analysis.cstr());
+    Str fit_error_msgs;
+    ProgressInfo progress(this->getApp(), this);
 
-  resulttext->setText(text_fit_result);
-  resulttext->setModified(TRUE);
+    lmfit_multi(fit, seeds.common, seeds.individual,
+                analysis.str(), fit_error_msgs.str(),
+                LMFIT_GET_RESULTING_STACK,
+                process_foxgui_events, &progress);
 
-  multi_fit_engine_disable (fit);
-  multi_fit_engine_free (fit);
+    progress.hide();
 
-  return 1;
+    if(fit_error_msgs.length() > 0) {
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages",
+                                  fit_error_msgs.cstr());
+        clean_error_msgs();
+    }
+
+    FXString text_fit_result;
+
+    Str fp_results;
+    multi_fit_engine_print_fit_results(fit, fp_results.str());
+    text_fit_result.append(fp_results.cstr());
+
+    text_fit_result.append(analysis.cstr());
+
+    resulttext->setText(text_fit_result);
+    resulttext->setModified(TRUE);
+
+    multi_fit_engine_disable(fit);
+    multi_fit_engine_free(fit);
+
+    return 1;
 }
 
 bool
 regress_pro_window::update_fit_strategy()
 {
-  if (scripttext->isModified()) {
-    return set_fit_strategy (scripttext->getText().text());
-  }
-  return true;
+    if(scripttext->isModified()) {
+        return set_fit_strategy(scripttext->getText().text());
+    }
+    return true;
 }
 
 bool
 regress_pro_window::check_spectrum(const char *context)
 {
-  if (spectrum == NULL)
-    {
-      FXMessageBox::information(this, MBOX_OK, context,
-				"Please load a spectra before.");
-      return false;
+    if(spectrum == NULL) {
+        FXMessageBox::information(this, MBOX_OK, context,
+                                  "Please load a spectra before.");
+        return false;
     }
 
-  return true;
+    return true;
 }
 
 long
 regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 {
-  if (! check_spectrum("Fitting"))
-    return 0;
-
-  reg_check_point(this);
-
-  if (! update_fit_strategy()) return 1;
-
-  double chisq;
-  Str analysis;
-  struct seeds *seeds;
-  struct fit_engine *fit;
-
-  fit = build_fit_engine (this->symtab, &seeds);
-
-  if (fit == NULL)
-    {
-      reportErrors();
-      return 1;
+    if(! check_spectrum("Fitting")) {
+        return 0;
     }
 
-  fit_engine_prepare (fit, this->spectrum);
+    reg_check_point(this);
 
-  Str fit_error_msgs;
-  ProgressInfo progress(this->getApp(), this);
-
-  lmfit_grid (fit, seeds, &chisq, analysis.str(), fit_error_msgs.str(),
-	      LMFIT_GET_RESULTING_STACK,
-	      process_foxgui_events, & progress);
-
-  progress.hide();
-
-  if (fit_error_msgs.length() > 0)
-    {
-      FXMessageBox::information(this, MBOX_OK, "Fit messages",
-				fit_error_msgs.cstr());
-      clean_error_msgs ();
+    if(! update_fit_strategy()) {
+        return 1;
     }
 
-  FXString fitresult, row;
+    double chisq;
+    Str analysis;
+    struct seeds *seeds;
+    struct fit_engine *fit;
 
-  /* name of the fit script */
-  row.format("%s :\n", scriptFile.text());
-  fitresult.append(row);
+    fit = build_fit_engine(this->symtab, &seeds);
 
-  /* fit parameters results */
-  Str fit_parameters_results;
-  fit_engine_print_fit_results (fit, fit_parameters_results.str(), 0);
-  fitresult.append(fit_parameters_results.cstr());
+    if(fit == NULL) {
+        reportErrors();
+        return 1;
+    }
 
-  /* final chi square obtained */
-  row.format("Residual Chisq/pt: %g\n", chisq);
-  fitresult.append(row);
+    fit_engine_prepare(fit, this->spectrum);
 
-  /* covariance matrix analysis */
-  fitresult.append("\n");
-  fitresult.append(analysis.cstr());
+    Str fit_error_msgs;
+    ProgressInfo progress(this->getApp(), this);
 
-  resulttext->setText(fitresult);
-  resulttext->setModified(TRUE);
+    lmfit_grid(fit, seeds, &chisq, analysis.str(), fit_error_msgs.str(),
+               LMFIT_GET_RESULTING_STACK,
+               process_foxgui_events, & progress);
 
-  if (m_model_spectr)
-    spectra_free (m_model_spectr);
+    progress.hide();
 
-  m_model_spectr = spectra_alloc (this->spectrum);
+    if(fit_error_msgs.length() > 0) {
+        FXMessageBox::information(this, MBOX_OK, "Fit messages",
+                                  fit_error_msgs.cstr());
+        clean_error_msgs();
+    }
 
-  fit_engine_generate_spectrum (fit, this->spectrum, m_model_spectr);
+    FXString fitresult, row;
 
-  spectra_plot (m_canvas, this->spectrum, m_model_spectr);
+    /* name of the fit script */
+    row.format("%s :\n", scriptFile.text());
+    fitresult.append(row);
 
-  if (this->stack_result)
-    stack_free (this->stack_result);
+    /* fit parameters results */
+    Str fit_parameters_results;
+    fit_engine_print_fit_results(fit, fit_parameters_results.str(), 0);
+    fitresult.append(fit_parameters_results.cstr());
 
-  this->stack_result = stack_copy (fit->stack);
+    /* final chi square obtained */
+    row.format("Residual Chisq/pt: %g\n", chisq);
+    fitresult.append(row);
 
-  fit_engine_disable (fit);
-  fit_engine_free (fit);
+    /* covariance matrix analysis */
+    fitresult.append("\n");
+    fitresult.append(analysis.cstr());
 
-  getApp()->endWaitCursor();
+    resulttext->setText(fitresult);
+    resulttext->setModified(TRUE);
 
-  return 1;
+    if(m_model_spectr) {
+        spectra_free(m_model_spectr);
+    }
+
+    m_model_spectr = spectra_alloc(this->spectrum);
+
+    fit_engine_generate_spectrum(fit, this->spectrum, m_model_spectr);
+
+    spectra_plot(m_canvas, this->spectrum, m_model_spectr);
+
+    if(this->stack_result) {
+        stack_free(this->stack_result);
+    }
+
+    this->stack_result = stack_copy(fit->stack);
+
+    fit_engine_disable(fit);
+    fit_engine_free(fit);
+
+    getApp()->endWaitCursor();
+
+    return 1;
 }
 
 long
 regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-  if (! check_spectrum("Fitting"))
-    return 0;
-
-  reg_check_point(this);
-
-  if (! update_fit_strategy()) return 1;
-
-  struct seeds *seeds;
-  struct fit_engine *fit = build_fit_engine (symtab, &seeds);
-
-  if (fit == NULL)
-    {
-      reportErrors();
-      return 1;
+    if(! check_spectrum("Fitting")) {
+        return 0;
     }
 
-  interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
-  elliss_app *app = get_elliss_app();
-  fit_window *fitwin = new fit_window(fitmgr, app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
-  fitwin->create();
-  fitwin->show(FX::PLACEMENT_SCREEN);
-  return 1;
+    reg_check_point(this);
+
+    if(! update_fit_strategy()) {
+        return 1;
+    }
+
+    struct seeds *seeds;
+    struct fit_engine *fit = build_fit_engine(symtab, &seeds);
+
+    if(fit == NULL) {
+        reportErrors();
+        return 1;
+    }
+
+    interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
+    elliss_app *app = get_elliss_app();
+    fit_window *fitwin = new fit_window(fitmgr, app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
+    fitwin->create();
+    fitwin->show(FX::PLACEMENT_SCREEN);
+    return 1;
 }
 
 bool
 regress_pro_window::set_fit_strategy(const char *script_text)
 {
-  cleanScriptErrors();
+    cleanScriptErrors();
 
-  if (parse_strategy (this->symtab, script_text) != 0)
-    {
-      int fline, lline;
-      str_t errmsg;
-      str_init (errmsg, 128);
-      
-      if (get_script_error_region (&fline, &lline) == 0)
-	setErrorRegion(fline, lline);
+    if(parse_strategy(this->symtab, script_text) != 0) {
+        int fline, lline;
+        str_t errmsg;
+        str_init(errmsg, 128);
 
-      get_errors_list (errmsg);
+        if(get_script_error_region(&fline, &lline) == 0) {
+            setErrorRegion(fline, lline);
+        }
 
-      FXMessageBox::information(this, MBOX_OK, "Script parsing",
-				"The parsing of the script has been"
-				" unsuccessful :\n%s", CSTR(errmsg));
+        get_errors_list(errmsg);
 
-      str_free (errmsg);
-      return false;
+        FXMessageBox::information(this, MBOX_OK, "Script parsing",
+                                  "The parsing of the script has been"
+                                  " unsuccessful :\n%s", CSTR(errmsg));
+
+        str_free(errmsg);
+        return false;
     }
 
-  return true;
+    return true;
 }
 
 void
 regress_pro_window::reportErrors()
 {
-  str_t errmsg;
-  str_init (errmsg, 128);
-  get_errors_list (errmsg);
-  FXMessageBox::information(this, MBOX_OK, "Script parsing",
-			    "The parsing of the script has been"
-			    " unsuccessful :\n%s", CSTR(errmsg));
-  str_free (errmsg);
+    str_t errmsg;
+    str_init(errmsg, 128);
+    get_errors_list(errmsg);
+    FXMessageBox::information(this, MBOX_OK, "Script parsing",
+                              "The parsing of the script has been"
+                              " unsuccessful :\n%s", CSTR(errmsg));
+    str_free(errmsg);
 }
 
 void
-regress_pro_window::cleanScriptErrors ()
+regress_pro_window::cleanScriptErrors()
 {
-  scripttext->changeStyle(0, scripttext->getLength(), 0);
+    scripttext->changeStyle(0, scripttext->getLength(), 0);
 }
 
 void
-regress_pro_window::setErrorRegion (int sl, int el)
+regress_pro_window::setErrorRegion(int sl, int el)
 {
-  int cl = 1, ns = 0, next;
-  FXString text(scripttext->getText());
-  const char *base = text.text();
+    int cl = 1, ns = 0, next;
+    FXString text(scripttext->getText());
+    const char *base = text.text();
 
-  while (cl < sl)
-    {
-      const char *ptr = strchr (base, '\n');
-      if (! ptr)
-	break;
-      ptr ++;
-      ns += ptr - base;
-      base = ptr;
-      cl ++;
+    while(cl < sl) {
+        const char *ptr = strchr(base, '\n');
+        if(! ptr) {
+            break;
+        }
+        ptr ++;
+        ns += ptr - base;
+        base = ptr;
+        cl ++;
     }
 
-  if (cl < sl)
-    return;
-
-  next = 0;
-  while (cl <= el)
-    {
-      const char *ptr = strchr (base, '\n');
-      if (! ptr)
-	break;
-      ptr ++;
-      next += ptr - base;
-      base = ptr;
-      cl ++;
+    if(cl < sl) {
+        return;
     }
-  
-  scripttext->changeStyle(ns, next, 1);
+
+    next = 0;
+    while(cl <= el) {
+        const char *ptr = strchr(base, '\n');
+        if(! ptr) {
+            break;
+        }
+        ptr ++;
+        next += ptr - base;
+        base = ptr;
+        cl ++;
+    }
+
+    scripttext->changeStyle(ns, next, 1);
 }
 
 float
-timeval_subtract (struct timeval *x, struct timeval *y)
+timeval_subtract(struct timeval *x, struct timeval *y)
 {
-  float result = y->tv_sec - x->tv_sec;
-  result += (y->tv_usec - x->tv_usec) / 1.0E6;
-  return result;
+    float result = y->tv_sec - x->tv_sec;
+    result += (y->tv_usec - x->tv_usec) / 1.0E6;
+    return result;
 }
 
 int
-process_foxgui_events (void *data, float progr, const char *msg)
+process_foxgui_events(void *data, float progr, const char *msg)
 {
-  const float wait_time = 0.4, progress_thresold = 0.5;
-  ProgressInfo *info = (ProgressInfo *) data;
-  struct timeval current[1];
+    const float wait_time = 0.4, progress_thresold = 0.5;
+    ProgressInfo *info = (ProgressInfo *) data;
+    struct timeval current[1];
 
-  if (gettimeofday (current, NULL) != 0)
+    if(gettimeofday(current, NULL) != 0) {
+        return 0;
+    }
+
+    float diff = timeval_subtract(info->start, current);
+    const int multfactor = 4096;
+
+    if(info->dialog == NULL) {
+        if(diff < wait_time || progr > progress_thresold) {
+            return 0;
+        }
+
+        info->dialog = new FXProgressDialog(info->window,
+                                            "Fit is running",
+                                            "Please wait...",
+                                            PROGRESSDIALOG_CANCEL);
+
+        info->dialog->setTotal(multfactor);
+        info->dialog->setBarStyle(PROGRESSBAR_PERCENTAGE);
+        info->dialog->create();
+        info->dialog->show(PLACEMENT_SCREEN);
+
+        info->dialog->setProgress((int)(progr * multfactor));
+        info->dialog->repaint();
+
+        info->app->beginWaitCursor();
+
+        return 0;
+    }
+
+    if(info->dialog) {
+        info->dialog->setProgress((int)(progr * multfactor));
+        info->dialog->repaint();
+        if(msg) {
+            info->dialog->setMessage(msg);
+        }
+
+        info->app->runModalWhileEvents(info->dialog);
+
+        return (info->dialog->shown() ? 0 : 1);
+    }
+
     return 0;
-
-  float diff = timeval_subtract (info->start, current);
-  const int multfactor = 4096;
-
-  if (info->dialog == NULL)
-    {
-      if (diff < wait_time || progr > progress_thresold)
-	return 0;
-
-      info->dialog = new FXProgressDialog(info->window,
-					  "Fit is running",
-					  "Please wait...",
-					  PROGRESSDIALOG_CANCEL);
-
-      info->dialog->setTotal(multfactor);
-      info->dialog->setBarStyle(PROGRESSBAR_PERCENTAGE);
-      info->dialog->create();
-      info->dialog->show(PLACEMENT_SCREEN);
-
-      info->dialog->setProgress((int) (progr * multfactor));
-      info->dialog->repaint();
-
-      info->app->beginWaitCursor();
-      
-      return 0;
-    }
-  
-  if (info->dialog)
-    {
-      info->dialog->setProgress((int) (progr * multfactor));
-      info->dialog->repaint();
-      if (msg)
-	info->dialog->setMessage(msg);
-
-      info->app->runModalWhileEvents(info->dialog);
-
-      return (info->dialog->shown() ? 0 : 1);
-    }
-
-  return 0;
 }
