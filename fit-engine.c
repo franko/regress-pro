@@ -187,6 +187,71 @@ fit_engine_commit_parameters(struct fit_engine *fit, const gsl_vector *x)
     fit_engine_apply_parameters(fit, fps, x);
 }
 
+static void
+prepare_spectrum(const struct fit_config *config, struct spectrum *s)
+{
+    if(config->spectr_range.active) {
+        double inf = config->spectr_range.min;
+        double sup = config->spectr_range.max;
+        spectr_cut_range(s, inf, sup);
+    }
+
+    const enum system_kind syskind = s->config.system;
+    if(config->subsampling) {
+        if(syskind == SYSTEM_ELLISS_AB || syskind == SYSTEM_ELLISS_PSIDEL) {
+            elliss_sample_minimize(s, 0.05);
+        }
+    }
+}
+
+static int
+setup_gsl_linfit_function(enum system_kind syskind, struct fit_engine *fit, const struct spectrum *s)
+{
+    switch(syskind) {
+    case SYSTEM_REFLECTOMETER:
+        fit->run->mffun.f      = & refl_fit_f;
+        fit->run->mffun.df     = & refl_fit_df;
+        fit->run->mffun.fdf    = & refl_fit_fdf;
+        fit->run->mffun.n      = spectra_points(s);
+        fit->run->mffun.p      = fit->parameters->number;
+        fit->run->mffun.params = fit;
+        break;
+    case SYSTEM_ELLISS_AB:
+    case SYSTEM_ELLISS_PSIDEL:
+        fit->run->mffun.f      = & elliss_fit_f;
+        fit->run->mffun.df     = & elliss_fit_df;
+        fit->run->mffun.fdf    = & elliss_fit_fdf;
+        fit->run->mffun.n      = 2 * spectra_points(s);
+        fit->run->mffun.p      = fit->parameters->number;
+        fit->run->mffun.params = fit;
+        break;
+    default:
+        return 1;
+    }
+    return 0;
+}
+
+enum system_kind
+fit_engine_batch_prepare(struct fit_engine *fit, struct spectrum *s)
+{
+    struct fit_config *cfg = fit->config;
+    enum system_kind syskind = s->config.system;
+
+    fit->run->system_kind = syskind;
+    fit->run->spectr = NULL;
+
+    build_fit_engine_cache(fit);
+    setup_gsl_linfit_function(syskind, fit, fit->run->spectr);
+
+    if(! cfg->thresold_given) {
+        cfg->chisq_thresold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
+    }
+
+    fit->run->results = gsl_vector_alloc(fit->parameters->number);
+
+    return 0;
+}
+
 int
 fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
 {
@@ -196,39 +261,9 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
     fit->run->system_kind = syskind;
     fit->run->spectr = spectra_copy(s);
 
-    if(fit->config->spectr_range.active)
-        spectr_cut_range(fit->run->spectr,
-                         cfg->spectr_range.min, cfg->spectr_range.max);
-
-    if(cfg->subsampling) {
-        if(syskind == SYSTEM_ELLISS_AB || syskind == SYSTEM_ELLISS_PSIDEL) {
-            elliss_sample_minimize(fit->run->spectr, 0.05);
-        }
-    }
-
+    prepare_spectrum(cfg, fit->run->spectr);
     build_fit_engine_cache(fit);
-
-    switch(syskind) {
-    case SYSTEM_REFLECTOMETER:
-        fit->run->mffun.f      = & refl_fit_f;
-        fit->run->mffun.df     = & refl_fit_df;
-        fit->run->mffun.fdf    = & refl_fit_fdf;
-        fit->run->mffun.n      = spectra_points(fit->run->spectr);
-        fit->run->mffun.p      = fit->parameters->number;
-        fit->run->mffun.params = fit;
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        fit->run->mffun.f      = & elliss_fit_f;
-        fit->run->mffun.df     = & elliss_fit_df;
-        fit->run->mffun.fdf    = & elliss_fit_fdf;
-        fit->run->mffun.n      = 2 * spectra_points(fit->run->spectr);
-        fit->run->mffun.p      = fit->parameters->number;
-        fit->run->mffun.params = fit;
-        break;
-    default:
-        return 1;
-    }
+    setup_gsl_linfit_function(syskind, fit, fit->run->spectr);
 
     if(! cfg->thresold_given) {
         cfg->chisq_thresold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
