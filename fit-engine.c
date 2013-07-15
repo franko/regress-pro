@@ -29,8 +29,12 @@
 #include "error-messages.h"
 #include "minsampling.h"
 
+enum {
+    DISABLE_RI_PRECALC = 0,
+    ENABLE_RI_PRECALC = 1,
+};
 
-static void build_fit_engine_cache(struct fit_engine *f);
+static void build_fit_engine_cache(struct fit_engine *f, int allow_RI_precalc);
 
 static void dispose_fit_engine_cache(struct fit_run *run);
 
@@ -101,14 +105,14 @@ dispose_stack_cache(struct stack_cache *cache)
 }
 
 void
-build_fit_engine_cache(struct fit_engine *f)
+build_fit_engine_cache(struct fit_engine *f, int allow_RI_precalc)
 {
     size_t dmultipl = (f->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
     int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
     size_t nb = f->stack->nb;
     int nblyr = nb - 2;
 
-    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed);
+    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, allow_RI_precalc && RI_fixed);
 
     f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
@@ -187,17 +191,18 @@ fit_engine_commit_parameters(struct fit_engine *fit, const gsl_vector *x)
     fit_engine_apply_parameters(fit, fps, x);
 }
 
-static void
-prepare_spectrum(const struct fit_config *config, struct spectrum *s)
+void
+fit_engine_prepare_spectrum(const struct fit_engine *fit, struct spectrum *s)
 {
-    if(config->spectr_range.active) {
-        double inf = config->spectr_range.min;
-        double sup = config->spectr_range.max;
+    const strct fit_config *c = fit->config;
+    if(c->spectr_range.active) {
+        double inf = c->spectr_range.min;
+        double sup = c->spectr_range.max;
         spectr_cut_range(s, inf, sup);
     }
 
     const enum system_kind syskind = s->config.system;
-    if(config->subsampling) {
+    if(c->subsampling) {
         if(syskind == SYSTEM_ELLISS_AB || syskind == SYSTEM_ELLISS_PSIDEL) {
             elliss_sample_minimize(s, 0.05);
         }
@@ -240,7 +245,7 @@ fit_engine_batch_prepare(struct fit_engine *fit, struct spectrum *s)
     fit->run->system_kind = syskind;
     fit->run->spectr = NULL;
 
-    build_fit_engine_cache(fit);
+    build_fit_engine_cache(fit, DISABLE_RI_PRECALC);
     setup_gsl_linfit_function(syskind, fit, fit->run->spectr);
 
     if(! cfg->thresold_given) {
@@ -252,6 +257,14 @@ fit_engine_batch_prepare(struct fit_engine *fit, struct spectrum *s)
     return 0;
 }
 
+void
+fit_engine_attach_spectrum(struct fit_engine *fit, struct spectrum *s)
+{
+    fit->run->spectr = s;
+    const int mult = (it->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
+    fit->run->mffun.n = mult * spectra_points(s);
+}
+
 int
 fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
 {
@@ -261,8 +274,8 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
     fit->run->system_kind = syskind;
     fit->run->spectr = spectra_copy(s);
 
-    prepare_spectrum(cfg, fit->run->spectr);
-    build_fit_engine_cache(fit);
+    fit_engine_prepare_spectrum(fit, fit->run->spectr);
+    build_fit_engine_cache(fit, ENABLE_RI_PRECALC);
     setup_gsl_linfit_function(syskind, fit, fit->run->spectr);
 
     if(! cfg->thresold_given) {

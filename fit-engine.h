@@ -75,6 +75,8 @@ extern void fit_engine_free(struct fit_engine *fit);
 
 extern int              fit_engine_prepare(struct fit_engine *f,struct spectrum *s);
 extern enum system_kind fit_engine_batch_prepare(struct fit_engine *f, struct spectrum *s);
+extern void             fit_engine_prepare_spectrum(const struct fit_engine *fit, struct spectrum *s);
+extern void             fit_engine_attach_spectrum(struct fit_engine *fit, struct spectrum *s);
 
 extern void fit_engine_disable(struct fit_engine *f);
 
