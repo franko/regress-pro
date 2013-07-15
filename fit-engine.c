@@ -194,7 +194,7 @@ fit_engine_commit_parameters(struct fit_engine *fit, const gsl_vector *x)
 void
 fit_engine_prepare_spectrum(const struct fit_engine *fit, struct spectrum *s)
 {
-    const strct fit_config *c = fit->config;
+    const struct fit_config *c = fit->config;
     if(c->spectr_range.active) {
         double inf = c->spectr_range.min;
         double sup = c->spectr_range.max;
@@ -261,7 +261,7 @@ void
 fit_engine_attach_spectrum(struct fit_engine *fit, struct spectrum *s)
 {
     fit->run->spectr = s;
-    const int mult = (it->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
+    const int mult = (fit->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
     fit->run->mffun.n = mult * spectra_points(s);
 }
 

@@ -69,6 +69,7 @@ bool batch_engine::init(spectra_gen& gen)
             return false;
         }
         spectrum_item it;
+        fit_engine_prepare_spectrum(m_fit_engine, s);
         it.assign(s, fit->parameters->number);
         m_spectra.push_back(it);
     }
@@ -84,8 +85,13 @@ bool batch_engine::prefit()
         double chisq;
         Str error_msgs, analysis;
         lmfit_grid(m_fit_engine, m_seeds, &chisq, analysis.str(), error_msgs.str(),
-            LMFIT_PRESERVE_STACK, NULL, NULL);
+                   LMFIT_PRESERVE_STACK, NULL, NULL);
 
         gsl_vector_memcpy(it.seeds, m_fit_engine->run->results);
     }
+}
+
+void batch_engine::apply_goal_parameters(const struct fit_parameters *fps, const gsl_vector *x)
+{
+    fit_engine_apply_parameters(m_fit_engine, fps, x);
 }
