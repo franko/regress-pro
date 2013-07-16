@@ -95,3 +95,29 @@ void batch_engine::apply_goal_parameters(const struct fit_parameters *fps, const
 {
     fit_engine_apply_parameters(m_fit_engine, fps, x);
 }
+
+gsl_vector* batch_engine::fit(int output_param)
+{
+    const int max_iter = 20;
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    struct fit_config *cfg = fit->config;
+    int np = fit->parameters->number;
+    gsl_vector *x = gsl_vector_alloc(np);
+    gsl_vector *results = gsl_vector_alloc(m_spectra.size());
+
+    for (unsigned k = 0; k < m_spectra.size(); k++) {
+        const spectrum_item& si = m_spectra[k];
+        gsl_multifit_function_fdf *f;
+        gsl_multifit_fdfsolver *solver;
+        int nb_iter;
+        fit_engine_attach_spectrum(fit, si.self);
+        f = &fit->run->mffun;
+        solver = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
+        gsl_vector_memcpy(x, si.seeds);
+        lmfit_iter(x, f, solver, max_iter, cfg->epsabs, cfg->epsrel, &nb_iter, NULL, NULL, NULL);
+        gsl_vector_set(results, k, gsl_vector_get(x, output_param));
+        gsl_multifit_fdfsolver_free(solver);
+    }
+
+    return results;
+}
