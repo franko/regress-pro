@@ -1,0 +1,57 @@
+
+water = Library "water"
+sio2 = Library "sio2"
+
+si = Library "si"
+
+nit_qfx = HODispersion {
+  parameters = [
+    HO {nosc= 121.868, en= 12.2933, eg= 0, nu= 0.3333, phi= 0},
+    HO {nosc= 0.536555, en= 4.52102, eg= 5.29172, nu= 0.3333, phi= 0.353983},
+    HO {nosc= 2.83429, en= 6.62844, eg= 1.97372, nu= 0.3333, phi= -0.489196}]
+}
+
+niptsi_01_ho = HODispersion {
+  parameters = [
+    HO {nosc= 190.974, en= 10.2068, eg= 4.03526, nu= 0.3333, phi= 0.0},
+    HO {nosc= 2.08617, en= 0.0,     eg= 3.38188, nu= 0.3333, phi= 18.1759},
+    HO {nosc= -0.412281, en= 3.0334, eg= 0.813621, nu= 0.3333, phi= 2.99122},
+    HO {nosc= -0.258435, en= 2.0782, eg= 0.839595, nu= 0.3333, phi= 1.38286}]
+}
+
+niptsi_02_ho = HODispersion {
+  parameters = [
+    HO {nosc= 181.661, en= 10.0025, eg= 4.2711, nu= 0.3333, phi= 0.0},
+    HO {nosc= 1.53942, en= 0.0,     eg= -3.8016, nu= 0.3333, phi= 15.5352},
+    HO {nosc= -0.774534, en= 3.23016, eg= 1.33249, nu= 0.3333, phi= 3.70088},
+    HO {nosc= -0.0912842, en= 1.98825, eg= 0.582214, nu= 0.3333, phi= 1.09528}]
+}
+
+niptsi = LookupDispersion {
+  values = [0, 1],
+  dispersions = [niptsi_01_ho, niptsi_02_ho],
+  predef = 0.5
+}
+
+pmd = Stack { 
+  mediums = [water, sio2, nit_qfx, niptsi_01_ho, si], 
+  thicknesses = [350, 30, 25] 
+} 
+ 
+thfit = Strategy { 
+  params = ["Th:1", "Th:2", "Th:3"], 
+  seeds = ["100-600,10", 30, 25] 
+} 
+ 
+set range "350-950"
+
+use stack pmd 
+use strategy thfit 
+
+
+
+
+
+
+
+
