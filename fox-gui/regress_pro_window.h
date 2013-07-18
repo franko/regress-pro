@@ -88,6 +88,7 @@ public:
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
+    long onCmdTestGBO(FXObject*,FXSelector,void*);
 
     bool save_script_as(const FXString& save_as);
     bool set_fit_strategy(const char *script_text);
@@ -112,6 +113,7 @@ public:
         ID_ABOUT,
         ID_SCRIPT_TEXT,
         ID_REGISTER,
+        ID_RUN_GBO,
         ID_LAST
     };
 

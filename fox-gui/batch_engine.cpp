@@ -8,8 +8,8 @@ bool batch_engine::init(generator<struct spectrum*>& gen)
 {
     gen.reset();
 
-    struct spectrum *s_first = gen.next();
-    if(s_first == NULL) {
+    struct spectrum* s_first;
+    if(gen.next(s_first) == generator_end) {
         return false;
     }
 
@@ -22,7 +22,8 @@ bool batch_engine::init(generator<struct spectrum*>& gen)
     itf.assign(s_first, m_fit_engine->parameters->number);
     m_spectra.push_back(itf);
 
-    for(struct spectrum* s = gen.next(); s != 0; s = gen.next()) {
+    struct spectrum* s;
+    for(generator_e gs = gen.next(s); gs > generator_end; gs = gen.next(s)) {
         if(s->config.system != m_spectra_kind) {
             return false;
         }

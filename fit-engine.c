@@ -246,7 +246,7 @@ fit_engine_batch_prepare(struct fit_engine *fit, struct spectrum *s)
     fit->run->spectr = NULL;
 
     build_fit_engine_cache(fit, DISABLE_RI_PRECALC);
-    setup_gsl_linfit_function(syskind, fit, fit->run->spectr);
+    setup_gsl_linfit_function(syskind, fit, s);
 
     if(! cfg->thresold_given) {
         cfg->chisq_thresold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
@@ -254,7 +254,7 @@ fit_engine_batch_prepare(struct fit_engine *fit, struct spectrum *s)
 
     fit->run->results = gsl_vector_alloc(fit->parameters->number);
 
-    return 0;
+    return syskind;
 }
 
 void

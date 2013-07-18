@@ -47,6 +47,8 @@
 #include "fit_window.h"
 #include "interactive_fit.h"
 
+extern bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filename);
+
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 
 #ifdef WIN32
@@ -70,6 +72,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_GBO, regress_pro_window::onCmdTestGBO),
 };
 
 
@@ -126,6 +129,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "GBO Testing",NULL,this,ID_RUN_GBO);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
     helpmenu = new FXMenuPane(this);
@@ -519,6 +523,29 @@ regress_pro_window::check_spectrum(const char *context)
     }
 
     return true;
+}
+
+long
+regress_pro_window::onCmdTestGBO(FXObject*,FXSelector,void*)
+{
+    if(! update_fit_strategy()) {
+        return 1;
+    }
+
+    double chisq;
+    Str analysis;
+    struct seeds *seeds;
+    struct fit_engine *fit;
+
+    fit = build_fit_engine(this->symtab, &seeds);
+
+    if(fit == NULL) {
+        reportErrors();
+        return 1;
+    }
+
+    gbo_test(fit, seeds, "F055-list.csv");
+    return 1;
 }
 
 long

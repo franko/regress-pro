@@ -40,16 +40,25 @@ struct vector_owner : agg::pod_bvector<T> {
     }
 };
 
+enum generator_e {
+    generator_end = 0,
+    generator_value = 1,
+    generator_error = -1,
+};
+
 template <typename T>
 struct generator {
     virtual void reset() = 0;
-    virtual T next() = 0;
+    virtual generator_e next(T& v) = 0;
     virtual ~generator() { }
 };
 
 class batch_engine {
 public:
-    batch_engine() {}
+    batch_engine(struct fit_engine* fit, struct seeds* seeds) :
+        m_fit_engine(fit), m_seeds(seeds)
+    {}
+
     ~batch_engine() {}
 
     bool init(generator<struct spectrum*>& gen);
