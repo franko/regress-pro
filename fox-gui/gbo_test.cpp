@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <math.h>
+#include <nlopt.h>
 
 #include "str.h"
 #include "batch_engine.h"
@@ -32,6 +34,26 @@ private:
     vector_owner<spectra_entry>& m_list;
     unsigned m_index;
 };
+
+struct gbo_data {
+    batch_engine* eng;
+    vector_owner<spectra_entry>* ref_list;
+};
+
+double gbo_obj_func(unsigned n, const double *x, double *grad, void *my_func_data)
+{
+    gbo_data* gbo = (gbo_data *) my_func_data;
+    batch_engine* eng = gbo->eng;
+    gsl_vector_view xv = gsl_vector_view_array(x, n);
+    eng->apply_goal_parameters(&xv.vector);
+    eng->fit(0);
+
+    if (grad) {
+        grad[0] = 0.0;
+        grad[1] = 0.5 / sqrt(x[1]);
+    }
+    return sqrt(x[1]);
+}
 
 bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filename)
 {

@@ -55,22 +55,24 @@ struct generator {
 
 class batch_engine {
 public:
-    batch_engine(struct fit_engine* fit, struct seeds* seeds) :
-        m_fit_engine(fit), m_seeds(seeds)
+    batch_engine(struct fit_engine* fit, struct seeds* seeds, const struct fit_parameters *gbo_fps) :
+        m_fit_engine(fit), m_seeds(seeds), m_gbo_params(gbo_fps), m_fit_results(0)
     {}
 
     ~batch_engine() {}
 
     bool init(generator<struct spectrum*>& gen);
     bool prefit();
-    void apply_goal_parameters(const struct fit_parameters *fps, const gsl_vector *x);
-    void fit(gsl_vector* results, int output_param);
+    void apply_goal_parameters(const gsl_vector *x);
+    void fit(int output_param);
 
 private:
     vector_owner<spectrum_item> m_spectra;
     enum system_kind m_spectra_kind;
     struct fit_engine* m_fit_engine;
     struct seeds* m_seeds;
+    const struct fit_parameters* m_gbo_params;
+    gsl_vector* m_fit_results;
 };
 
 #endif
