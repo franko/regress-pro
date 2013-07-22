@@ -23,7 +23,7 @@ GSL_INCLUDES =
 
 REG_LIBS = -lmhash -lgmp
 
-LIBS += $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++
+LIBS += $(FOX_LIBS) $(GSL_LIBS) -lnlopt -lagg -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   LIBS += -lgdi32 -lwsock32 -mwindows

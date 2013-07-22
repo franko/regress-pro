@@ -35,24 +35,46 @@ private:
     unsigned m_index;
 };
 
+class spectra_list_ref {
+public:
+    spectra_list_ref(vector_owner<spectra_entry>& ls) : m_list(ls) {}
+    double operator [] (unsigned k) const { return m_list[k].ref_value; }
+private:
+    const vector_owner<spectra_entry>& m_list;
+};
+
+template <typename ReferenceArray>
+double gbo_score_simple(ReferenceArray& ref, gsl_vector* results)
+{
+    double p = 0.0;
+    for (unsigned k = 0; k < results->size; k++) {
+        const double del = (gsl_vector_get(results, k) - ref[k]);
+        p = p + del * del;
+    }
+    return p;
+}
+
 struct gbo_data {
     batch_engine* eng;
-    vector_owner<spectra_entry>* ref_list;
+    spectra_list_ref* ref_array;
+    gsl_vector* results;
 };
 
 double gbo_obj_func(unsigned n, const double *x, double *grad, void *my_func_data)
 {
     gbo_data* gbo = (gbo_data *) my_func_data;
     batch_engine* eng = gbo->eng;
-    gsl_vector_view xv = gsl_vector_view_array(x, n);
-    eng->apply_goal_parameters(&xv.vector);
-    eng->fit(0);
-
-    if (grad) {
-        grad[0] = 0.0;
-        grad[1] = 0.5 / sqrt(x[1]);
+    fprintf(stderr, "X:");
+    for (unsigned k = 0; k < n; k++) {
+        fprintf(stderr, " %g", x[k]);
     }
-    return sqrt(x[1]);
+    fprintf(stderr, "\n");
+    gsl_vector_const_view xv = gsl_vector_const_view_array(x, n);
+    eng->apply_goal_parameters(&xv.vector);
+    eng->fit(gbo->results, 0);
+    double score = gbo_score_simple(*gbo->ref_array, gbo->results);
+    fprintf(stderr, "score: %g\n", score);
+    return score;
 }
 
 bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filename)
@@ -85,12 +107,81 @@ bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filen
     }
     str_free(line);
 
-    batch_engine eng(fit, seeds);
+    const unsigned N = list.size();
+
+    struct fit_parameters* fps = fit_parameters_new();
+    fit_param_t fp[1];
+    set_model_param(fp, 2, MODEL_HO, 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 2, MODEL_HO, 5  + 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 2, MODEL_HO, 5  + 2);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 2, MODEL_HO, 5  + 4);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 2, MODEL_HO, 10 + 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 2, MODEL_HO, 10 + 2);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 2, MODEL_HO, 10 + 4);
+    fit_parameters_add(fps, fp);
+
+    set_model_param(fp, 3, MODEL_HO, 0  + 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 0  + 2);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 0  + 4);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 5  + 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 5  + 2);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 5  + 4);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 10 + 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 10 + 2);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 10 + 4);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 15 + 0);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 15 + 2);
+    fit_parameters_add(fps, fp);
+    set_model_param(fp, 3, MODEL_HO, 15 + 4);
+    fit_parameters_add(fps, fp);
+
+    batch_engine eng(fit, seeds, fps);
     spectra_source s_source(list);
     eng.init(s_source);
     eng.prefit();
 
-    gsl_vector* results = gsl_vector_alloc(list.size());
-    eng.fit(results, 0);
+    spectra_list_ref ref_array(list);
+    gsl_vector* fit_results = gsl_vector_alloc(N);
+    gbo_data gdata = {&eng, &ref_array, fit_results};
+
+    double x[32];
+
+    for (unsigned k = 0; k < fps->number; k++) {
+        x[k] = fit_engine_get_parameter_value(fit, &fps->values[k]);
+    }
+
+    double lb[19] = {0, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI};
+    double ub[19] = {2000, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI};
+
+    nlopt_opt opt = nlopt_create(NLOPT_LN_COBYLA, fps->number);
+    nlopt_set_lower_bounds(opt, lb);
+    nlopt_set_upper_bounds(opt, ub);
+    nlopt_set_min_objective(opt, gbo_obj_func, &gdata);
+    nlopt_set_xtol_rel(opt, 1e-4);
+
+    double minf;
+    if (nlopt_optimize(opt, x, &minf) < 0) {
+        printf("nlopt failed!\n");
+    }
+    else {
+        printf("found minimum at f(%g,%g) = %0.10g\n", x[0], x[1], minf);
+    }
+
     return true;
 }

@@ -33,11 +33,10 @@ bool batch_engine::init(generator<struct spectrum*>& gen)
         m_spectra.push_back(it);
     }
 
-    m_fit_results = gsl_vector_alloc(m_spectra.size());
     return true;
 }
 
-bool batch_engine::prefit()
+void batch_engine::prefit()
 {
     for(unsigned k = 0; k < m_spectra.size(); k++) {
         spectrum_item it = m_spectra[k];
@@ -57,7 +56,7 @@ void batch_engine::apply_goal_parameters(const gsl_vector *x)
     fit_engine_apply_parameters(m_fit_engine, m_gbo_params, x);
 }
 
-void batch_engine::fit(int output_param)
+void batch_engine::fit(gsl_vector* results, int output_param)
 {
     const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
     struct fit_engine *fit = m_fit_engine;
@@ -75,7 +74,7 @@ void batch_engine::fit(int output_param)
         solver = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
         gsl_vector_memcpy(x, si.seeds);
         lmfit_iter(x, f, solver, cfg->nb_max_iters, cfg->epsabs, cfg->epsrel, &nb_iter, NULL, NULL, NULL);
-        gsl_vector_set(m_fit_results, k, gsl_vector_get(x, output_param));
+        gsl_vector_set(results, k, gsl_vector_get(x, output_param));
         gsl_multifit_fdfsolver_free(solver);
     }
 }
