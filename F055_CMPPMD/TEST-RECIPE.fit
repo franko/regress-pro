@@ -14,17 +14,17 @@ nit_qfx = HODispersion {
 niptsi_01_ho = HODispersion {
   parameters = [
     HO {nosc= 190.974, en= 10.2068, eg= 4.03526, nu= 0.3333, phi= 0.0},
-    HO {nosc= 2.08617, en= 0.0,     eg= 3.38188, nu= 0.3333, phi= 18.1759},
-    HO {nosc= -0.412281, en= 3.0334, eg= 0.813621, nu= 0.3333, phi= 2.99122},
-    HO {nosc= -0.258435, en= 2.0782, eg= 0.839595, nu= 0.3333, phi= 1.38286}]
+    HO {nosc= 2.08617, en= 0.0,     eg= 3.38188, nu= 0.3333, phi= -0.67365592},
+    HO {nosc= 0.412281, en= 3.0334, eg= 0.813621, nu= 0.3333, phi= -0.1503727},
+    HO {nosc= 0.258435, en= 2.0782, eg= 0.839595, nu= 0.3333, phi= -1.7587327}]
 }
 
 niptsi_02_ho = HODispersion {
   parameters = [
     HO {nosc= 181.661, en= 10.0025, eg= 4.2711, nu= 0.3333, phi= 0.0},
-    HO {nosc= 1.53942, en= 0.0,     eg= -3.8016, nu= 0.3333, phi= 15.5352},
-    HO {nosc= -0.774534, en= 3.23016, eg= 1.33249, nu= 0.3333, phi= 3.70088},
-    HO {nosc= -0.0912842, en= 1.98825, eg= 0.582214, nu= 0.3333, phi= 1.09528}]
+    HO {nosc= 1.53942, en= 0.0,     eg= 3.5, nu= 0.3333, phi= 15.5352},
+    HO {nosc= 0.774534, en= 3.23016, eg= 1.33249, nu= 0.3333, phi= 0.55928735},
+    HO {nosc= 0.0912842, en= 1.98825, eg= 0.582214, nu= 0.3333, phi= -2.0463127}]
 }
 
 niptsi = LookupDispersion {
