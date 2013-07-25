@@ -1,0 +1,42 @@
+
+water = Library "water"
+
+si = ReadMATFile "dispers/siuv.mat" 
+
+# replace the NOVA dispersion because this latter is truncated to the second
+# decimal digit and is therefore strangely approximative
+nit_ho = HODispersion {
+  parameters = [
+    HO {nosc= 155.115, en= 12.2028, eg= 2.55473, nu= 0.3333, phi= -0.0378027}]
+}
+
+sio2 = HODispersion {
+  parameters = [
+    HO {nosc= 145.222, en= 15.6676, eg= 0.0, nu= 0.3333, phi= 0.0}]
+}
+
+niptsi_v5 = HODispersion {
+  parameters = [
+    HO {nosc= 1313.48, en= 24.9757, eg= 7.96438, nu= 0.3333, phi= 0.0408007},
+    HO {nosc= 0.288715, en= 0.0,     eg= 1.28654, nu= 0.3333, phi= 6.23696},
+    HO {nosc= 0.0333863, en= 2.9744, eg= 0.501351, nu= 0.3333, phi= -5.04443},
+    HO {nosc= 0.0603889, en= 2.17689, eg= 0.73506, nu= 0.3333, phi= 5.58147}]
+}
+
+pmd = Stack { 
+  mediums = [water, sio2, nit_ho, niptsi_v5, si], 
+  thicknesses = [350, 20, 10]
+} 
+
+
+thfit = Strategy { 
+  params = ["Th:1", "Th:2", "Th:3"], 
+  seeds = ["100-600,10", 30, 25] 
+} 
+ 
+set range "350-950"
+
+use stack pmd 
+use strategy thfit 
+
+
