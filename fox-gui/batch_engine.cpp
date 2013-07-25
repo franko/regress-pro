@@ -1,3 +1,5 @@
+#include <gsl/gsl_blas.h>
+
 #include "batch_engine.h"
 #include "fit-params.h"
 #include "lmfit.h"
@@ -56,7 +58,7 @@ void batch_engine::apply_goal_parameters(const gsl_vector *x)
     fit_engine_apply_parameters(m_fit_engine, m_gbo_params, x);
 }
 
-void batch_engine::fit(gsl_vector* results, int output_param)
+void batch_engine::fit(gsl_vector* results, gsl_vector* cov_results, int output_param)
 {
     const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
     struct fit_engine *fit = m_fit_engine;
@@ -75,6 +77,15 @@ void batch_engine::fit(gsl_vector* results, int output_param)
         gsl_vector_memcpy(x, si.seeds);
         lmfit_iter(x, f, solver, cfg->nb_max_iters, cfg->epsabs, cfg->epsrel, &nb_iter, NULL, NULL, NULL);
         gsl_vector_set(results, k, gsl_vector_get(x, output_param));
+#if 0
+        gsl_matrix* covar = gsl_matrix_alloc(f->p, f->p);
+        gsl_multifit_covar(solver->J, 1e-6, covar);
+        gsl_vector_set(cov_results, k, gsl_matrix_get(covar, output_param, output_param));
+        double chi = gsl_blas_dnrm2(solver->f);
+        double dof = f->n - f->p;
+        fprintf(stderr, "%d: value= %g, stddev= %g\n", k + 1, gsl_vector_get(x, output_param), (chi / sqrt(dof)) * sqrt(gsl_matrix_get(covar, output_param, output_param)));
+        gsl_matrix_free(covar);
+#endif
         gsl_multifit_fdfsolver_free(solver);
     }
 }

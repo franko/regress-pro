@@ -39,25 +39,123 @@ class spectra_list_ref {
 public:
     spectra_list_ref(vector_owner<spectra_entry>& ls) : m_list(ls) {}
     double operator [] (unsigned k) const { return m_list[k].ref_value; }
+    unsigned size() const { return m_list.size(); }
 private:
     const vector_owner<spectra_entry>& m_list;
 };
 
+struct gbo_score_eval {
+    virtual double eval(gsl_vector* results) = 0;
+    virtual ~gbo_score_eval() {}
+};
+
 template <typename ReferenceArray>
-double gbo_score_simple(ReferenceArray& ref, gsl_vector* results)
+class gbo_score_simple : public gbo_score_eval
 {
-    double p = 0.0;
-    for (unsigned k = 0; k < results->size; k++) {
-        const double del = (gsl_vector_get(results, k) - ref[k]);
-        p = p + del * del;
+public:
+    gbo_score_simple(const ReferenceArray& ref) : m_ref(ref) { }
+
+    virtual double eval(gsl_vector* results) {
+        const unsigned n = m_ref.size();
+        double p = 0.0;
+        for (unsigned k = 0; k < n; k++) {
+            const double del = gsl_vector_get(results, k) - m_ref[k];
+            p = p + del * del;
+        }
+        return p;
     }
-    return p;
-}
+private:
+    const ReferenceArray& m_ref;
+};
+
+struct regress_result {
+    double a, b;
+    double rsq;
+};
+
+template <typename ReferenceArray>
+class gbo_score_correl : public gbo_score_eval
+{
+public:
+    gbo_score_correl(const ReferenceArray& ref) : m_ref(ref) {
+        prepare();
+    }
+
+    void linfit(gsl_vector* results, regress_result& r) {
+        const unsigned n = m_ref.size();
+        double xy_sum = 0.0, y_sum = 0.0;
+        for (unsigned k = 0; k < n; k++) {
+            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            y_sum += y;
+            xy_sum += x * y;
+        }
+        const double den = n * m_xsqsum - m_xsum * m_xsum;
+        r.b = (n * xy_sum - m_xsum * y_sum) / den;
+        r.a = (m_xsqsum * y_sum - m_xsum * xy_sum) / den;
+        double rsq = 0.0;
+        for (unsigned k = 0; k < n; k++) {
+            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            const double del = (r.b * x + r.a) - y;
+            rsq += del * del;
+        }
+        r.rsq = rsq;
+    }
+
+    void prepare() {
+        const unsigned n = m_ref.size();
+        double x_sum = 0.0, xsq_sum = 0.0;
+        for (unsigned k = 0; k < n; k++) {
+            const double x = m_ref[k];
+            x_sum += x;
+            xsq_sum += x * x;
+        }
+        m_xsum = x_sum;
+        m_xsqsum = xsq_sum;
+    }
+
+    virtual double eval(gsl_vector* results) {
+        regress_result reg;
+        linfit(results, reg);
+        fprintf(stderr, "REG: a=%g b=%g Rsq=%g\n", reg.a, reg.b, reg.rsq);
+        return reg.rsq;
+    }
+
+private:
+    const ReferenceArray& m_ref;
+    double m_xsum, m_xsqsum;
+};
+
+template <typename ReferenceArray>
+class gbo_score_offset : public gbo_score_eval
+{
+public:
+    gbo_score_offset(const ReferenceArray& ref) : m_ref(ref) { }
+
+    virtual double eval(gsl_vector* results) {
+        const unsigned n = m_ref.size();
+        double del_s = 0.0;
+        for (unsigned k = 0; k < n; k++) {
+            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            del_s += (y - x);
+        }
+        const double del_avg = del_s / n;
+        double res = 0.0;
+        for (unsigned k = 0; k < n; k++) {
+            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            res += (y - x - del_avg) * (y - x - del_avg);
+        }
+        return res;
+    }
+
+private:
+    const ReferenceArray& m_ref;
+};
 
 struct gbo_data {
     batch_engine* eng;
-    spectra_list_ref* ref_array;
     gsl_vector* results;
+    gsl_vector* cov_results;
+    gbo_score_eval* score;
 };
 
 double gbo_obj_func(unsigned n, const double *x, double *grad, void *my_func_data)
@@ -71,8 +169,8 @@ double gbo_obj_func(unsigned n, const double *x, double *grad, void *my_func_dat
     fprintf(stderr, "\n");
     gsl_vector_const_view xv = gsl_vector_const_view_array(x, n);
     eng->apply_goal_parameters(&xv.vector);
-    eng->fit(gbo->results, 0);
-    double score = gbo_score_simple(*gbo->ref_array, gbo->results);
+    eng->fit(gbo->results, gbo->cov_results, 0);
+    double score = gbo->score->eval(gbo->results);
     fprintf(stderr, "score: %g\n", score);
     return score;
 }
@@ -158,7 +256,9 @@ bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filen
 
     spectra_list_ref ref_array(list);
     gsl_vector* fit_results = gsl_vector_alloc(N);
-    gbo_data gdata = {&eng, &ref_array, fit_results};
+    gsl_vector* cov_results = gsl_vector_alloc(N);
+    gbo_score_eval* s_eval = new gbo_score_offset<spectra_list_ref>(ref_array);
+    gbo_data gdata = {&eng, fit_results, cov_results, s_eval};
 
     double x[32];
 
