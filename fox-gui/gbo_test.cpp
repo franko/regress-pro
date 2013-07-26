@@ -266,8 +266,12 @@ bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filen
         x[k] = fit_engine_get_parameter_value(fit, &fps->values[k]);
     }
 
-    double lb[19] = {0, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI, 0, 0, - M_PI};
-    double ub[19] = {2000, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI, 2000, 40, M_PI};
+    double lb[19];
+    double ub[19];
+
+    for (unsigned k = 0; k < fps->number; k++) {
+        get_param_bounds(&fps->values[k], lb + k, ub + k);
+    }
 
     nlopt_opt opt = nlopt_create(NLOPT_LN_COBYLA, fps->number);
     nlopt_set_lower_bounds(opt, lb);
