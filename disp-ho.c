@@ -38,6 +38,8 @@ static void ho_encode_param(str_t param, const fit_param_t *fp);
 static double ho_get_param_value(const struct disp_struct *d,
                                  const fit_param_t *fp);
 
+static void ho_get_param_bounds(fit_param_t *fp, double *lower, double *upper);
+
 struct disp_class ho_disp_class = {
     .disp_class_id       = DISP_HO,
     .model_id            = MODEL_HO,
@@ -56,6 +58,7 @@ struct disp_class ho_disp_class = {
 
     .decode_param_string = ho_decode_param_string,
     .encode_param        = ho_encode_param,
+    .get_param_bounds    = ho_get_param_bounds,
 };
 
 static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
@@ -308,4 +311,33 @@ disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
     memcpy(d->disp.ho.params, params, nb_hos * sizeof(struct ho_params));
 
     return d;
+}
+
+void
+ho_get_param_bounds(fit_param_t *fp, double *lower, double *upper)
+{
+    int npp;
+    npp = fp->param_nb % HO_NB_PARAMS;
+    switch(npp) {
+    case 0:
+        *lower = 0.0;
+        *upper = 2000.0;
+        break;
+    case 1:
+        *lower = 0.0;
+        *upper = 35.0;
+        break;
+    case 2:
+        *lower = 0.0;
+        *upper = 35.0;
+        break;
+    case 3:
+        *lower = 0.0;
+        *upper = 1.0;
+        break;
+    default:
+        *lower = - M_PI;
+        *upper = M_PI;
+        break;
+    }
 }

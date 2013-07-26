@@ -30,6 +30,7 @@ struct disp_class disp_sample_table_class = {
 
     .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
+    .get_param_bounds    = NULL,
 };
 
 static void

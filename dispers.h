@@ -41,6 +41,7 @@ struct disp_class {
     /* class methods */
     int (*decode_param_string)(const char *param);
     void (*encode_param)(str_t param, const fit_param_t *fp);
+    void (*get_param_bounds)(fit_param_t *fp, double *lower, double *upper);
 };
 
 struct deriv_info {
@@ -94,6 +95,7 @@ extern disp_t * disp_new(enum disp_type tp);
 extern disp_t * disp_new_with_name(enum disp_type tp, const char *name);
 extern int      disp_get_number_of_params(const disp_t *d);
 extern double   disp_get_param_value(const disp_t *d, const fit_param_t *fp);
+extern void     get_disp_param_bounds(fit_param_t *fp, double *lower, double *upper);
 extern int      disp_integrity_check(disp_t *d);
 extern int      disp_get_model_id(disp_t *d);
 extern int      disp_check_fit_param(disp_t *d, fit_param_t *fp);

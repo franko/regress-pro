@@ -37,6 +37,7 @@ struct disp_class disp_lookup_class = {
 
     .decode_param_string = lookup_decode_param_string,
     .encode_param        = lookup_encode_param,
+    .get_param_bounds    = NULL,
 };
 
 struct disp_struct *

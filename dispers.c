@@ -200,6 +200,25 @@ disp_check_fit_param(disp_t *d, fit_param_t *fp)
     return 0;
 }
 
+void
+get_disp_param_bounds(fit_param_t *fp, double *lower, double *upper)
+{
+    void* class_iter;
+    for (class_iter = disp_class_next(NULL); class_iter; class_iter = disp_class_next(class_iter)) {
+        struct disp_class *c = disp_class_from_iter(class_iter);
+        if (c->model_id == fp->model_id) {
+            if (c->get_param_bounds) {
+                c->get_param_bounds(fp, lower, upper);
+            } else {
+                *lower = -HUGE_VAL;
+                *upper = HUGE_VAL;
+            }
+            return;
+        }
+    }
+    assert(0);
+}
+
 double
 disp_get_param_value(const disp_t *d, const fit_param_t *fp)
 {

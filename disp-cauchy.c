@@ -15,6 +15,8 @@ static void cauchy_encode_param(str_t param, const fit_param_t *fp);
 static double cauchy_get_param_value(const struct disp_struct *d,
                                      const fit_param_t *fp);
 
+static void cauchy_get_param_bounds(fit_param_t *fp, double *lower, double *upper);
+
 #define CAUCHY_NB_N_PARAMS 3
 #define CAUCHY_NB_PARAMS 6
 
@@ -36,6 +38,7 @@ struct disp_class cauchy_disp_class = {
 
     .decode_param_string = cauchy_decode_param_string,
     .encode_param        = cauchy_encode_param,
+    .get_param_bounds    = cauchy_get_param_bounds,
 };
 
 cmpl
@@ -152,4 +155,24 @@ disp_new_cauchy(const char *name, const double n[], const double k[])
     }
 
     return d;
+}
+
+void
+cauchy_get_param_bounds(fit_param_t *fp, double *lower, double *upper)
+{
+    int nb = (fp->param_nb % 3);
+    switch (nb) {
+    case 0:
+        *lower = 0.1;
+        *upper = 8.0;
+        break;
+    case 1:
+        *lower = -1.0e6;
+        *upper = +1.0e6;
+        break;
+    default:
+        *lower = -1.0e10;
+        *upper = +1.0e10;
+        break;
+     }
 }

@@ -44,6 +44,27 @@ get_param_name(fit_param_t *fp, str_t name)
 }
 
 void
+get_param_bounds(fit_param_t *fp, double *lower, double *upper)
+{
+    switch(fp->id) {
+    case PID_THICKNESS:
+        *lower = 0;
+        *upper = HUGE_VAL;
+        break;
+    case PID_FIRSTMUL:
+        *lower = 0.5;
+        *upper = 2.0;
+        break;
+    case PID_LAYER_N:
+        get_disp_param_bounds(fp, lower, upper);
+        break;
+    default:
+        *lower = -HUGE_VAL;
+        *upper = HUGE_VAL;
+    }
+}
+
+void
 get_disp_param_name(fit_param_t *fp, str_ptr buf)
 {
     struct disp_class *dclass;

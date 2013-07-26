@@ -19,6 +19,8 @@ static void bruggeman_encode_param(str_t param, const fit_param_t *fp);
 static double bruggeman_get_param_value(const struct disp_struct *d,
                                         const fit_param_t *fp);
 
+static void bruggeman_get_param_bounds(fit_param_t *fp, double *lower, double *upper);
+
 struct disp_class bruggeman_disp_class = {
     .disp_class_id       = DISP_BRUGGEMAN,
     .model_id            = MODEL_BRUGGEMAN,
@@ -37,6 +39,7 @@ struct disp_class bruggeman_disp_class = {
 
     .decode_param_string = bruggeman_decode_param_string,
     .encode_param        = bruggeman_encode_param,
+    .get_param_bounds    = bruggeman_get_param_bounds,
 };
 
 void
@@ -167,4 +170,11 @@ bruggeman_get_param_value(const struct disp_struct *d,
     int np = fp->param_nb;
     assert(np >= 0 && np < 2);
     return bd->frac[np];
+}
+
+void
+bruggeman_get_param_bounds(fit_param_t *fp, double *lower, double *upper)
+{
+    *lower = 0.0;
+    *upper = 1.0;
 }
