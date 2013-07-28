@@ -45,10 +45,11 @@ private:
 };
 
 struct gbo_score_eval {
-    virtual double eval(gsl_vector* results) = 0;
+    virtual double eval(gsl_matrix* results) = 0;
     virtual ~gbo_score_eval() {}
 };
 
+#if 0
 template <typename ReferenceArray>
 class gbo_score_simple : public gbo_score_eval
 {
@@ -124,25 +125,31 @@ private:
     const ReferenceArray& m_ref;
     double m_xsum, m_xsqsum;
 };
+#endif
 
-template <typename ReferenceArray>
+template <typename ReferenceArray, bool AddError>
 class gbo_score_offset : public gbo_score_eval
 {
 public:
     gbo_score_offset(const ReferenceArray& ref) : m_ref(ref) { }
 
-    virtual double eval(gsl_vector* results) {
+    virtual double eval(gsl_matrix* results) {
         const unsigned n = m_ref.size();
         double del_s = 0.0;
         for (unsigned k = 0; k < n; k++) {
-            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            const double x = m_ref[k], y = gsl_matrix_get(results, k, 0);
             del_s += (y - x);
         }
         const double del_avg = del_s / n;
         double res = 0.0;
         for (unsigned k = 0; k < n; k++) {
-            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            const double x = m_ref[k], y = gsl_matrix_get(results, k, 0);
             res += (y - x - del_avg) * (y - x - del_avg);
+            if (AddError) {
+                const double stdev = gsl_matrix_get(results, k, 1);
+                const double chi0 = gsl_matrix_get(results, k, 2);
+                res += stdev * chi0;
+            }
         }
         return res;
     }
@@ -153,8 +160,7 @@ private:
 
 struct gbo_data {
     batch_engine* eng;
-    gsl_vector* results;
-    gsl_vector* cov_results;
+    gsl_matrix* results;
     gbo_score_eval* score;
 };
 
@@ -169,7 +175,7 @@ double gbo_obj_func(unsigned n, const double *x, double *grad, void *my_func_dat
     fprintf(stderr, "\n");
     gsl_vector_const_view xv = gsl_vector_const_view_array(x, n);
     eng->apply_goal_parameters(&xv.vector);
-    eng->fit(gbo->results, gbo->cov_results, 0);
+    eng->fit(gbo->results, 0);
     double score = gbo->score->eval(gbo->results);
     fprintf(stderr, "score: %g\n", score);
     return score;
@@ -255,10 +261,9 @@ bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filen
     eng.prefit();
 
     spectra_list_ref ref_array(list);
-    gsl_vector* fit_results = gsl_vector_alloc(N);
-    gsl_vector* cov_results = gsl_vector_alloc(N);
-    gbo_score_eval* s_eval = new gbo_score_offset<spectra_list_ref>(ref_array);
-    gbo_data gdata = {&eng, fit_results, cov_results, s_eval};
+    gsl_matrix* fit_results = gsl_matrix_alloc(N, 3);
+    gbo_score_eval* s_eval = new gbo_score_offset<spectra_list_ref, true>(ref_array);
+    gbo_data gdata = {&eng, fit_results, s_eval};
 
     double x[32];
 
@@ -273,7 +278,7 @@ bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filen
         get_param_bounds(&fps->values[k], lb + k, ub + k);
     }
 
-    nlopt_opt opt = nlopt_create(NLOPT_LN_COBYLA, fps->number);
+    nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, fps->number);
     nlopt_set_lower_bounds(opt, lb);
     nlopt_set_upper_bounds(opt, ub);
     nlopt_set_min_objective(opt, gbo_obj_func, &gdata);

@@ -64,7 +64,7 @@ public:
     bool init(generator<struct spectrum*>& gen);
     void prefit();
     void apply_goal_parameters(const gsl_vector *x);
-    void fit(gsl_vector* results, gsl_vector* cov_results, int output_param);
+    void fit(gsl_matrix* results, int output_param);
 
 private:
     vector_owner<spectrum_item> m_spectra;
