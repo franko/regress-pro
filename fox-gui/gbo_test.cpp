@@ -49,32 +49,12 @@ struct gbo_score_eval {
     virtual ~gbo_score_eval() {}
 };
 
-#if 0
-template <typename ReferenceArray>
-class gbo_score_simple : public gbo_score_eval
-{
-public:
-    gbo_score_simple(const ReferenceArray& ref) : m_ref(ref) { }
-
-    virtual double eval(gsl_vector* results) {
-        const unsigned n = m_ref.size();
-        double p = 0.0;
-        for (unsigned k = 0; k < n; k++) {
-            const double del = gsl_vector_get(results, k) - m_ref[k];
-            p = p + del * del;
-        }
-        return p;
-    }
-private:
-    const ReferenceArray& m_ref;
-};
-
 struct regress_result {
     double a, b;
     double rsq;
 };
 
-template <typename ReferenceArray>
+template <typename ReferenceArray, typename ErrorEstim>
 class gbo_score_correl : public gbo_score_eval
 {
 public:
@@ -82,11 +62,11 @@ public:
         prepare();
     }
 
-    void linfit(gsl_vector* results, regress_result& r) {
+    void linfit(gsl_matrix* results, regress_result& r) {
         const unsigned n = m_ref.size();
         double xy_sum = 0.0, y_sum = 0.0;
         for (unsigned k = 0; k < n; k++) {
-            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            const double x = m_ref[k], y = gsl_matrix_get(results, k, 0);
             y_sum += y;
             xy_sum += x * y;
         }
@@ -95,9 +75,10 @@ public:
         r.a = (m_xsqsum * y_sum - m_xsum * xy_sum) / den;
         double rsq = 0.0;
         for (unsigned k = 0; k < n; k++) {
-            const double x = m_ref[k], y = gsl_vector_get(results, k);
+            const double x = m_ref[k], y = gsl_matrix_get(results, k, 0);
             const double del = (r.b * x + r.a) - y;
             rsq += del * del;
+            rsq += ErrorEstim::eval(results, k);
         }
         r.rsq = rsq;
     }
@@ -114,7 +95,7 @@ public:
         m_xsqsum = xsq_sum;
     }
 
-    virtual double eval(gsl_vector* results) {
+    virtual double eval(gsl_matrix* results) {
         regress_result reg;
         linfit(results, reg);
         fprintf(stderr, "REG: a=%g b=%g Rsq=%g\n", reg.a, reg.b, reg.rsq);
@@ -125,9 +106,20 @@ private:
     const ReferenceArray& m_ref;
     double m_xsum, m_xsqsum;
 };
-#endif
 
-template <typename ReferenceArray, bool AddError>
+struct error_estim_zero {
+    static double eval(gsl_matrix* results, unsigned k) { return 0; }
+};
+
+struct error_estim_direct {
+    static double eval(gsl_matrix* results, unsigned k) {
+        const double stdev = gsl_matrix_get(results, k, 1);
+        const double chi0 = gsl_matrix_get(results, k, 2);
+        return stdev * chi0;
+    }
+};
+
+template <typename ReferenceArray, typename ErrorEstim>
 class gbo_score_offset : public gbo_score_eval
 {
 public:
@@ -145,11 +137,7 @@ public:
         for (unsigned k = 0; k < n; k++) {
             const double x = m_ref[k], y = gsl_matrix_get(results, k, 0);
             res += (y - x - del_avg) * (y - x - del_avg);
-            if (AddError) {
-                const double stdev = gsl_matrix_get(results, k, 1);
-                const double chi0 = gsl_matrix_get(results, k, 2);
-                res += stdev * chi0;
-            }
+            res += ErrorEstim::eval(results, k);
         }
         return res;
     }
@@ -262,7 +250,7 @@ bool gbo_test(struct fit_engine* fit, struct seeds *seeds, const char* tab_filen
 
     spectra_list_ref ref_array(list);
     gsl_matrix* fit_results = gsl_matrix_alloc(N, 3);
-    gbo_score_eval* s_eval = new gbo_score_offset<spectra_list_ref, true>(ref_array);
+    gbo_score_eval* s_eval = new gbo_score_offset<spectra_list_ref, error_estim_direct>(ref_array);
     gbo_data gdata = {&eng, fit_results, s_eval};
 
     double x[32];
