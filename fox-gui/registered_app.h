@@ -3,6 +3,8 @@
 
 #include <fx.h>
 
+#include "dataset_window.h"
+
 class registered_app : public FXApp {
     FXDECLARE(registered_app)
 
@@ -10,6 +12,7 @@ class registered_app : public FXApp {
 
 public:
     registered_app(const FXString& name,const FXString& vendor);
+    virtual ~registered_app();
 
     virtual void create();
 
@@ -17,6 +20,8 @@ public:
     bool is_registered() const {
         return m_registered;
     }
+
+    void show_dataset() { m_dataset_win->show(PLACEMENT_SCREEN); }
 
     long on_registration_enter(FXObject*,FXSelector,void*);
     long on_registration_ask(FXObject*,FXSelector,void*);
@@ -47,6 +52,7 @@ private:
     FXTextField *m_user_name_entry;
     FXTextField *m_user_email_entry;
     FXTextField *m_key_entry;
+    dataset_window *m_dataset_win;
 };
 
 #endif

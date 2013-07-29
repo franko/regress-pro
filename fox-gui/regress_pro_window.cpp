@@ -73,6 +73,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_GBO, regress_pro_window::onCmdTestGBO),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
 };
 
 
@@ -131,6 +132,10 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
     new FXMenuCommand(fitmenu, "GBO Testing",NULL,this,ID_RUN_GBO);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
+
+    datasetmenu = new FXMenuPane(this);
+    new FXMenuCommand(datasetmenu, "Edit",NULL,this,ID_DATASET_EDIT);
+    new FXMenuTitle(menubar,"DataSet",NULL,datasetmenu);
 
     helpmenu = new FXMenuPane(this);
     new FXMenuCommand(helpmenu, "&Register", NULL, this, ID_REGISTER);
@@ -402,6 +407,7 @@ regress_pro_window::~regress_pro_window()
     delete spectrmenu;
     delete dispmenu;
     delete fitmenu;
+    delete datasetmenu;
     delete helpmenu;
 
     if(this->spectrum) {
@@ -805,4 +811,11 @@ process_foxgui_events(void *data, float progr, const char *msg)
     }
 
     return 0;
+}
+
+long
+regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void *)
+{
+    get_elliss_app()->show_dataset();
+    return 1;
 }

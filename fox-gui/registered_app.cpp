@@ -13,12 +13,19 @@ FXIMPLEMENT(registered_app, FXApp, registered_app_map,ARRAYNUMBER(registered_app
 registered_app::registered_app(const FXString& name,const FXString& vendor) :
     FXApp(name, vendor), m_reg_count(0), m_registered(false)
 {
+    m_dataset_win = new dataset_window(this, "DataSet Window");
+}
+
+registered_app::~registered_app()
+{
+    m_dataset_win->close(TRUE);
 }
 
 void
 registered_app::create()
 {
     FXApp::create();
+    m_dataset_win->create();
     check_registration();
 }
 

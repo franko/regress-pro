@@ -50,6 +50,7 @@ protected:
     FXMenuPane        *spectrmenu;
     FXMenuPane        *dispmenu;
     FXMenuPane        *fitmenu;
+    FXMenuPane        *datasetmenu;
     FXMenuPane        *helpmenu;
 
     FXTabBook         *tabbook;
@@ -89,6 +90,7 @@ public:
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
     long onCmdTestGBO(FXObject*,FXSelector,void*);
+    long onCmdDatasetEdit(FXObject*,FXSelector,void*);
 
     bool save_script_as(const FXString& save_as);
     bool set_fit_strategy(const char *script_text);
@@ -114,6 +116,7 @@ public:
         ID_SCRIPT_TEXT,
         ID_REGISTER,
         ID_RUN_GBO,
+        ID_DATASET_EDIT,
         ID_LAST
     };
 
