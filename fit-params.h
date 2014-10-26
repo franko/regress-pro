@@ -40,14 +40,14 @@ typedef struct {
 } fit_param_t;
 
 struct fit_parameters {
-    unsigned int number;
-    unsigned int alloc;
+    size_t number;
+    size_t alloc;
     fit_param_t *values;
 };
 
 struct seeds {
-    unsigned int number;
-    unsigned int alloc;
+    size_t number;
+    size_t alloc;
     seed_t *values;
 };
 
