@@ -60,6 +60,26 @@ struct disp_class ho_disp_class = {
 
 static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
+/* Based on the user manual of an industrial ellipsometer tool the HO
+   multiplicative factor is: 16 * Pi * Ry^2 * r0^3 where
+   Ry is the Rydberg constant Ry = 13.6058 eV et r0 is the Bohr radius:
+   r0 = 0.0529177 nm.
+   The definition above would give the following constant:
+
+#define HO_MULT_FACT 1.3788623090164978586499199863586
+
+   For the conversion from eV to nm it seems that the value of 1240 is used
+   in the software:
+
+   E(eV) = 1240 / lambda(nm)
+
+#define HO_EV_NM 1240.0
+
+   Regress Pro 1.4.1 is using a value slightly more accurate.
+*/
+
+#define HO_EV_NM 1239.8
+
 #define HO_MULT_FACT 1.3732
 #define HO_NB_PARAMS 5
 #define HO_NOSC_OFFS 0
@@ -113,7 +133,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     double e;
     int chop_k;
 
-    e = 1239.8 / lambda;
+    e = HO_EV_NM / lambda;
 
     hsum = 0.0, hnusum = 0.0;
     for(k = 0; k < nb; k++) {
