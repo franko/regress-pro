@@ -74,6 +74,7 @@ public:
         return (elliss_app*) getApp();
     }
 
+    long onCmdFilmStack(FXObject*,FXSelector,void*);
     long onCmdLoadScript(FXObject*,FXSelector,void*);
     long onCmdSaveScript(FXObject*,FXSelector,void*);
     long onCmdSaveAsScript(FXObject*,FXSelector,void *);
@@ -112,6 +113,7 @@ public:
         ID_ABOUT,
         ID_SCRIPT_TEXT,
         ID_REGISTER,
+        ID_FILM_STACK,
         ID_LAST
     };
 

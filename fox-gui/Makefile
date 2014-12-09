@@ -33,7 +33,7 @@ INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp regress_pro_window.cpp BatchDialog.cpp dispers_dialog.cpp dispers_win.cpp sampling_win.cpp fx_numeric_field.cpp disp_chooser.cpp fit_window.cpp colors.cpp plot_units.cpp plot_canvas.cpp utils.cpp main.cpp
+SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp regress_pro_window.cpp BatchDialog.cpp dispers_dialog.cpp dispers_win.cpp sampling_win.cpp fx_numeric_field.cpp disp_chooser.cpp fit_window.cpp colors.cpp plot_units.cpp plot_canvas.cpp utils.cpp filmstack_window.cpp main.cpp
 PRG = regress.exe
 
 REG_SRC_FILES := registration.c registered_app.cpp
