@@ -21,9 +21,13 @@ public:
 
 private:
     FXMenuPane *popupmenu;
+    FXVerticalFrame *layersframe;
+    int current_layer;
 
 public:
     long on_stack_right_mouse(FXObject*,FXSelector,void* ptr);
+    long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
+    long on_cmd_delete_layer(FXObject*,FXSelector,void* ptr);
 
     enum {
         ID_STACK = FXDialogBox::ID_LAST,
