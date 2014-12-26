@@ -6,7 +6,6 @@
 class filmstack_window : public FXDialogBox {
     FXDECLARE(filmstack_window)
 
-public:
 protected:
     filmstack_window() {};
 private:

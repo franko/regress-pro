@@ -1,4 +1,5 @@
 #include "filmstack_window.h"
+#include "dispers_chooser.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -67,6 +68,10 @@ long
 filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
 {
     static int counter = 0;
+
+    dispers_chooser *chooser = new dispers_chooser(this->getApp());
+    chooser->execute();
+
     FXWindow *ref = get_child(layersframe, current_layer + 1);
     if (!ref) return 0;
     char label[] = "New Layer X";
