@@ -1,9 +1,15 @@
 #ifndef DISPERS_CHOOSER_H
 #define DISPERS_CHOOSER_H
 
-#endif
-
 #include <fx.h>
+
+#include "dispers.h"
+
+class dispers_selector {
+public:
+    virtual ~dispers_selector() {};
+    virtual disp_t *get() = 0;
+};
 
 class dispers_chooser : public FXDialogBox {
     FXDECLARE(dispers_chooser)
@@ -18,14 +24,19 @@ public:
     virtual ~dispers_chooser();
 
     long on_cmd_category(FXObject *, FXSelector, void *);
+    long on_cmd_dispers(FXObject *, FXSelector, void *);
 
     enum {
         ID_CATEGORY = FXDialogBox::ID_LAST,
+        ID_DISPERS,
         ID_LAST
     };
 
 private:
     FXList *catlist;
     FXSwitcher *choose_switcher;
-    FXSwitcher *disp_switcher;
+    FXVerticalFrame *vframe;
+    dispers_selector *dispers_selectors[4];
 };
+
+#endif

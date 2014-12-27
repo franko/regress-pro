@@ -1,16 +1,32 @@
 #include "dispers_chooser.h"
 
 #include "disp_library_iter.h"
+#include "dispers_ui_edit.h"
+
+class library_dispers_selector : public dispers_selector {
+public:
+    library_dispers_selector(FXComboBox *c): combo(c) {}
+    virtual disp_t *get();
+    FXComboBox *combo;
+};
+
+disp_t *library_dispers_selector::get()
+{
+    FXString name = this->combo->getText();
+    disp_t *d = dispers_library_search(name.text());
+    return d;
+}
 
 // Map
 FXDEFMAP(dispers_chooser) dispers_chooser_map[]= {
     FXMAPFUNC(SEL_COMMAND, dispers_chooser::ID_CATEGORY, dispers_chooser::on_cmd_category),
+    FXMAPFUNC(SEL_COMMAND, dispers_chooser::ID_DISPERS, dispers_chooser::on_cmd_dispers),
 };
 
 FXIMPLEMENT(dispers_chooser,FXDialogBox,dispers_chooser_map,ARRAYNUMBER(dispers_chooser_map));
 
 FXWindow *
-new_library_chooser(FXComposite *win)
+new_library_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXComposite *win)
 {
     disp_library_iter disp_iter;
 
@@ -19,12 +35,13 @@ new_library_chooser(FXComposite *win)
 
     int nb_disp = disp_iter.length();
 
-    FXComboBox *combo = new FXComboBox(hf, 10, NULL, 0, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
+    FXComboBox *combo = new FXComboBox(hf, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
     combo->setNumVisible(nb_disp);
     for(const char *nm = disp_iter.start(); nm; nm = disp_iter.next()) {
-        fprintf(stderr, ">> adding %s\n", nm);
         combo->appendItem(nm);
     }
+
+    *pselect = new library_dispers_selector(combo);
 
     return hf;
 }
@@ -39,18 +56,24 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     catlist->appendItem("New Model", NULL, NULL, TRUE);
     catlist->appendItem("User List", NULL, NULL, TRUE);
 
-    FXVerticalFrame *vf = new FXVerticalFrame(hf,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    choose_switcher = new FXSwitcher(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT|FRAME_THICK|FRAME_RAISED);
-    new_library_chooser(choose_switcher);
+    vframe = new FXVerticalFrame(hf,LAYOUT_FILL_X|LAYOUT_FIX_HEIGHT, 0, 0, 500, 120);
+    choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT|FRAME_THICK|FRAME_RAISED);
+    new_library_chooser(this, this->dispers_selectors + 0, choose_switcher);
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    this->dispers_selectors[1] = NULL;
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    this->dispers_selectors[2] = NULL;
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    this->dispers_selectors[3] = NULL;
 
-    disp_switcher = new FXSwitcher(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT|FRAME_THICK|FRAME_RAISED);
+    new FXHorizontalFrame(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 }
 
 dispers_chooser::~dispers_chooser()
 {
+    for (int i = 0; i < 4; i++) {
+        delete dispers_selectors[i];
+    }
 }
 
 long
@@ -59,5 +82,26 @@ dispers_chooser::on_cmd_category(FXObject *, FXSelector, void *)
     int cat = catlist->getCurrentItem();
     choose_switcher->setCurrent(cat);
     fprintf(stderr, ">> command %d\n", cat);
+    return 1;
+}
+
+long
+dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
+{
+    int cat = catlist->getCurrentItem();
+    dispers_selector *dispers_select = dispers_selectors[cat];
+    if (dispers_select) {
+        disp_t *d = dispers_select->get();
+        if (d->type == DISP_HO) {
+            fprintf(stderr, "HO\n");
+            FXWindow *a = vframe->getFirst();
+            FXWindow *b = a->getNext();
+            delete b;
+            fx_disp_ho_window *w = new fx_disp_ho_window(d, vframe);
+            w->create();
+            vframe->recalc();
+        }
+        fprintf(stderr, ">> dispersion: %p\n", d);
+    }
     return 1;
 }
