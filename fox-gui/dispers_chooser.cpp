@@ -146,12 +146,16 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
             disp_free(current_disp);
         }
         current_disp = dispers_select->get();
+        delete dispwin;
         if (current_disp->type == DISP_HO) {
-            delete dispwin;
             dispwin = new fx_disp_ho_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-            dispwin->create();
-            dispwin->reparent(vframe, validhf);
+        } else if (current_disp->type == DISP_CAUCHY) {
+            dispwin = new fx_disp_cauchy_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+        } else {
+            dispwin = new FXLabel(vframe, "Choose a dispersion");
         }
+        dispwin->create();
+        dispwin->reparent(vframe, validhf);
     }
     return 1;
 }
