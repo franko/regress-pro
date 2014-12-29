@@ -3,15 +3,19 @@
 
 // Map
 FXDEFMAP(fx_disp_ho_window) fx_disp_ho_window_map[]= {
+    FXMAPFUNC(SEL_CHANGED, fx_disp_ho_window::ID_NAME, fx_disp_ho_window::on_changed_name),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_0 + 5*16, fx_disp_ho_window::on_cmd_value),
 };
 
-FXIMPLEMENT(fx_disp_ho_window,FXHorizontalFrame,fx_disp_ho_window_map,ARRAYNUMBER(fx_disp_ho_window_map));
+FXIMPLEMENT(fx_disp_ho_window,FXVerticalFrame,fx_disp_ho_window_map,ARRAYNUMBER(fx_disp_ho_window_map));
 
 fx_disp_ho_window::fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts)
-    : FXHorizontalFrame(p, opts), m_disp(d)
+    : FXVerticalFrame(p, opts), m_disp(d)
 {
-    fprintf(stderr, "HERE\n");
+    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
+    new FXLabel(namehf, "Name");
+    new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
+
     FXMatrix *matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "#");
     new FXLabel(matrix, "Nosc");
@@ -70,5 +74,13 @@ fx_disp_ho_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
         default:
         /* */;
     }
+    return 1;
+}
+
+long
+fx_disp_ho_window::on_changed_name(FXObject *, FXSelector, void *__text)
+{
+    FXchar *text = (FXchar *) __text;
+    str_copy_c(m_disp->name, text);
     return 1;
 }

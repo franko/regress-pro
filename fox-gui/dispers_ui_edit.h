@@ -6,7 +6,7 @@
 #include "dispers.h"
 #include "fx_numeric_field.h"
 
-class fx_disp_ho_window : public FXHorizontalFrame {
+class fx_disp_ho_window : public FXVerticalFrame {
     FXDECLARE(fx_disp_ho_window)
 
 protected:
@@ -21,10 +21,12 @@ public:
 
     disp_t *disp() const { return m_disp; }
 
-    long on_cmd_value(FXObject*, FXSelector sel, void *);
+    long on_cmd_value(FXObject*, FXSelector, void *);
+    long on_changed_name(FXObject*, FXSelector, void *);
 
     enum {
-        ID_PARAM_0 = FXHorizontalFrame::ID_LAST,
+        ID_NAME = FXVerticalFrame::ID_LAST,
+        ID_PARAM_0,
         ID_LAST
     };
 

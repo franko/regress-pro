@@ -56,8 +56,8 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     catlist->appendItem("New Model", NULL, NULL, TRUE);
     catlist->appendItem("User List", NULL, NULL, TRUE);
 
-    vframe = new FXVerticalFrame(hf,LAYOUT_FILL_X|LAYOUT_FIX_HEIGHT, 0, 0, 500, 120);
-    choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT|FRAME_THICK|FRAME_RAISED);
+    vframe = new FXVerticalFrame(hf,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|LAYOUT_FIX_HEIGHT|FRAME_THICK|FRAME_RAISED, 0, 0, 500, 80);
     new_library_chooser(this, this->dispers_selectors + 0, choose_switcher);
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     this->dispers_selectors[1] = NULL;
@@ -66,7 +66,7 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     this->dispers_selectors[3] = NULL;
 
-    new FXHorizontalFrame(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    dispwin = new FXLabel(vframe, "Choose a dispersion");
 }
 
 dispers_chooser::~dispers_chooser()
@@ -93,12 +93,9 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
     if (dispers_select) {
         disp_t *d = dispers_select->get();
         if (d->type == DISP_HO) {
-            fprintf(stderr, "HO\n");
-            FXWindow *a = vframe->getFirst();
-            FXWindow *b = a->getNext();
-            delete b;
-            fx_disp_ho_window *w = new fx_disp_ho_window(d, vframe);
-            w->create();
+            delete dispwin;
+            dispwin = new fx_disp_ho_window(d, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+            dispwin->create();
             vframe->recalc();
         }
         fprintf(stderr, ">> dispersion: %p\n", d);
