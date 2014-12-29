@@ -47,7 +47,8 @@ new_library_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXComp
 }
 
 dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Film Stack", opts, 0, 0, 500, 400, pl, pr, pt, pb, hs, vs)
+    : FXDialogBox(a, "Film Stack", opts, 0, 0, 500, 400, pl, pr, pt, pb, hs, vs),
+    current_disp(0)
 {
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
     catlist = new FXList(hf, this, ID_CATEGORY, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH, 0, 0, 140, 400);
@@ -67,12 +68,26 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     this->dispers_selectors[3] = NULL;
 
     dispwin = new FXLabel(vframe, "Choose a dispersion");
+
+    validhf = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
+    new FXButton(validhf, "Cancel", NULL, this, ID_CANCEL);
+    new FXButton(validhf, "Ok", NULL, this, ID_ACCEPT);
+}
+
+disp_t *dispers_chooser::get_dispersion()
+{
+    disp_t *d = current_disp;
+    current_disp = 0;
+    return d;
 }
 
 dispers_chooser::~dispers_chooser()
 {
     for (int i = 0; i < 4; i++) {
         delete dispers_selectors[i];
+    }
+    if (current_disp) {
+        disp_free(current_disp);
     }
 }
 
@@ -91,14 +106,13 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
     int cat = catlist->getCurrentItem();
     dispers_selector *dispers_select = dispers_selectors[cat];
     if (dispers_select) {
-        disp_t *d = dispers_select->get();
-        if (d->type == DISP_HO) {
+        current_disp = dispers_select->get();
+        if (current_disp->type == DISP_HO) {
             delete dispwin;
-            dispwin = new fx_disp_ho_window(d, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+            dispwin = new fx_disp_ho_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
             dispwin->create();
-            vframe->recalc();
+            dispwin->reparent(vframe, validhf);
         }
-        fprintf(stderr, ">> dispersion: %p\n", d);
     }
     return 1;
 }

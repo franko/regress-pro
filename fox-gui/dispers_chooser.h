@@ -23,6 +23,9 @@ public:
     dispers_chooser(FXApp* a, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~dispers_chooser();
 
+    // Transfer the ownership of the dispersion.
+    disp_t *get_dispersion();
+
     long on_cmd_category(FXObject *, FXSelector, void *);
     long on_cmd_dispers(FXObject *, FXSelector, void *);
 
@@ -36,8 +39,10 @@ private:
     FXList *catlist;
     FXSwitcher *choose_switcher;
     FXVerticalFrame *vframe;
+    FXComposite *validhf;
     FXWindow *dispwin;
     dispers_selector *dispers_selectors[4];
+    disp_t *current_disp;
 };
 
 #endif

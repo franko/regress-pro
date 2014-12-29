@@ -1,5 +1,6 @@
 #include "filmstack_window.h"
 #include "dispers_chooser.h"
+#include "dispers.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -71,12 +72,11 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
 
     dispers_chooser *chooser = new dispers_chooser(this->getApp());
     chooser->execute();
+    disp_t *d = chooser->get_dispersion();
 
     FXWindow *ref = get_child(layersframe, current_layer + 1);
-    if (!ref) return 0;
-    char label[] = "New Layer X";
-    label[strlen(label) - 1] = 'A' + counter++;
-    FXButton *button = new FXButton(layersframe, label, NULL, this, ID_STACK, FRAME_LINE|JUSTIFY_NORMAL|LAYOUT_FILL_X|LAYOUT_BOTTOM);
+    if (!ref || !d) return 0;
+    FXButton *button = new FXButton(layersframe, CSTR(d->name), NULL, this, ID_STACK, FRAME_LINE|JUSTIFY_NORMAL|LAYOUT_FILL_X|LAYOUT_BOTTOM);
     button->create();
     button->reparent(layersframe, ref);
     return 1;
