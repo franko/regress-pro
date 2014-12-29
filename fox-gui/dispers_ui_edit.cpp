@@ -14,7 +14,8 @@ fx_disp_ho_window::fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts)
 {
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
     new FXLabel(namehf, "Name");
-    new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
+    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
+    tf->setText(CSTR(m_disp->name));
 
     FXMatrix *matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "#");
