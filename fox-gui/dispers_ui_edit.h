@@ -19,6 +19,11 @@ public:
     fx_disp_window(disp_t *d, FXComposite* p, FXuint opts=0);
     ~fx_disp_window() { }
 
+    virtual void create();
+    virtual void setup_dialog() { }
+    virtual double *map_parameter(int index) { return 0; }
+
+    long on_cmd_value(FXObject*, FXSelector, void *);
     long on_changed_name(FXObject*, FXSelector, void *);
 
     enum {
@@ -33,37 +38,17 @@ protected:
 };
 
 class fx_disp_ho_window : public fx_disp_window {
-    FXDECLARE(fx_disp_ho_window)
-
-protected:
-    fx_disp_ho_window() {};
-private:
-    fx_disp_ho_window(const fx_disp_ho_window&);
-    fx_disp_ho_window &operator=(const fx_disp_ho_window&);
-
 public:
-    fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts=0);
-    ~fx_disp_ho_window();
-
-    long on_cmd_value(FXObject*, FXSelector, void *);
-
-private:
-    fx_numeric_field **field;
+    fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts=0): fx_disp_window(d, p, opts) { }
+    virtual void setup_dialog();
+    virtual double *map_parameter(int index);
 };
 
 class fx_disp_cauchy_window : public fx_disp_window {
-    FXDECLARE(fx_disp_cauchy_window)
-
-protected:
-    fx_disp_cauchy_window() {};
-private:
-    fx_disp_cauchy_window(const fx_disp_cauchy_window&);
-    fx_disp_cauchy_window &operator=(const fx_disp_cauchy_window&);
-
 public:
-    fx_disp_cauchy_window(disp_t *d, FXComposite* p, FXuint opts=0);
-
-    long on_cmd_value(FXObject*, FXSelector, void *);
+    fx_disp_cauchy_window(disp_t *d, FXComposite* p, FXuint opts=0): fx_disp_window(d, p, opts) { }
+    virtual void setup_dialog();
+    virtual double *map_parameter(int index);
 };
 
 #endif

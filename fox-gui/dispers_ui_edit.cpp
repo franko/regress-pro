@@ -4,6 +4,7 @@
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNC(SEL_CHANGED, fx_disp_window::ID_NAME, fx_disp_window::on_changed_name),
+    FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_0 + 5*16, fx_disp_ho_window::on_cmd_value),
 };
 
 FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
@@ -17,6 +18,21 @@ fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts)
     tf->setText(CSTR(disp->name));
 }
 
+void fx_disp_window::create()
+{
+    this->setup_dialog();
+    FXVerticalFrame::create();
+}
+
+long
+fx_disp_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
+{
+    double *pvalue = this->map_parameter(FXSELID(sel) - ID_PARAM_0);
+    double new_value = strtod((FXchar*)data, NULL);
+    *pvalue = new_value;
+    return 1;
+}
+
 long
 fx_disp_window::on_changed_name(FXObject *, FXSelector, void *text)
 {
@@ -24,24 +40,17 @@ fx_disp_window::on_changed_name(FXObject *, FXSelector, void *text)
     return 1;
 }
 
-// Map
-FXDEFMAP(fx_disp_ho_window) fx_disp_ho_window_map[]= {
-    FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_0 + 5*16, fx_disp_ho_window::on_cmd_value),
-};
-
-FXIMPLEMENT(fx_disp_ho_window,fx_disp_window,fx_disp_ho_window_map,ARRAYNUMBER(fx_disp_ho_window_map));
-
-static fx_numeric_field *create_textfield(FXComposite *frame, FXObject *target, FXSelector id, double value)
+static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *target, FXSelector id)
 {
     fx_numeric_field *tf = new fx_numeric_field(frame, 10, target, id, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     FXString vstr;
-    vstr.format("%g", value);
+    double *pvalue = target->map_parameter(id - fx_disp_window::ID_PARAM_0);
+    vstr.format("%g", *pvalue);
     tf->setText(vstr);
     return tf;
 }
 
-fx_disp_ho_window::fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts)
-    : fx_disp_window(d, p, opts)
+void fx_disp_ho_window::setup_dialog()
 {
     FXMatrix *matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "#");
@@ -51,81 +60,50 @@ fx_disp_ho_window::fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts)
     new FXLabel(matrix, "Nu");
     new FXLabel(matrix, "Phi");
 
-    field = new fx_numeric_field*[disp->disp.ho.nb_hos * 5];
-
     FXString nbstr;
     for (int i = 0; i < disp->disp.ho.nb_hos; i++) {
-        struct ho_params *ho = disp->disp.ho.params + i;
-        int k = 5*i;
         nbstr.format("%d", i + 1);
         new FXLabel(matrix, nbstr);
-        field[k+0] = create_textfield(matrix, this, ID_PARAM_0 + k+0, ho->nosc);
-        field[k+1] = create_textfield(matrix, this, ID_PARAM_0 + k+1, ho->en);
-        field[k+2] = create_textfield(matrix, this, ID_PARAM_0 + k+2, ho->eg);
-        field[k+3] = create_textfield(matrix, this, ID_PARAM_0 + k+3, ho->nu);
-        field[k+4] = create_textfield(matrix, this, ID_PARAM_0 + k+4, ho->phi);
+        for (int j = 5*i; j < 5*(i+1); j++) {
+            create_textfield(matrix, this, ID_PARAM_0 + j);
+        }
     }
 }
 
-fx_disp_ho_window::~fx_disp_ho_window()
+double *fx_disp_ho_window::map_parameter(int index)
 {
-    delete [] field;
-}
-
-long
-fx_disp_ho_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
-{
-    FXint index = FXSELID(sel) - ID_PARAM_0;
     int i = index / 5, j = index % 5;
-    FXchar* vstr = (FXchar*)data;
-    double val = strtod(vstr, NULL);
     struct ho_params *ho = disp->disp.ho.params + i;
     switch (j) {
-        case 0: ho->nosc = val; break;
-        case 1: ho->en   = val; break;
-        case 2: ho->eg   = val; break;
-        case 3: ho->nu   = val; break;
-        case 4: ho->phi  = val; break;
+        case 0: return &ho->nosc; break;
+        case 1: return &ho->en;   break;
+        case 2: return &ho->eg;   break;
+        case 3: return &ho->nu;   break;
+        case 4: return &ho->phi;  break;
         default:
         /* */;
     }
-    return 1;
+    return NULL;
 }
 
-// Map
-FXDEFMAP(fx_disp_cauchy_window) fx_disp_cauchy_window_map[]= {
-    FXMAPFUNCS(SEL_CHANGED, fx_disp_cauchy_window::ID_PARAM_0, fx_disp_cauchy_window::ID_PARAM_0 + 5, fx_disp_cauchy_window::on_cmd_value),
-};
-
-FXIMPLEMENT(fx_disp_cauchy_window,fx_disp_window,fx_disp_cauchy_window_map,ARRAYNUMBER(fx_disp_cauchy_window_map));
-
-fx_disp_cauchy_window::fx_disp_cauchy_window(disp_t *d, FXComposite* p, FXuint opts)
-    : fx_disp_window(d, p, opts)
+void fx_disp_cauchy_window::setup_dialog()
 {
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "N");
     new FXLabel(matrix, "K");
 
-    disp_cauchy *cauchy = &disp->disp.cauchy;
-    create_textfield(matrix, this, ID_PARAM_0 + 0, cauchy->n[0]);
-    create_textfield(matrix, this, ID_PARAM_0 + 1, cauchy->n[1]);
-    create_textfield(matrix, this, ID_PARAM_0 + 2, cauchy->n[2]);
-    create_textfield(matrix, this, ID_PARAM_0 + 3, cauchy->k[0]);
-    create_textfield(matrix, this, ID_PARAM_0 + 4, cauchy->k[1]);
-    create_textfield(matrix, this, ID_PARAM_0 + 5, cauchy->k[2]);
+    for (int j = 0; j < 6; j++) {
+        create_textfield(matrix, this, ID_PARAM_0 + j);
+    }
 }
 
-long
-fx_disp_cauchy_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
+double *fx_disp_cauchy_window::map_parameter(int index)
 {
-    FXint index = FXSELID(sel) - ID_PARAM_0;
-    FXchar* vstr = (FXchar*)data;
-    double val = strtod(vstr, NULL);
     disp_cauchy *c = &disp->disp.cauchy;
     if (index < 3) {
-        c->n[index] = val;
+        return c->n + index;
     } else {
-        c->k[index - 3] = val;
+        return c->k + (index - 3);
     }
-    return 1;
+    return NULL;
 }
