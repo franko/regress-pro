@@ -103,11 +103,13 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     this->dispers_selectors[3] = NULL;
 
-    dispwin = new FXLabel(vframe, "Choose a dispersion");
+    FXHorizontalFrame *labfr = new FXHorizontalFrame(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
+    dispwin = new FXLabel(labfr, "Choose a dispersion");
 
-    validhf = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
-    new FXButton(validhf, "Cancel", NULL, this, ID_CANCEL);
-    new FXButton(validhf, "Ok", NULL, this, ID_ACCEPT);
+    dispwin_anchor = new FXHorizontalSeparator(vframe,SEPARATOR_GROOVE|LAYOUT_FILL_X);
+    FXHorizontalFrame *validhf = new FXHorizontalFrame(vframe,LAYOUT_FILL_X|LAYOUT_RIGHT);
+    new FXButton(validhf,"&Cancel",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(validhf,"&Ok",NULL,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 }
 
 disp_t *dispers_chooser::get_dispersion()
@@ -132,7 +134,6 @@ dispers_chooser::on_cmd_category(FXObject *, FXSelector, void *)
 {
     int cat = catlist->getCurrentItem();
     choose_switcher->setCurrent(cat);
-    fprintf(stderr, ">> command %d\n", cat);
     return 1;
 }
 
@@ -155,7 +156,7 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
             dispwin = new FXLabel(vframe, "Choose a dispersion");
         }
         dispwin->create();
-        dispwin->reparent(vframe, validhf);
+        dispwin->reparent(vframe, dispwin_anchor);
     }
     return 1;
 }

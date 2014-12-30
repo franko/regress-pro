@@ -39,8 +39,8 @@ private:
     FXList *catlist;
     FXSwitcher *choose_switcher;
     FXVerticalFrame *vframe;
-    FXComposite *validhf;
     FXWindow *dispwin;
+    FXWindow *dispwin_anchor;
     dispers_selector *dispers_selectors[4];
     disp_t *current_disp;
 };
