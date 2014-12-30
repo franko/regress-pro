@@ -135,6 +135,16 @@ disp_add_ho(struct disp_struct *d)
     ho->nb_hos = n + 1;
 }
 
+void
+disp_delete_ho(struct disp_struct *d, int index)
+{
+    struct disp_ho *ho = &d->disp.ho;
+    int n = ho->nb_hos;
+    int nrem = n - index - 1;
+    memcpy(ho->params + index, ho->params + index + 1, sizeof(struct ho_params) * nrem);
+    ho->nb_hos = n - 1;
+}
+
 cmpl
 ho_n_value(const disp_t *disp, double lam)
 {

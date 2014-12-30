@@ -47,6 +47,7 @@ extern struct disp_class ho_disp_class;
 extern struct disp_struct * disp_new_ho(const char *name, int nb_hos,
                                         struct ho_params *params);
 extern void disp_add_ho(struct disp_struct *d);
+extern void disp_delete_ho(struct disp_struct *d, int index);
 
 __END_DECLS
 
