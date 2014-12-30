@@ -117,6 +117,24 @@ ho_copy(const disp_t *src)
     return res;
 }
 
+void
+disp_add_ho(struct disp_struct *d)
+{
+    struct disp_ho *ho = &d->disp.ho;
+    int n = ho->nb_hos;
+    struct ho_params *params = emalloc(sizeof(struct ho_params) * (n + 1));
+    memcpy(params, ho->params, sizeof(struct ho_params) * n);
+    params[n].nosc = 0.0;
+    params[n].en = 15.7;
+    params[n].eg = 0.3;
+    params[n].nu = 1.0 / 3.0;
+    params[n].phi = 0.0;
+
+    free(ho->params);
+    ho->params = params;
+    ho->nb_hos = n + 1;
+}
+
 cmpl
 ho_n_value(const disp_t *disp, double lam)
 {
