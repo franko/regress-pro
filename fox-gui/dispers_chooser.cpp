@@ -153,7 +153,7 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
         } else if (current_disp->type == DISP_CAUCHY) {
             dispwin = new fx_disp_cauchy_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
         } else {
-            dispwin = new FXLabel(vframe, "Choose a dispersion");
+            dispwin = new fx_disp_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);;
         }
         dispwin->create();
         dispwin->reparent(vframe, dispwin_anchor);

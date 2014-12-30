@@ -2,12 +2,34 @@
 #include "disp-ho.h"
 
 // Map
+FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
+    FXMAPFUNC(SEL_CHANGED, fx_disp_window::ID_NAME, fx_disp_window::on_changed_name),
+};
+
+FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
+
+fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts)
+: FXVerticalFrame(p, opts), disp(d)
+{
+    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
+    new FXLabel(namehf, "Name");
+    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
+    tf->setText(CSTR(disp->name));
+}
+
+long
+fx_disp_window::on_changed_name(FXObject *, FXSelector, void *text)
+{
+    str_copy_c(disp->name, (FXchar *) text);
+    return 1;
+}
+
+// Map
 FXDEFMAP(fx_disp_ho_window) fx_disp_ho_window_map[]= {
-    FXMAPFUNC(SEL_CHANGED, fx_disp_ho_window::ID_NAME, fx_disp_ho_window::on_changed_name),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_0 + 5*16, fx_disp_ho_window::on_cmd_value),
 };
 
-FXIMPLEMENT(fx_disp_ho_window,FXVerticalFrame,fx_disp_ho_window_map,ARRAYNUMBER(fx_disp_ho_window_map));
+FXIMPLEMENT(fx_disp_ho_window,fx_disp_window,fx_disp_ho_window_map,ARRAYNUMBER(fx_disp_ho_window_map));
 
 static fx_numeric_field *create_textfield(FXComposite *frame, FXObject *target, FXSelector id, double value)
 {
@@ -18,15 +40,9 @@ static fx_numeric_field *create_textfield(FXComposite *frame, FXObject *target, 
     return tf;
 }
 
-
 fx_disp_ho_window::fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts)
-    : FXVerticalFrame(p, opts), m_disp(d)
+    : fx_disp_window(d, p, opts)
 {
-    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
-    new FXLabel(namehf, "Name");
-    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
-    tf->setText(CSTR(m_disp->name));
-
     FXMatrix *matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "#");
     new FXLabel(matrix, "Nosc");
@@ -35,13 +51,13 @@ fx_disp_ho_window::fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts)
     new FXLabel(matrix, "Nu");
     new FXLabel(matrix, "Phi");
 
-    field = new fx_numeric_field*[m_disp->disp.ho.nb_hos * 5];
+    field = new fx_numeric_field*[disp->disp.ho.nb_hos * 5];
 
-    char nbstr[32];
-    for (int i = 0; i < m_disp->disp.ho.nb_hos; i++) {
-        struct ho_params *ho = m_disp->disp.ho.params + i;
+    FXString nbstr;
+    for (int i = 0; i < disp->disp.ho.nb_hos; i++) {
+        struct ho_params *ho = disp->disp.ho.params + i;
         int k = 5*i;
-        sprintf(nbstr, "%d", i + 1);
+        nbstr.format("%d", i + 1);
         new FXLabel(matrix, nbstr);
         field[k+0] = create_textfield(matrix, this, ID_PARAM_0 + k+0, ho->nosc);
         field[k+1] = create_textfield(matrix, this, ID_PARAM_0 + k+1, ho->en);
@@ -63,7 +79,7 @@ fx_disp_ho_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
     int i = index / 5, j = index % 5;
     FXchar* vstr = (FXchar*)data;
     double val = strtod(vstr, NULL);
-    struct ho_params *ho = m_disp->disp.ho.params + i;
+    struct ho_params *ho = disp->disp.ho.params + i;
     switch (j) {
         case 0: ho->nosc = val; break;
         case 1: ho->en   = val; break;
@@ -76,52 +92,27 @@ fx_disp_ho_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
     return 1;
 }
 
-long
-fx_disp_ho_window::on_changed_name(FXObject *, FXSelector, void *__text)
-{
-    FXchar *text = (FXchar *) __text;
-    str_copy_c(m_disp->name, text);
-    return 1;
-}
-
 // Map
 FXDEFMAP(fx_disp_cauchy_window) fx_disp_cauchy_window_map[]= {
-    FXMAPFUNC(SEL_CHANGED, fx_disp_cauchy_window::ID_NAME, fx_disp_cauchy_window::on_changed_name),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_cauchy_window::ID_PARAM_0, fx_disp_cauchy_window::ID_PARAM_0 + 5, fx_disp_cauchy_window::on_cmd_value),
 };
 
-FXIMPLEMENT(fx_disp_cauchy_window,FXVerticalFrame,fx_disp_cauchy_window_map,ARRAYNUMBER(fx_disp_cauchy_window_map));
+FXIMPLEMENT(fx_disp_cauchy_window,fx_disp_window,fx_disp_cauchy_window_map,ARRAYNUMBER(fx_disp_cauchy_window_map));
 
 fx_disp_cauchy_window::fx_disp_cauchy_window(disp_t *d, FXComposite* p, FXuint opts)
-    : FXVerticalFrame(p, opts), m_disp(d)
+    : fx_disp_window(d, p, opts)
 {
-    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
-    new FXLabel(namehf, "Name");
-    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
-    tf->setText(CSTR(m_disp->name));
-
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "N");
     new FXLabel(matrix, "K");
 
-    disp_cauchy *cauchy = &m_disp->disp.cauchy;
-    n0 = create_textfield(matrix, this, ID_PARAM_0 + 0, cauchy->n[0]);
-    n1 = create_textfield(matrix, this, ID_PARAM_0 + 1, cauchy->n[1]);
-    n2 = create_textfield(matrix, this, ID_PARAM_0 + 2, cauchy->n[2]);
-    k0 = create_textfield(matrix, this, ID_PARAM_0 + 3, cauchy->k[0]);
-    k1 = create_textfield(matrix, this, ID_PARAM_0 + 4, cauchy->k[1]);
-    k2 = create_textfield(matrix, this, ID_PARAM_0 + 5, cauchy->k[2]);
-}
-
-fx_disp_cauchy_window::~fx_disp_cauchy_window()
-{ }
-
-long
-fx_disp_cauchy_window::on_changed_name(FXObject *, FXSelector, void *__text)
-{
-    FXchar *text = (FXchar *) __text;
-    str_copy_c(m_disp->name, text);
-    return 1;
+    disp_cauchy *cauchy = &disp->disp.cauchy;
+    create_textfield(matrix, this, ID_PARAM_0 + 0, cauchy->n[0]);
+    create_textfield(matrix, this, ID_PARAM_0 + 1, cauchy->n[1]);
+    create_textfield(matrix, this, ID_PARAM_0 + 2, cauchy->n[2]);
+    create_textfield(matrix, this, ID_PARAM_0 + 3, cauchy->k[0]);
+    create_textfield(matrix, this, ID_PARAM_0 + 4, cauchy->k[1]);
+    create_textfield(matrix, this, ID_PARAM_0 + 5, cauchy->k[2]);
 }
 
 long
@@ -130,7 +121,7 @@ fx_disp_cauchy_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
     FXint index = FXSELID(sel) - ID_PARAM_0;
     FXchar* vstr = (FXchar*)data;
     double val = strtod(vstr, NULL);
-    disp_cauchy *c = &m_disp->disp.cauchy;
+    disp_cauchy *c = &disp->disp.cauchy;
     if (index < 3) {
         c->n[index] = val;
     } else {
