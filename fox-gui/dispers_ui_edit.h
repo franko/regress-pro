@@ -19,20 +19,25 @@ public:
     fx_disp_window(disp_t *d, FXComposite* p, FXuint opts=0);
     ~fx_disp_window();
 
+    void setup_name();
+
     virtual void create();
-    virtual void setup_dialog() { }
+    virtual void setup_dialog() { setup_name(); }
     virtual void add_dispersion_element() {}
+    virtual void delete_dispersion_element(int index) {}
     virtual double *map_parameter(int index) { return 0; }
 
     long on_cmd_value(FXObject*, FXSelector, void *);
     long on_changed_name(FXObject*, FXSelector, void *);
     long on_disp_element_add(FXObject*, FXSelector, void *);
+    long on_disp_element_delete(FXObject*, FXSelector, void *);
 
     enum {
         ID_NAME = FXVerticalFrame::ID_LAST,
         ID_PARAM_0,
         ID_PARAM_LAST = ID_PARAM_0 + 5 * 16,
         ID_DISP_ELEMENT_DELETE,
+        ID_DISP_ELEMENT_DELETE_LAST = ID_DISP_ELEMENT_DELETE + 16,
         ID_DISP_ELEMENT_ADD,
         ID_LAST
     };
@@ -49,6 +54,7 @@ public:
     fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts=0): fx_disp_window(d, p, opts) { }
     virtual void setup_dialog();
     virtual void add_dispersion_element();
+    virtual void delete_dispersion_element(int index);
     virtual double *map_parameter(int index);
 private:
     FXMatrix *matrix;

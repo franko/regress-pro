@@ -6,7 +6,8 @@
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNC(SEL_CHANGED, fx_disp_window::ID_NAME, fx_disp_window::on_changed_name),
     FXMAPFUNC(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_ADD, fx_disp_window::on_disp_element_add),
-    FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_0 + 5*16, fx_disp_ho_window::on_cmd_value),
+    FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
+    FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
 };
 
 FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
@@ -14,15 +15,18 @@ FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_dis
 fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts)
 : FXVerticalFrame(p, opts), disp(d)
 {
-    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
-    new FXLabel(namehf, "Name");
-    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
-    tf->setText(CSTR(disp->name));
-
     delete_icon = new FXGIFIcon(getApp(), delete_gif);
     add_icon = new FXGIFIcon(getApp(), new_gif);
 }
 
+void
+fx_disp_window::setup_name()
+{
+    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
+    new FXLabel(namehf, "Name");
+    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
+    tf->setText(CSTR(disp->name));
+}
 
 fx_disp_window::~fx_disp_window()
 {
@@ -59,6 +63,14 @@ fx_disp_window::on_disp_element_add(FXObject*, FXSelector, void *)
     return 1;
 }
 
+long
+fx_disp_window::on_disp_element_delete(FXObject*, FXSelector sel, void *)
+{
+    int index = FXSELID(sel) - ID_DISP_ELEMENT_DELETE;
+    this->delete_dispersion_element(index);
+    return 1;
+}
+
 static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *target, FXSelector id)
 {
     fx_numeric_field *tf = new fx_numeric_field(frame, 10, target, id, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
@@ -71,6 +83,8 @@ static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *ta
 
 void fx_disp_ho_window::setup_dialog()
 {
+    setup_name();
+
     matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
     new FXLabel(matrix, "Nosc");
@@ -80,7 +94,8 @@ void fx_disp_ho_window::setup_dialog()
     new FXLabel(matrix, "Phi");
 
     for (int i = 0; i < disp->disp.ho.nb_hos; i++) {
-        new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE);
+        FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + i);
+        if (disp->disp.ho.nb_hos == 1) { db->disable(); }
         for (int j = 5*i; j < 5*(i+1); j++) {
             create_textfield(matrix, this, ID_PARAM_0 + j);
         }
@@ -108,17 +123,29 @@ void fx_disp_ho_window::add_dispersion_element()
 {
     int n = disp->disp.ho.nb_hos;
     disp_add_ho(disp);
-    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE);
+    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n);
     db->create();
     for (int j = 5*n; j < 5*(n+1); j++) {
         FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j);
         tf->create();
     }
+    matrix->childAtRowCol(1, 0)->enable();
     this->recalc();
+}
+
+void fx_disp_ho_window::delete_dispersion_element(int index)
+{
+    disp_delete_ho(disp, index);
+    for (FXWindow *w = this->getFirst(); w; w = this->getFirst()) {
+        delete w;
+    }
+    this->create();
 }
 
 void fx_disp_cauchy_window::setup_dialog()
 {
+    setup_name();
+
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "N");
     new FXLabel(matrix, "K");
