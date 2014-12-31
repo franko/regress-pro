@@ -84,18 +84,20 @@ new_model_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXCompos
 }
 
 dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Film Stack", opts, 0, 0, 500, 400, pl, pr, pt, pb, hs, vs),
+    : FXDialogBox(a, "Film Stack", opts, 0, 0, 600, 400, pl, pr, pt, pb, hs, vs),
     current_disp(0)
 {
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    catlist = new FXList(hf, this, ID_CATEGORY, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FIX_WIDTH, 0, 0, 140, 400);
+    FXSpring *listspring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 16, 0);
+    catlist = new FXList(listspring, this, ID_CATEGORY, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
     catlist->appendItem("Library", NULL, NULL, TRUE);
     catlist->appendItem("Choose File", NULL, NULL, TRUE);
     catlist->appendItem("New Model", NULL, NULL, TRUE);
     catlist->appendItem("User List", NULL, NULL, TRUE);
 
-    vframe = new FXVerticalFrame(hf,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|LAYOUT_FIX_HEIGHT|FRAME_THICK|FRAME_RAISED, 0, 0, 500, 80);
+    FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 84, 0);
+    vframe = new FXVerticalFrame(vframespring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|FRAME_GROOVE);
     new_library_chooser(this, this->dispers_selectors + 0, choose_switcher);
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     this->dispers_selectors[1] = NULL;
@@ -103,13 +105,16 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     this->dispers_selectors[3] = NULL;
 
-    FXHorizontalFrame *labfr = new FXHorizontalFrame(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
-    dispwin = new FXLabel(labfr, "Choose a dispersion");
+    FXHorizontalFrame *labfr = new FXHorizontalFrame(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    new FXLabel(labfr, "Choose a dispersion", NULL, LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
 
-    dispwin_anchor = new FXHorizontalSeparator(vframe,SEPARATOR_GROOVE|LAYOUT_FILL_X);
-    FXHorizontalFrame *validhf = new FXHorizontalFrame(vframe,LAYOUT_FILL_X|LAYOUT_RIGHT);
+    FXHorizontalSeparator *hsep = new FXHorizontalSeparator(vframe,SEPARATOR_GROOVE|LAYOUT_FILL_X);
+    FXHorizontalFrame *validhf = new FXHorizontalFrame(vframe,LAYOUT_FILL_X);
     new FXButton(validhf,"&Cancel",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
     new FXButton(validhf,"&Ok",NULL,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+
+    dispwin = labfr;
+    dispwin_anchor = hsep;
 }
 
 disp_t *dispers_chooser::get_dispersion()
@@ -149,11 +154,11 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
         current_disp = dispers_select->get();
         delete dispwin;
         if (current_disp->type == DISP_HO) {
-            dispwin = new fx_disp_ho_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+            dispwin = new fx_disp_ho_window(current_disp, vframe);
         } else if (current_disp->type == DISP_CAUCHY) {
-            dispwin = new fx_disp_cauchy_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+            dispwin = new fx_disp_cauchy_window(current_disp, vframe);
         } else {
-            dispwin = new fx_disp_window(current_disp, vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y);;
+            dispwin = new fx_disp_window(current_disp, vframe);;
         }
         dispwin->create();
         dispwin->reparent(vframe, dispwin_anchor);

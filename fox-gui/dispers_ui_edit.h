@@ -16,7 +16,7 @@ private:
     fx_disp_window &operator=(const fx_disp_window&);
 
 public:
-    fx_disp_window(disp_t *d, FXComposite* p, FXuint opts=0);
+    fx_disp_window(disp_t *d, FXComposite* p, FXuint opts=LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
     ~fx_disp_window();
 
     void setup_name();
@@ -51,7 +51,7 @@ protected:
 
 class fx_disp_ho_window : public fx_disp_window {
 public:
-    fx_disp_ho_window(disp_t *d, FXComposite* p, FXuint opts=0): fx_disp_window(d, p, opts) { }
+    fx_disp_ho_window(disp_t *d, FXComposite* p): fx_disp_window(d, p) { }
     virtual void setup_dialog();
     virtual void add_dispersion_element();
     virtual void delete_dispersion_element(int index);
@@ -62,7 +62,7 @@ private:
 
 class fx_disp_cauchy_window : public fx_disp_window {
 public:
-    fx_disp_cauchy_window(disp_t *d, FXComposite* p, FXuint opts=0): fx_disp_window(d, p, opts) { }
+    fx_disp_cauchy_window(disp_t *d, FXComposite* p): fx_disp_window(d, p) { }
     virtual void setup_dialog();
     virtual double *map_parameter(int index);
 };

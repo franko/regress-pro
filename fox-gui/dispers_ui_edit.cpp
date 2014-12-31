@@ -23,8 +23,8 @@ void
 fx_disp_window::setup_name()
 {
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
-    new FXLabel(namehf, "Name");
-    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, LAYOUT_FILL_X);
+    new FXLabel(namehf, "Name ");
+    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
     tf->setText(CSTR(disp->name));
 }
 
