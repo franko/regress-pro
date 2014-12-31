@@ -18,22 +18,26 @@ stack_init(stack_t *s)
     stack_init_raw(s, 8);
 }
 
+static void
+ensure_size(stack_t *s, int req_size)
+{
+    if((size_t)req_size > s->nb_alloc)
+    {
+        size_t nsz;
+        s->nb_alloc *= 2;
+        nsz = s->nb_alloc;
+        s->disp = erealloc(s->disp, nsz * sizeof(void *));
+        /* For thicknesses we allocate more space of what is actually needed. */
+        s->thickness = erealloc(s->thickness,  nsz * sizeof(double));
+    }
+}
+
 void
 stack_add_layer(stack_t *s, disp_t *lyr, double th)
 {
     size_t idx;
 
-    if((size_t)s->nb >= s->nb_alloc) {
-        size_t nsz;
-
-        s->nb_alloc *= 2;
-        nsz = s->nb_alloc;
-
-        s->disp = erealloc(s->disp, nsz * sizeof(void *));
-
-        /* For thicknesses we allocate more space of what is actually needed. */
-        s->thickness = erealloc(s->thickness,  nsz * sizeof(double));
-    }
+    ensure_size(s, s->nb + 1);
 
     idx = s->nb;
 
@@ -43,6 +47,33 @@ stack_add_layer(stack_t *s, disp_t *lyr, double th)
     }
 
     s->nb ++;
+}
+
+void
+stack_insert_layer(stack_t *s, int pos, disp_t *lyr, double th)
+{
+    ensure_size(s, s->nb + 1);
+    int nrem = s->nb - pos;
+    memcpy(s->disp + pos + 1, s->disp + pos, sizeof(void *) * nrem);
+    int lpos = pos > 0 ? pos - 1 : 0;
+    memcpy(s->thickness + lpos + 1, s->thickness + lpos, sizeof(double) * nrem);
+    s->disp[pos] = lyr;
+    if (pos > 0) {
+        s->thickness[pos - 1] = th;
+    } else {
+        s->thickness[0] = 0.0;
+    }
+    s->nb++;
+}
+
+void
+stack_delete_layer(stack_t *s, int pos)
+{
+    int nrem = s->nb - pos - 1;
+    memcpy(s->disp + pos, s->disp + pos + 1, sizeof(void *) * nrem);
+    int lpos = pos > 0 ? pos - 1 : 0;
+    memcpy(s->thickness + lpos, s->thickness + lpos + 1, sizeof(double) * nrem);
+    s->nb--;
 }
 
 stack_t *

@@ -22,6 +22,8 @@ extern stack_t *stack_copy(stack_t *s);
 extern void     stack_init(stack_t *s);
 extern void     stack_init_raw(stack_t *s, size_t nb_init);
 extern void     stack_add_layer(stack_t *s, disp_t *lyr, double th);
+extern void     stack_insert_layer(stack_t *s, int pos, disp_t *lyr, double th);
+extern void     stack_delete_layer(stack_t *s, int pos);
 extern const
 double *        stack_get_ths_list(const stack_t *s);
 extern void     stack_get_ns_list(stack_t *s, cmpl *ns, double lambda);
