@@ -7,20 +7,28 @@ class library_dispers_selector : public dispers_selector {
 public:
     library_dispers_selector(FXComboBox *c): combo(c) {}
     virtual disp_t *get();
+    virtual void reset();
     FXComboBox *combo;
 };
 
 disp_t *library_dispers_selector::get()
 {
     FXString name = this->combo->getText();
+    if (name[0] == '-') return NULL;
     disp_t *d = dispers_library_search(name.text());
     return d;
+}
+
+void library_dispers_selector::reset()
+{
+    combo->setCurrentItem(0);
 }
 
 class new_dispers_selector : public dispers_selector {
 public:
     new_dispers_selector(FXComboBox *c): combo(c) {}
     virtual disp_t *get();
+    virtual void reset();
     FXComboBox *combo;
 };
 
@@ -36,6 +44,11 @@ disp_t *new_dispers_selector::get()
         return disp_new_cauchy("*cauchy", n, k);
     }
     return NULL;
+}
+
+void new_dispers_selector::reset()
+{
+    combo->setCurrentItem(0);
 }
 
 // Map
@@ -57,7 +70,8 @@ new_library_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXComp
     int nb_disp = disp_iter.length();
 
     FXComboBox *combo = new FXComboBox(hf, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
-    combo->setNumVisible(nb_disp);
+    combo->setNumVisible(nb_disp + 1);
+    combo->appendItem("- choose a dispersion");
     for(const char *nm = disp_iter.start(); nm; nm = disp_iter.next()) {
         combo->appendItem(nm);
     }
@@ -74,7 +88,8 @@ new_model_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXCompos
     new FXLabel(hf, "New Model");
 
     FXComboBox *combo = new FXComboBox(hf, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
-    combo->setNumVisible(2);
+    combo->setNumVisible(3);
+    combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy Model");
 
@@ -105,15 +120,14 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     new FXHorizontalFrame(choose_switcher, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     this->dispers_selectors[3] = NULL;
 
-    FXHorizontalFrame *labfr = new FXHorizontalFrame(vframe, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
-    new FXLabel(labfr, "Choose a dispersion", NULL, LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
+    dispwin = new_dispwin_dummy(vframe);
+    dispwin_dummy = dispwin;
 
     FXHorizontalSeparator *hsep = new FXHorizontalSeparator(vframe,SEPARATOR_GROOVE|LAYOUT_FILL_X);
     FXHorizontalFrame *validhf = new FXHorizontalFrame(vframe,LAYOUT_FILL_X);
     new FXButton(validhf,"&Cancel",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
     new FXButton(validhf,"&Ok",NULL,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 
-    dispwin = labfr;
     dispwin_anchor = hsep;
 }
 
@@ -134,11 +148,42 @@ dispers_chooser::~dispers_chooser()
     }
 }
 
+void
+dispers_chooser::replace_dispwin(FXWindow *new_dispwin)
+{
+    delete dispwin;
+    dispwin = new_dispwin;
+    dispwin->create();
+    dispwin->reparent(vframe, dispwin_anchor);
+}
+
+FXWindow *
+dispers_chooser::new_dispwin_dummy(FXComposite *frame)
+{
+    FXHorizontalFrame *labfr = new FXHorizontalFrame(frame, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    new FXLabel(labfr, "Choose a dispersion", NULL, LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
+    dispwin_dummy = labfr;
+    return labfr;
+}
+
+void
+dispers_chooser::clear_dispwin()
+{
+    if (dispwin == dispwin_dummy) return;
+    replace_dispwin(new_dispwin_dummy(vframe));
+}
+
 long
 dispers_chooser::on_cmd_category(FXObject *, FXSelector, void *)
 {
     int cat = catlist->getCurrentItem();
     choose_switcher->setCurrent(cat);
+    dispers_selector *dispers_select = dispers_selectors[cat];
+    if (dispers_select) {
+        dispers_select->reset();
+    }
+    release_current_disp();
+    clear_dispwin();
     return 1;
 }
 
@@ -148,20 +193,19 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
     int cat = catlist->getCurrentItem();
     dispers_selector *dispers_select = dispers_selectors[cat];
     if (dispers_select) {
-        if (current_disp) {
-            disp_free(current_disp);
-        }
-        current_disp = dispers_select->get();
-        delete dispwin;
+        disp_t *new_disp = dispers_select->get();
+        if (!new_disp) return 0;
+        release_current_disp();
+        current_disp = new_disp;
+        FXWindow *new_dispwin;
         if (current_disp->type == DISP_HO) {
-            dispwin = new fx_disp_ho_window(current_disp, vframe);
+            new_dispwin = new fx_disp_ho_window(current_disp, vframe);
         } else if (current_disp->type == DISP_CAUCHY) {
-            dispwin = new fx_disp_cauchy_window(current_disp, vframe);
+            new_dispwin = new fx_disp_cauchy_window(current_disp, vframe);
         } else {
-            dispwin = new fx_disp_window(current_disp, vframe);;
+            new_dispwin = new fx_disp_window(current_disp, vframe);;
         }
-        dispwin->create();
-        dispwin->reparent(vframe, dispwin_anchor);
+        replace_dispwin(new_dispwin);
     }
     return 1;
 }

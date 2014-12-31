@@ -9,6 +9,7 @@ class dispers_selector {
 public:
     virtual ~dispers_selector() {};
     virtual disp_t *get() = 0;
+    virtual void reset() = 0;
 };
 
 class dispers_chooser : public FXDialogBox {
@@ -36,11 +37,23 @@ public:
     };
 
 private:
+    void clear_dispwin();
+    void replace_dispwin(FXWindow *new_dispwin);
+    FXWindow *new_dispwin_dummy(FXComposite *frame);
+
+    void release_current_disp()
+    {
+        if (current_disp) {
+            disp_free(current_disp);
+        }
+        current_disp = NULL;
+    }
+
     FXList *catlist;
     FXSwitcher *choose_switcher;
     FXVerticalFrame *vframe;
     FXWindow *dispwin;
-    FXWindow *dispwin_anchor;
+    FXWindow *dispwin_anchor, *dispwin_dummy;
     dispers_selector *dispers_selectors[4];
     disp_t *current_disp;
 };
