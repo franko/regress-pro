@@ -3,6 +3,8 @@
 
 #include <fx.h>
 
+#include "stack.h"
+
 class filmstack_window : public FXDialogBox {
     FXDECLARE(filmstack_window)
 
@@ -20,20 +22,31 @@ public:
 
 private:
     FXMenuPane *popupmenu;
-    FXVerticalFrame *layersframe;
+    // FXVerticalFrame *layersframe;
     int current_layer;
 
 public:
-    long on_stack_right_mouse(FXObject*,FXSelector,void* ptr);
+    long on_cmd_film_menu(FXObject*,FXSelector,void* ptr);
     long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
     long on_cmd_delete_layer(FXObject*,FXSelector,void* ptr);
 
     enum {
-        ID_STACK = FXDialogBox::ID_LAST,
+        ID_FILM_MENU = FXDialogBox::ID_LAST,
+        ID_FILM_MENU_LAST = ID_FILM_MENU + 64,
+        ID_FILM_NAME,
+        ID_FILM_NAME_LAST = ID_FILM_NAME + 64,
+        ID_FILM_THICKNESS,
+        ID_FILM_THICKNESS_LAST = ID_FILM_THICKNESS + 64,
         ID_DELETE_LAYER,
         ID_INSERT_LAYER,
         ID_LAST
     };
+
+private:
+    FXMatrix *setup_stack_window(FXComposite *);
+
+    FXMatrix *matrix;
+    stack_t *stack;
 };
 
 #endif
