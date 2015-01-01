@@ -29,6 +29,8 @@ public:
     long on_cmd_film_menu(FXObject*,FXSelector,void* ptr);
     long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
     long on_cmd_delete_layer(FXObject*,FXSelector,void* ptr);
+    long on_change_name(FXObject*,FXSelector,void* ptr);
+    long on_change_thickness(FXObject*,FXSelector,void* ptr);
 
     enum {
         ID_FILM_MENU = FXDialogBox::ID_LAST,
@@ -43,9 +45,9 @@ public:
     };
 
 private:
-    FXMatrix *setup_stack_window(FXComposite *);
+    FXWindow *setup_stack_window(FXComposite *);
 
-    FXMatrix *matrix;
+    FXWindow *stack_window;
     stack_t *stack;
 };
 

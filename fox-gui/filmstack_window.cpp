@@ -8,6 +8,8 @@ static stack_t *init_stack();
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNCS(SEL_LEFTBUTTONPRESS, filmstack_window::ID_FILM_MENU, filmstack_window::ID_FILM_MENU_LAST, filmstack_window::on_cmd_film_menu),
+    FXMAPFUNCS(SEL_CHANGED, filmstack_window::ID_FILM_NAME, filmstack_window::ID_FILM_NAME_LAST, filmstack_window::on_change_name),
+    FXMAPFUNCS(SEL_CHANGED, filmstack_window::ID_FILM_THICKNESS, filmstack_window::ID_FILM_THICKNESS_LAST, filmstack_window::on_change_thickness),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_INSERT_LAYER, filmstack_window::on_cmd_insert_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE_LAYER, filmstack_window::on_cmd_delete_layer),
 };
@@ -15,10 +17,10 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
 
 filmstack_window::filmstack_window(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Film Stack", opts, 0, 0, 300, 200, pl, pr, pt, pb, hs, vs)
+    : FXDialogBox(a, "Film Stack", opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs)
 {
     stack = init_stack();
-    matrix = setup_stack_window(this);
+    stack_window = setup_stack_window(this);
 
     popupmenu = new FXMenuPane(this);
     new FXMenuCommand(popupmenu,"Delete Layer", NULL, this, ID_DELETE_LAYER);
@@ -29,18 +31,18 @@ filmstack_window::~filmstack_window()
 {
     delete popupmenu;
     stack_free(stack);
-    free(stack);
 }
 
-FXMatrix *
+FXWindow *
 filmstack_window::setup_stack_window(FXComposite *cont)
 {
-    FXMatrix *matrix = new FXMatrix(cont, 3, LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_SIDE_BOTTOM|MATRIX_BY_COLUMNS);
+    FXVerticalFrame *vf = new FXVerticalFrame(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXMatrix *matrix = new FXMatrix(vf, 3, LAYOUT_FILL_X|LAYOUT_BOTTOM|MATRIX_BY_COLUMNS);
     FXString nstr;
     for (int i = stack->nb - 1; i >= 0; i--) {
         nstr.format("%d", i);
         new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i);
-        FXTextField *filmtf = new FXTextField(matrix, 30, this, ID_FILM_NAME + i, FRAME_SUNKEN);
+        FXTextField *filmtf = new FXTextField(matrix, 24, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
         FXTextField *thktf = new FXTextField(matrix, 6, this, ID_FILM_THICKNESS + i, FRAME_SUNKEN);
         filmtf->setText(CSTR(stack->disp[i]->name));
         if (i > 0) {
@@ -50,7 +52,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
         }
         thktf->setText(nstr);
     }
-    return matrix;
+    return vf;
 }
 
 void filmstack_window::create()
@@ -78,19 +80,39 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
     if (chooser->execute() == TRUE) {
         disp_t *d = chooser->get_dispersion();
         if (!d) return 0;
-        stack_insert_layer(stack, current_layer, d, 0.0);
-        delete matrix;
-        matrix = setup_stack_window(this);
-        matrix->create();
+        stack_insert_layer(stack, current_layer + 1, d, 0.0);
+        delete stack_window;
+        stack_window = setup_stack_window(this);
+        stack_window->create();
         return 1;
     }
     return 0;
 }
 
 long
-filmstack_window::on_cmd_delete_layer(FXObject*,FXSelector,void*)
+filmstack_window::on_cmd_delete_layer(FXObject*, FXSelector, void*)
 {
-    // To be implemented.
+    stack_delete_layer(stack, current_layer);
+    delete stack_window;
+    stack_window = setup_stack_window(this);
+    stack_window->create();
+    return 1;
+}
+
+long
+filmstack_window::on_change_name(FXObject*, FXSelector sel, void *data)
+{
+    int index = FXSELID(sel) - ID_FILM_NAME;
+    str_copy_c(stack->disp[index]->name, (FXchar *)data);
+    return 1;
+}
+
+long
+filmstack_window::on_change_thickness(FXObject*, FXSelector sel, void *data)
+{
+    int index = FXSELID(sel) - ID_FILM_THICKNESS;
+    double x = strtod((FXchar *)data, NULL);
+    stack->thickness[index - 1] = x;
     return 1;
 }
 
