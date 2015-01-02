@@ -70,6 +70,7 @@ void
 stack_delete_layer(stack_t *s, int pos)
 {
     int nrem = s->nb - pos - 1;
+    disp_free(s->disp[pos]);
     memcpy(s->disp + pos, s->disp + pos + 1, sizeof(void *) * nrem);
     int lpos = pos > 0 ? pos - 1 : 0;
     memcpy(s->thickness + lpos, s->thickness + lpos + 1, sizeof(double) * nrem);
