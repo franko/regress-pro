@@ -12,6 +12,7 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNCS(SEL_CHANGED, filmstack_window::ID_FILM_THICKNESS, filmstack_window::ID_FILM_THICKNESS_LAST, filmstack_window::on_change_thickness),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_INSERT_LAYER, filmstack_window::on_cmd_insert_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE_LAYER, filmstack_window::on_cmd_delete_layer),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_REPLACE_LAYER, filmstack_window::on_cmd_replace_layer),
 };
 
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
@@ -24,6 +25,7 @@ filmstack_window::filmstack_window(FXApp* a, FXuint opts, FXint pl, FXint pr, FX
 
     popupmenu = new FXMenuPane(this);
     new FXMenuCommand(popupmenu,"Delete Layer", NULL, this, ID_DELETE_LAYER);
+    new FXMenuCommand(popupmenu,"Select New Layer", NULL, this, ID_REPLACE_LAYER);
     new FXMenuCommand(popupmenu,"Insert Layer Above", NULL, this, ID_INSERT_LAYER);
 }
 
@@ -43,14 +45,14 @@ filmstack_window::setup_stack_window(FXComposite *cont)
         nstr.format("%d", i);
         new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i);
         FXTextField *filmtf = new FXTextField(matrix, 24, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
-        FXTextField *thktf = new FXTextField(matrix, 6, this, ID_FILM_THICKNESS + i, FRAME_SUNKEN);
         filmtf->setText(CSTR(stack->disp[i]->name));
-        if (i > 0) {
+        if (i > 0 && i < stack->nb - 1) {
+            FXTextField *thktf = new FXTextField(matrix, 6, this, ID_FILM_THICKNESS + i, FRAME_SUNKEN|TEXTFIELD_REAL);
             nstr.format("%g", stack->thickness[i - 1]);
+            thktf->setText(nstr);
         } else {
-            nstr = "";
+            new FXVerticalFrame(matrix);
         }
-        thktf->setText(nstr);
     }
     return vf;
 }
@@ -73,6 +75,14 @@ filmstack_window::on_cmd_film_menu(FXObject*sender, FXSelector sel, void *ptr)
     return 1;
 }
 
+void
+filmstack_window::rebuild_stack_window()
+{
+    delete stack_window;
+    stack_window = setup_stack_window(this);
+    stack_window->create();
+}
+
 long
 filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
 {
@@ -81,9 +91,22 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
         disp_t *d = chooser->get_dispersion();
         if (!d) return 0;
         stack_insert_layer(stack, current_layer + 1, d, 0.0);
-        delete stack_window;
-        stack_window = setup_stack_window(this);
-        stack_window->create();
+        rebuild_stack_window();
+        return 1;
+    }
+    return 0;
+}
+
+long
+filmstack_window::on_cmd_replace_layer(FXObject*,FXSelector,void*)
+{
+    dispers_chooser *chooser = new dispers_chooser(this->getApp());
+    if (chooser->execute() == TRUE) {
+        disp_t *d = chooser->get_dispersion();
+        if (!d) return 0;
+        disp_free(stack->disp[current_layer]);
+        stack->disp[current_layer] = d;
+        rebuild_stack_window();
         return 1;
     }
     return 0;
@@ -93,9 +116,7 @@ long
 filmstack_window::on_cmd_delete_layer(FXObject*, FXSelector, void*)
 {
     stack_delete_layer(stack, current_layer);
-    delete stack_window;
-    stack_window = setup_stack_window(this);
-    stack_window->create();
+    rebuild_stack_window();
     return 1;
 }
 
