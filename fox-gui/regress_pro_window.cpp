@@ -62,6 +62,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_FILM_STACK, regress_pro_window::onCmdFilmStack),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_EDIT, regress_pro_window::onCmdRecipeEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
@@ -105,12 +106,17 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
     // Script menu
     filemenu=new FXMenuPane(this);
-    new FXMenuCommand(filemenu,"Film Stack",NULL,this,ID_FILM_STACK);
     new FXMenuCommand(filemenu,"&Load",NULL,this,ID_LOAD_SCRIPT);
     new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
     new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
     new FXMenuTitle(menubar,"&Script",NULL,filemenu);
+
+    // Edit menu
+    editmenu = new FXMenuPane(this);
+    new FXMenuCommand(editmenu, "Film Stack", NULL, this, ID_FILM_STACK);
+    new FXMenuCommand(editmenu, "Recipe", NULL, this, ID_RECIPE_EDIT);
+    new FXMenuTitle(menubar, "&Edit", NULL, editmenu);
 
     // Script menu
     spectrmenu = new FXMenuPane(this);
@@ -398,6 +404,7 @@ regress_pro_window::~regress_pro_window()
 {
     delete scriptfont;
     delete filemenu;
+    delete editmenu;
     delete spectrmenu;
     delete dispmenu;
     delete fitmenu;
@@ -645,6 +652,14 @@ long
 regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 {
     filmstack_window *w = new filmstack_window(this->getApp());
+    w->execute();
+    return 1;
+}
+
+long
+regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
+{
+    recipe_window *w = new recipe_window(this->getApp());
     w->execute();
     return 1;
 }

@@ -27,6 +27,7 @@
 
 #include "elliss_app.h"
 #include "plot_canvas.h"
+#include "recipe_window.h"
 #include "spectra.h"
 #include "symtab.h"
 
@@ -47,6 +48,7 @@ protected:
     FXStatusBar       *statusbar;
 
     FXMenuPane        *filemenu;
+    FXMenuPane        *editmenu;
     FXMenuPane        *spectrmenu;
     FXMenuPane        *dispmenu;
     FXMenuPane        *fitmenu;
@@ -75,6 +77,7 @@ public:
     }
 
     long onCmdFilmStack(FXObject*,FXSelector,void*);
+    long onCmdRecipeEdit(FXObject*,FXSelector,void*);
     long onCmdLoadScript(FXObject*,FXSelector,void*);
     long onCmdSaveScript(FXObject*,FXSelector,void*);
     long onCmdSaveAsScript(FXObject*,FXSelector,void *);
@@ -114,6 +117,7 @@ public:
         ID_SCRIPT_TEXT,
         ID_REGISTER,
         ID_FILM_STACK,
+        ID_RECIPE_EDIT,
         ID_LAST
     };
 
