@@ -15,7 +15,6 @@ static struct assign * symbol_table_cell_find(struct symtab *symtab,
         str_ptr name);
 static int             set_config_value_raw(struct symtab *symtab,
         lex_string_t *id, val_t *v);
-static void            config_set_default(struct fit_config *cfg);
 
 
 static char const * const tl_type_name[] = {
@@ -348,18 +347,6 @@ set_config_value(struct symtab *symtab, lex_string_t *id, val_t *v)
     return status;
 }
 
-
-void
-config_set_default(struct fit_config *cfg)
-{
-    cfg->thresold_given = 0;
-    cfg->nb_max_iters = 30;
-    cfg->subsampling = 1;
-    cfg->spectr_range.active = 0;
-    cfg->epsabs = 1.0E-7;
-    cfg->epsrel = 1.0E-7;
-}
-
 int
 parse_strategy(struct symtab *symtab, const char *text)
 {
@@ -375,7 +362,7 @@ parse_strategy(struct symtab *symtab, const char *text)
 
     symbol_table_clean(symtab);
 
-    config_set_default(symtab->config_table);
+    fit_config_set_default(symtab->config_table);
 
     status = yyparse(symtab);
 

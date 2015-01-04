@@ -427,10 +427,28 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 }
 
 struct fit_engine *
+fit_engine_new()
+{
+    struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
+    set_default_extra_param(fit->extra);
+    fit->parameters = NULL;
+    fit->stack = NULL;
+    return fit;
+}
+
+void
+fit_engine_bind(struct fit_engine *fit, stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters)
+{
+    fit->config[0] = *config;
+    /* fit is not the owner of the "parameters", we just keep a reference */
+    fit->parameters = parameters;
+    fit->stack = stack_copy(stack);
+}
+
+struct fit_engine *
 build_fit_engine(struct symtab *symtab, struct seeds **seeds) {
     stack_t *stack;
     struct strategy *strategy;
-    struct fit_engine *fit;
 
     stack    = retrieve_parsed_object(symtab, TL_TYPE_STACK,
                                       symtab->directives->stack);
@@ -448,24 +466,17 @@ build_fit_engine(struct symtab *symtab, struct seeds **seeds) {
 
     *seeds = strategy->seeds;
 
-    fit = emalloc(sizeof(struct fit_engine));
-
-    set_default_extra_param(fit->extra);
-
-    fit->config[0] = symtab->config_table[0];
-
-    /* fit is not the owner of the "parameters", we just keep a reference */
-    fit->parameters = strategy->parameters;
-
-    fit->stack = stack_copy(stack);
-
+    struct fit_engine *fit = fit_engine_new();
+    fit_engine_bind(fit, stack, symtab->config_table, strategy->parameters);
     return fit;
 }
 
 void
 fit_engine_free(struct fit_engine *fit)
 {
-    stack_free(fit->stack);
+    if (fit->stack) {
+        stack_free(fit->stack);
+    }
     free(fit);
 }
 
@@ -499,4 +510,15 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 
     str_free(value);
     str_free(pname);
+}
+
+void
+fit_config_set_default(struct fit_config *cfg)
+{
+    cfg->thresold_given = 0;
+    cfg->nb_max_iters = 30;
+    cfg->subsampling = 1;
+    cfg->spectr_range.active = 0;
+    cfg->epsabs = 1.0E-7;
+    cfg->epsrel = 1.0E-7;
 }

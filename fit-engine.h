@@ -71,6 +71,10 @@ struct fit_engine {
 struct seeds;
 struct symtab;
 
+extern struct fit_engine *fit_engine_new();
+
+extern void fit_engine_bind(struct fit_engine *fit, stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters);
+
 extern void fit_engine_free(struct fit_engine *fit);
 
 extern int  fit_engine_prepare(struct fit_engine *f,
@@ -116,6 +120,9 @@ fit_engine_get_all_parameters(struct fit_engine *fit);
 extern double
 fit_engine_get_parameter_value(const struct fit_engine *fit,
                                const fit_param_t *fp);
+
+extern void
+fit_config_set_default(struct fit_config *cfg);
 
 __END_DECLS
 
