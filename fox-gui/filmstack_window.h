@@ -15,7 +15,7 @@ private:
     filmstack_window &operator=(const filmstack_window&);
 
 public:
-    filmstack_window(FXApp* a, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    filmstack_window(stack_t *s, FXApp* a, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~filmstack_window();
 
     virtual void create();

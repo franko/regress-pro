@@ -30,6 +30,7 @@
 #include "recipe_window.h"
 #include "spectra.h"
 #include "symtab.h"
+#include "fit_recipe.h"
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -38,6 +39,7 @@ protected:
     struct spectrum *spectrum;
     struct stack *stack_result;
     struct symtab symtab[1];
+    fit_recipe *recipe;
 
     FXString scriptFile;
     FXString spectrFile;

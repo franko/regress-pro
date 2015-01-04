@@ -173,6 +173,9 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
     dispers_library_init();
 
+    recipe = new fit_recipe();
+    recipe->setup_default_stack();
+
     m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     m_title_dirty = true;
@@ -409,6 +412,8 @@ regress_pro_window::~regress_pro_window()
     delete dispmenu;
     delete fitmenu;
     delete helpmenu;
+
+    delete recipe;
 
     if(this->spectrum) {
         spectra_free(this->spectrum);
@@ -651,7 +656,7 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 {
-    filmstack_window *w = new filmstack_window(this->getApp());
+    filmstack_window *w = new filmstack_window(recipe->stack, getApp());
     w->execute();
     return 1;
 }
@@ -659,7 +664,7 @@ regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
 {
-    recipe_window *w = new recipe_window(this->getApp());
+    recipe_window *w = new recipe_window(recipe, getApp());
     w->execute();
     return 1;
 }

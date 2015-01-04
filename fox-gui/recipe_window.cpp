@@ -14,8 +14,9 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
 
 FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_window_map));
 
-recipe_window::recipe_window(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs)
+recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXDialogBox(a, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
+    recipe(rcp)
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);

@@ -1,9 +1,5 @@
 #include "filmstack_window.h"
 #include "dispers_chooser.h"
-#include "dispers.h"
-#include "dispers-library.h"
-
-static stack_t *init_stack();
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -17,10 +13,10 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
 
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
 
-filmstack_window::filmstack_window(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Film Stack", opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs)
+filmstack_window::filmstack_window(stack_t *s, FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXDialogBox(a, "Film Stack", opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
+    stack(s)
 {
-    stack = init_stack();
     stack_window = setup_stack_window(this);
 
     popupmenu = new FXMenuPane(this);
@@ -32,7 +28,6 @@ filmstack_window::filmstack_window(FXApp* a, FXuint opts, FXint pl, FXint pr, FX
 filmstack_window::~filmstack_window()
 {
     delete popupmenu;
-    stack_free(stack);
 }
 
 FXWindow *
@@ -135,17 +130,4 @@ filmstack_window::on_change_thickness(FXObject*, FXSelector sel, void *data)
     double x = strtod((FXchar *)data, NULL);
     stack->thickness[index - 1] = x;
     return 1;
-}
-
-stack_t *init_stack()
-{
-    stack_t *s = (stack_t*) emalloc(sizeof(disp_t));
-    stack_init(s);
-    disp_t *si = dispers_library_search("si");
-    disp_t *sio2 = dispers_library_search("sio2");
-    disp_t *vac = dispers_library_search("vacuum");
-    stack_add_layer(s, si, 0.0);
-    stack_add_layer(s, sio2, 10.0);
-    stack_add_layer(s, vac, 0.0);
-    return s;
 }
