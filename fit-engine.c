@@ -310,41 +310,14 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
 
 struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
-    struct stack *stack = fit->stack;
-    int n_layers = stack->nb - 2;
-    int n_params = 1 + n_layers;
-    struct fit_parameters *fps;
     fit_param_t fp[1];
-    int j;
 
-    for(j = 1; j < n_layers + 2; j++) {
-        disp_t *d = stack->disp[j];
-        int np = disp_get_number_of_params(d);
-        n_params += np;
-    }
-
-    fps = fit_parameters_new();
+    struct fit_parameters *fps = fit_parameters_new();
 
     fp->id = PID_FIRSTMUL;
     fit_parameters_add(fps, fp);
 
-    fp->id = PID_THICKNESS;
-    for(j = 1; j < n_layers + 1; j++) {
-        fp->layer_nb = j;
-        fit_parameters_add(fps, fp);
-    }
-
-    fp->id = PID_LAYER_N;
-    for(j = 1; j < n_layers + 2; j++) {
-        disp_t *d = stack->disp[j];
-        int k, np = disp_get_number_of_params(d);
-        fp->layer_nb = j;
-        fp->model_id = disp_get_model_id(d);
-        for(k = 0; k < np; k++) {
-            fp->param_nb = k;
-            fit_parameters_add(fps, fp);
-        }
-    }
+    stack_get_all_parameters(fit->stack, fps);
 
     return fps;
 }

@@ -3,6 +3,7 @@
 
 #include "cmpl.h"
 #include "dispers.h"
+#include "fit-params.h"
 
 __BEGIN_DECLS
 
@@ -27,6 +28,7 @@ extern void     stack_delete_layer(stack_t *s, int pos);
 extern const
 double *        stack_get_ths_list(const stack_t *s);
 extern void     stack_get_ns_list(stack_t *s, cmpl *ns, double lambda);
+extern void     stack_get_all_parameters(stack_t *s, struct fit_parameters *fps);
 
 __END_DECLS
 

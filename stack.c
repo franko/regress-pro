@@ -145,3 +145,29 @@ stack_free(stack_t *s)
     free(s->disp);
     free(s);
 }
+
+void
+stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
+{
+    int n_layers = stack->nb - 2;
+    fit_param_t fp[1];
+    int j;
+
+    fp->id = PID_THICKNESS;
+    for(j = 1; j < n_layers + 1; j++) {
+        fp->layer_nb = j;
+        fit_parameters_add(fps, fp);
+    }
+
+    fp->id = PID_LAYER_N;
+    for(j = 1; j < n_layers + 2; j++) {
+        disp_t *d = stack->disp[j];
+        int k, np = disp_get_number_of_params(d);
+        fp->layer_nb = j;
+        fp->model_id = disp_get_model_id(d);
+        for(k = 0; k < np; k++) {
+            fp->param_nb = k;
+            fit_parameters_add(fps, fp);
+        }
+    }
+}
