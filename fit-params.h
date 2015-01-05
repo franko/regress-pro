@@ -24,6 +24,7 @@ enum disp_model_id {
 enum seed_type_id {
     SEED_SIMPLE,
     SEED_RANGE,
+    SEED_UNDEF,
 };
 
 typedef struct {
