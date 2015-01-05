@@ -72,7 +72,7 @@ extern int      fit_parameters_are_RI_fixed(struct fit_parameters *f);
 extern struct seeds * seed_list_new(void);
 extern void           seed_list_free(struct seeds *s);
 extern void           seed_list_add_simple(struct seeds *s, double v);
-extern void           seed_list_add(struct seeds *s, seed_t *seed);
+extern void           seed_list_add(struct seeds *s, const seed_t *seed);
 
 extern void     set_model_param(fit_param_t *fpres, int lyr,
                                 enum disp_model_id model_id,

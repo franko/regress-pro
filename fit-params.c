@@ -140,7 +140,7 @@ seed_list_add_simple(struct seeds *s, double v)
 }
 
 void
-seed_list_add(struct seeds *s, seed_t *v)
+seed_list_add(struct seeds *s, const seed_t *v)
 {
     size_t idx = s->number;
     ARRAY_CHECK_ALLOC(s, seed_t, idx);
