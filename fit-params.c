@@ -181,3 +181,27 @@ fit_parameters_are_RI_fixed(struct fit_parameters *f)
     return (j >= f->number);
 }
 
+int
+fit_param_compare(const fit_param_t *a, const fit_param_t *b)
+{
+    if (a->id != b->id) return 1;
+    if (a->layer_nb != b->layer_nb) return 1;
+    if (a->id == PID_LAYER_N) {
+        if (a->model_id != b->model_id) return 1;
+        if (a->param_nb != b->param_nb) return 1;
+    }
+    return 0;
+}
+
+int
+fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp)
+{
+    int j;
+    for(j = 0; j < lst->number; j++) {
+        const fit_param_t *lfp = &lst->values[j];
+        if (fit_param_compare(lfp, fp) == 0) {
+            return j;
+        }
+    }
+    return -1;
+}
