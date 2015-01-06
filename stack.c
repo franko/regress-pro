@@ -52,14 +52,18 @@ stack_add_layer(stack_t *s, disp_t *lyr, double th)
 void
 stack_insert_layer(stack_t *s, int pos, disp_t *lyr, double th)
 {
+    int i;
     ensure_size(s, s->nb + 1);
-    int nrem = s->nb - pos;
-    memcpy(s->disp + pos + 1, s->disp + pos, sizeof(void *) * nrem);
-    int lpos = pos > 0 ? pos - 1 : 0;
-    memcpy(s->thickness + lpos + 1, s->thickness + lpos, sizeof(double) * nrem);
+    for (i = s->nb - 1; i >= pos; i--) {
+        s->disp[i + 1] = s->disp[i];
+    }
     s->disp[pos] = lyr;
+    int lpos = pos > 0 ? pos - 1 : 0;
+    for (i = s->nb - 3; i >= lpos; i--) {
+        s->thickness[i+1] = s->thickness[i];
+    }
     if (pos > 0) {
-        s->thickness[pos - 1] = th;
+        s->thickness[pos-1] = th;
     } else {
         s->thickness[0] = 0.0;
     }
@@ -69,11 +73,15 @@ stack_insert_layer(stack_t *s, int pos, disp_t *lyr, double th)
 void
 stack_delete_layer(stack_t *s, int pos)
 {
-    int nrem = s->nb - pos - 1;
+    int i;
     disp_free(s->disp[pos]);
-    memcpy(s->disp + pos, s->disp + pos + 1, sizeof(void *) * nrem);
+    for (i = pos; i + 1 < s->nb; i++) {
+        s->disp[i] = s->disp[i+1];
+    }
     int lpos = pos > 0 ? pos - 1 : 0;
-    memcpy(s->thickness + lpos, s->thickness + lpos + 1, sizeof(double) * nrem);
+    for (i = lpos; i + 1 < s->nb - 2; i++) {
+        s->thickness[i] = s->thickness[i+1];
+    }
     s->nb--;
 }
 
