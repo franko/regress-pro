@@ -21,6 +21,7 @@ public:
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);
+    long on_update_seed(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,
@@ -33,6 +34,8 @@ public:
     };
 
 private:
+    void populate_fit_parameters();
+    const fit_param_t *selected_parameter();
     void set_fit_parameter(const fit_param_t *fp, const seed_t *value);
     void update_seed_value(const fit_param_t *fp);
     void set_seed_fields(const seed_t *s);
@@ -48,10 +51,7 @@ private:
 
     fit_recipe *recipe;
     fit_parameters *param_list;
-    int parameter_index;
-
-    // fit_parameters *fit_params;
-    // seeds *fit_seeds;
+    bool seed_dirty;
 };
 
 #endif
