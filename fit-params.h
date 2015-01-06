@@ -66,6 +66,7 @@ extern void     fit_parameters_free(struct fit_parameters *s);
 extern void     fit_parameters_clear(struct fit_parameters *s);
 extern void     fit_parameters_add(struct fit_parameters *lst,
                                    fit_param_t const * fp);
+extern void     fit_parameters_remove(struct fit_parameters *lst, int index);
 extern int      fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp);
 
 extern int      fit_parameters_are_RI_fixed(struct fit_parameters *f);
@@ -74,6 +75,7 @@ extern struct seeds * seed_list_new(void);
 extern void           seed_list_free(struct seeds *s);
 extern void           seed_list_add_simple(struct seeds *s, double v);
 extern void           seed_list_add(struct seeds *s, const seed_t *seed);
+extern void           seed_list_remove(struct seeds *lst, int index);
 
 extern void     set_model_param(fit_param_t *fpres, int lyr,
                                 enum disp_model_id model_id,

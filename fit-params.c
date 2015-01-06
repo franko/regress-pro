@@ -114,6 +114,16 @@ fit_parameters_add(struct fit_parameters *lst, fit_param_t const * fp)
     lst->number ++;
 }
 
+void
+fit_parameters_remove(struct fit_parameters *lst, int index)
+{
+    size_t i;
+    for (i = index; i + 1 < lst->number; i++) {
+        lst->values[i] = lst->values[i + 1];
+    }
+    lst->number--;
+}
+
 struct seeds *
 seed_list_new(void) {
     return (struct seeds *) ARRAY_NEW(seed_t);
@@ -146,6 +156,16 @@ seed_list_add(struct seeds *s, const seed_t *v)
     ARRAY_CHECK_ALLOC(s, seed_t, idx);
     memcpy(s->values + idx, v, sizeof(seed_t));
     s->number ++;
+}
+
+void
+seed_list_remove(struct seeds *lst, int index)
+{
+    size_t i;
+    for (i = index; i + 1 < lst->number; i++) {
+        lst->values[i] = lst->values[i + 1];
+    }
+    lst->number--;
 }
 
 struct strategy *
