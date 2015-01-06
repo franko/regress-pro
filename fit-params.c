@@ -3,7 +3,7 @@
 #include "fit-params.h"
 #include "dispers.h"
 
-static void get_disp_param_name(fit_param_t *fp, str_ptr buf);
+static void get_disp_param_name(const fit_param_t *fp, str_ptr buf);
 
 
 void
@@ -26,7 +26,7 @@ set_thick_param(fit_param_t *fpres, int lyr)
 }
 
 void
-get_param_name(fit_param_t *fp, str_t name)
+get_param_name(const fit_param_t *fp, str_t name)
 {
     switch(fp->id) {
     case PID_THICKNESS:
@@ -44,7 +44,7 @@ get_param_name(fit_param_t *fp, str_t name)
 }
 
 void
-get_disp_param_name(fit_param_t *fp, str_ptr buf)
+get_disp_param_name(const fit_param_t *fp, str_ptr buf)
 {
     struct disp_class *dclass;
     void *iter;
