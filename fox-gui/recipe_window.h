@@ -22,6 +22,7 @@ public:
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);
     long on_update_seed(FXObject*, FXSelector, void*);
+    long on_keypress_parameter(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,

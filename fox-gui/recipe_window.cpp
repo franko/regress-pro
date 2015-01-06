@@ -1,3 +1,5 @@
+#include <fxkeys.h>
+
 #include "recipe_window.h"
 #include "fit-params.h"
 #include "stack.h"
@@ -8,6 +10,7 @@ static FXString format_fit_parameter(const fit_param_t *fp, const seed_t *value)
 // Map
 FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAM_SELECT, recipe_window::on_cmd_param_select),
+    FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAMETER, recipe_window::on_keypress_parameter),
     FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_cmd_seed),
     FXMAPFUNCS(SEL_UPDATE, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_update_seed),
 };
@@ -204,6 +207,25 @@ recipe_window::on_update_seed(FXObject* sender, FXSelector sel, void *)
         seed_dirty = false;
     }
     return 1;
+}
+
+long
+recipe_window::on_keypress_parameter(FXObject*, FXSelector sel, void *ptr)
+{
+    FXEvent* event=(FXEvent*)ptr;
+    switch(event->code) {
+    case KEY_Delete:
+    {
+        FXint index = fit_list->getCurrentItem();
+        fit_list->removeItem(index);
+        fit_parameters_remove(recipe->parameters, index);
+        seed_list_remove(recipe->seeds_list, index);
+        return 1;
+    }
+    default:
+        /* */ ;
+    }
+    return 0;
 }
 
 FXString
