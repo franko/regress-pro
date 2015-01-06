@@ -6,7 +6,7 @@ static void set_numeric_textfield(FXTextField *tf, double value);
 
 // Map
 FXDEFMAP(recipe_window) recipe_window_map[]= {
-    FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAMETER, recipe_window::on_cmd_parameter),
+    FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAM_SELECT, recipe_window::on_cmd_param_select),
     FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_cmd_seed),
 };
 
@@ -18,7 +18,10 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);
-    FXHorizontalFrame *tophf = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXGroupBox *lgb = new FXGroupBox(topspr, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    FXVerticalFrame *frame = new FXVerticalFrame(lgb, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN);
+    fit_list = new FXList(frame, this, ID_PARAMETER, LIST_SINGLESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    fit_list->setNumVisible(16);
 
     new FXHorizontalSeparator(vf,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
@@ -40,9 +43,6 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
     grid_min_tf = new FXTextField(matrix, 10, this, ID_GRID_MIN, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     grid_max_tf = new FXTextField(matrix, 10, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     grid_step_tf = new FXTextField(matrix, 10, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-
-    fit_params = fit_parameters_new();
-    fit_seeds = seed_list_new();
 }
 
 void recipe_window::setup_parameters_list(FXComposite *comp)
@@ -50,11 +50,8 @@ void recipe_window::setup_parameters_list(FXComposite *comp)
     param_list = fit_parameters_new();
     stack_get_all_parameters(recipe->stack, param_list);
 
-    fit_seeds = seed_list_new();
-    fit_params = fit_parameters_new();
-
     FXGroupBox *group = new FXGroupBox(comp, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    FXListBox *list = new FXListBox(group, this, ID_PARAMETER);
+    FXListBox *list = new FXListBox(group, this, ID_PARAM_SELECT);
     list->setNumVisible(8);
     str_t pname;
     str_init(pname, 16);
@@ -76,8 +73,6 @@ void recipe_window::setup_parameters_list(FXComposite *comp)
 recipe_window::~recipe_window()
 {
     fit_parameters_free(param_list);
-    fit_parameters_free(fit_params);
-    seed_list_free(fit_seeds);
 }
 
 void
@@ -114,9 +109,9 @@ recipe_window::set_seed_fields(const seed_t *s)
 void
 recipe_window::update_seed_value(const fit_param_t *fp)
 {
-    int i = fit_parameters_find(fit_params, fp);
+    int i = fit_parameters_find(recipe->parameters, fp);
     if (i >= 0) {
-        set_seed_fields(&fit_seeds->values[i]);
+        set_seed_fields(&recipe->seeds_list->values[i]);
     } else {
         clear_seed_textfield();
         clear_grid_textfields();
@@ -124,7 +119,7 @@ recipe_window::update_seed_value(const fit_param_t *fp)
 }
 
 long
-recipe_window::on_cmd_parameter(FXObject* sender, FXSelector, void *ptr)
+recipe_window::on_cmd_param_select(FXObject* sender, FXSelector, void *ptr)
 {
     FXint no = (FXint)(FXival)ptr;
     parameter_index = (FXint)(param_listbox->getItemData(no)) - 1;
@@ -135,15 +130,49 @@ recipe_window::on_cmd_parameter(FXObject* sender, FXSelector, void *ptr)
     return 1;
 }
 
+static FXString
+format_fit_parameter(const fit_param_t *fp, const seed_t *value)
+{
+    FXString txt;
+    str_t name;
+    str_init(name, 16);
+    get_param_name(fp, name);
+    if (value->type == SEED_SIMPLE) {
+        txt.format("%s, %g", CSTR(name), value->seed);
+    } else if (value->type == SEED_RANGE) {
+        txt.format("%s, [%g - %g, %g]", CSTR(name), value->min, value->max, value->step);
+    } else {
+        txt.format("%s, ?", CSTR(name));
+    }
+    str_free(name);
+    return txt;
+}
+
+void
+recipe_window::fit_list_append_parameter(const fit_param_t *fp, const seed_t *value)
+{
+    FXString txt = format_fit_parameter(fp, value);
+    fit_list->appendItem(txt);
+}
+
+void
+recipe_window::fit_list_update_parameter(int i, const fit_param_t *fp, const seed_t *value)
+{
+    FXString txt = format_fit_parameter(fp, value);
+    fit_list->setItem(i, txt);
+}
+
 void
 recipe_window::set_fit_parameter(const fit_param_t *fp, const seed_t *value)
 {
-    int i = fit_parameters_find(fit_params, fp);
+    int i = fit_parameters_find(recipe->parameters, fp);
     if (i >= 0) {
-        fit_seeds->values[i] = *value;
+        recipe->seeds_list->values[i] = *value;
+        fit_list_update_parameter(i, fp, value);
     } else {
-        fit_parameters_add(fit_params, fp);
-        seed_list_add(fit_seeds, value);
+        fit_parameters_add(recipe->parameters, fp);
+        seed_list_add(recipe->seeds_list, value);
+        fit_list_append_parameter(fp, value);
     }
 }
 

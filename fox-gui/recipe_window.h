@@ -19,11 +19,12 @@ public:
 
     void setup_parameters_list(FXComposite *comp);
 
-    long on_cmd_parameter(FXObject*, FXSelector, void*);
+    long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);
 
     enum {
-        ID_PARAMETER = FXDialogBox::ID_LAST,
+        ID_PARAM_SELECT = FXDialogBox::ID_LAST,
+        ID_PARAMETER,
         ID_SEED,
         ID_GRID_MIN,
         ID_GRID_MAX,
@@ -37,17 +38,20 @@ private:
     void set_seed_fields(const seed_t *s);
     void clear_seed_textfield();
     void clear_grid_textfields();
+    void fit_list_append_parameter(const fit_param_t *fp, const seed_t *value);
+    void fit_list_update_parameter(int i, const fit_param_t *fp, const seed_t *value);
 
     FXListBox *param_listbox;
     FXTextField *seed_tf;
     FXTextField *grid_min_tf, *grid_max_tf, *grid_step_tf;
+    FXList *fit_list;
 
     fit_recipe *recipe;
     fit_parameters *param_list;
     int parameter_index;
 
-    fit_parameters *fit_params;
-    seeds *fit_seeds;
+    // fit_parameters *fit_params;
+    // seeds *fit_seeds;
 };
 
 #endif
