@@ -24,7 +24,7 @@ FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_windo
 
 recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXDialogBox(a, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
-    recipe(rcp), seed_dirty(true)
+    recipe(rcp), param_list(NULL), seed_dirty(true)
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);
@@ -41,6 +41,8 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
     new FXLabel(rmatrix, "Sub sampling");
     subsamp_textfield = new FXTextField(rmatrix, 5, this, ID_SUBSAMPLE, FRAME_SUNKEN|TEXTFIELD_INTEGER);
 
+    setup_config_parameters();
+
     FXGroupBox *lgb = new FXGroupBox(tframe, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     FXVerticalFrame *frame = new FXVerticalFrame(lgb, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN);
     fit_list = new FXList(frame, this, ID_PARAMETER, LIST_SINGLESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -51,7 +53,11 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
     FXSpring *botspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
     FXHorizontalFrame *bhf = new FXHorizontalFrame(botspr, LAYOUT_FILL_Y);
 
-    setup_parameters_list(bhf);
+    FXGroupBox *plgroup = new FXGroupBox(bhf, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    param_listbox = new FXListBox(plgroup, this, ID_PARAM_SELECT);
+    param_listbox->setNumVisible(8);
+
+    setup_parameters_list();
 
     FXGroupBox *group = new FXGroupBox(bhf, "Initial Fit Value", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     FXVerticalFrame *seedvf = new FXVerticalFrame(group, LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -69,14 +75,50 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
     populate_fit_parameters();
 }
 
-void recipe_window::setup_parameters_list(FXComposite *comp)
+void recipe_window::setup_config_parameters()
 {
+    spectral_range *range = &recipe->config->spectr_range;
+    FXString text;
+    if (range->active) {
+        FXString text;
+        text.format("%g-%g", range->min, range->max);
+        range_textfield->setText(text);
+    } else {
+        range_textfield->setText("");
+    }
+    if (recipe->config->threshold_given) {
+        text.format("%g", recipe->config->chisq_threshold);
+        chisq_textfield->setText(text);
+    } else {
+        chisq_textfield->setText("");
+    }
+    text.format("%d", recipe->config->nb_max_iters);
+    iter_textfield->setText(text);
+    if (recipe->config->subsampling != 1) {
+        text.format("%d", recipe->config->subsampling);
+        subsamp_textfield->setText(text);
+    } else {
+        subsamp_textfield->setText("");
+    }
+}
+
+void recipe_window::setup_recipe_parameters()
+{
+    setup_config_parameters();
+    populate_fit_parameters();
+    setup_parameters_list();
+}
+
+void recipe_window::setup_parameters_list()
+{
+    if (param_list) {
+        fit_parameters_free(param_list);
+    }
     param_list = fit_parameters_new();
     stack_get_all_parameters(recipe->stack, param_list);
 
-    FXGroupBox *group = new FXGroupBox(comp, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    FXListBox *list = new FXListBox(group, this, ID_PARAM_SELECT);
-    list->setNumVisible(8);
+    param_listbox->clearItems();
+
     str_t pname;
     str_init(pname, 16);
     int current_layer = 0;
@@ -84,18 +126,18 @@ void recipe_window::setup_parameters_list(FXComposite *comp)
         fit_param_t *fp = &param_list->values[i];
         if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer) {
             str_printf(pname, "-- layer %d", fp->layer_nb);
-            list->appendItem(CSTR(pname));
+            param_listbox->appendItem(CSTR(pname));
             current_layer = fp->layer_nb;
         }
         get_param_name(fp, pname);
-        list->appendItem(CSTR(pname), NULL, (void*) (i + 1));
+        param_listbox->appendItem(CSTR(pname), NULL, (void*) (i + 1));
     }
     str_free(pname);
-    param_listbox = list;
 }
 
 void recipe_window::populate_fit_parameters()
 {
+    fit_list->clearItems();
     for (size_t i = 0; i < recipe->parameters->number; i++) {
         const fit_param_t *fp = &recipe->parameters->values[i];
         const seed_t *value = &recipe->seeds_list->values[i];
