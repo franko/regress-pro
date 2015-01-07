@@ -22,8 +22,8 @@ struct stack_cache {
 };
 
 struct fit_config {
-    double chisq_thresold;
-    int thresold_given;
+    double chisq_threshold;
+    int threshold_given;
     int nb_max_iters;
     int subsampling;
     struct spectral_range spectr_range;

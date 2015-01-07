@@ -230,8 +230,8 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
         return 1;
     }
 
-    if(! cfg->thresold_given) {
-        cfg->chisq_thresold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
+    if(! cfg->threshold_given) {
+        cfg->chisq_threshold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
     }
 
     fit->run->results = gsl_vector_alloc(fit->parameters->number);
@@ -488,7 +488,7 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 void
 fit_config_set_default(struct fit_config *cfg)
 {
-    cfg->thresold_given = 0;
+    cfg->threshold_given = 0;
     cfg->nb_max_iters = 30;
     cfg->subsampling = 1;
     cfg->spectr_range.active = 0;

@@ -90,7 +90,7 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
             gsl_vector_memcpy(xbest, x);
         }
 
-        if(*chisq < cfg->chisq_thresold) {
+        if(*chisq < cfg->chisq_threshold) {
             have_good = 1;
             break;
         }
@@ -128,9 +128,9 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
             str_copy_c(analysis, "Seed used: ");
             print_vector(analysis, "%.5g", x);
             str_printf_add(analysis,
-                           "With ChiSq: %g. Required thresold was: %g.\n\n",
+                           "With ChiSq: %g. Required threshold was: %g.\n\n",
                            have_good ? *chisq : chisq_best,
-                           cfg->chisq_thresold);
+                           cfg->chisq_threshold);
         }
 
         status = lmfit_iter(x, f, s, cfg->nb_max_iters,

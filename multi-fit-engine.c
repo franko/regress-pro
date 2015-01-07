@@ -115,11 +115,11 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
         return 1;
     }
 
-    if(! cfg->thresold_given) {
-        cfg->chisq_thresold = (fit->system_kind == SYSTEM_REFLECTOMETER ? 5.0E3 : 2.0E5);
+    if(! cfg->threshold_given) {
+        cfg->chisq_threshold = (fit->system_kind == SYSTEM_REFLECTOMETER ? 5.0E3 : 2.0E5);
     }
 
-    cfg->chisq_thresold *= fit->samples_number;
+    cfg->chisq_threshold *= fit->samples_number;
 
     fit->results = gsl_vector_alloc(nb_total_params);
     fit->chisq   = gsl_vector_alloc(fit->samples_number);

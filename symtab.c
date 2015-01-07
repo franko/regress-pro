@@ -299,10 +299,10 @@ set_config_value_raw(struct symtab *symtab, lex_string_t *id, val_t *v)
 range_exit_err:
         notify_error_msg(SCRIPT_ERROR, "Invalid range specification.");
         return 1;
-    } else if(LEX_STRING_EQUAL(id, "chisq_thresold")) {
+    } else if(LEX_STRING_EQUAL(id, "chisq_threshold")) {
         if(v->type == VAL_TP_DOUBLE) {
-            cfg->chisq_thresold = v->cont.real;
-            cfg->thresold_given = 1;
+            cfg->chisq_threshold = v->cont.real;
+            cfg->threshold_given = 1;
             return 0;
         }
 
