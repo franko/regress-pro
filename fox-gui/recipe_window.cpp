@@ -6,6 +6,7 @@
 
 static void set_numeric_textfield(FXTextField *tf, double value);
 static FXString format_fit_parameter(const fit_param_t *fp, const seed_t *value);
+static bool range_correct_format(const char *txt, double ps[]);
 
 // Map
 FXDEFMAP(recipe_window) recipe_window_map[]= {
@@ -13,6 +14,10 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAMETER, recipe_window::on_keypress_parameter),
     FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_cmd_seed),
     FXMAPFUNCS(SEL_UPDATE, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_update_seed),
+    FXMAPFUNC(SEL_CHANGED, recipe_window::ID_SPECTRA_RANGE, recipe_window::on_changed_range),
+    FXMAPFUNC(SEL_CHANGED, recipe_window::ID_CHISQ_THRESHOLD, recipe_window::on_changed_threshold),
+    FXMAPFUNC(SEL_CHANGED, recipe_window::ID_ITERATIONS, recipe_window::on_changed_iterations),
+    FXMAPFUNC(SEL_CHANGED, recipe_window::ID_SUBSAMPLE, recipe_window::on_changed_subsampling),
 };
 
 FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_window_map));
@@ -23,7 +28,20 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);
-    FXGroupBox *lgb = new FXGroupBox(topspr, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    FXHorizontalFrame *tframe = new FXHorizontalFrame(topspr, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    FXGroupBox *sgb = new FXGroupBox(tframe, "Fit Options", GROUPBOX_NORMAL|FRAME_LINE);
+    FXMatrix *rmatrix = new FXMatrix(sgb, 2, MATRIX_BY_COLUMNS);
+    new FXLabel(rmatrix, "Wavelength Range");
+    range_textfield = new FXTextField(rmatrix, 10, this, ID_SPECTRA_RANGE, FRAME_SUNKEN);
+    new FXLabel(rmatrix, "ChiSq threshold");
+    chisq_textfield = new FXTextField(rmatrix, 5, this, ID_CHISQ_THRESHOLD, FRAME_SUNKEN|TEXTFIELD_REAL);
+    new FXLabel(rmatrix, "Max Iterations");
+    iter_textfield = new FXTextField(rmatrix, 5, this, ID_ITERATIONS, FRAME_SUNKEN|TEXTFIELD_INTEGER);
+    new FXLabel(rmatrix, "Sub sampling");
+    subsamp_textfield = new FXTextField(rmatrix, 5, this, ID_SUBSAMPLE, FRAME_SUNKEN|TEXTFIELD_INTEGER);
+
+    FXGroupBox *lgb = new FXGroupBox(tframe, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     FXVerticalFrame *frame = new FXVerticalFrame(lgb, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN);
     fit_list = new FXList(frame, this, ID_PARAMETER, LIST_SINGLESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     fit_list->setNumVisible(16);
@@ -31,7 +49,6 @@ recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, F
     new FXHorizontalSeparator(vf,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
     FXSpring *botspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
-
     FXHorizontalFrame *bhf = new FXHorizontalFrame(botspr, LAYOUT_FILL_Y);
 
     setup_parameters_list(bhf);
@@ -178,7 +195,7 @@ recipe_window::set_fit_parameter(const fit_param_t *fp, const seed_t *value)
 }
 
 long
-recipe_window::on_cmd_seed(FXObject* sender, FXSelector sel, void *)
+recipe_window::on_cmd_seed(FXObject *, FXSelector sel, void *)
 {
     const fit_param_t *selfp = selected_parameter();
     if (selfp == NULL) return 0;
@@ -198,7 +215,7 @@ recipe_window::on_cmd_seed(FXObject* sender, FXSelector sel, void *)
 }
 
 long
-recipe_window::on_update_seed(FXObject* sender, FXSelector sel, void *)
+recipe_window::on_update_seed(FXObject *, FXSelector, void *)
 {
     if (!seed_dirty) return 0;
     const fit_param_t *fp = selected_parameter();
@@ -228,6 +245,66 @@ recipe_window::on_keypress_parameter(FXObject*, FXSelector sel, void *ptr)
     return 0;
 }
 
+long
+recipe_window::on_changed_range(FXObject *, FXSelector sel, void *ptr)
+{
+    FXchar *txt = (FXchar *) ptr;
+    double ps[2];
+    if (range_correct_format(txt, ps)) {
+        range_textfield->setTextColor(FXRGB(0,0,0));
+        recipe->config->spectr_range.active = 1;
+        recipe->config->spectr_range.min = ps[0];
+        recipe->config->spectr_range.max = ps[1];
+    } else {
+        recipe->config->spectr_range.active = 0;
+        range_textfield->setTextColor(FXRGB(150,5,10));
+    }
+    return 1;
+}
+
+long
+recipe_window::on_changed_threshold(FXObject *, FXSelector sel, void *ptr)
+{
+    FXchar *txt = (FXchar *) ptr;
+    char *tail;
+    double v = strtod(txt, &tail);
+    if (tail != txt) {
+        recipe->config->chisq_threshold = v;
+        recipe->config->threshold_given = 1;
+    } else {
+        recipe->config->threshold_given = 0;
+    }
+    return 1;
+}
+
+long
+recipe_window::on_changed_iterations(FXObject *, FXSelector sel, void *ptr)
+{
+    FXchar *txt = (FXchar *) ptr;
+    char *tail;
+    long n = strtol(txt, &tail, 10);
+    if (tail != txt) {
+        recipe->config->nb_max_iters = n;
+    } else {
+        recipe->config->nb_max_iters = 30;
+    }
+    return 1;
+}
+
+long
+recipe_window::on_changed_subsampling(FXObject *, FXSelector sel, void *ptr)
+{
+    FXchar *txt = (FXchar *) ptr;
+    char *tail;
+    long n = strtol(txt, &tail, 10);
+    if (tail != txt) {
+        recipe->config->subsampling = n;
+    } else {
+        recipe->config->subsampling = 1;
+    }
+    return 1;
+}
+
 FXString
 format_fit_parameter(const fit_param_t *fp, const seed_t *value)
 {
@@ -251,4 +328,10 @@ void set_numeric_textfield(FXTextField *tf, double value)
     FXString text;
     text.format("%g", value);
     tf->setText(text);
+}
+
+bool range_correct_format(const char *txt, double ps[])
+{
+    int nass = sscanf(txt, "%lf-%lf", ps, ps+1);
+    return (nass == 2 && ps[1] > ps[0]);
 }

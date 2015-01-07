@@ -23,6 +23,10 @@ public:
     long on_cmd_seed(FXObject*, FXSelector, void*);
     long on_update_seed(FXObject*, FXSelector, void*);
     long on_keypress_parameter(FXObject*, FXSelector, void*);
+    long on_changed_range(FXObject*, FXSelector, void*);
+    long on_changed_threshold(FXObject*, FXSelector, void*);
+    long on_changed_iterations(FXObject*, FXSelector, void*);
+    long on_changed_subsampling(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,
@@ -31,6 +35,10 @@ public:
         ID_GRID_MIN,
         ID_GRID_MAX,
         ID_GRID_STEP,
+        ID_SPECTRA_RANGE,
+        ID_CHISQ_THRESHOLD,
+        ID_ITERATIONS,
+        ID_SUBSAMPLE,
         ID_LAST
     };
 
@@ -49,6 +57,7 @@ private:
     FXTextField *seed_tf;
     FXTextField *grid_min_tf, *grid_max_tf, *grid_step_tf;
     FXList *fit_list;
+    FXTextField *range_textfield, *chisq_textfield, *iter_textfield, *subsamp_textfield;
 
     fit_recipe *recipe;
     fit_parameters *param_list;
