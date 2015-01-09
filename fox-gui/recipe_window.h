@@ -14,13 +14,12 @@ private:
     recipe_window &operator=(const recipe_window&);
 
 public:
-    recipe_window(fit_recipe *r, FXApp* a, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    recipe_window(fit_recipe *r, FXWindow* w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~recipe_window();
 
     void setup_parameters_list();
     void setup_config_parameters();
     void populate_fit_parameters();
-    void setup_recipe_parameters();
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);
@@ -30,6 +29,7 @@ public:
     long on_changed_threshold(FXObject*, FXSelector, void*);
     long on_changed_iterations(FXObject*, FXSelector, void*);
     long on_changed_subsampling(FXObject*, FXSelector, void*);
+    long on_cmd_stack_change(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,
@@ -42,6 +42,7 @@ public:
         ID_CHISQ_THRESHOLD,
         ID_ITERATIONS,
         ID_SUBSAMPLE,
+        ID_STACK_CHANGE,
         ID_LAST
     };
 

@@ -18,12 +18,14 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_CHISQ_THRESHOLD, recipe_window::on_changed_threshold),
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_ITERATIONS, recipe_window::on_changed_iterations),
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_SUBSAMPLE, recipe_window::on_changed_subsampling),
+    FXMAPFUNC(SEL_COMMAND, recipe_window::ID_STACK_CHANGE, recipe_window::on_cmd_stack_change),
+    FXMAPFUNC(SEL_COMMAND, recipe_window::ID_DELETE, recipe_window::onCmdHide),
 };
 
 FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_window_map));
 
-recipe_window::recipe_window(fit_recipe *rcp, FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
+recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXDialogBox(topwin, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
     recipe(rcp), param_list(NULL), seed_dirty(true)
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -100,13 +102,6 @@ void recipe_window::setup_config_parameters()
     } else {
         subsamp_textfield->setText("");
     }
-}
-
-void recipe_window::setup_recipe_parameters()
-{
-    setup_config_parameters();
-    populate_fit_parameters();
-    setup_parameters_list();
 }
 
 void recipe_window::setup_parameters_list()
@@ -344,6 +339,14 @@ recipe_window::on_changed_subsampling(FXObject *, FXSelector sel, void *ptr)
     } else {
         recipe->config->subsampling = 1;
     }
+    return 1;
+}
+
+long
+recipe_window::on_cmd_stack_change(FXObject *, FXSelector, void *)
+{
+    populate_fit_parameters();
+    setup_parameters_list();
     return 1;
 }
 

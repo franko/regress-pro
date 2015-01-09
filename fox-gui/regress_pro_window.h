@@ -46,6 +46,9 @@ protected:
     FXString batchFileId;
 
 protected:
+    FXDialogBox *my_filmstack_window;
+    FXDialogBox *my_recipe_window;
+
     FXMenuBar         *menubar;
     FXStatusBar       *statusbar;
 
@@ -93,6 +96,7 @@ public:
     long onCmdRunBatch(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
+    long onCmdStackChange(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
 
     bool save_script_as(const FXString& save_as);
@@ -120,6 +124,7 @@ public:
         ID_REGISTER,
         ID_FILM_STACK,
         ID_RECIPE_EDIT,
+        ID_STACK_CHANGE,
         ID_LAST
     };
 

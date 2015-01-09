@@ -15,14 +15,13 @@ private:
     filmstack_window &operator=(const filmstack_window&);
 
 public:
-    filmstack_window(stack_t *s, FXApp* a, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    filmstack_window(stack_t *s, FXWindow *w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~filmstack_window();
 
     virtual void create();
 
 private:
     FXMenuPane *popupmenu;
-    // FXVerticalFrame *layersframe;
     int current_layer;
 
 public:
@@ -49,6 +48,7 @@ public:
 private:
     FXWindow *setup_stack_window(FXComposite *);
     void rebuild_stack_window();
+    void notify_stack_change();
 
     FXWindow *stack_window;
     stack_t *stack;

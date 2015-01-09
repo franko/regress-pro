@@ -1,5 +1,7 @@
 #include "filmstack_window.h"
 #include "dispers_chooser.h"
+#include "recipe_window.h"
+#include "regress_pro_window.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -9,12 +11,13 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_INSERT_LAYER, filmstack_window::on_cmd_insert_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE_LAYER, filmstack_window::on_cmd_delete_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_REPLACE_LAYER, filmstack_window::on_cmd_replace_layer),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, recipe_window::onCmdHide),
 };
 
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
 
-filmstack_window::filmstack_window(stack_t *s, FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Film Stack", opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
+filmstack_window::filmstack_window(stack_t *s, FXWindow *topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXDialogBox(topwin, "Film Stack", opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
     stack(s)
 {
     stack_window = setup_stack_window(this);
@@ -76,6 +79,13 @@ filmstack_window::rebuild_stack_window()
     delete stack_window;
     stack_window = setup_stack_window(this);
     stack_window->create();
+    notify_stack_change();
+}
+
+void
+filmstack_window::notify_stack_change()
+{
+    getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE), NULL);
 }
 
 long

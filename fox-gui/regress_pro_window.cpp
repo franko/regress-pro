@@ -73,6 +73,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
 };
 
 
@@ -98,6 +99,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
+      my_filmstack_window(NULL), my_recipe_window(NULL),
       m_model_spectr(0)
 {
     // Menubar
@@ -656,17 +658,35 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 {
-    filmstack_window *w = new filmstack_window(recipe->stack, getApp());
-    w->execute();
+    if (!my_filmstack_window) {
+        filmstack_window *w = new filmstack_window(recipe->stack, this);
+        my_filmstack_window = w;
+        w->create();
+    }
+    my_filmstack_window->show(PLACEMENT_SCREEN);
     return 1;
 }
 
 long
 regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
 {
-    recipe_window *w = new recipe_window(recipe, getApp());
-    w->execute();
+    if (!my_recipe_window) {
+        recipe_window *w = new recipe_window(recipe, this);
+        my_recipe_window = w;
+        w->create();
+    }
+    my_recipe_window->show(PLACEMENT_SCREEN);
     return 1;
+}
+
+long
+regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
+{
+    if (my_recipe_window) {
+        my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+        return 1;
+    }
+    return 0;
 }
 
 bool
