@@ -2,6 +2,7 @@
 #include "dispers_chooser.h"
 #include "recipe_window.h"
 #include "regress_pro_window.h"
+#include "fit-params.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -96,6 +97,8 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
         disp_t *d = chooser->get_dispersion();
         if (!d) return 0;
         stack_insert_layer(stack, current_layer + 1, d, 0.0);
+        shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer + 1)};
+        getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT), (void *) &info);
         rebuild_stack_window();
         return 1;
     }
@@ -121,6 +124,8 @@ long
 filmstack_window::on_cmd_delete_layer(FXObject*, FXSelector, void*)
 {
     stack_delete_layer(stack, current_layer);
+    shift_info info = {short(SHIFT_DELETE_LAYER), short(current_layer)};
+    getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT), (void *) &info);
     rebuild_stack_window();
     return 1;
 }

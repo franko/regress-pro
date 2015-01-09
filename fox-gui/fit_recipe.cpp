@@ -29,3 +29,8 @@ void fit_recipe::setup_default_stack()
     stack_add_layer(stack, sio2, 10.0);
     stack_add_layer(stack, vac, 0.0);
 }
+
+void fit_recipe::shift_fit_parameters(const shift_info *shift)
+{
+    fit_parameters_fix_layer_shift(parameters, *shift);
+}

@@ -74,6 +74,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
 };
 
 
@@ -687,6 +688,13 @@ regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
         return 1;
     }
     return 0;
+}
+
+long
+regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
+{
+    recipe->shift_fit_parameters((shift_info *)ptr);
+    return 1;
 }
 
 bool

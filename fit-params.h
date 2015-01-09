@@ -9,8 +9,22 @@ __BEGIN_DECLS
 
 enum params_id {
     PID_THICKNESS = 1,
-    PID_FIRSTMUL,
-    PID_LAYER_N
+    PID_LAYER_N,
+    PID_LAYER_INDIPENDENT, /* Beginning of layer-indipendent parameters */
+    PID_FIRSTMUL = PID_LAYER_INDIPENDENT,
+    PID_INVALID,
+};
+
+/* Used to inform about the insert or delete of a layer in a
+   film stack. */
+enum {
+    SHIFT_DELETE_LAYER,
+    SHIFT_INSERT_LAYER,
+};
+
+struct shift_info {
+    short int event; /* Should be on the SHIFT_* enumerated values. */
+    short int index; /* The index of the layer removed on inserted. */
 };
 
 enum disp_model_id {
@@ -67,6 +81,7 @@ extern void     fit_parameters_clear(struct fit_parameters *s);
 extern void     fit_parameters_add(struct fit_parameters *lst,
                                    fit_param_t const * fp);
 extern void     fit_parameters_remove(struct fit_parameters *lst, int index);
+extern void     fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shift);
 extern int      fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp);
 
 extern int      fit_parameters_are_RI_fixed(struct fit_parameters *f);

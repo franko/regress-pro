@@ -8,6 +8,7 @@ struct fit_recipe {
     ~fit_recipe();
 
     void setup_default_stack();
+    void shift_fit_parameters(const shift_info *shift);
 
     fit_config config[1];
     stack_t *stack;

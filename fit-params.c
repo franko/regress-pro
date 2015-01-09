@@ -225,3 +225,41 @@ fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp)
     }
     return -1;
 }
+
+static void
+fix_delete_layer(struct fit_parameters *lst, int index)
+{
+    size_t i;
+    for (i = 0; i < lst->number; i++) {
+        fit_param_t *fp = &lst->values[i];
+        if (fp->id < PID_LAYER_INDIPENDENT && fp->layer_nb >= index) {
+            if (fp->layer_nb > index) {
+                fp->layer_nb --;
+            } else {
+                fp->id = PID_INVALID;
+            }
+        }
+    }
+}
+
+static void
+fix_insert_layer(struct fit_parameters *lst, int index)
+{
+    size_t i;
+    for (i = 0; i < lst->number; i++) {
+        fit_param_t *fp = &lst->values[i];
+        if (fp->id < PID_LAYER_INDIPENDENT && fp->layer_nb >= index) {
+            fp->layer_nb ++;
+        }
+    }
+}
+
+void
+fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shift)
+{
+    if (shift.event == SHIFT_DELETE_LAYER) {
+        fix_delete_layer(lst, shift.index);
+    } else if (shift.event == SHIFT_INSERT_LAYER) {
+        fix_insert_layer(lst, shift.index);
+    }
+}

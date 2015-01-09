@@ -97,6 +97,7 @@ public:
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
+    long onCmdStackShift(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
 
     bool save_script_as(const FXString& save_as);
@@ -125,6 +126,7 @@ public:
         ID_FILM_STACK,
         ID_RECIPE_EDIT,
         ID_STACK_CHANGE,
+        ID_STACK_SHIFT,
         ID_LAST
     };
 
