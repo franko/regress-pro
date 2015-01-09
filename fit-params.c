@@ -44,6 +44,30 @@ get_param_name(const fit_param_t *fp, str_t name)
 }
 
 void
+get_full_param_name(const fit_param_t *fp, str_t name)
+{
+    switch(fp->id) {
+    case PID_THICKNESS:
+        str_printf(name, "T%i", fp->layer_nb);
+        break;
+    case PID_FIRSTMUL:
+        str_printf(name, "1stmult");
+        break;
+    case PID_LAYER_N:
+    {
+        str_t dname;
+        str_init(dname, 16);
+        get_disp_param_name(fp, dname);
+        str_printf(name, "Layer%d / %s", fp->layer_nb, CSTR(dname));
+        str_free(dname);
+        break;
+    }
+    default:
+        str_printf(name, "###");
+    }
+}
+
+void
 get_disp_param_name(const fit_param_t *fp, str_ptr buf)
 {
     struct disp_class *dclass;

@@ -97,6 +97,7 @@ extern void     set_model_param(fit_param_t *fpres, int lyr,
                                 int param_nb);
 extern void     set_thick_param(fit_param_t *fp, int lyr);
 extern void     get_param_name(const fit_param_t *fp, str_t name);
+extern void     get_full_param_name(const fit_param_t *fp, str_t name);
 extern int      parse_fit_string(const char *s, seed_t *seed);
 
 __END_DECLS
