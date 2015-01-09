@@ -124,7 +124,7 @@ void recipe_window::setup_parameters_list()
             param_listbox->appendItem(CSTR(pname));
             current_layer = fp->layer_nb;
         }
-        get_param_name(fp, pname);
+        get_full_param_name(fp, pname);
         param_listbox->appendItem(CSTR(pname), NULL, (void*) (i + 1));
     }
     str_free(pname);
@@ -356,7 +356,7 @@ format_fit_parameter(const fit_param_t *fp, const seed_t *value)
     FXString txt;
     str_t name;
     str_init(name, 16);
-    get_param_name(fp, name);
+    get_full_param_name(fp, name);
     if (value->type == SEED_SIMPLE) {
         txt.format("%s, %g", CSTR(name), value->seed);
     } else if (value->type == SEED_RANGE) {
