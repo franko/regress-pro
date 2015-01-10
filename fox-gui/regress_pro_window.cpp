@@ -70,6 +70,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT_NEW, regress_pro_window::onCmdRunFitNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
@@ -134,6 +135,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
     // Fit menu
     fitmenu = new FXMenuPane(this);
+    new FXMenuCommand(fitmenu, "Run (NEW) Fitting",NULL,this,ID_RUN_FIT_NEW);
     new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
@@ -631,6 +633,23 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 
     getApp()->endWaitCursor();
 
+    return 1;
+}
+
+long
+regress_pro_window::onCmdRunFitNew(FXObject*,FXSelector,void *)
+{
+    if(! check_spectrum("Fitting")) {
+        return 0;
+    }
+    reg_check_point(this);
+    if (check_fit_parameters(recipe->stack, recipe->parameters) != 0) {
+        // ADD a proper ERROR MESSAGE here.
+        return 0;
+    }
+    fit_engine_bind(recipe->fit, recipe->stack, recipe->config, recipe->parameters);
+    run_fit(recipe->fit, recipe->seeds_list, this->spectrum);
+    getApp()->endWaitCursor();
     return 1;
 }
 
