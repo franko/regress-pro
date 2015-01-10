@@ -539,37 +539,18 @@ regress_pro_window::check_spectrum(const char *context)
     return true;
 }
 
-long
-regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
+void
+regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
 {
-    if(! check_spectrum("Fitting")) {
-        return 0;
-    }
-
-    reg_check_point(this);
-
-    if(! update_fit_strategy()) {
-        return 1;
-    }
-
     double chisq;
     Str analysis;
-    struct seeds *seeds;
-    struct fit_engine *fit;
 
-    fit = build_fit_engine(this->symtab, &seeds);
-
-    if(fit == NULL) {
-        reportErrors();
-        return 1;
-    }
-
-    fit_engine_prepare(fit, this->spectrum);
+    fit_engine_prepare(fit, fspectrum);
 
     Str fit_error_msgs;
     ProgressInfo progress(this->getApp(), this);
 
-    lmfit_grid(fit, seeds, &chisq, analysis.str(), fit_error_msgs.str(),
+    lmfit_grid(fit, fseeds, &chisq, analysis.str(), fit_error_msgs.str(),
                LMFIT_GET_RESULTING_STACK,
                process_foxgui_events, & progress);
 
@@ -607,11 +588,11 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
         spectra_free(m_model_spectr);
     }
 
-    m_model_spectr = spectra_alloc(this->spectrum);
+    m_model_spectr = spectra_alloc(fspectrum);
 
-    fit_engine_generate_spectrum(fit, this->spectrum, m_model_spectr);
+    fit_engine_generate_spectrum(fit, fspectrum, m_model_spectr);
 
-    spectra_plot(m_canvas, this->spectrum, m_model_spectr);
+    spectra_plot(m_canvas, fspectrum, m_model_spectr);
 
     if(this->stack_result) {
         stack_free(this->stack_result);
@@ -620,6 +601,32 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
     this->stack_result = stack_copy(fit->stack);
 
     fit_engine_disable(fit);
+}
+
+long
+regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
+{
+    if(! check_spectrum("Fitting")) {
+        return 0;
+    }
+
+    reg_check_point(this);
+
+    if(! update_fit_strategy()) {
+        return 1;
+    }
+
+    struct seeds *seeds;
+    struct fit_engine *fit;
+
+    fit = build_fit_engine(this->symtab, &seeds);
+
+    if(fit == NULL) {
+        reportErrors();
+        return 1;
+    }
+
+    run_fit(fit, seeds, this->spectrum);
     fit_engine_free(fit);
 
     getApp()->endWaitCursor();
