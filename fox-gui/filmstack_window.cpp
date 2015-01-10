@@ -40,7 +40,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
     FXVerticalFrame *vf = new FXVerticalFrame(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXMatrix *matrix = new FXMatrix(vf, 3, LAYOUT_FILL_X|LAYOUT_BOTTOM|MATRIX_BY_COLUMNS);
     FXString nstr;
-    for (int i = stack->nb - 1; i >= 0; i--) {
+    for (int i = 0; i < stack->nb; i++) {
         nstr.format("%d", i);
         new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i);
         FXTextField *filmtf = new FXTextField(matrix, 24, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
@@ -96,8 +96,8 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
     if (chooser->execute() == TRUE) {
         disp_t *d = chooser->get_dispersion();
         if (!d) return 0;
-        stack_insert_layer(stack, current_layer + 1, d, 0.0);
-        shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer + 1)};
+        stack_insert_layer(stack, current_layer, d, 0.0);
+        shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer)};
         getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT), (void *) &info);
         rebuild_stack_window();
         return 1;

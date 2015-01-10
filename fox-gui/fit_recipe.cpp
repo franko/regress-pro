@@ -25,9 +25,9 @@ void fit_recipe::setup_default_stack()
     disp_t *si = dispers_library_search("si");
     disp_t *sio2 = dispers_library_search("sio2");
     disp_t *vac = dispers_library_search("vacuum");
-    stack_add_layer(stack, si, 0.0);
-    stack_add_layer(stack, sio2, 10.0);
     stack_add_layer(stack, vac, 0.0);
+    stack_add_layer(stack, sio2, 10.0);
+    stack_add_layer(stack, si, 0.0);
 }
 
 void fit_recipe::shift_fit_parameters(const shift_info *shift)
