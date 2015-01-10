@@ -647,8 +647,10 @@ regress_pro_window::onCmdRunFitNew(FXObject*,FXSelector,void *)
         // ADD a proper ERROR MESSAGE here.
         return 0;
     }
-    fit_engine_bind(recipe->fit, recipe->stack, recipe->config, recipe->parameters);
-    run_fit(recipe->fit, recipe->seeds_list, this->spectrum);
+    fit_engine *fit = fit_engine_new();
+    fit_engine_bind(fit, recipe->stack, recipe->config, recipe->parameters);
+    run_fit(fit, recipe->seeds_list, this->spectrum);
+    fit_engine_free(fit);
     getApp()->endWaitCursor();
     return 1;
 }

@@ -14,7 +14,6 @@ struct fit_recipe {
     stack_t *stack;
     fit_parameters *parameters;
     seeds *seeds_list;
-    fit_engine *fit;
 };
 
 #endif

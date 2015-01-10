@@ -8,12 +8,10 @@ fit_recipe::fit_recipe()
     stack_init(stack);
     parameters = fit_parameters_new();
     seeds_list = seed_list_new();
-    fit = fit_engine_new();
 }
 
 fit_recipe::~fit_recipe()
 {
-    fit_engine_free(fit);
     seed_list_free(seeds_list);
     fit_parameters_free(parameters);
     stack_free(stack);
