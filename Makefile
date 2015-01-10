@@ -9,7 +9,7 @@ INCLUDES = $(GSL_INCLUDES)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-ELL_SRC_FILES = common.c data-table.c data-view.c disp-table.c disp-sample-table.c disp-lookup.c str.c dispers-library.c str-util.c batch.c error-messages.c cmpl.c minsampling.c dispers.c disp-ho.c disp-bruggeman.c disp-cauchy.c dispers-classes.c stack.c lmfit.c lmfit-simple.c fit-params.c disp-util.c fit-engine.c refl-kernel.c refl-fit.c elliss-fit.c refl-utils.c spectra.c elliss.c descr-util.c model-interp.c interp.c symtab.c descr.c fitlexer.c test-deriv.c elliss-multifit.c multi-fit-engine.c grid-search.c lmfit-multi.c sample-info.c multi-fit-interp.c refl-multifit.c disp-fit-engine.c
+ELL_SRC_FILES = common.c data-table.c data-view.c disp-table.c disp-sample-table.c disp-lookup.c str.c dispers-library.c str-util.c batch.c error-messages.c cmpl.c minsampling.c dispers.c disp-ho.c disp-bruggeman.c disp-cauchy.c dispers-classes.c stack.c lmfit.c lmfit-simple.c fit-params.c disp-util.c fit-engine.c refl-kernel.c refl-fit.c elliss-fit.c refl-utils.c spectra.c elliss.c descr-util.c model-interp.c interp.c symtab.c descr.c fitlexer.c test-deriv.c elliss-multifit.c multi-fit-engine.c grid-search.c lmfit-multi.c sample-info.c multi-fit-interp.c refl-multifit.c disp-fit-engine.c fit_result.c
 YACC_FILES = descr.y
 EFIT_LIB = libefit.a
 SUBDIRS = fox-gui

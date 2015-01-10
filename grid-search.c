@@ -1,7 +1,3 @@
-/*
-  $Id$
- */
-
 #include <assert.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -10,13 +6,12 @@
 #include "lmfit.h"
 #include "grid-search.h"
 #include "stack.h"
-#include "str.h"
+#include "fit_result.h"
 
 int
-lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
-           double * chisq, str_ptr analysis,
-           str_ptr error_msg, int preserve_init_stack,
-           gui_hook_func_t hfun, void *hdata)
+lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
+    int preserve_init_stack, struct fit_result *result,
+    gui_hook_func_t hfun, void *hdata)
 {
     const gsl_multifit_fdfsolver_type *T;
     gsl_multifit_fdfsolver *s;
@@ -25,8 +20,7 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
     int nb, j, iter, nb_grid_pts, j_grid_pts;
     gsl_vector *x, *xbest;
     double *xarr;
-    double chi, chisq_best = 0.0;
-    int have_best = 0, have_good = 0;
+    double chisq, chi, chisq_best = -1.0;
     int status, stop_request = 0;
     stack_t *initial_stack;
     seed_t *vseed;
@@ -69,6 +63,8 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
     T = gsl_multifit_fdfsolver_lmsder;
     s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
+    result->interrupted = 0;
+    result->chisq_threshold = cfg->chisq_threshold;
     for(j_grid_pts = 0; ; j_grid_pts++) {
         const int search_max_iters = 3;
 
@@ -82,16 +78,14 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
         }
 
         chi = gsl_blas_dnrm2(s->f);
-        *chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+        chisq = 1.0E6 * pow(chi, 2.0) / f->n;
 
-        if(!have_best || *chisq < chisq_best) {
-            have_best = 1;
-            chisq_best = *chisq;
+        if(chisq_best < 0 || chisq < chisq_best) {
+            chisq_best = chisq;
             gsl_vector_memcpy(xbest, x);
         }
 
-        if(*chisq < cfg->chisq_threshold) {
-            have_good = 1;
+        if(chisq < cfg->chisq_threshold) {
             break;
         }
 
@@ -119,62 +113,35 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
         }
     }
 
-    if(j < 0) {
+    /* Case of grid search exhausted or stop request. */
+    if(j < 0 || stop_request) {
         gsl_vector_memcpy(x, xbest);
+        chisq = chisq_best;
     }
 
-    if(stop_request == 0) {
-        if(analysis) {
-            str_copy_c(analysis, "Seed used: ");
-            print_vector(analysis, "%.5g", x);
-            str_printf_add(analysis,
-                           "With ChiSq: %g. Required threshold was: %g.\n\n",
-                           have_good ? *chisq : chisq_best,
-                           cfg->chisq_threshold);
-        }
+    result->gsearch_chisq = chisq;
+    result->chisq = chisq;
+    gsl_vector_memcpy(result->gsearch_x, x);
+    result->interrupted = stop_request;
 
+    if(stop_request == 0) {
         status = lmfit_iter(x, f, s, cfg->nb_max_iters,
                             cfg->epsabs, cfg->epsrel,
                             & iter, hfun, hdata, & stop_request);
 
         chi = gsl_blas_dnrm2(s->f);
-        *chisq = 1.0E6 * pow(chi, 2.0) / f->n;
-
-        if(error_msg) {
-            switch(status) {
-            case GSL_SUCCESS:
-                str_trunc(error_msg, 0);
-                break;
-            case GSL_CONTINUE:
-                str_copy_c(error_msg, "Error: more iterations needed.");
-                break;
-            default:
-                str_printf(error_msg, "Error: %s", gsl_strerror(status));
-            }
-        }
-
-        if(analysis && !stop_request) {
-            str_printf_add(analysis, "Nb of iterations to converge: %i\n",
-                           iter);
-            print_analysis(analysis, f, s);
-        }
-    }
-
-    if(stop_request) {
-        status = 1;
-        if(error_msg) {
-            str_copy_c(error_msg, "Fit interrupted by user request.");
-        }
-        if(analysis) {
-            str_copy_c(analysis, "** Fit interrupted by the user.");
+        result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+        result->status = status;
+        result->iter = iter;
+        if (result->covar) {
+            gsl_multifit_covar(s->J, 1e-6, result->covar);
         }
     }
 
     if(preserve_init_stack) {
         /* we restore the initial stack */
-        stack_t *tmp_stack = fit->stack;
+        stack_free(fit->stack);
         fit->stack = initial_stack;
-        stack_free(tmp_stack);
     } else {
         /* we take care to commit the results obtained from the fit */
         fit_engine_commit_parameters(fit, x);
@@ -187,5 +154,26 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
 
     gsl_multifit_fdfsolver_free(s);
 
+    return status;
+}
+
+
+int
+lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
+           double * chisq, str_ptr analysis,
+           str_ptr error_msg, int preserve_init_stack,
+           gui_hook_func_t hfun, void *hdata)
+{
+    struct fit_result result[1];
+    int want_covar_mat = (analysis ? 1 : 0);
+    int status;
+
+    fit_result_init(result, fit, want_covar_mat);
+    status = lmfit_grid_run(fit, seeds, preserve_init_stack, result, hfun, hdata);
+    if (analysis) {
+        fit_result_report(result, analysis, error_msg);
+    }
+    *chisq = result->chisq;
+    fit_result_free(result);
     return status;
 }
