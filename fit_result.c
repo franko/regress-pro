@@ -1,6 +1,7 @@
 #include "fit_result.h"
 #include "str.h"
-#include "lmfit.h"
+#include "vector_print.h"
+#include "covariance_analysis.h"
 
 void
 fit_result_init(struct fit_result *r, struct fit_engine *fit, int want_cover_mat)
@@ -50,7 +51,6 @@ fit_result_report(struct fit_result *r, str_ptr analysis, str_ptr error)
 
     str_printf_add(analysis, "Nb of iterations to converge: %i\n", r->iter);
     if (r->covar) {
-        str_append_c(analysis, "\nCovariance matrix:\n", 0);
-        print_matrix(analysis, "%g", r->covar);
+        print_covar_analysis(analysis, r->covar);
     }
 }

@@ -6,6 +6,7 @@
 
 #include "disp-fit-engine.h"
 #include "lmfit.h"
+#include "vector_print.h"
 #include "str.h"
 
 static int disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,

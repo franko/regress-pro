@@ -6,7 +6,7 @@
 #include "lmfit.h"
 #include "lmfit-simple.h"
 #include "stack.h"
-#include "str.h"
+#include "vector_print.h"
 
 int
 lmfit_simple(struct fit_engine *fit, gsl_vector *x,

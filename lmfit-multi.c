@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>
@@ -13,6 +8,7 @@
 #include "lmfit-multi.h"
 #include "fit-params.h"
 #include "multi-fit-engine.h"
+#include "vector_print.h"
 
 
 int
