@@ -30,6 +30,7 @@ public:
     long on_changed_iterations(FXObject*, FXSelector, void*);
     long on_changed_subsampling(FXObject*, FXSelector, void*);
     long on_cmd_stack_change(FXObject*, FXSelector, void*);
+    long on_select_parameter(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,

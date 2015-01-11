@@ -12,6 +12,7 @@ static bool range_correct_format(const char *txt, double ps[]);
 FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAM_SELECT, recipe_window::on_cmd_param_select),
     FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAMETER, recipe_window::on_keypress_parameter),
+    FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAMETER, recipe_window::on_select_parameter),
     FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_cmd_seed),
     FXMAPFUNCS(SEL_UPDATE, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_update_seed),
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_SPECTRA_RANGE, recipe_window::on_changed_range),
@@ -347,6 +348,20 @@ recipe_window::on_cmd_stack_change(FXObject *, FXSelector, void *)
 {
     populate_fit_parameters();
     setup_parameters_list();
+    return 1;
+}
+
+long
+recipe_window::on_select_parameter(FXObject *, FXSelector, void *)
+{
+    FXint index = fit_list->getCurrentItem();
+    const fit_param_t *selfp = &recipe->parameters->values[index];
+    int i = fit_parameters_find(param_list, selfp);
+    for (int j = 0; j < param_listbox->getNumItems(); j++) {
+        if ((FXint)(param_listbox->getItemData(j)) - 1 == i) {
+            param_listbox->setCurrentItem(j, TRUE);
+        }
+    }
     return 1;
 }
 
