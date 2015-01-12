@@ -12,8 +12,8 @@ FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
 
 FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
 
-fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts)
-: FXVerticalFrame(p, opts), disp(d)
+fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
+: FXVerticalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs), disp(d)
 {
     delete_icon = new FXGIFIcon(getApp(), delete_gif);
     add_icon = new FXGIFIcon(getApp(), new_gif);
@@ -164,4 +164,18 @@ double *fx_disp_cauchy_window::map_parameter(int index)
         return c->k + (index - 3);
     }
     return NULL;
+}
+
+fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
+{
+    const FXint opts = LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE;
+    fx_disp_window *dispwin;
+    if (d->type == DISP_HO) {
+        dispwin = new fx_disp_ho_window(d, comp, opts);
+    } else if (d->type == DISP_CAUCHY) {
+        dispwin = new fx_disp_cauchy_window(d, comp, opts);
+    } else {
+        dispwin = new fx_disp_window(d, comp, opts);
+    }
+    return dispwin;
 }

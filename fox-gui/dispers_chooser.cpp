@@ -99,7 +99,7 @@ new_model_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXCompos
 }
 
 dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Film Stack", opts, 0, 0, 600, 400, pl, pr, pt, pb, hs, vs),
+    : FXDialogBox(a, "Dispersion Select", opts, 0, 0, 600, 400, pl, pr, pt, pb, hs, vs),
     current_disp(0)
 {
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -197,14 +197,7 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
         if (!new_disp) return 0;
         release_current_disp();
         current_disp = new_disp;
-        FXWindow *new_dispwin;
-        if (current_disp->type == DISP_HO) {
-            new_dispwin = new fx_disp_ho_window(current_disp, vframe);
-        } else if (current_disp->type == DISP_CAUCHY) {
-            new_dispwin = new fx_disp_cauchy_window(current_disp, vframe);
-        } else {
-            new_dispwin = new fx_disp_window(current_disp, vframe);;
-        }
+        FXWindow *new_dispwin = new_disp_window(current_disp, vframe);
         replace_dispwin(new_dispwin);
     }
     return 1;

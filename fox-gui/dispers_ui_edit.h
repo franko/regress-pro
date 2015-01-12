@@ -16,7 +16,7 @@ private:
     fx_disp_window &operator=(const fx_disp_window&);
 
 public:
-    fx_disp_window(disp_t *d, FXComposite* p, FXuint opts=LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    fx_disp_window(disp_t *d, FXComposite *p,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
     ~fx_disp_window();
 
     void setup_name();
@@ -51,7 +51,10 @@ protected:
 
 class fx_disp_ho_window : public fx_disp_window {
 public:
-    fx_disp_ho_window(disp_t *d, FXComposite* p): fx_disp_window(d, p) { }
+    fx_disp_ho_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
+    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+    { }
+
     virtual void setup_dialog();
     virtual void add_dispersion_element();
     virtual void delete_dispersion_element(int index);
@@ -62,9 +65,16 @@ private:
 
 class fx_disp_cauchy_window : public fx_disp_window {
 public:
-    fx_disp_cauchy_window(disp_t *d, FXComposite* p): fx_disp_window(d, p) { }
+    fx_disp_cauchy_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
+    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+    { }
+
     virtual void setup_dialog();
     virtual double *map_parameter(int index);
 };
+
+// Create a new fx_disp_window (or a derived class instance) that corresponds to the
+// given dispersion.
+extern fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp);
 
 #endif
