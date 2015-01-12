@@ -29,6 +29,7 @@ public:
     long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
     long on_cmd_replace_layer(FXObject*,FXSelector,void* ptr);
     long on_cmd_delete_layer(FXObject*,FXSelector,void* ptr);
+    long on_cmd_edit_layer(FXObject*,FXSelector,void* ptr);
     long on_change_name(FXObject*,FXSelector,void* ptr);
     long on_change_thickness(FXObject*,FXSelector,void* ptr);
 
@@ -39,6 +40,7 @@ public:
         ID_FILM_NAME_LAST = ID_FILM_NAME + 64,
         ID_FILM_THICKNESS,
         ID_FILM_THICKNESS_LAST = ID_FILM_THICKNESS + 64,
+        ID_EDIT_LAYER,
         ID_DELETE_LAYER,
         ID_INSERT_LAYER,
         ID_REPLACE_LAYER,

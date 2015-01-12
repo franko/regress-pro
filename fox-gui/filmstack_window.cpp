@@ -3,6 +3,7 @@
 #include "recipe_window.h"
 #include "regress_pro_window.h"
 #include "fit-params.h"
+#include "dispers_edit_window.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -12,6 +13,7 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_INSERT_LAYER, filmstack_window::on_cmd_insert_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE_LAYER, filmstack_window::on_cmd_delete_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_REPLACE_LAYER, filmstack_window::on_cmd_replace_layer),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_EDIT_LAYER, filmstack_window::on_cmd_edit_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, recipe_window::onCmdHide),
 };
 
@@ -27,6 +29,7 @@ filmstack_window::filmstack_window(stack_t *s, FXWindow *topwin, FXuint opts, FX
     new FXMenuCommand(popupmenu,"Delete Layer", NULL, this, ID_DELETE_LAYER);
     new FXMenuCommand(popupmenu,"Select New Layer", NULL, this, ID_REPLACE_LAYER);
     new FXMenuCommand(popupmenu,"Insert Layer Above", NULL, this, ID_INSERT_LAYER);
+    new FXMenuCommand(popupmenu,"Edit Dispersion", NULL, this, ID_EDIT_LAYER);
 }
 
 filmstack_window::~filmstack_window()
@@ -127,6 +130,23 @@ filmstack_window::on_cmd_delete_layer(FXObject*, FXSelector, void*)
     shift_info info = {short(SHIFT_DELETE_LAYER), short(current_layer)};
     getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT), (void *) &info);
     rebuild_stack_window();
+    return 1;
+}
+
+long
+filmstack_window::on_cmd_edit_layer(FXObject*, FXSelector, void*)
+{
+    disp_t *current_disp = stack->disp[current_layer];
+    disp_t *edit_disp = disp_copy(current_disp);
+    dispers_edit_window *edit_win = new dispers_edit_window(edit_disp, this, DECOR_TITLE|DECOR_BORDER, 0, 0, 400, 320);
+    if (edit_win->execute() == TRUE) {
+        stack->disp[current_layer] = edit_disp;
+        disp_free(current_disp);
+        rebuild_stack_window();
+        return 1;
+    } else {
+        disp_free(edit_disp);
+    }
     return 1;
 }
 
