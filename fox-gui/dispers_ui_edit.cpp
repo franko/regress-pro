@@ -73,7 +73,7 @@ fx_disp_window::on_disp_element_delete(FXObject*, FXSelector sel, void *)
 
 static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *target, FXSelector id)
 {
-    fx_numeric_field *tf = new fx_numeric_field(frame, 10, target, id, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    fx_numeric_field *tf = new fx_numeric_field(frame, 8, target, id, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     FXString vstr;
     double *pvalue = target->map_parameter(id - fx_disp_window::ID_PARAM_0);
     vstr.format("%g", *pvalue);

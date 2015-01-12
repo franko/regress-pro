@@ -99,7 +99,7 @@ new_model_chooser(dispers_chooser *chooser, dispers_selector **pselect, FXCompos
 }
 
 dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(a, "Dispersion Select", opts, 0, 0, 600, 400, pl, pr, pt, pb, hs, vs),
+    : FXDialogBox(a, "Dispersion Select", opts, 0, 0, 480, 340, pl, pr, pt, pb, hs, vs),
     current_disp(0)
 {
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
