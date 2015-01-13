@@ -31,6 +31,7 @@
 #include "spectra.h"
 #include "symtab.h"
 #include "fit_recipe.h"
+#include "filmstack_window.h"
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -46,8 +47,9 @@ protected:
     FXString batchFileId;
 
 protected:
-    FXDialogBox *my_filmstack_window;
-    FXDialogBox *my_recipe_window;
+    filmstack_window *my_filmstack_window;
+    recipe_window *my_recipe_window;
+    filmstack_window *result_filmstack_window;
 
     FXMenuBar         *menubar;
     FXStatusBar       *statusbar;
@@ -99,6 +101,7 @@ public:
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
     long onCmdStackShift(FXObject*,FXSelector,void*);
+    long onCmdEditFilmStackResult(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
 
     bool save_script_as(const FXString& save_as);
@@ -126,6 +129,7 @@ public:
         ID_SCRIPT_TEXT,
         ID_REGISTER,
         ID_FILM_STACK,
+        ID_EDIT_FILMSTACK_RESULT,
         ID_RECIPE_EDIT,
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,

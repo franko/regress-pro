@@ -1,7 +1,6 @@
 #include "filmstack_window.h"
 #include "dispers_chooser.h"
 #include "recipe_window.h"
-#include "regress_pro_window.h"
 #include "fit-params.h"
 #include "dispers_edit_window.h"
 
@@ -19,9 +18,9 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
 
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
 
-filmstack_window::filmstack_window(stack_t *s, FXWindow *topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(topwin, "Film Stack", opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
-    stack(s)
+filmstack_window::filmstack_window(stack_t *s, const char *title, FXObject *rcp, FXuint sel_change, FXuint sel_shift, FXWindow *topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXDialogBox(topwin, title, opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
+    recipe_target(rcp), recipe_sel_change(sel_change), recipe_sel_shift(sel_shift), stack(s)
 {
     stack_window = setup_stack_window(this);
 
@@ -89,7 +88,17 @@ filmstack_window::rebuild_stack_window()
 void
 filmstack_window::notify_stack_change()
 {
-    getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE), NULL);
+    if (recipe_target) {
+        recipe_target->handle(this, recipe_sel_change, NULL);
+    }
+}
+
+void
+filmstack_window::notify_stack_shift(shift_info *info)
+{
+    if (recipe_target) {
+        recipe_target->handle(this, recipe_sel_shift, info);
+    }
 }
 
 long
@@ -101,7 +110,7 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
         if (!d) return 0;
         stack_insert_layer(stack, current_layer, d, 0.0);
         shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer)};
-        getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT), (void *) &info);
+        notify_stack_shift(&info);
         rebuild_stack_window();
         return 1;
     }
@@ -128,7 +137,7 @@ filmstack_window::on_cmd_delete_layer(FXObject*, FXSelector, void*)
 {
     stack_delete_layer(stack, current_layer);
     shift_info info = {short(SHIFT_DELETE_LAYER), short(current_layer)};
-    getOwner()->handle(this, FXSEL(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT), (void *) &info);
+    notify_stack_shift(&info);
     rebuild_stack_window();
     return 1;
 }
@@ -165,4 +174,10 @@ filmstack_window::on_change_thickness(FXObject*, FXSelector sel, void *data)
     double x = strtod((FXchar *)data, NULL);
     stack->thickness[index - 1] = x;
     return 1;
+}
+
+void
+filmstack_window::bind_new_filmstack(stack_t *s) {
+    stack = s;
+    rebuild_stack_window();
 }

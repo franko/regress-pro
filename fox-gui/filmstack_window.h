@@ -15,7 +15,9 @@ private:
     filmstack_window &operator=(const filmstack_window&);
 
 public:
-    filmstack_window(stack_t *s, FXWindow *w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    /* The arguments FXObject *rcp with the two selector indicates a recipe_window
+       that will be used as target to notify changes in film stack. */
+    filmstack_window(stack_t *s, const char *title, FXObject *rcp, FXuint sel_change, FXuint sel_shift, FXWindow *w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~filmstack_window();
 
     virtual void create();
@@ -25,6 +27,8 @@ private:
     int current_layer;
 
 public:
+    void bind_new_filmstack(stack_t *s);
+
     long on_cmd_film_menu(FXObject*,FXSelector,void* ptr);
     long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
     long on_cmd_replace_layer(FXObject*,FXSelector,void* ptr);
@@ -51,8 +55,15 @@ private:
     FXWindow *setup_stack_window(FXComposite *);
     void rebuild_stack_window();
     void notify_stack_change();
+    void notify_stack_shift(shift_info *);
 
     FXWindow *stack_window;
+
+    // If not NULL will send a message to the given target with the selectors below.
+    FXObject *recipe_target;
+    FXuint recipe_sel_change;
+    FXuint recipe_sel_shift;
+
     stack_t *stack;
 };
 

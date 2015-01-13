@@ -46,7 +46,6 @@
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "interactive_fit.h"
-#include "filmstack_window.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 
@@ -76,6 +75,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_EDIT_FILMSTACK_RESULT, regress_pro_window::onCmdEditFilmStackResult),
 };
 
 
@@ -136,6 +136,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     // Fit menu
     fitmenu = new FXMenuPane(this);
     new FXMenuCommand(fitmenu, "Run (NEW) Fitting",NULL,this,ID_RUN_FIT_NEW);
+    new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_EDIT_FILMSTACK_RESULT);
     new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
@@ -601,6 +602,9 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     }
 
     this->stack_result = fit_engine_yield_stack(fit);
+    if (result_filmstack_window) {
+        result_filmstack_window->bind_new_filmstack(this->stack_result);
+    }
 
     fit_engine_disable(fit);
 }
@@ -688,11 +692,24 @@ long
 regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 {
     if (!my_filmstack_window) {
-        filmstack_window *w = new filmstack_window(recipe->stack, this);
-        my_filmstack_window = w;
-        w->create();
+        my_filmstack_window = new filmstack_window(recipe->stack, "Fit Stack", this, ID_STACK_CHANGE, ID_STACK_SHIFT, this);
+        my_filmstack_window->create();
     }
     my_filmstack_window->show(PLACEMENT_SCREEN);
+    return 1;
+}
+
+long
+regress_pro_window::onCmdEditFilmStackResult(FXObject*,FXSelector,void*)
+{
+    if (!stack_result) {
+        return 0;
+    }
+    if (!result_filmstack_window) {
+        result_filmstack_window = new filmstack_window(stack_result, "Result Stack", NULL, 0, 0, this);
+        result_filmstack_window->create();
+    }
+    result_filmstack_window->show(PLACEMENT_SCREEN);
     return 1;
 }
 
