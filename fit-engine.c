@@ -418,6 +418,14 @@ fit_engine_bind(struct fit_engine *fit, stack_t *stack, const struct fit_config 
     fit->stack = stack_copy(stack);
 }
 
+stack_t *
+fit_engine_yield_stack(struct fit_engine *fit)
+{
+    stack_t *s = fit->stack;
+    fit->stack = NULL;
+    return s;
+}
+
 struct fit_engine *
 build_fit_engine(struct symtab *symtab, struct seeds **seeds) {
     stack_t *stack;

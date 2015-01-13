@@ -82,6 +82,10 @@ extern int  fit_engine_prepare(struct fit_engine *f,
 
 extern void fit_engine_disable(struct fit_engine *f);
 
+/* Return the stack owned by the fit_engine and gives it ownership to the
+   caller function. */
+extern stack_t *fit_engine_yield_stack(struct fit_engine *f);
+
 extern int  check_fit_parameters(struct stack *stack,
                                  struct fit_parameters *fps);
 
