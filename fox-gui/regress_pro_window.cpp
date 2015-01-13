@@ -600,7 +600,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
         stack_free(this->stack_result);
     }
 
-    this->stack_result = stack_copy(fit->stack);
+    this->stack_result = fit_engine_yield_stack(fit);
 
     fit_engine_disable(fit);
 }
