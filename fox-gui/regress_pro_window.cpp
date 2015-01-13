@@ -692,7 +692,8 @@ long
 regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 {
     if (!my_filmstack_window) {
-        my_filmstack_window = new filmstack_window(recipe->stack, "Fit Stack", this, ID_STACK_CHANGE, ID_STACK_SHIFT, this);
+        my_filmstack_window = new filmstack_window(recipe->stack, "Fit Stack", this);
+        my_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
         my_filmstack_window->create();
     }
     my_filmstack_window->show(PLACEMENT_SCREEN);
@@ -706,7 +707,7 @@ regress_pro_window::onCmdEditFilmStackResult(FXObject*,FXSelector,void*)
         return 0;
     }
     if (!result_filmstack_window) {
-        result_filmstack_window = new filmstack_window(stack_result, "Result Stack", NULL, 0, 0, this);
+        result_filmstack_window = new filmstack_window(stack_result, "Result Stack", this);
         result_filmstack_window->create();
     }
     result_filmstack_window->show(PLACEMENT_SCREEN);

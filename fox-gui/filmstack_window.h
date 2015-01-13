@@ -15,9 +15,7 @@ private:
     filmstack_window &operator=(const filmstack_window&);
 
 public:
-    /* The arguments FXObject *rcp with the two selector indicates a recipe_window
-       that will be used as target to notify changes in film stack. */
-    filmstack_window(stack_t *s, const char *title, FXObject *rcp, FXuint sel_change, FXuint sel_shift, FXWindow *w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    filmstack_window(stack_t *s, const char *title, FXWindow *w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~filmstack_window();
 
     virtual void create();
@@ -27,6 +25,10 @@ private:
     int current_layer;
 
 public:
+    /* The arguments FXObject *rcp with the two selector indicates an object
+       that will be used as target to notify changes in film stack. */
+    void set_target_stack_changes(FXObject *rcp, FXuint sel_change, FXuint sel_shift);
+
     void bind_new_filmstack(stack_t *s);
 
     long on_cmd_film_menu(FXObject*,FXSelector,void* ptr);

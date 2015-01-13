@@ -18,9 +18,9 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
 
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
 
-filmstack_window::filmstack_window(stack_t *s, const char *title, FXObject *rcp, FXuint sel_change, FXuint sel_shift, FXWindow *topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+filmstack_window::filmstack_window(stack_t *s, const char *title, FXWindow *topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXDialogBox(topwin, title, opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
-    recipe_target(rcp), recipe_sel_change(sel_change), recipe_sel_shift(sel_shift), stack(s)
+    recipe_target(NULL), recipe_sel_change(0), recipe_sel_shift(0), stack(s)
 {
     stack_window = setup_stack_window(this);
 
@@ -34,6 +34,14 @@ filmstack_window::filmstack_window(stack_t *s, const char *title, FXObject *rcp,
 filmstack_window::~filmstack_window()
 {
     delete popupmenu;
+}
+
+void
+filmstack_window::set_target_stack_changes(FXObject *rcp, FXuint sel_change, FXuint sel_shift)
+{
+    recipe_target = rcp;
+    recipe_sel_change = sel_change;
+    recipe_sel_shift = sel_shift;
 }
 
 FXWindow *
