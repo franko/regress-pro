@@ -647,7 +647,8 @@ regress_pro_window::onCmdRunFitNew(FXObject*,FXSelector,void *)
         return 0;
     }
     reg_check_point(this);
-    if (check_fit_parameters(recipe->stack, recipe->parameters) != 0) {
+    if (recipe->parameters->number == 0 ||
+        check_fit_parameters(recipe->stack, recipe->parameters) != 0) {
         // ADD a proper ERROR MESSAGE here.
         return 0;
     }
