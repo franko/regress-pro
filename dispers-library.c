@@ -1,8 +1,3 @@
-
-/*
-  $Id$
- */
-
 #include <string.h>
 
 #include "common.h"
@@ -34,6 +29,8 @@ static void add_dispersion_node(struct disp_list_node *curr,
 #include "poly-table.h"
 
 static struct disp_list_node *dispers_library_list;
+
+struct disp_list user_lib[1] = {{NULL, NULL}};
 
 void
 add_dispersion_node(struct disp_list_node *curr, struct disp_list_node *prev,
@@ -167,4 +164,60 @@ dispers_library_get(int index, char const ** lname)
         }
     }
     return NULL;
+}
+
+static struct disp_node *new_disp_node(disp_t *d)
+{
+    struct disp_node *n = malloc(sizeof(struct disp_node));
+    n->content = d;
+    n->next = NULL;
+    return n;
+}
+
+static void free_disp_node(struct disp_node *n)
+{
+    disp_free(n->content);
+    free(n);
+}
+
+struct disp_node *
+disp_list_add(struct disp_list *lst, disp_t *d)
+{
+    struct disp_node *n = new_disp_node(d);
+    if (lst->last) {
+        lst->last->next = n;
+        lst->last = n;
+    } else {
+        lst->first = n;
+        lst->last = n;
+    }
+    return n;
+}
+
+void
+disp_list_remove(struct disp_list *lst, struct disp_node *prev)
+{
+    struct disp_node *n = (prev ? prev->next : lst->first);
+    struct disp_node *next = n->next;
+    free_disp_node(n);
+    if (prev) {
+        prev->next = next;
+    } else {
+        lst->first = next;
+    }
+    if (next == NULL) {
+        lst->last = prev;
+    }
+}
+
+void
+disp_list_free(struct disp_list *lst)
+{
+    struct disp_node *n, *next;
+    for (n = lst->first; n; n = next) {
+        next = n->next;
+        free_disp_node(n);
+    }
+    lst->first = NULL;
+    lst->last = NULL;
 }
