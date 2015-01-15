@@ -3,6 +3,7 @@
 #include "recipe_window.h"
 #include "fit-params.h"
 #include "dispers_edit_window.h"
+#include "dispers-library.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -13,6 +14,7 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE_LAYER, filmstack_window::on_cmd_delete_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_REPLACE_LAYER, filmstack_window::on_cmd_replace_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_EDIT_LAYER, filmstack_window::on_cmd_edit_layer),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_SAVE_USERLIB, filmstack_window::on_cmd_save_userlib),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, recipe_window::onCmdHide),
 };
 
@@ -29,6 +31,8 @@ filmstack_window::filmstack_window(stack_t *s, const char *title, FXWindow *topw
     new FXMenuCommand(popupmenu,"Select New Layer", NULL, this, ID_REPLACE_LAYER);
     new FXMenuCommand(popupmenu,"Insert Layer Above", NULL, this, ID_INSERT_LAYER);
     new FXMenuCommand(popupmenu,"Edit Dispersion", NULL, this, ID_EDIT_LAYER);
+    new FXMenuSeparator(popupmenu);
+    new FXMenuCommand(popupmenu,"Save into User Library", NULL, this, ID_SAVE_USERLIB);
 }
 
 filmstack_window::~filmstack_window()
@@ -164,6 +168,14 @@ filmstack_window::on_cmd_edit_layer(FXObject*, FXSelector, void*)
     } else {
         disp_free(edit_disp);
     }
+    return 1;
+}
+
+long
+filmstack_window::on_cmd_save_userlib(FXObject*, FXSelector, void*)
+{
+    disp_t *d = disp_copy(stack->disp[current_layer]);
+    disp_list_add(user_lib, d);
     return 1;
 }
 

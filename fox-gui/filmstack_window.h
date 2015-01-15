@@ -38,6 +38,7 @@ public:
     long on_cmd_edit_layer(FXObject*,FXSelector,void* ptr);
     long on_change_name(FXObject*,FXSelector,void* ptr);
     long on_change_thickness(FXObject*,FXSelector,void* ptr);
+    long on_cmd_save_userlib(FXObject*,FXSelector,void* ptr);
 
     enum {
         ID_FILM_MENU = FXDialogBox::ID_LAST,
@@ -50,6 +51,7 @@ public:
         ID_DELETE_LAYER,
         ID_INSERT_LAYER,
         ID_REPLACE_LAYER,
+        ID_SAVE_USERLIB,
         ID_LAST
     };
 
