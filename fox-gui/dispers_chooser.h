@@ -5,11 +5,20 @@
 
 #include "dispers.h"
 
-class dispers_selector {
+class fx_dispers_selector : public FXHorizontalFrame {
+    FXDECLARE(fx_dispers_selector)
+protected:
+    fx_dispers_selector() {};
+private:
+    fx_dispers_selector(const fx_dispers_selector&);
+    fx_dispers_selector &operator=(const fx_dispers_selector&);
 public:
-    virtual ~dispers_selector() {};
-    virtual disp_t *get() = 0;
-    virtual void reset() = 0;
+    fx_dispers_selector(FXWindow *chooser, FXComposite *p,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
+    : FXHorizontalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+    { }
+
+    virtual disp_t *get_dispersion() { return NULL; }
+    virtual void reset() { }
 };
 
 class dispers_chooser : public FXDialogBox {
@@ -49,12 +58,16 @@ private:
         current_disp = NULL;
     }
 
+    fx_dispers_selector *selector_frame(int cat)
+    {
+        return (fx_dispers_selector *) choose_switcher->childAtIndex(cat);
+    }
+
     FXList *catlist;
     FXSwitcher *choose_switcher;
     FXVerticalFrame *vframe;
     FXWindow *dispwin;
     FXWindow *dispwin_anchor, *dispwin_dummy;
-    dispers_selector *dispers_selectors[4];
     disp_t *current_disp;
 };
 
