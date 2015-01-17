@@ -62,6 +62,7 @@ private:
     void notify_stack_shift(shift_info *);
 
     FXWindow *stack_window;
+    FXFont *small_font;
 
     // If not NULL will send a message to the given target with the selectors below.
     FXObject *recipe_target;
