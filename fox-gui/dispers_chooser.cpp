@@ -5,6 +5,82 @@
 
 FXIMPLEMENT(fx_dispers_selector,FXHorizontalFrame,NULL,0);
 
+class fx_library_selector : public fx_dispers_selector {
+public:
+    fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    virtual disp_t *get_dispersion();
+    virtual void reset();
+private:
+    disp_library_iter iter;
+    FXComboBox *combo;
+};
+
+fx_library_selector::fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
+: fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+{
+    new FXLabel(this, "Library Model");
+    int nb_disp = iter.length();
+
+    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
+    combo->setNumVisible(nb_disp + 1);
+    combo->appendItem("- choose a dispersion");
+    for(const char *nm = iter.start(); nm; nm = iter.next()) {
+        combo->appendItem(nm);
+    }
+}
+
+disp_t *
+fx_library_selector::get_dispersion()
+{
+    FXint index = combo->getCurrentItem() - 1;
+    return iter.get(index);
+}
+
+void
+fx_library_selector::reset()
+{
+    combo->setCurrentItem(0);
+}
+
+
+class fx_userlib_selector : public fx_dispers_selector {
+public:
+    fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    virtual disp_t *get_dispersion();
+    virtual void reset();
+private:
+    userlib_iter iter;
+    FXComboBox *combo;
+};
+
+fx_userlib_selector::fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
+: fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+{
+    new FXLabel(this, "User Model");
+    int nb_disp = iter.length();
+
+    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
+    combo->setNumVisible(nb_disp + 1);
+    combo->appendItem("- choose a dispersion");
+    for(const char *nm = iter.start(); nm; nm = iter.next()) {
+        combo->appendItem(nm);
+    }
+}
+
+disp_t *
+fx_userlib_selector::get_dispersion()
+{
+    FXint index = combo->getCurrentItem() - 1;
+    return iter.get(index);
+}
+
+void
+fx_userlib_selector::reset()
+{
+    combo->setCurrentItem(0);
+}
+
+
 class fx_newmodel_selector : public fx_dispers_selector {
 public:
     fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
@@ -14,43 +90,6 @@ private:
     FXComboBox *combo;
 };
 
-class fx_library_selector : public fx_dispers_selector {
-public:
-    fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
-    virtual disp_t *get_dispersion();
-    virtual void reset();
-private:
-    FXComboBox *combo;
-};
-
-fx_library_selector::fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
-: fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
-{
-    new FXLabel(this, "Library Model");
-    disp_library_iter disp_iter;
-    int nb_disp = disp_iter.length();
-
-    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
-    combo->setNumVisible(nb_disp + 1);
-    combo->appendItem("- choose a dispersion");
-    for(const char *nm = disp_iter.start(); nm; nm = disp_iter.next()) {
-        combo->appendItem(nm);
-    }
-}
-
-disp_t *
-fx_library_selector::get_dispersion()
-{
-    FXString name = this->combo->getText();
-    if (name[0] == '-') return NULL;
-    return dispers_library_search(name.text());
-}
-
-void
-fx_library_selector::reset()
-{
-    combo->setCurrentItem(0);
-}
 
 fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
 : fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
@@ -110,7 +149,7 @@ dispers_chooser::dispers_chooser(FXApp* a, FXuint opts, FXint pl, FXint pr, FXin
     new fx_library_selector(this, choose_switcher);
     new fx_dispers_selector(this, choose_switcher);
     new fx_newmodel_selector(this, choose_switcher);
-    new fx_dispers_selector(this, choose_switcher);
+    new fx_userlib_selector(this, choose_switcher);
 
     dispwin = new_dispwin_dummy(vframe);
     dispwin_dummy = dispwin;
