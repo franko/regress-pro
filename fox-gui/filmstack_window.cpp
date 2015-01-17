@@ -86,6 +86,7 @@ void filmstack_window::create()
 {
     FXDialogBox::create();
     popupmenu->create();
+    resize(getWidth(), getDefaultHeight());
 }
 
 long
@@ -106,6 +107,7 @@ filmstack_window::rebuild_stack_window()
     delete stack_window;
     stack_window = setup_stack_window(this);
     stack_window->create();
+    resize(getWidth(), getDefaultHeight());
     notify_stack_change();
 }
 
