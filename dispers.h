@@ -11,6 +11,7 @@
 #include "disp-lookup.h"
 #include "disp-cauchy.h"
 #include "dispers-classes.h"
+#include "writer.h"
 
 __BEGIN_DECLS
 
@@ -41,6 +42,7 @@ struct disp_class {
     /* class methods */
     int (*decode_param_string)(const char *param);
     void (*encode_param)(str_t param, const fit_param_t *fp);
+    int (*write)(writer_t *w, const struct disp_struct *_d);
 };
 
 struct deriv_info {
@@ -104,6 +106,7 @@ extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
 extern int      disp_base_decode_param_string(const char *param);
 extern int      disp_base_fp_number(const disp_t *src);
+extern int      disp_write(writer_t *w, const disp_t *_d);
 
 __END_DECLS
 

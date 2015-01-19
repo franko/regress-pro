@@ -38,6 +38,8 @@ static void ho_encode_param(str_t param, const fit_param_t *fp);
 static double ho_get_param_value(const struct disp_struct *d,
                                  const fit_param_t *fp);
 
+static int ho_write(writer_t *w, const disp_t *_d);
+
 struct disp_class ho_disp_class = {
     .disp_class_id       = DISP_HO,
     .model_id            = MODEL_HO,
@@ -56,6 +58,7 @@ struct disp_class ho_disp_class = {
 
     .decode_param_string = ho_decode_param_string,
     .encode_param        = ho_encode_param,
+    .write               = ho_write,
 };
 
 static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
@@ -356,4 +359,22 @@ disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
     memcpy(d->disp.ho.params, params, nb_hos * sizeof(struct ho_params));
 
     return d;
+}
+
+int ho_write(writer_t *w, const disp_t *_d)
+{
+    const struct disp_ho *d = &_d->disp.ho;
+    writer_printf(w, "ho \"%s\" %d [", CSTR(_d->name), d->nb_hos);
+    writer_newline_enter(w);
+    struct ho_params *ho = d->params;
+    for (int i = 0; i < d->nb_hos; i++, ho++) {
+        if (i > 0) {
+            writer_printf(w, ",");
+            writer_newline(w);
+        }
+        writer_printf(w, "%g, %g, %g, %g, %g", ho->nosc, ho->en, ho->eg, ho->nu, ho->phi);
+    }
+    writer_newline_exit(w);
+    writer_printf(w, "]");
+    return 0;
 }

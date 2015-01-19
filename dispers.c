@@ -269,3 +269,10 @@ decode_fit_param(fit_param_t *fp, const str_t str)
 
     return 1;
 }
+
+int
+disp_write(writer_t *w, const disp_t *d)
+{
+    assert(d->dclass != NULL);
+    return d->dclass->write(w, d);
+}
