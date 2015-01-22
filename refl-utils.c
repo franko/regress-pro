@@ -19,7 +19,8 @@ read_nova_spectrum(FILE *f, str_ptr ln) {
     unsigned int c, c_save;
     int na, j, lc0 = 0, lcount;
     long dpos;
-    int starting_zeroes = 1, ending_zeroes = 0;
+    int starting_zeroes = 1;
+    int ezcount = 0; /* Number of zeroes at the end of file. */
     double w[5];
 
     for(;;) {
@@ -36,17 +37,20 @@ read_nova_spectrum(FILE *f, str_ptr ln) {
                 starting_zeroes = 0;
                 lcount = 1;
                 continue;
+            } else if (c > 0 && ezcount > 0) {
+                lcount += ezcount;
+                ezcount = 0;
             }
 
             if(c == 0) {
                 if(!starting_zeroes) {
-                    ending_zeroes = 1;
+                    ezcount ++;
                 } else {
                     lc0++;
                 }
             }
 
-            if(!starting_zeroes && !ending_zeroes) {
+            if(!starting_zeroes && ezcount == 0) {
                 lcount++;
             }
             continue;
