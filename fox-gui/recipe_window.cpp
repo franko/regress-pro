@@ -1,7 +1,7 @@
 #include <fxkeys.h>
 
 #include "recipe_window.h"
-#include "fit-params.h"
+#include "fit_params_utils.h"
 #include "stack.h"
 
 static void set_numeric_textfield(FXTextField *tf, double value);
@@ -110,25 +110,7 @@ void recipe_window::setup_parameters_list()
     if (param_list) {
         fit_parameters_free(param_list);
     }
-    param_list = fit_parameters_new();
-    stack_get_all_parameters(recipe->stack, param_list);
-
-    param_listbox->clearItems();
-
-    str_t pname;
-    str_init(pname, 16);
-    int current_layer = 0;
-    for (size_t i = 0; i < param_list->number; i++) {
-        fit_param_t *fp = &param_list->values[i];
-        if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer) {
-            str_printf(pname, "-- layer %d", fp->layer_nb);
-            param_listbox->appendItem(CSTR(pname));
-            current_layer = fp->layer_nb;
-        }
-        get_full_param_name(fp, pname);
-        param_listbox->appendItem(CSTR(pname), NULL, (void*) (i + 1));
-    }
-    str_free(pname);
+    param_list = listbox_populate_all_parameters(param_listbox, recipe->stack);
 }
 
 void recipe_window::populate_fit_parameters()
