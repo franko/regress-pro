@@ -5,7 +5,6 @@
 #include "stack.h"
 
 static void set_numeric_textfield(FXTextField *tf, double value);
-static FXString format_fit_parameter(const fit_param_t *fp, const seed_t *value);
 static bool range_correct_format(const char *txt, double ps[]);
 
 // Map
@@ -338,31 +337,9 @@ recipe_window::on_select_parameter(FXObject *, FXSelector, void *)
 {
     FXint index = fit_list->getCurrentItem();
     const fit_param_t *selfp = &recipe->parameters->values[index];
-    int i = fit_parameters_find(param_list, selfp);
-    for (int j = 0; j < param_listbox->getNumItems(); j++) {
-        if ((FXint)(param_listbox->getItemData(j)) - 1 == i) {
-            param_listbox->setCurrentItem(j, TRUE);
-        }
-    }
+    int fp_index = fit_parameters_find(param_list, selfp);
+    listbox_select_parameter(param_listbox, fp_index);
     return 1;
-}
-
-FXString
-format_fit_parameter(const fit_param_t *fp, const seed_t *value)
-{
-    FXString txt;
-    str_t name;
-    str_init(name, 16);
-    get_full_param_name(fp, name);
-    if (value->type == SEED_SIMPLE) {
-        txt.format("%s, %g", CSTR(name), value->seed);
-    } else if (value->type == SEED_RANGE) {
-        txt.format("%s, [%g ... %g, %g]", CSTR(name), value->min, value->max, value->step);
-    } else {
-        txt.format("%s, ?", CSTR(name));
-    }
-    str_free(name);
-    return txt;
 }
 
 void set_numeric_textfield(FXTextField *tf, double value)

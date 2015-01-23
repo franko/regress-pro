@@ -25,3 +25,34 @@ fit_parameters *listbox_populate_all_parameters(FXListBox *listbox, stack_t *sta
 
     return fps;
 }
+
+FXString
+format_fit_parameter(const fit_param_t *fp, const seed_t *value)
+{
+    FXString txt;
+    str_t name;
+    str_init(name, 16);
+    get_full_param_name(fp, name);
+    if (value && value->type == SEED_SIMPLE) {
+        txt.format("%s, %g", CSTR(name), value->seed);
+    } else if (value && value->type == SEED_RANGE) {
+        txt.format("%s, [%g ... %g, %g]", CSTR(name), value->min, value->max, value->step);
+    } else if (value) {
+        txt.format("%s, ?", CSTR(name));
+    } else {
+        txt.format("%s", CSTR(name));
+    }
+    str_free(name);
+    return txt;
+}
+
+int listbox_select_parameter(FXListBox *listbox, int fp_index)
+{
+    for (int j = 0; j < listbox->getNumItems(); j++) {
+        if ((FXint)(listbox->getItemData(j)) - 1 == fp_index) {
+            listbox->setCurrentItem(j, TRUE);
+            return 1;
+        }
+    }
+    return 0;
+}
