@@ -46,6 +46,7 @@
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "interactive_fit.h"
+#include "multifit_window.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 
@@ -62,6 +63,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_FILM_STACK, regress_pro_window::onCmdFilmStack),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_EDIT, regress_pro_window::onCmdRecipeEdit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_MSAMPLE_EDIT, regress_pro_window::onCmdMultiSampleEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
@@ -120,6 +122,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     editmenu = new FXMenuPane(this);
     new FXMenuCommand(editmenu, "Film Stack", NULL, this, ID_FILM_STACK);
     new FXMenuCommand(editmenu, "Recipe", NULL, this, ID_RECIPE_EDIT);
+    new FXMenuCommand(editmenu, "Multi Sample", NULL, this, ID_MSAMPLE_EDIT);
     new FXMenuTitle(menubar, "&Edit", NULL, editmenu);
 
     // Script menu
@@ -824,6 +827,13 @@ regress_pro_window::setErrorRegion(int sl, int el)
     }
 
     scripttext->changeStyle(ns, next, 1);
+}
+
+long regress_pro_window::onCmdMultiSampleEdit(FXObject *, FXSelector, void *)
+{
+    multifit_window *win = new multifit_window(recipe, this);
+    win->execute();
+    return 1;
 }
 
 float

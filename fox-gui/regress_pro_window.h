@@ -85,6 +85,7 @@ public:
 
     long onCmdFilmStack(FXObject*,FXSelector,void*);
     long onCmdRecipeEdit(FXObject*,FXSelector,void*);
+    long onCmdMultiSampleEdit(FXObject*,FXSelector,void*);
     long onCmdLoadScript(FXObject*,FXSelector,void*);
     long onCmdSaveScript(FXObject*,FXSelector,void*);
     long onCmdSaveAsScript(FXObject*,FXSelector,void *);
@@ -131,6 +132,7 @@ public:
         ID_FILM_STACK,
         ID_EDIT_FILMSTACK_RESULT,
         ID_RECIPE_EDIT,
+        ID_MSAMPLE_EDIT,
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,
         ID_LAST
