@@ -33,6 +33,7 @@
 #include "fit_recipe.h"
 #include "filmstack_window.h"
 #include "multifit_window.h"
+#include "dataset_window.h"
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -51,6 +52,7 @@ protected:
     filmstack_window *my_filmstack_window;
     recipe_window *my_recipe_window;
     multifit_window *my_multifit_window;
+    dataset_window *my_dataset_window;
     filmstack_window *result_filmstack_window;
 
     FXMenuBar         *menubar;
@@ -88,6 +90,7 @@ public:
     long onCmdFilmStack(FXObject*,FXSelector,void*);
     long onCmdRecipeEdit(FXObject*,FXSelector,void*);
     long onCmdMultiSampleEdit(FXObject*,FXSelector,void*);
+    long onCmdDatasetEdit(FXObject*,FXSelector,void*);
     long onCmdLoadScript(FXObject*,FXSelector,void*);
     long onCmdSaveScript(FXObject*,FXSelector,void*);
     long onCmdSaveAsScript(FXObject*,FXSelector,void *);
@@ -135,6 +138,7 @@ public:
         ID_EDIT_FILMSTACK_RESULT,
         ID_RECIPE_EDIT,
         ID_MSAMPLE_EDIT,
+        ID_DATASET_EDIT,
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,
         ID_LAST

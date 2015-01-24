@@ -63,6 +63,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_FILM_STACK, regress_pro_window::onCmdFilmStack),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_EDIT, regress_pro_window::onCmdRecipeEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_MSAMPLE_EDIT, regress_pro_window::onCmdMultiSampleEdit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
@@ -103,7 +104,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
       my_filmstack_window(NULL), my_recipe_window(NULL), my_multifit_window(NULL),
-      m_model_spectr(0)
+      my_dataset_window(NULL), m_model_spectr(0)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -122,6 +123,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(editmenu, "Film Stack", NULL, this, ID_FILM_STACK);
     new FXMenuCommand(editmenu, "Recipe", NULL, this, ID_RECIPE_EDIT);
     new FXMenuCommand(editmenu, "Multi Sample", NULL, this, ID_MSAMPLE_EDIT);
+    new FXMenuCommand(editmenu, "Dataset", NULL, this, ID_DATASET_EDIT);
     new FXMenuTitle(menubar, "&Edit", NULL, editmenu);
 
     // Script menu
@@ -726,6 +728,17 @@ regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
         w->create();
     }
     my_recipe_window->show(PLACEMENT_SCREEN);
+    return 1;
+}
+
+long
+regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
+{
+    if (!my_dataset_window) {
+        my_dataset_window = new dataset_window(this);
+        my_dataset_window->create();
+    }
+    my_dataset_window->show(PLACEMENT_SCREEN);
     return 1;
 }
 
