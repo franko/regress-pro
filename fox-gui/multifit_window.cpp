@@ -1,3 +1,5 @@
+#include <fxkeys.h>
+
 #include "multifit_window.h"
 #include "fit_params_utils.h"
 #include "str.h"
@@ -9,6 +11,10 @@ FXDEFMAP(multifit_window) multifit_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, multifit_window::ID_ADD_CONSTR, multifit_window::on_cmd_add_constr),
     FXMAPFUNC(SEL_SELECTED, multifit_window::ID_PARAM_INDIV, multifit_window::on_select_param),
     FXMAPFUNC(SEL_SELECTED, multifit_window::ID_PARAM_CONSTR, multifit_window::on_select_param),
+    FXMAPFUNC(SEL_COMMAND, multifit_window::ID_STACK_CHANGE, multifit_window::on_cmd_stack_change),
+    FXMAPFUNC(SEL_COMMAND, multifit_window::ID_STACK_SHIFT, multifit_window::on_cmd_stack_shift),
+    FXMAPFUNC(SEL_KEYPRESS, multifit_window::ID_PARAM_INDIV, multifit_window::on_keypress_parameter),
+    FXMAPFUNC(SEL_KEYPRESS, multifit_window::ID_PARAM_CONSTR, multifit_window::on_keypress_parameter),
 };
 
 FXIMPLEMENT(multifit_window,FXDialogBox,multifit_window_map,ARRAYNUMBER(multifit_window_map));
@@ -106,4 +112,43 @@ long multifit_window::on_select_param(FXObject *, FXSelector sel, void *)
     /* Select in the listbox the given parameter. */
     listbox_select_parameter(param_listbox, fp_index);
     return 1;
+}
+
+long multifit_window::on_cmd_stack_change(FXObject *, FXSelector, void *)
+{
+    list_populate(indiv_listbox, iparameters, NULL, true);
+    list_populate(constr_listbox, cparameters, NULL, true);
+    setup_parameters_list();
+    return 1;
+}
+
+long multifit_window::on_cmd_stack_shift(FXObject *, FXSelector, void *ptr)
+{
+    const shift_info *shift = (const shift_info *) ptr;
+    fit_parameters_fix_layer_shift(iparameters, *shift);
+    fit_parameters_fix_layer_shift(cparameters, *shift);
+    return 1;
+}
+
+long multifit_window::on_keypress_parameter(FXObject *, FXSelector sel, void *ptr)
+{
+    int id = FXSELID(sel);
+    FXEvent* event=(FXEvent*)ptr;
+    FXList *list = (id == ID_PARAM_INDIV ? indiv_listbox : constr_listbox);
+    fit_parameters *fps = (id == ID_PARAM_INDIV ? iparameters : cparameters);
+    switch(event->code) {
+    case KEY_Delete:
+    {
+        FXint index = list->getCurrentItem();
+        if (index >= 0) {
+            list->removeItem(index);
+            fit_parameters_remove(fps, index);
+            return 1;
+        }
+        break;
+    }
+    default:
+        /* */ ;
+    }
+    return 0;
 }

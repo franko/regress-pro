@@ -24,6 +24,9 @@ public:
     long on_cmd_add_fit(FXObject *, FXSelector, void *);
     long on_cmd_add_constr(FXObject *, FXSelector, void *);
     long on_select_param(FXObject *, FXSelector, void *);
+    long on_cmd_stack_change(FXObject *, FXSelector, void *);
+    long on_cmd_stack_shift(FXObject *, FXSelector, void *);
+    long on_keypress_parameter(FXObject *, FXSelector, void *);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,
@@ -31,6 +34,8 @@ public:
         ID_PARAM_CONSTR,
         ID_ADD_FIT,
         ID_ADD_CONSTR,
+        ID_STACK_CHANGE,
+        ID_STACK_SHIFT,
         ID_LAST
     };
 

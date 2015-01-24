@@ -46,7 +46,6 @@
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "interactive_fit.h"
-#include "multifit_window.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 
@@ -103,7 +102,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
-      my_filmstack_window(NULL), my_recipe_window(NULL),
+      my_filmstack_window(NULL), my_recipe_window(NULL), my_multifit_window(NULL),
       m_model_spectr(0)
 {
     // Menubar
@@ -735,15 +734,20 @@ regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
 {
     if (my_recipe_window) {
         my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
-        return 1;
     }
-    return 0;
+    if (my_multifit_window) {
+        my_multifit_window->handle(this, FXSEL(SEL_COMMAND, multifit_window::ID_STACK_CHANGE), NULL);
+    }
+    return 1;
 }
 
 long
 regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
 {
     recipe->shift_fit_parameters((shift_info *)ptr);
+    if (my_multifit_window) {
+        my_multifit_window->handle(this, FXSEL(SEL_COMMAND, multifit_window::ID_STACK_SHIFT), ptr);
+    }
     return 1;
 }
 
@@ -831,8 +835,11 @@ regress_pro_window::setErrorRegion(int sl, int el)
 
 long regress_pro_window::onCmdMultiSampleEdit(FXObject *, FXSelector, void *)
 {
-    multifit_window *win = new multifit_window(recipe, this);
-    win->execute();
+    if (!my_multifit_window) {
+        my_multifit_window = new multifit_window(recipe, this);
+        my_multifit_window->create();
+    }
+    my_multifit_window->show(PLACEMENT_SCREEN);
     return 1;
 }
 

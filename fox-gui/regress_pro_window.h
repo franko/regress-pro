@@ -32,6 +32,7 @@
 #include "symtab.h"
 #include "fit_recipe.h"
 #include "filmstack_window.h"
+#include "multifit_window.h"
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -49,6 +50,7 @@ protected:
 protected:
     filmstack_window *my_filmstack_window;
     recipe_window *my_recipe_window;
+    multifit_window *my_multifit_window;
     filmstack_window *result_filmstack_window;
 
     FXMenuBar         *menubar;
