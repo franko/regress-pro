@@ -74,7 +74,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXi
     grid_max_tf = new FXTextField(matrix, 10, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     grid_step_tf = new FXTextField(matrix, 10, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
-    populate_fit_parameters();
+    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
 }
 
 void recipe_window::setup_config_parameters()
@@ -110,16 +110,6 @@ void recipe_window::setup_parameters_list()
         fit_parameters_free(param_list);
     }
     param_list = listbox_populate_all_parameters(param_listbox, recipe->stack);
-}
-
-void recipe_window::populate_fit_parameters()
-{
-    fit_list->clearItems();
-    for (size_t i = 0; i < recipe->parameters->number; i++) {
-        const fit_param_t *fp = &recipe->parameters->values[i];
-        const seed_t *value = &recipe->seeds_list->values[i];
-        fit_list->appendItem(format_fit_parameter(fp, value));
-    }
 }
 
 recipe_window::~recipe_window()
@@ -327,7 +317,7 @@ recipe_window::on_changed_subsampling(FXObject *, FXSelector sel, void *ptr)
 long
 recipe_window::on_cmd_stack_change(FXObject *, FXSelector, void *)
 {
-    populate_fit_parameters();
+    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
     setup_parameters_list();
     return 1;
 }

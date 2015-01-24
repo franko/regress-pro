@@ -19,7 +19,6 @@ public:
 
     void setup_parameters_list();
     void setup_config_parameters();
-    void populate_fit_parameters();
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);
