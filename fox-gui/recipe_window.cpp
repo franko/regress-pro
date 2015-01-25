@@ -1,4 +1,5 @@
 #include <fxkeys.h>
+#include <stdint.h>
 
 #include "recipe_window.h"
 #include "fit_params_utils.h"
@@ -121,7 +122,7 @@ const fit_param_t *
 recipe_window::selected_parameter()
 {
     FXint no = param_listbox->getCurrentItem();
-    int index = (FXint)(param_listbox->getItemData(no)) - 1;
+    int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
     return index >= 0 ? &param_list->values[index] : NULL;
 }
 

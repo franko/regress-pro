@@ -1,4 +1,5 @@
 #include <fxkeys.h>
+#include <stdint.h>
 
 #include "multifit_window.h"
 #include "fit_params_utils.h"
@@ -67,7 +68,7 @@ void multifit_window::setup_parameters_list()
 const fit_param_t *multifit_window::selected_parameter() const
 {
     FXint no = param_listbox->getCurrentItem();
-    int index = (FXint)(param_listbox->getItemData(no)) - 1;
+    int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
     return index >= 0 ? &param_list->values[index] : NULL;
 }
 

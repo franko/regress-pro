@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "fit_params_utils.h"
 #include "fit-params.h"
 
@@ -49,7 +50,7 @@ format_fit_parameter(const fit_param_t *fp, const seed_t *value)
 int listbox_select_parameter(FXListBox *listbox, int fp_index)
 {
     for (int j = 0; j < listbox->getNumItems(); j++) {
-        if ((FXint)(listbox->getItemData(j)) - 1 == fp_index) {
+        if ((intptr_t)(listbox->getItemData(j)) - 1 == fp_index) {
             listbox->setCurrentItem(j, TRUE);
             return 1;
         }
