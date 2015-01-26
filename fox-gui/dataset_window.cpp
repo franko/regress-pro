@@ -12,12 +12,10 @@ dataset_window::dataset_window(FXWindow *topwin, FXuint opts, FXint pl, FXint pr
     : FXDialogBox(topwin, "Spectra Dataset", opts, 0, 0, 540, 400, pl, pr, pt, pb, hs, vs)
 {
     FXHorizontalFrame *hframe = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    table = new FXTable(hframe, this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    table = new dataset_table(hframe, this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     table->setTableSize(20, 6);
     table->setRowHeaderWidth(28);
-    table->setColumnText(0, "Spectrum");
-
-    entries_no = 0;
+    table->setColumnText(0, "Filename");
 
     FXVerticalFrame *bframe = new FXVerticalFrame(hframe, LAYOUT_FILL_Y);
     new FXButton(bframe, "Add Files", NULL, this, ID_ADD_FILES);
@@ -31,13 +29,8 @@ long dataset_window::on_cmd_add_files(FXObject *, FXSelector, void *)
     open.setPatternList("Spectra File (*.dat)\nAny Files (*)");
     if (open.execute()) {
         FXString *filenames = open.getFilenames();
-        int rrows = entries_no > 20 ? entries_no : 20;
-        if (rrows != table->getNumRows()) {
-            table->setTableSize(rrows, table->getNumColumns());
-            table->setColumnText(0, "Spectrum");
-        }
-        for (int i = 0; filenames && filenames[i] != ""; i++) {
-            table->setItemText(i + entries_no, 0, filenames[i]);
+        if (filenames) {
+            table->append_filenames(filenames);
         }
     }
     return 1;

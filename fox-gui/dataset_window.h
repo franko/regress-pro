@@ -3,6 +3,8 @@
 
 #include <fx.h>
 
+#include "dataset_table.h"
+
 class dataset_window : public FXDialogBox {
     FXDECLARE(dataset_window)
 
@@ -26,8 +28,7 @@ public:
     };
 
 private:
-    FXTable *table;
-    int entries_no;
+    dataset_table *table;
 };
 
 #endif
