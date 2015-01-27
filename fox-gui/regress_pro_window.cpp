@@ -735,7 +735,7 @@ long
 regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
 {
     if (!my_dataset_window) {
-        my_dataset_window = new dataset_window(this);
+        my_dataset_window = new dataset_window(recipe, this);
         my_dataset_window->create();
     }
     my_dataset_window->show(PLACEMENT_SCREEN);

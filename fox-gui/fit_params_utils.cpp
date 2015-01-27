@@ -69,3 +69,29 @@ void list_populate(FXList *list, fit_parameters *fps, seeds *seed, bool clear)
         list->appendItem(format_fit_parameter(fp, value));
     }
 }
+
+FXMenuPane *fit_parameters_menu(FXWindow *win, FXObject *target, FXSelector sel, fit_parameters *fps)
+{
+    FXMenuPane *topmenu = new FXMenuPane(win);
+    FXMenuPane *menu = topmenu;
+
+    str_t name;
+    str_init(name, 16);
+    int current_layer = 0;
+    for (size_t i = 0; i < fps->number; i++) {
+        const fit_param_t *fp = &fps->values[i];
+        if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer) {
+            FXMenuPane *submenu = new FXMenuPane(win);
+            str_printf(name, "Layer %d", fp->layer_nb);
+            new FXMenuCascade(menu, CSTR(name), NULL, submenu);
+            menu = submenu;
+            current_layer = fp->layer_nb;
+        } else if (fp->id != PID_LAYER_N) {
+            menu = topmenu;
+        }
+        get_full_param_name(fp, name);
+        new FXMenuCommand(menu, CSTR(name), NULL, target, sel + i);
+    }
+    str_free(name);
+    return topmenu;
+}
