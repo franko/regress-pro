@@ -81,10 +81,9 @@ FXMenuPane *fit_parameters_menu(FXWindow *win, FXObject *target, FXSelector sel,
     for (size_t i = 0; i < fps->number; i++) {
         const fit_param_t *fp = &fps->values[i];
         if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer) {
-            FXMenuPane *submenu = new FXMenuPane(win);
+            menu = new FXMenuPane(win);
             str_printf(name, "Layer %d", fp->layer_nb);
-            new FXMenuCascade(menu, CSTR(name), NULL, submenu);
-            menu = submenu;
+            new FXMenuCascade(topmenu, CSTR(name), NULL, menu);
             current_layer = fp->layer_nb;
         } else if (fp->id != PID_LAYER_N) {
             menu = topmenu;
