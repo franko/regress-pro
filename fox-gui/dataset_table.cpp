@@ -3,8 +3,8 @@
 
 // Map
 FXDEFMAP(dataset_table) dataset_table_map[]= {
-    // FXMAPFUNC(SEL_LEFTBUTTONPRESS, 0, dataset_table::on_left_button),
     FXMAPFUNC(SEL_COMMAND, dataset_table::ID_SELECT_COLUMN_INDEX, dataset_table::on_cmd_select_column),
+    FXMAPFUNCS(SEL_COMMAND, dataset_table::ID_FIT_PARAM, dataset_table::ID_FIT_PARAM_LAST, dataset_table::on_cmd_fit_param),
 };
 
 FXIMPLEMENT(dataset_table,FXTable,dataset_table_map,ARRAYNUMBER(dataset_table_map));
@@ -47,19 +47,25 @@ void dataset_table::append_filenames(FXString *filenames)
     entries_no += count;
 }
 
-long dataset_table::on_left_button(FXObject *obj, FXSelector sel, void *ptr)
-{
-    FXEvent *event = (FXEvent *)ptr;
-    int row= rowAtY(event->win_y);
-    int col= colAtX(event->win_x);
-    fprintf(stderr, ">> %d %d\n", row, col);
-    return FXTable::onLeftBtnPress(obj, sel, ptr);
-}
-
 long dataset_table::on_cmd_select_column(FXObject *obj, FXSelector sel, void *ptr)
 {
-    FXint col = (FXint)(FXival)ptr;
-    popupmenu->popup(NULL, 50, 50);
+    popup_col = (FXint)(FXival)ptr;
+    if (popup_col == 0) return 0;
+    FXint x = getShell()->getX() + colHeader->getX() + colHeader->getItemOffset(popup_col);
+    FXint y = getShell()->getY() + colHeader->getY();
+    popupmenu->popup(NULL, x, y);
     getApp()->runModalWhileShown(popupmenu);
+    return 1;
+}
+
+long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
+{
+    int fpindex = FXSELID(sel) - ID_FIT_PARAM;
+    const fit_param_t *fp = fit_params->values + fpindex;
+    str_t name;
+    str_init(name, 16);
+    get_full_param_name(fp, name);
+    setColumnText(popup_col, CSTR(name));
+    str_free(name);
     return 1;
 }

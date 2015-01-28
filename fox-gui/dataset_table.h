@@ -22,8 +22,8 @@ public:
 
     void append_filenames(FXString *filenames);
 
-    long on_left_button(FXObject *, FXSelector, void *);
     long on_cmd_select_column(FXObject *, FXSelector, void *);
+    long on_cmd_fit_param(FXObject *, FXSelector, void *);
 
     enum {
         ID_FIT_PARAM = FXTable::ID_LAST,
@@ -37,6 +37,7 @@ private:
     int entries_no;
     fit_recipe *recipe;
     fit_parameters *fit_params;
+    int popup_col;
 };
 
 #endif
