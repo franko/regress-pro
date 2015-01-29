@@ -5,6 +5,11 @@
 
 #include "fit_recipe.h"
 
+/* Used to hold a simple linked list of fit parameters. Each node
+ * represent the association of a fit parameter with a given column
+ * of the dataset table. */
+struct fit_param_node;
+
 class dataset_table : public FXTable {
     FXDECLARE(dataset_table)
 
@@ -21,6 +26,7 @@ public:
     virtual void create();
 
     void append_filenames(FXString *filenames);
+    void link_parameter(const fit_param_t *fp, int column);
 
     long on_cmd_select_column(FXObject *, FXSelector, void *);
     long on_cmd_fit_param(FXObject *, FXSelector, void *);
@@ -38,6 +44,8 @@ private:
     fit_recipe *recipe;
     fit_parameters *fit_params;
     int popup_col;
+
+    fit_param_node *fplink;
 };
 
 #endif
