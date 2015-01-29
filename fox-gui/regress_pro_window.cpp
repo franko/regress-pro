@@ -104,7 +104,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
       my_filmstack_window(NULL), my_recipe_window(NULL), my_multifit_window(NULL),
-      my_dataset_window(NULL), m_model_spectr(0)
+      my_dataset_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
