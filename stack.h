@@ -19,7 +19,7 @@ typedef struct stack stack_t;
 extern int      stack_apply_param(stack_t *s, const fit_param_t *fp,
                                   double val);
 extern void     stack_free(stack_t *d);
-extern stack_t *stack_copy(stack_t *s);
+extern stack_t *stack_copy(const stack_t *s);
 extern void     stack_init(stack_t *s);
 extern void     stack_init_raw(stack_t *s, size_t nb_init);
 extern void     stack_add_layer(stack_t *s, disp_t *lyr, double th);

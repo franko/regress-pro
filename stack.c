@@ -86,7 +86,7 @@ stack_delete_layer(stack_t *s, int pos)
 }
 
 stack_t *
-stack_copy(stack_t *s)
+stack_copy(const stack_t *s)
 {
     int j;
     stack_t *r = emalloc(sizeof(stack_t));
