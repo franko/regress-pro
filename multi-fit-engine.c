@@ -319,6 +319,15 @@ multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, struct
     fit->private_parameters = pparameters;
 }
 
+void
+multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, const struct fit_parameters *fps, const double value[])
+{
+    int k;
+    for(k = 0; k < fps->number; k++) {
+        stack_apply_param(fit->stack_list[k], fps->values + k, value[k]);
+    }
+}
+
 extern struct multi_fit_engine *
 build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
                        struct seeds **indiv) {
@@ -327,7 +336,8 @@ build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
     struct multi_fit_info *inf;
     struct multi_fit_engine *fit;
     int fit_parameters_error;
-    int k, kincr;
+    double *seed_array;
+    int j, k, index;
 
     stack    = retrieve_parsed_object(symtab, TL_TYPE_STACK,
                                       symtab->directives->stack);
@@ -357,14 +367,18 @@ build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
     fit = multi_fit_engine_new(symtab->config_table, inf->samples_number);
     multi_fit_engine_bind(fit, stack, strategy->parameters, inf->individual.parameters);
 
-    for(kincr = 0, k = 0; k < fit->samples_number; k++) {
-        int kp;
-        for(kp = 0; kp < inf->constraints.parameters->number; kp++, kincr++) {
-            stack_apply_param(fit->stack_list[k],
-                              inf->constraints.parameters->values + kp,
-                              inf->constraints.seeds->values[kincr].seed);
-        }
+    struct fit_parameters *constr = inf->constraints.parameters;
+    seed_array = emalloc(constr->number * sizeof(double));
 
+    for(index = 0, k = 0; k < fit->samples_number; k++) {
+        for(j = 0; j < constr->number; j++, index++) {
+            seed_array[j] = inf->constraints.seeds->values[index].seed;
+        }
+        multi_fit_engine_apply_parameters(fit, constr, seed_array);
+    }
+    free(seed_array);
+
+    for(k = 0; k < fit->samples_number; k++) {
         /* we just keep a reference, we don't own the data */
         fit->spectra_list[k] = inf->spectra_list[k];
     }
