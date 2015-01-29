@@ -244,10 +244,12 @@ recipe_window::on_keypress_parameter(FXObject*, FXSelector sel, void *ptr)
     case KEY_Delete:
     {
         FXint index = fit_list->getCurrentItem();
-        fit_list->removeItem(index);
-        fit_parameters_remove(recipe->parameters, index);
-        seed_list_remove(recipe->seeds_list, index);
-        return 1;
+        if (index >= 0) {
+            fit_list->removeItem(index);
+            fit_parameters_remove(recipe->parameters, index);
+            seed_list_remove(recipe->seeds_list, index);
+            return 1;
+        }
     }
     default:
         /* */ ;
