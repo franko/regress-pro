@@ -50,6 +50,10 @@ struct multi_fit_engine {
 extern struct multi_fit_engine * \
 multi_fit_engine_new(struct fit_config const *cfg,
                      int samples_number);
+
+/* Bind the fit engine to the stack and fit parameters. */
+extern void multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, struct fit_parameters *cparameters, struct fit_parameters *pparameters);
+
 extern void multi_fit_engine_free(struct multi_fit_engine *f);
 extern int  multi_fit_engine_prepare(struct multi_fit_engine *f);
 

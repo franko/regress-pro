@@ -304,6 +304,21 @@ multi_fit_engine_free(struct multi_fit_engine *f)
     free(f);
 }
 
+void
+multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, struct fit_parameters *cparameters, struct fit_parameters *pparameters)
+{
+    int k;
+    /* fit is not the owner of the "parameters", we just keep a reference */
+    fit->common_parameters = cparameters;
+
+    for(k = 0; k < fit->samples_number; k++) {
+        fit->stack_list[k] = stack_copy(stack);
+    }
+
+    /* fit is not the owner of the "parameters", we just keep a reference */
+    fit->private_parameters = pparameters;
+}
+
 extern struct multi_fit_engine *
 build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
                        struct seeds **indiv) {
@@ -340,15 +355,10 @@ build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
     *indiv = inf->individual.seeds;
 
     fit = multi_fit_engine_new(symtab->config_table, inf->samples_number);
-
-    /* fit is not the owner of the "parameters", we just keep a reference */
-    fit->common_parameters = strategy->parameters;
+    multi_fit_engine_bind(fit, stack, strategy->parameters, inf->individual.parameters);
 
     for(kincr = 0, k = 0; k < fit->samples_number; k++) {
         int kp;
-
-        fit->stack_list[k] = stack_copy(stack);
-
         for(kp = 0; kp < inf->constraints.parameters->number; kp++, kincr++) {
             stack_apply_param(fit->stack_list[k],
                               inf->constraints.parameters->values + kp,
@@ -358,9 +368,6 @@ build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
         /* we just keep a reference, we don't own the data */
         fit->spectra_list[k] = inf->spectra_list[k];
     }
-
-    /* fit is not the owner of the "parameters", we just keep a reference */
-    fit->private_parameters = inf->individual.parameters;
 
     if(multi_fit_engine_prepare(fit) != 0) {
         multi_fit_engine_free(fit);
