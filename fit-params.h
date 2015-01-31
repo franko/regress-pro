@@ -85,6 +85,7 @@ extern void     fit_parameters_fix_layer_shift(struct fit_parameters *lst, struc
 extern int      fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp);
 
 extern int      fit_parameters_are_RI_fixed(struct fit_parameters *f);
+extern int      fit_param_compare(const fit_param_t *a, const fit_param_t *b);
 
 extern struct seeds * seed_list_new(void);
 extern void           seed_list_free(struct seeds *s);
