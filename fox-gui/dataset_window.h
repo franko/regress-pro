@@ -21,6 +21,8 @@ public:
     long on_cmd_add_files(FXObject *, FXSelector, void *);
     long on_cmd_remove_files(FXObject *, FXSelector, void *);
 
+    dataset_table *dataset() const { return table; }
+
     enum {
         ID_TABLE = FXDialogBox::ID_LAST,
         ID_ADD_FILES,

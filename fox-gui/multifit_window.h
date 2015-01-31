@@ -21,6 +21,9 @@ public:
     void setup_parameters_list();
     const fit_param_t *selected_parameter() const;
 
+    const fit_parameters *indiv_parameters() const { return iparameters; }
+    const fit_parameters *constr_parameters() const { return cparameters; }
+
     long on_cmd_add_fit(FXObject *, FXSelector, void *);
     long on_cmd_add_constr(FXObject *, FXSelector, void *);
     long on_select_param(FXObject *, FXSelector, void *);
