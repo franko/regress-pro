@@ -27,6 +27,9 @@ public:
 
     void append_filenames(FXString *filenames);
     void link_parameter(const fit_param_t *fp, int column);
+    bool get_spectra_list(spectrum *spectra_list[], FXString& error_filename);
+    bool get_values(int row, const fit_parameters *fps, double value_array[], int& error_col);
+    int samples_number() { return entries_no; }
 
     long on_cmd_select_column(FXObject *, FXSelector, void *);
     long on_cmd_fit_param(FXObject *, FXSelector, void *);

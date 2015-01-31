@@ -91,3 +91,44 @@ long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
     str_free(name);
     return 1;
 }
+
+bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_filename)
+{
+    for (int i = 0; i < entries_no; i++) {
+        FXString name = getItemText(i, 0);
+        spectrum *s = load_gener_spectrum(name.text());
+        if (!s) {
+            error_filename = name;
+            return false;
+        }
+        spectra_list[i] = s;
+    }
+    return true;
+}
+
+bool dataset_table::get_values(int row, const fit_parameters *fps, double value_array[], int& error_col)
+{
+    FXString cell_text;
+    for (unsigned i = 0; i < fps->number; i++) {
+        const fit_param_t fp = fps->values[i];
+        const char *ctext = NULL;
+        for (fit_param_node *p = fplink; p; p = p->next) {
+            if (fit_param_compare(&p->fp, &fp) == 0) {
+                cell_text = getItemText(row, p->column);
+                ctext = cell_text.text();
+                char *endptr;
+                value_array[i] = strtod(ctext, &endptr);
+                if (endptr == ctext) {
+                    error_col = p->column;
+                    return false;
+                }
+                break;
+            }
+        }
+        if (ctext == NULL) { /* Fit parameter not found. */
+            error_col = -1;
+            return false;
+        }
+    }
+    return true;
+}
