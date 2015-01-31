@@ -305,7 +305,7 @@ multi_fit_engine_free(struct multi_fit_engine *f)
 }
 
 void
-multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, struct fit_parameters *cparameters, struct fit_parameters *pparameters)
+multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const struct fit_parameters *cparameters, const struct fit_parameters *pparameters)
 {
     int k;
     /* fit is not the owner of the "parameters", we just keep a reference */
