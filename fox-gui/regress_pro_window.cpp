@@ -74,6 +74,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT_NEW, regress_pro_window::onCmdRunFitNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT_NEW, regress_pro_window::onCmdRunMultiFitNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
@@ -144,6 +145,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
+    new FXMenuCommand(fitmenu, "Run (NEW) Multiple Fit",NULL,this,ID_RUN_MULTI_FIT_NEW);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
@@ -468,6 +470,101 @@ regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
     batchFileId = batch.getFilename();
 
     fit_engine_free(fit);
+
+    return 1;
+}
+
+long
+regress_pro_window::onCmdRunMultiFitNew(FXObject*,FXSelector,void *)
+{
+    if (!my_dataset_window || !my_multifit_window) {
+        return 0;
+    }
+
+    struct multi_fit_engine *fit;
+    dataset_table *dataset = my_dataset_window->dataset();
+    int samples_number = dataset->samples_number();
+    const fit_parameters *iparams = my_multifit_window->indiv_parameters();
+    const fit_parameters *cparams = my_multifit_window->constr_parameters();
+    fit = multi_fit_engine_new(recipe->config, samples_number);
+    multi_fit_engine_bind(fit, recipe->stack, recipe->parameters, iparams);
+    double *constr_values = new double[cparams->number];
+    for (int i = 0; i < samples_number; i++) {
+        int error_col;
+        bool ok = dataset->get_values(i, cparams, constr_values, error_col);
+        if (!ok) {
+            FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing parameter");
+            delete [] constr_values;
+            multi_fit_engine_free(fit);
+            return 1;
+        }
+        multi_fit_engine_apply_parameters(fit, cparams, constr_values);
+    }
+    delete [] constr_values;
+
+    FXString error_filename;
+    bool ok = dataset->get_spectra_list(fit->spectra_list, error_filename);
+    if (!ok) {
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "error opening: %s", error_filename.text());
+        multi_fit_engine_free(fit);
+        return 1;
+    }
+
+    if(multi_fit_engine_prepare(fit) != 0) {
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Error preparing multi fit calculatin");
+        multi_fit_engine_free(fit);
+        return 1;
+    }
+
+    struct seeds *iseeds = seed_list_new();
+
+    double *iseed_values = new double[iparams->number];
+    for (int i = 0; i < samples_number; i++) {
+        int error_col;
+        bool ok = dataset->get_values(i, iparams, iseed_values, error_col);
+        if (!ok) {
+            FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing parameter");
+            delete [] iseed_values;
+            seed_list_free(iseeds);
+            multi_fit_engine_free(fit);
+            return 1;
+        }
+        for (unsigned j = 0; j < iparams->number; j++) {
+            seed_list_add_simple(iseeds, iseed_values[j]);
+        }
+    }
+    delete [] iseed_values;
+
+    Str fit_error_msgs;
+    ProgressInfo progress(this->getApp(), this);
+
+    Str analysis;
+    lmfit_multi(fit, recipe->seeds_list, iseeds,
+                analysis.str(), fit_error_msgs.str(),
+                LMFIT_GET_RESULTING_STACK,
+                process_foxgui_events, &progress);
+
+    progress.hide();
+
+    if(fit_error_msgs.length() > 0) {
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages", "%s", fit_error_msgs.cstr());
+        clean_error_msgs();
+    }
+
+    FXString text_fit_result;
+
+    Str fp_results;
+    multi_fit_engine_print_fit_results(fit, fp_results.str());
+    text_fit_result.append(fp_results.cstr());
+
+    text_fit_result.append(analysis.cstr());
+
+    resulttext->setText(text_fit_result);
+    resulttext->setModified(TRUE);
+
+    seed_list_free(iseeds);
+    multi_fit_engine_disable(fit);
+    multi_fit_engine_free(fit);
 
     return 1;
 }
