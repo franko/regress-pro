@@ -78,3 +78,23 @@ data_table_unref(struct data_table *table)
         free(table);
     }
 }
+
+int
+data_table_write(writer_t *w, const struct data_table *dt)
+{
+    writer_printf(w, "%d %d", dt->rows, dt->columns);
+    writer_newline(w);
+    int i, j;
+    for (i = 0; i < dt->rows; i++) {
+        if (i > 0) {
+            writer_newline(w);
+        }
+        for (j = 0; j < dt->columns; j++) {
+            if (j > 0) {
+                writer_printf(w, " ");
+            }
+            writer_printf(w, "%g", data_table_get(dt, i, j));
+        }
+    }
+    return 0;
+}

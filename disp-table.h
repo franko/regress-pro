@@ -1,7 +1,3 @@
-/*
-  $Id$
-*/
-
 #ifndef DISP_TABLE_H
 #define DISP_TABLE_H
 

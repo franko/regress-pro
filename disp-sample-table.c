@@ -11,6 +11,7 @@ static void     disp_sample_table_free(disp_t *d);
 static disp_t * disp_sample_table_copy(const disp_t *d);
 
 static cmpl disp_sample_table_n_value(const disp_t *disp, double lam);
+static int disp_sample_table_write(writer_t *w, const disp_t *_d);
 
 struct disp_class disp_sample_table_class = {
     .disp_class_id       = DISP_SAMPLE_TABLE,
@@ -30,6 +31,7 @@ struct disp_class disp_sample_table_class = {
 
     .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
+    .write               = disp_sample_table_write,
 };
 
 static void
@@ -221,4 +223,15 @@ close_exit:
     fclose(f);
     str_free(row);
     return disp;
+}
+
+int
+disp_sample_table_write(writer_t *w, const disp_t *_d)
+{
+    const struct disp_sample_table *d = &_d->disp.sample_table;
+    writer_printf(w, "table \"%s\" %d", CSTR(_d->name), d->nb);
+    writer_newline_enter(w);
+    data_table_write(w, d->table_ref);
+    writer_newline_exit(w);
+    return 0;
 }

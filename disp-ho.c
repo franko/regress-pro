@@ -364,17 +364,16 @@ disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
 int ho_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_ho *d = &_d->disp.ho;
-    writer_printf(w, "ho \"%s\" %d [", CSTR(_d->name), d->nb_hos);
+    writer_printf(w, "ho \"%s\" %d", CSTR(_d->name), d->nb_hos);
     writer_newline_enter(w);
     struct ho_params *ho = d->params;
-    for (int i = 0; i < d->nb_hos; i++, ho++) {
+    int i;
+    for (i = 0; i < d->nb_hos; i++, ho++) {
         if (i > 0) {
-            writer_printf(w, ",");
             writer_newline(w);
         }
-        writer_printf(w, "%g, %g, %g, %g, %g", ho->nosc, ho->en, ho->eg, ho->nu, ho->phi);
+        writer_printf(w, "%g %g %g %g %g", ho->nosc, ho->en, ho->eg, ho->nu, ho->phi);
     }
     writer_newline_exit(w);
-    writer_printf(w, "]");
     return 0;
 }

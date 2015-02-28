@@ -4,6 +4,7 @@
 #include "cmpl.h"
 #include "dispers.h"
 #include "fit-params.h"
+#include "writer.h"
 
 __BEGIN_DECLS
 
@@ -29,6 +30,7 @@ extern const
 double *        stack_get_ths_list(const stack_t *s);
 extern void     stack_get_ns_list(stack_t *s, cmpl *ns, double lambda);
 extern void     stack_get_all_parameters(stack_t *s, struct fit_parameters *fps);
+extern int      stack_write(writer_t *w, const stack_t *s);
 
 __END_DECLS
 

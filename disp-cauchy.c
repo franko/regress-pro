@@ -14,6 +14,7 @@ static void cauchy_encode_param(str_t param, const fit_param_t *fp);
 
 static double cauchy_get_param_value(const struct disp_struct *d,
                                      const fit_param_t *fp);
+static int cauchy_write(writer_t *w, const disp_t *_d);
 
 #define CAUCHY_NB_N_PARAMS 3
 #define CAUCHY_NB_PARAMS 6
@@ -36,6 +37,7 @@ struct disp_class cauchy_disp_class = {
 
     .decode_param_string = cauchy_decode_param_string,
     .encode_param        = cauchy_encode_param,
+    .write               = cauchy_write,
 };
 
 cmpl
@@ -152,4 +154,17 @@ disp_new_cauchy(const char *name, const double n[], const double k[])
     }
 
     return d;
+}
+
+int
+cauchy_write(writer_t *w, const disp_t *_d)
+{
+    const struct disp_cauchy *d = & _d->disp.cauchy;
+    writer_printf(w, "cauchy \"%s\"", CSTR(_d->name));
+    writer_newline_enter(w);
+    writer_printf(w, "%g %g %g", d->n[0], d->n[1], d->n[2]);
+    writer_newline(w);
+    writer_printf(w, "%g %g %g", d->k[0], d->k[1], d->k[2]);
+    writer_newline_exit(w);
+    return 0;
 }

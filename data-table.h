@@ -1,12 +1,9 @@
-/*
-  $Id$
- */
-
 #ifndef DATA_TABLE_H
 #define DATA_TABLE_H
 
 #include <stdio.h>
 #include "common.h"
+#include "writer.h"
 
 __BEGIN_DECLS
 
@@ -27,6 +24,8 @@ void                data_table_unref(struct data_table *dt);
 
 struct data_table * data_table_read_lines(FILE *f, const char *fmt,
         int row_start, int columns);
+
+extern int data_table_write(writer_t *w, const struct data_table *dt);
 
 extern struct data_table empty_data_table[1];
 

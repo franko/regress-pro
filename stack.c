@@ -179,3 +179,22 @@ stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
         }
     }
 }
+
+int
+stack_write(writer_t *w, const stack_t *s)
+{
+    writer_printf(w, "%d", s->nb);
+    writer_newline(w);
+    int i;
+    for (i = 1; i < s->nb - 1; i++) {
+        if (i > 1) {
+            writer_printf(w, " ");
+        }
+        writer_printf(w, "%g", s->thickness[i-1]);
+    }
+    writer_newline(w);
+    for (i = 0; i < s->nb; i++) {
+        disp_write(w, s->disp[i]);
+    }
+    return 0;
+}
