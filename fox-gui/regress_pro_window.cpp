@@ -67,6 +67,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_RECIPE, regress_pro_window::onCmdSaveRecipe),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
@@ -116,6 +117,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(filemenu,"&Load",NULL,this,ID_LOAD_SCRIPT);
     new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
     new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
+    new FXMenuCommand(filemenu,"Save Recipe",NULL,this,ID_SAVE_RECIPE);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
     new FXMenuTitle(menubar,"&Script",NULL,filemenu);
 
@@ -1011,4 +1013,14 @@ process_foxgui_events(void *data, float progr, const char *msg)
     }
 
     return 0;
+}
+
+long
+regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
+{
+    writer_t *w = writer_new();
+    recipe->write(w);
+    fprintf(stderr, "%s\n", CSTR(w->text));
+    writer_free(w);
+    return 1;
 }

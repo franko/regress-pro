@@ -192,6 +192,35 @@ seed_list_remove(struct seeds *lst, int index)
     lst->number--;
 }
 
+static int
+seed_write(writer_t *w, const seed_t *s)
+{
+    if (s->type == SEED_SIMPLE) {
+        writer_printf(w, "value %g", s->seed);
+    } else if (s->type == SEED_RANGE) {
+        writer_printf(w, "range %g %g %g", s->min, s->max, s->step);
+    } else {
+        writer_printf(w, "?");
+    }
+    return 0;
+}
+
+int
+seed_list_write(writer_t *w, const struct seeds *s)
+{
+    writer_printf(w, "seed-list %d", s->number);
+    writer_newline_enter(w);
+    int i;
+    for (i = 0; i < s->number; i++) {
+        if (i > 0) {
+            writer_newline(w);
+        }
+        seed_write(w, s->values + i);
+    }
+    writer_newline_exit(w);
+    return 1;
+}
+
 struct strategy *
 strategy_new() {
     struct strategy *r;
@@ -286,4 +315,38 @@ fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shi
     } else if (shift.event == SHIFT_INSERT_LAYER) {
         fix_insert_layer(lst, shift.index);
     }
+}
+
+static int
+fit_param_write(writer_t *w, const fit_param_t *fp)
+{
+    static const char *id_name[] = {"thickness", "n", "firstmul"};
+    static const char *model_name[] = {"ho", "cauchy", "lookup", "bruggeman"};
+    int id = fp->id;
+    writer_printf(w, "%s", (id >= PID_THICKNESS && id < PID_INVALID) ? id_name[id-1] : "invalid");
+    if (id < PID_LAYER_INDIPENDENT) {
+        writer_printf(w, " %d", fp->layer_nb);
+        if (id == PID_LAYER_N) {
+            const int mid = fp->model_id;
+            const char *mname = (mid >= 1 && mid < MODEL_NONE) ? model_name[mid - 1] : "unknown";
+            writer_printf(w, " %s %d", mname, fp->param_nb);
+        }
+    }
+    return 0;
+}
+
+int
+fit_parameters_write(writer_t *w, const struct fit_parameters *s)
+{
+    writer_printf(w, "fit-parameters %d", s->number);
+    writer_newline_enter(w);
+    int i;
+    for (i = 0; i < s->number; i++) {
+        if (i > 0) {
+            writer_newline(w);
+        }
+        fit_param_write(w, s->values + i);
+    }
+    writer_newline_exit(w);
+    return 1;
 }

@@ -27,6 +27,7 @@
 #include "stack.h"
 #include "fit-params.h"
 #include "fit-engine-common.h"
+#include "writer.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -127,6 +128,9 @@ fit_engine_get_parameter_value(const struct fit_engine *fit,
 
 extern void
 fit_config_set_default(struct fit_config *cfg);
+
+extern int
+fit_config_write(writer_t *w, const struct fit_config *config);
 
 __END_DECLS
 

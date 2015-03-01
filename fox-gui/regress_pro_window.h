@@ -94,6 +94,7 @@ public:
     long onCmdLoadScript(FXObject*,FXSelector,void*);
     long onCmdSaveScript(FXObject*,FXSelector,void*);
     long onCmdSaveAsScript(FXObject*,FXSelector,void *);
+    long onCmdSaveRecipe(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
     long onCmdPlotDispers(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
@@ -123,6 +124,7 @@ public:
         ID_LOAD_SCRIPT = FXMainWindow::ID_LAST,
         ID_SAVE_SCRIPT,
         ID_SAVEAS_SCRIPT,
+        ID_SAVE_RECIPE,
         ID_LOAD_SPECTRA,
         ID_DISP_PLOT,
         ID_DISP_OPTIM,

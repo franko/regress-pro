@@ -503,3 +503,28 @@ fit_config_set_default(struct fit_config *cfg)
     cfg->epsabs = 1.0E-7;
     cfg->epsrel = 1.0E-7;
 }
+
+int
+fit_config_write(writer_t *w, const struct fit_config *config)
+{
+    writer_printf(w, "fit-config");
+    writer_newline_enter(w);
+    if (config->threshold_given) {
+        writer_printf(w, "threshold %g", config->chisq_threshold);
+        writer_newline(w);
+    }
+    writer_printf(w, "max-iterations %d", config->nb_max_iters);
+    writer_newline(w);
+
+    writer_printf(w, "subsampling %d", config->subsampling);
+    writer_newline(w);
+
+    if (config->spectr_range.active) {
+        writer_printf(w, "wavelength-range %g %g", config->spectr_range.min, config->spectr_range.min);
+        writer_newline(w);
+    }
+
+    writer_printf(w, "epsilon %g %g", config->epsabs, config->epsrel);
+    writer_newline_exit(w);
+    return 1;
+}

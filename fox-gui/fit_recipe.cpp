@@ -32,3 +32,12 @@ void fit_recipe::shift_fit_parameters(const shift_info *shift)
 {
     fit_parameters_fix_layer_shift(parameters, *shift);
 }
+
+int fit_recipe::write(writer_t *w)
+{
+    stack_write(w, stack);
+    fit_config_write(w, config);
+    fit_parameters_write(w, parameters);
+    seed_list_write(w, seeds_list);
+    return 0;
+}
