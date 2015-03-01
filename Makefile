@@ -18,7 +18,7 @@ ELL_SRC_FILES = common.c data-table.c data-view.c disp-table.c \
 	model-interp.c interp.c symtab.c descr.c fitlexer.c test-deriv.c \
 	elliss-multifit.c multi-fit-engine.c grid-search.c lmfit-multi.c \
 	sample-info.c multi-fit-interp.c refl-multifit.c disp-fit-engine.c \
-	vector_print.c covariance_analysis.c fit_result.c writer.c
+	vector_print.c covariance_analysis.c fit_result.c writer.c lexer.c
 YACC_FILES = descr.y
 EFIT_LIB = libefit.a
 SUBDIRS = fox-gui
