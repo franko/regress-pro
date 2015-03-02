@@ -12,6 +12,7 @@
 #include "disp-cauchy.h"
 #include "dispers-classes.h"
 #include "writer.h"
+#include "lexer.h"
 
 __BEGIN_DECLS
 
@@ -38,11 +39,12 @@ struct disp_class {
                        double val);
     double(*get_param_value)(const struct disp_struct *d,
                              const fit_param_t *fp);
+    int (*write)(writer_t *w, const struct disp_struct *_d);
 
     /* class methods */
     int (*decode_param_string)(const char *param);
     void (*encode_param)(str_t param, const fit_param_t *fp);
-    int (*write)(writer_t *w, const struct disp_struct *_d);
+    int (*read)(lexer_t *l, struct disp_struct *d);
 };
 
 struct deriv_info {
@@ -107,6 +109,7 @@ extern void     disp_base_free(disp_t *d);
 extern int      disp_base_decode_param_string(const char *param);
 extern int      disp_base_fp_number(const disp_t *src);
 extern int      disp_write(writer_t *w, const disp_t *_d);
+extern disp_t * disp_read_header(lexer_t *l);
 
 __END_DECLS
 

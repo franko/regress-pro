@@ -8,10 +8,16 @@ lexer_new(const char *s)
 {
     lexer_t *l = emalloc(sizeof(lexer_t));
     l->text = s;
-    l->rem = strlen(s);
     l->current.tk = TK_UNDEF;
     str_init(l->buffer, 64);
     return l;
+}
+
+void
+lexer_free(lexer_t *l)
+{
+    str_free(l->buffer);
+    free(l);
 }
 
 static void
@@ -47,7 +53,6 @@ lexer_next(lexer_t *l)
 {
     while (*l->text == ' ' || *l->text == '\n') {
         l->text ++;
-        l->rem --;
     }
     char c = l->text[0];
     if (c == 0) {
@@ -59,12 +64,10 @@ lexer_next(lexer_t *l)
         if (ltail == ftail) {
             l->current.tk = TK_INTEGER;
             l->current.value.integer = lval;
-            l->rem -= (ltail - l->text);
             l->text = ltail;
         } else {
             l->current.tk = TK_NUMBER;
             l->current.value.num = fval;
-            l->rem -= (ftail - l->text);
             l->text = ftail;
         }
     } else if (c == '"') {
@@ -73,7 +76,6 @@ lexer_next(lexer_t *l)
         read_string(l->text + 1, l->buffer, &tail);
         l->current.tk = TK_STRING;
         l->current.value.str = CSTR(l->buffer);
-        l->rem -= (tail - l->text);
         l->text = tail;
     } else {
         const char *tail;
@@ -82,10 +84,47 @@ lexer_next(lexer_t *l)
         if (tail == l->text) {
             l->current.tk = TK_UNDEF;
         } else {
-            l->current.tk = TK_STRING;
+            l->current.tk = TK_IDENT;
             l->current.value.str = CSTR(l->buffer);
-            l->rem -= (tail - l->text);
             l->text = tail;
         }
     }
+}
+
+int
+lexer_string_gen(lexer_t *l, str_ptr s, int tk_ident)
+{
+    const int req = (tk_ident ? TK_IDENT : TK_STRING);
+    if (l->current.tk == req) {
+        str_copy_c(s, l->current.value.str);
+        lexer_next(l);
+        return 0;
+    }
+    return 1;
+}
+
+int
+lexer_integer(lexer_t *l, long *value)
+{
+    if (l->current.tk == TK_INTEGER) {
+        *value = l->current.value.integer;
+        lexer_next(l);
+        return 0;
+    }
+    return 1;
+}
+
+int
+lexer_number(lexer_t *l, double *value)
+{
+    if (l->current.tk == TK_INTEGER) {
+        *value = (double) (l->current.value.integer);
+        lexer_next(l);
+        return 0;
+    } else if (l->current.tk == TK_NUMBER) {
+        *value = l->current.value.num;
+        lexer_next(l);
+        return 0;
+    }
+    return 1;
 }

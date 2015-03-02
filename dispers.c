@@ -276,3 +276,29 @@ disp_write(writer_t *w, const disp_t *d)
     assert(d->dclass != NULL);
     return d->dclass->write(w, d);
 }
+
+disp_t *
+disp_read_header(lexer_t *l)
+{
+    static const char *model[] = {"uniform-table", "table", "cauchy", "ho", "lookup", "bruggeman"};
+    disp_t *d = NULL;
+    str_t id, name;
+    str_init(id, 15);
+    str_init(name, 32);
+    int status = lexer_ident(l, id);
+    if (status != 0) goto read_exit;
+    enum disp_type model_id;
+    for (model_id = DISP_TABLE; model_id < DISP_END_OF_TABLE; model_id++) {
+        if (strcmp(model[model_id - 1], CSTR(id)) == 0) {
+            break;
+        }
+    }
+    if (model_id == DISP_END_OF_TABLE) goto read_exit;
+    status = lexer_string(l, name);
+    if (status != 0) goto read_exit;
+    d = disp_new_with_name(model_id, CSTR(name));
+read_exit:
+    str_free(id);
+    str_free(name);
+    return d;
+}

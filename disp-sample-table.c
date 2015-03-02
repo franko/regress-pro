@@ -12,6 +12,7 @@ static disp_t * disp_sample_table_copy(const disp_t *d);
 
 static cmpl disp_sample_table_n_value(const disp_t *disp, double lam);
 static int disp_sample_table_write(writer_t *w, const disp_t *_d);
+static int disp_sample_table_read(lexer_t *l, disp_t *d);
 
 struct disp_class disp_sample_table_class = {
     .disp_class_id       = DISP_SAMPLE_TABLE,
@@ -32,6 +33,7 @@ struct disp_class disp_sample_table_class = {
     .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
     .write               = disp_sample_table_write,
+    .read                = disp_sample_table_read,
 };
 
 static void
@@ -233,5 +235,19 @@ disp_sample_table_write(writer_t *w, const disp_t *_d)
     writer_newline_enter(w);
     data_table_write(w, d->table_ref);
     writer_newline_exit(w);
+    return 0;
+}
+
+int
+disp_sample_table_read(lexer_t *l, disp_t *d_gen)
+{
+    long nb;
+    int status = lexer_integer(l, &nb);
+    if (status != 0) return 1;
+    struct data_table *tab = data_table_read(l);
+    if (!tab) return 1;
+    struct disp_sample_table *d = &d_gen->disp.sample_table;
+    d->nb = nb;
+    d->table_ref = tab;
     return 0;
 }

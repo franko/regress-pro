@@ -46,6 +46,7 @@
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "interactive_fit.h"
+#include "lexer.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 
@@ -1021,6 +1022,13 @@ regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
     writer_t *w = writer_new();
     recipe->write(w);
     fprintf(stderr, "%s\n", CSTR(w->text));
+    lexer_t *l = lexer_new(CSTR(w->text));
+    lexer_next(l);
+    stack_t *s = stack_read(l);
+    if (s) {
+        stack_free(s);
+    }
+    lexer_free(l);
     writer_free(w);
     return 1;
 }

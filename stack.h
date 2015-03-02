@@ -5,6 +5,7 @@
 #include "dispers.h"
 #include "fit-params.h"
 #include "writer.h"
+#include "lexer.h"
 
 __BEGIN_DECLS
 
@@ -31,6 +32,7 @@ double *        stack_get_ths_list(const stack_t *s);
 extern void     stack_get_ns_list(stack_t *s, cmpl *ns, double lambda);
 extern void     stack_get_all_parameters(stack_t *s, struct fit_parameters *fps);
 extern int      stack_write(writer_t *w, const stack_t *s);
+extern stack_t *stack_read(lexer_t *l);
 
 __END_DECLS
 

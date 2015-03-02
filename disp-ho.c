@@ -39,6 +39,7 @@ static double ho_get_param_value(const struct disp_struct *d,
                                  const fit_param_t *fp);
 
 static int ho_write(writer_t *w, const disp_t *_d);
+static int ho_read(lexer_t *l, disp_t *d);
 
 struct disp_class ho_disp_class = {
     .disp_class_id       = DISP_HO,
@@ -59,6 +60,7 @@ struct disp_class ho_disp_class = {
     .decode_param_string = ho_decode_param_string,
     .encode_param        = ho_encode_param,
     .write               = ho_write,
+    .read                = ho_read,
 };
 
 static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
@@ -361,7 +363,8 @@ disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
     return d;
 }
 
-int ho_write(writer_t *w, const disp_t *_d)
+int
+ho_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_ho *d = &_d->disp.ho;
     writer_printf(w, "ho \"%s\" %d", CSTR(_d->name), d->nb_hos);
@@ -375,5 +378,31 @@ int ho_write(writer_t *w, const disp_t *_d)
         writer_printf(w, "%g %g %g %g %g", ho->nosc, ho->en, ho->eg, ho->nu, ho->phi);
     }
     writer_newline_exit(w);
+    return 0;
+}
+
+int
+ho_read(lexer_t *l, disp_t *d_gen)
+{
+    long n_osc;
+    int status = lexer_integer(l, &n_osc);
+    if (status != 0) return 1;
+    struct disp_ho *d = &d_gen->disp.ho;
+    d->nb_hos = n_osc;
+    d->params = emalloc(n_osc * sizeof(struct ho_params));
+    struct ho_params *ho = d->params;
+    int i;
+    for (i = 0; i < n_osc; i++, ho++) {
+        status = lexer_number(l, &ho->nosc);
+        if (status != 0) return 1;
+        status = lexer_number(l, &ho->en);
+        if (status != 0) return 1;
+        status = lexer_number(l, &ho->eg);
+        if (status != 0) return 1;
+        status = lexer_number(l, &ho->nu);
+        if (status != 0) return 1;
+        status = lexer_number(l, &ho->phi);
+        if (status != 0) return 1;
+    }
     return 0;
 }
