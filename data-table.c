@@ -103,23 +103,19 @@ struct data_table *
 data_table_read(lexer_t *l)
 {
     long rows, columns;
-    int status;
-    status = lexer_integer(l, &rows);
-    if (status != 0) return NULL;
-    status = lexer_integer(l, &columns);
-    if (status != 0) return NULL;
+    if (lexer_integer(l, &rows)) return NULL;
+    if (lexer_integer(l, &columns)) return NULL;
     int i, j;
     struct data_table *dt = data_table_new(rows, columns);
     float *p = dt->heap;
     for (i = 0; i < rows; i++) {
         for (j = 0; j < columns; j++, p++) {
             double x;
-            status = lexer_number(l, &x);
-            if (status != 0) goto table_exit;
+            if (lexer_number(l, &x)) goto table_exit;
             *p = x;
         }
     }
-    return 0;
+    return dt;
 table_exit:
     data_table_unref(dt);
     return NULL;

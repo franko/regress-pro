@@ -385,24 +385,18 @@ int
 ho_read(lexer_t *l, disp_t *d_gen)
 {
     long n_osc;
-    int status = lexer_integer(l, &n_osc);
-    if (status != 0) return 1;
+    if (lexer_integer(l, &n_osc)) return 1;
     struct disp_ho *d = &d_gen->disp.ho;
     d->nb_hos = n_osc;
     d->params = emalloc(n_osc * sizeof(struct ho_params));
     struct ho_params *ho = d->params;
     int i;
     for (i = 0; i < n_osc; i++, ho++) {
-        status = lexer_number(l, &ho->nosc);
-        if (status != 0) return 1;
-        status = lexer_number(l, &ho->en);
-        if (status != 0) return 1;
-        status = lexer_number(l, &ho->eg);
-        if (status != 0) return 1;
-        status = lexer_number(l, &ho->nu);
-        if (status != 0) return 1;
-        status = lexer_number(l, &ho->phi);
-        if (status != 0) return 1;
+        if (lexer_number(l, &ho->nosc)) return 1;
+        if (lexer_number(l, &ho->en)) return 1;
+        if (lexer_number(l, &ho->eg)) return 1;
+        if (lexer_number(l, &ho->nu)) return 1;
+        if (lexer_number(l, &ho->phi)) return 1;
     }
     return 0;
 }

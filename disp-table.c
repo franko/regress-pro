@@ -13,6 +13,7 @@ static disp_t * disp_table_copy(const disp_t *d);
 static cmpl     disp_table_n_value(const disp_t *disp, double lam);
 
 static int disp_table_write(writer_t *w, const disp_t *_d);
+static int disp_table_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_table_class = {
     .disp_class_id       = DISP_TABLE,
@@ -33,6 +34,7 @@ struct disp_class disp_table_class = {
     .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
     .write               = disp_table_write,
+    .read                = disp_table_read,
 };
 
 static void disp_table_init(struct disp_table dt[], int points);
@@ -184,5 +186,25 @@ disp_table_write(writer_t *w, const disp_t *_d)
     writer_newline(w);
     data_table_write(w, d->table_ref);
     writer_newline_exit(w);
+    return 0;
+}
+
+int
+disp_table_read(lexer_t *l, disp_t *d_gen)
+{
+    long nb;
+    double lmin, lmax, lstep;
+    if (lexer_integer(l, &nb)) return 1;
+    if (lexer_number(l, &lmin)) return 1;
+    if (lexer_number(l, &lmax)) return 1;
+    if (lexer_number(l, &lstep)) return 1;
+    struct data_table *tab = data_table_read(l);
+    if (!tab) return 1;
+    struct disp_table *d = &d_gen->disp.table;
+    d->lambda_min = lmin;
+    d->lambda_max = lmax;
+    d->lambda_stride = lstep;
+    d->points_number = nb;
+    d->table_ref = tab;
     return 0;
 }

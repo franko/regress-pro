@@ -242,8 +242,7 @@ int
 disp_sample_table_read(lexer_t *l, disp_t *d_gen)
 {
     long nb;
-    int status = lexer_integer(l, &nb);
-    if (status != 0) return 1;
+    if (lexer_integer(l, &nb)) return 1;
     struct data_table *tab = data_table_read(l);
     if (!tab) return 1;
     struct disp_sample_table *d = &d_gen->disp.sample_table;
