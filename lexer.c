@@ -8,8 +8,8 @@ lexer_new(const char *s)
 {
     lexer_t *l = emalloc(sizeof(lexer_t));
     l->text = s;
-    l->current.tk = TK_UNDEF;
     str_init(l->buffer, 64);
+    lexer_next(l);
     return l;
 }
 
@@ -104,7 +104,7 @@ lexer_string_gen(lexer_t *l, str_ptr s, int tk_ident)
 }
 
 int
-lexer_integer(lexer_t *l, long *value)
+lexer_integer(lexer_t *l, int *value)
 {
     if (l->current.tk == TK_INTEGER) {
         *value = l->current.value.integer;

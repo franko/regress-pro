@@ -129,8 +129,8 @@ fit_engine_get_parameter_value(const struct fit_engine *fit,
 extern void
 fit_config_set_default(struct fit_config *cfg);
 
-extern int
-fit_config_write(writer_t *w, const struct fit_config *config);
+extern int fit_config_write(writer_t *w, const struct fit_config *config);
+extern int fit_config_read(lexer_t *l, struct fit_config *config);
 
 __END_DECLS
 

@@ -384,7 +384,7 @@ ho_write(writer_t *w, const disp_t *_d)
 int
 ho_read(lexer_t *l, disp_t *d_gen)
 {
-    long n_osc;
+    int n_osc;
     if (lexer_integer(l, &n_osc)) return 1;
     struct disp_ho *d = &d_gen->disp.ho;
     d->nb_hos = n_osc;

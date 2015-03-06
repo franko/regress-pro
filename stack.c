@@ -203,6 +203,7 @@ stack_write(writer_t *w, const stack_t *s)
 stack_t *
 stack_read(lexer_t *l)
 {
+    int nb;
     str_t header;
     str_init(header, 15);
     int status = lexer_ident(l, header);
@@ -211,10 +212,11 @@ stack_read(lexer_t *l)
         return NULL;
     }
     str_free(header);
-    long i, nb;
     if (lexer_integer(l, &nb)) return NULL;
     stack_t *s = emalloc(sizeof(stack_t));
-    stack_init_raw(s, nb);    
+    stack_init_raw(s, nb);
+    s->nb = nb;
+    int i;
     for (i = 1; i < nb - 1; i++) {
         if (lexer_number(l, s->thickness + (i - 1))) goto stack_exit;
     }

@@ -241,7 +241,7 @@ disp_sample_table_write(writer_t *w, const disp_t *_d)
 int
 disp_sample_table_read(lexer_t *l, disp_t *d_gen)
 {
-    long nb;
+    int nb;
     if (lexer_integer(l, &nb)) return 1;
     struct data_table *tab = data_table_read(l);
     if (!tab) return 1;

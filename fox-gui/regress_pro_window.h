@@ -73,6 +73,7 @@ protected:
     FXFont            *scriptfont;
 
     static const FXchar patterns_fit[];
+    static const FXchar patterns_recipe[];
     static const FXchar patterns_spectr[];
 
     static const FXHiliteStyle tstyles[];
@@ -94,8 +95,9 @@ public:
     long onCmdLoadScript(FXObject*,FXSelector,void*);
     long onCmdSaveScript(FXObject*,FXSelector,void*);
     long onCmdSaveAsScript(FXObject*,FXSelector,void *);
-    long onCmdSaveRecipe(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
+    long onCmdSaveRecipe(FXObject*,FXSelector,void*);
+    long onCmdLoadRecipe(FXObject*,FXSelector,void*);
     long onCmdPlotDispers(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
     long onCmdRunFit(FXObject*,FXSelector,void*);
@@ -125,6 +127,7 @@ public:
         ID_SAVE_SCRIPT,
         ID_SAVEAS_SCRIPT,
         ID_SAVE_RECIPE,
+        ID_LOAD_RECIPE,
         ID_LOAD_SPECTRA,
         ID_DISP_PLOT,
         ID_DISP_OPTIM,

@@ -69,6 +69,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_RECIPE, regress_pro_window::onCmdSaveRecipe),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_RECIPE, regress_pro_window::onCmdLoadRecipe),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
@@ -93,6 +94,9 @@ const FXchar regress_pro_window::patterns_fit[] =
     "\nAll Files (*)";
 const FXchar regress_pro_window::patterns_spectr[] =
     "Fit Strategy (*.dat)"
+    "\nAll Files (*)";
+const FXchar regress_pro_window::patterns_recipe[] =
+    "Fit Recipe (*.rcp)"
     "\nAll Files (*)";
 
 const FXHiliteStyle regress_pro_window::tstyles[] = {
@@ -119,6 +123,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
     new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
     new FXMenuCommand(filemenu,"Save Recipe",NULL,this,ID_SAVE_RECIPE);
+    new FXMenuCommand(filemenu,"Load Recipe",NULL,this,ID_LOAD_RECIPE);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
     new FXMenuTitle(menubar,"&Script",NULL,filemenu);
 
@@ -1019,16 +1024,50 @@ process_foxgui_events(void *data, float progr, const char *msg)
 long
 regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
 {
-    writer_t *w = writer_new();
-    recipe->write(w);
-    fprintf(stderr, "%s\n", CSTR(w->text));
-    lexer_t *l = lexer_new(CSTR(w->text));
-    lexer_next(l);
-    stack_t *s = stack_read(l);
-    if (s) {
-        stack_free(s);
+    FXFileDialog open(this, "Save Recipe As");
+    // open.setFilename(scriptFile);
+    open.setPatternList(patterns_recipe);
+
+    if(open.execute()) {
+        FXString new_filename = open.getFilename();
+        writer_t *w = writer_new();
+        recipe->write(w);
+        FILE *f = fopen(new_filename.text(), "wb");
+        if (f) {
+            fputs(CSTR(w->text), f);
+            fclose(f);
+        }
+        writer_free(w);
     }
-    lexer_free(l);
-    writer_free(w);
+    return 1;
+}
+
+long
+regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
+{
+    FXFileDialog open(this, "Open Fit Recipe");
+    open.setPatternList(patterns_recipe);
+
+    if(open.execute()) {
+        FXString filename = open.getFilename();
+        Str content;
+
+        if(str_loadfile(filename.text(), content.str()) != 0) {
+            return 1;
+        }
+
+        lexer_t *l = lexer_new(content.cstr());
+        fit_recipe *new_recipe = fit_recipe::read(l);
+        if (!new_recipe) {
+            lexer_free(l);
+            return 1;
+        }
+        delete recipe;
+        recipe = new_recipe;
+        if (my_recipe_window) {
+            my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+        }
+        lexer_free(l);
+    }
     return 1;
 }

@@ -192,7 +192,7 @@ disp_table_write(writer_t *w, const disp_t *_d)
 int
 disp_table_read(lexer_t *l, disp_t *d_gen)
 {
-    long nb;
+    int nb;
     double lmin, lmax, lstep;
     if (lexer_integer(l, &nb)) return 1;
     if (lexer_number(l, &lmin)) return 1;

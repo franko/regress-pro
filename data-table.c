@@ -102,7 +102,7 @@ data_table_write(writer_t *w, const struct data_table *dt)
 struct data_table *
 data_table_read(lexer_t *l)
 {
-    long rows, columns;
+    int rows, columns;
     if (lexer_integer(l, &rows)) return NULL;
     if (lexer_integer(l, &columns)) return NULL;
     int i, j;

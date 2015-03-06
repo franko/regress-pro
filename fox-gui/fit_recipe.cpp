@@ -10,6 +10,12 @@ fit_recipe::fit_recipe()
     seeds_list = seed_list_new();
 }
 
+fit_recipe::fit_recipe(stack_t *s, const fit_config *cfg, fit_parameters *fps, seeds *sl)
+: stack(s), parameters(fps), seeds_list(sl)
+{
+    *config = *cfg;
+}
+
 fit_recipe::~fit_recipe()
 {
     seed_list_free(seeds_list);
@@ -40,4 +46,29 @@ int fit_recipe::write(writer_t *w)
     fit_parameters_write(w, parameters);
     seed_list_write(w, seeds_list);
     return 0;
+}
+
+    fit_config config[1];
+    stack_t *stack;
+    fit_parameters *parameters;
+    seeds *seeds_list;
+
+fit_recipe *fit_recipe::read(lexer_t *l)
+{
+    fit_config config[1];
+    fit_parameters *parameters;
+    seeds *seeds_list;
+    stack_t *stack = stack_read(l);
+    if (!stack) return NULL;
+    if (fit_config_read(l, config)) goto stack_fail;
+    parameters = fit_parameters_read(l);
+    if (!parameters) goto stack_fail;
+    seeds_list = seed_list_read(l);
+    if (!seeds_list) goto params_fail;
+    return new fit_recipe(stack, config, parameters, seeds_list);
+params_fail:
+    fit_parameters_free(parameters);
+stack_fail:
+    stack_free(stack);
+    return NULL;
 }

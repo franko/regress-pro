@@ -200,7 +200,27 @@ seed_write(writer_t *w, const seed_t *s)
     } else if (s->type == SEED_RANGE) {
         writer_printf(w, "range %g %g %g", s->min, s->max, s->step);
     } else {
-        writer_printf(w, "?");
+        writer_printf(w, "undef");
+    }
+    return 0;
+}
+
+static int
+seed_read(lexer_t *l, seed_t *seed, str_ptr id)
+{
+    if (lexer_ident(l, id)) return 1;
+    if (strcmp(CSTR(id), "value") == 0) {
+        seed->type = SEED_SIMPLE;
+        if (lexer_number(l, &seed->seed)) return 1;
+    } else if (strcmp(CSTR(id), "range") == 0) {
+        seed->type = SEED_RANGE;
+        if (lexer_number(l, &seed->min)) return 1;
+        if (lexer_number(l, &seed->max)) return 1;
+        if (lexer_number(l, &seed->step)) return 1;
+    } else if (strcmp(CSTR(id), "undef") == 0) {
+        seed->type = SEED_UNDEF;
+    } else {
+        return 1;
     }
     return 0;
 }
@@ -219,6 +239,28 @@ seed_list_write(writer_t *w, const struct seeds *s)
     }
     writer_newline_exit(w);
     return 1;
+}
+
+struct seeds *
+seed_list_read(lexer_t *l)
+{
+    str_t id;
+    int i, nb;
+    str_init(id, 24);
+    struct seeds *s = seed_list_new();
+    if (lexer_ident(l, id) || strcmp(CSTR(id), "seed-list")) goto seeds_exit;
+    if (lexer_integer(l, &nb)) goto seeds_exit;
+    for (i = 0; i < nb; i++) {
+        seed_t seed[1];
+        if (seed_read(l, seed, id)) goto seeds_exit;
+        seed_list_add(s, seed);
+    }
+    str_free(id);
+    return s;
+seeds_exit:
+    str_free(id);
+    seed_list_free(s);
+    return NULL;
 }
 
 struct strategy *
@@ -317,11 +359,12 @@ fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shi
     }
 }
 
+static const char *id_name[] = {"thickness", "n", "firstmul", NULL};
+static const char *model_name[] = {"ho", "cauchy", "lookup", "bruggeman", NULL};
+
 static int
 fit_param_write(writer_t *w, const fit_param_t *fp)
 {
-    static const char *id_name[] = {"thickness", "n", "firstmul"};
-    static const char *model_name[] = {"ho", "cauchy", "lookup", "bruggeman"};
     int id = fp->id;
     writer_printf(w, "%s", (id >= PID_THICKNESS && id < PID_INVALID) ? id_name[id-1] : "invalid");
     if (id < PID_LAYER_INDIPENDENT) {
@@ -331,6 +374,32 @@ fit_param_write(writer_t *w, const fit_param_t *fp)
             const char *mname = (mid >= 1 && mid < MODEL_NONE) ? model_name[mid - 1] : "unknown";
             writer_printf(w, " %s %d", mname, fp->param_nb);
         }
+    }
+    return 0;
+}
+
+static int
+fit_param_read(lexer_t *l, fit_param_t *fp, str_ptr id)
+{
+    if (lexer_ident(l, id)) return 1;
+    if (strcmp(CSTR(id), "thickness") == 0) {
+        fp->id = PID_THICKNESS;
+        if (lexer_integer(l, &fp->layer_nb)) return 1;
+    } else if (strcmp(CSTR(id), "n") == 0) {
+        fp->id = PID_LAYER_N;
+        if (lexer_integer(l, &fp->layer_nb)) return 1;
+        if (lexer_ident(l, id)) return 1;
+        int mid;
+        for (mid = 0; model_name[mid]; mid++) {
+            if (strcmp(model_name[mid], CSTR(id)) == 0) {
+                fp->model_id = mid + 1;
+                break;
+            }
+        }
+        if (model_name[mid] == NULL) return 1;
+        if (lexer_integer(l, &fp->param_nb)) return 1;
+    } else if (strcmp(CSTR(id), "firstmul") == 0) {
+        fp->id = PID_FIRSTMUL;
     }
     return 0;
 }
@@ -349,4 +418,27 @@ fit_parameters_write(writer_t *w, const struct fit_parameters *s)
     }
     writer_newline_exit(w);
     return 1;
+}
+
+struct fit_parameters *
+fit_parameters_read(lexer_t *l)
+{
+    str_t id;
+    int nb;
+    str_init(id, 24);
+    struct fit_parameters *fps = fit_parameters_new();
+    if (lexer_ident(l, id) || strcmp(CSTR(id), "fit-parameters")) goto params_exit;
+    if (lexer_integer(l, &nb)) goto params_exit;
+    int i;
+    for (i = 0; i < nb; i++) {
+        fit_param_t fp[1];
+        if (fit_param_read(l, fp, id)) goto params_exit;
+        fit_parameters_add(fps, fp);
+    }
+    str_free(id);
+    return fps;
+params_exit:
+    fit_parameters_free(fps);
+    str_free(id);
+    return NULL;
 }
