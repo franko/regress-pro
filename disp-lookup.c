@@ -19,6 +19,7 @@ static void lookup_encode_param(str_t param, const fit_param_t *fp);
 static double lookup_get_param_value(const struct disp_struct *d,
                                      const fit_param_t *fp);
 static int lookup_write(writer_t *w, const disp_t *_d);
+static int lookup_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_lookup_class = {
     .disp_class_id       = DISP_LOOKUP,
@@ -39,6 +40,7 @@ struct disp_class disp_lookup_class = {
     .decode_param_string = lookup_decode_param_string,
     .encode_param        = lookup_encode_param,
     .write               = lookup_write,
+    .read                = lookup_read,
 };
 
 struct disp_struct *
@@ -170,7 +172,7 @@ lookup_encode_param(str_t param, const fit_param_t *fp)
 int
 lookup_write(writer_t *w, const disp_t *_d) {
     const struct disp_lookup *d = & _d->disp.lookup;
-    writer_printf(w, "lookup \"%s\" %d %d", CSTR(_d->name), d->nb_comps, d->p);
+    writer_printf(w, "lookup \"%s\" %d %g", CSTR(_d->name), d->nb_comps, d->p);
     writer_newline_enter(w);
     struct lookup_comp *comp = d->component;
     int i;
@@ -180,5 +182,23 @@ lookup_write(writer_t *w, const disp_t *_d) {
         disp_write(w, comp->disp);
     }
     writer_indent(w, -1);
+    return 0;
+}
+
+int
+lookup_read(lexer_t *l, disp_t *d_gen)
+{
+    struct disp_lookup *d = &d_gen->disp.lookup;
+    int i, nb;
+    if (lexer_integer(l, &nb)) return 1;
+    if (lexer_number(l, &d->p)) return 1;
+    d->component = emalloc(sizeof(struct lookup_comp) * nb);
+    d->nb_comps = 0;
+    struct lookup_comp *comp = d->component;
+    for (i = 0; i < nb; i++, comp++, d->nb_comps++) {
+        if (lexer_number(l, &comp->p)) return 1;
+        comp->disp = disp_read(l);
+        if (!comp->disp) return 1;
+    }
     return 0;
 }

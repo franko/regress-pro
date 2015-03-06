@@ -532,39 +532,35 @@ fit_config_write(writer_t *w, const struct fit_config *config)
 int
 fit_config_read(lexer_t *l, struct fit_config *config)
 {
-    str_t id;
-    str_init(id, 24);
-    if (lexer_ident(l, id) || strcmp(CSTR(id), "fit-config")) goto config_exit;
-    if (lexer_ident(l, id)) goto config_exit;
-    if (strcmp(CSTR(id), "threshold") == 0) {
+    if (lexer_ident(l) || strcmp(CSTR(l->store), "fit-config")) goto config_exit;
+    if (lexer_ident(l)) goto config_exit;
+    if (strcmp(CSTR(l->store), "threshold") == 0) {
         config->threshold_given = 1;
         if (lexer_number(l, &config->chisq_threshold)) goto config_exit;
-        if (lexer_ident(l, id)) goto config_exit;
+        if (lexer_ident(l)) goto config_exit;
     } else {
         config->threshold_given = 0;
     }
-    if (strcmp(CSTR(id), "max-iterations")) goto config_exit;
+    if (strcmp(CSTR(l->store), "max-iterations")) goto config_exit;
     if (lexer_integer(l, &config->nb_max_iters)) goto config_exit;
-    if (lexer_ident(l, id) || strcmp(CSTR(id), "subsampling")) goto config_exit;
+    if (lexer_ident(l) || strcmp(CSTR(l->store), "subsampling")) goto config_exit;
     if (lexer_integer(l, &config->subsampling)) goto config_exit;
-    if (lexer_ident(l, id)) goto config_exit;
-    if (strcmp(CSTR(id), "wavelength-range") == 0) {
+    if (lexer_ident(l)) goto config_exit;
+    if (strcmp(CSTR(l->store), "wavelength-range") == 0) {
         double lmin, lmax;
         if (lexer_number(l, &lmin)) goto config_exit;
         if (lexer_number(l, &lmax)) goto config_exit;
         config->spectr_range.active = 1;
         config->spectr_range.min = lmin;
         config->spectr_range.max = lmax;
-        if (lexer_ident(l, id)) goto config_exit;
+        if (lexer_ident(l)) goto config_exit;
     } else {
         config->spectr_range.active = 0;
     }
-    if (strcmp(CSTR(id), "epsilon")) goto config_exit;
+    if (strcmp(CSTR(l->store), "epsilon")) goto config_exit;
     if (lexer_number(l, &config->epsabs)) goto config_exit;
     if (lexer_number(l, &config->epsrel)) goto config_exit;
-    str_free(id);
     return 0;
 config_exit:
-    str_free(id);
     return 1;
 }

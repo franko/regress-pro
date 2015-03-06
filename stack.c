@@ -203,28 +203,17 @@ stack_write(writer_t *w, const stack_t *s)
 stack_t *
 stack_read(lexer_t *l)
 {
-    int nb;
-    str_t header;
-    str_init(header, 15);
-    int status = lexer_ident(l, header);
-    if (status != 0 || strcmp(CSTR(header), "stack") != 0) {
-        str_free(header);
-        return NULL;
-    }
-    str_free(header);
+    int i, nb;
+    if (lexer_ident(l) || strcmp(CSTR(l->store), "stack")) return NULL;
     if (lexer_integer(l, &nb)) return NULL;
     stack_t *s = emalloc(sizeof(stack_t));
     stack_init_raw(s, nb);
-    s->nb = nb;
-    int i;
     for (i = 1; i < nb - 1; i++) {
         if (lexer_number(l, s->thickness + (i - 1))) goto stack_exit;
     }
-    for (i = 0; i < nb; i++) {
-        disp_t *d = disp_read_header(l);
-        if (!d) goto stack_exit;
-        if (d->dclass->read == NULL || d->dclass->read(l, d)) goto stack_exit;
-        s->disp[i] = d;
+    for (i = 0; i < nb; i++, s->nb++) {
+        s->disp[i] = disp_read(l);
+        if (!s->disp[i]) goto stack_exit;
     }
     return s;
 stack_exit:

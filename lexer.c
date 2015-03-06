@@ -9,6 +9,7 @@ lexer_new(const char *s)
     lexer_t *l = emalloc(sizeof(lexer_t));
     l->text = s;
     str_init(l->buffer, 64);
+    str_init(l->store, 64);
     lexer_next(l);
     return l;
 }
@@ -17,6 +18,7 @@ void
 lexer_free(lexer_t *l)
 {
     str_free(l->buffer);
+    str_free(l->store);
     free(l);
 }
 
@@ -57,7 +59,7 @@ lexer_next(lexer_t *l)
     char c = l->text[0];
     if (c == 0) {
         l->current.tk = TK_EOF;
-    } else if ((c >= '0' && c <= '9') || c == '.') {
+    } else if ((c >= '0' && c <= '9') || c == '.' || c == '-') {
         char *ftail, *ltail;
         double fval = strtod(l->text, &ftail);
         long lval = strtol(l->text, &ltail, 10);
@@ -92,11 +94,11 @@ lexer_next(lexer_t *l)
 }
 
 int
-lexer_string_gen(lexer_t *l, str_ptr s, int tk_ident)
+lexer_string_store(lexer_t *l, int tk_ident)
 {
     const int req = (tk_ident ? TK_IDENT : TK_STRING);
     if (l->current.tk == req) {
-        str_copy_c(s, l->current.value.str);
+        str_copy_c(l->store, l->current.value.str);
         lexer_next(l);
         return 0;
     }
