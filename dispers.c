@@ -298,8 +298,7 @@ disp_read(lexer_t *l)
 {
     disp_t *d = disp_read_header(l);
     if (!d || d->dclass->read == NULL || d->dclass->read(l, d)) {
-        str_free(d->name);
-        free(d);
+        disp_free(d);
         return NULL;
     }
     return d;

@@ -384,9 +384,10 @@ ho_write(writer_t *w, const disp_t *_d)
 int
 ho_read(lexer_t *l, disp_t *d_gen)
 {
+    struct disp_ho *d = &d_gen->disp.ho;
+    d->params = NULL;
     int n_osc;
     if (lexer_integer(l, &n_osc)) return 1;
-    struct disp_ho *d = &d_gen->disp.ho;
     d->nb_hos = n_osc;
     d->params = emalloc(n_osc * sizeof(struct ho_params));
     struct ho_params *ho = d->params;

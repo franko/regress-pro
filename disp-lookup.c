@@ -189,11 +189,12 @@ int
 lookup_read(lexer_t *l, disp_t *d_gen)
 {
     struct disp_lookup *d = &d_gen->disp.lookup;
+    d->nb_comps = 0;
+    d->component = NULL;
     int i, nb;
     if (lexer_integer(l, &nb)) return 1;
     if (lexer_number(l, &d->p)) return 1;
     d->component = emalloc(sizeof(struct lookup_comp) * nb);
-    d->nb_comps = 0;
     struct lookup_comp *comp = d->component;
     for (i = 0; i < nb; i++, comp++, d->nb_comps++) {
         if (lexer_number(l, &comp->p)) return 1;

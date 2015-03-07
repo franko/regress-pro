@@ -241,12 +241,12 @@ disp_sample_table_write(writer_t *w, const disp_t *_d)
 int
 disp_sample_table_read(lexer_t *l, disp_t *d_gen)
 {
+    struct disp_sample_table *d = &d_gen->disp.sample_table;
+    d->nb = 0;
     int nb;
     if (lexer_integer(l, &nb)) return 1;
-    struct data_table *tab = data_table_read(l);
-    if (!tab) return 1;
-    struct disp_sample_table *d = &d_gen->disp.sample_table;
+    d->table_ref = data_table_read(l);
+    if (!d->table_ref) return 1;
     d->nb = nb;
-    d->table_ref = tab;
     return 0;
 }

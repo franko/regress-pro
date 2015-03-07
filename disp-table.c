@@ -52,7 +52,9 @@ disp_table_init(struct disp_table dt[], int points)
 void
 disp_table_free(struct disp_struct *d)
 {
-    data_table_unref(d->disp.table.table_ref);
+    if (d->disp.table.table_ref) {
+        data_table_unref(d->disp.table.table_ref);
+    }
     disp_base_free(d);
 }
 
@@ -192,19 +194,19 @@ disp_table_write(writer_t *w, const disp_t *_d)
 int
 disp_table_read(lexer_t *l, disp_t *d_gen)
 {
+    struct disp_table *d = &d_gen->disp.table;
+    d->table_ref = NULL;
     int nb;
     double lmin, lmax, lstep;
     if (lexer_integer(l, &nb)) return 1;
     if (lexer_number(l, &lmin)) return 1;
     if (lexer_number(l, &lmax)) return 1;
     if (lexer_number(l, &lstep)) return 1;
-    struct data_table *tab = data_table_read(l);
-    if (!tab) return 1;
-    struct disp_table *d = &d_gen->disp.table;
+    d->table_ref = data_table_read(l);
+    if (!d->table_ref) return 1;
     d->lambda_min = lmin;
     d->lambda_max = lmax;
     d->lambda_stride = lstep;
     d->points_number = nb;
-    d->table_ref = tab;
     return 0;
 }
