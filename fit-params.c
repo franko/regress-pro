@@ -246,7 +246,7 @@ seed_list_read(lexer_t *l)
 {
     int i, nb;
     struct seeds *s = seed_list_new();
-    if (lexer_ident(l) || strcmp(CSTR(l->store), "seed-list")) goto seeds_exit;
+    if (lexer_check_ident(l, "seed-list")) goto seeds_exit;
     if (lexer_integer(l, &nb)) goto seeds_exit;
     for (i = 0; i < nb; i++) {
         seed_t seed[1];
@@ -421,7 +421,7 @@ fit_parameters_read(lexer_t *l)
 {
     int nb;
     struct fit_parameters *fps = fit_parameters_new();
-    if (lexer_ident(l) || strcmp(CSTR(l->store), "fit-parameters")) goto params_exit;
+    if (lexer_check_ident(l, "fit-parameters")) goto params_exit;
     if (lexer_integer(l, &nb)) goto params_exit;
     int i;
     for (i = 0; i < nb; i++) {

@@ -532,7 +532,7 @@ fit_config_write(writer_t *w, const struct fit_config *config)
 int
 fit_config_read(lexer_t *l, struct fit_config *config)
 {
-    if (lexer_ident(l) || strcmp(CSTR(l->store), "fit-config")) goto config_exit;
+    if (lexer_check_ident(l, "fit-config")) goto config_exit;
     if (lexer_ident(l)) goto config_exit;
     if (strcmp(CSTR(l->store), "threshold") == 0) {
         config->threshold_given = 1;
@@ -543,7 +543,7 @@ fit_config_read(lexer_t *l, struct fit_config *config)
     }
     if (strcmp(CSTR(l->store), "max-iterations")) goto config_exit;
     if (lexer_integer(l, &config->nb_max_iters)) goto config_exit;
-    if (lexer_ident(l) || strcmp(CSTR(l->store), "subsampling")) goto config_exit;
+    if (lexer_check_ident(l, "subsampling")) goto config_exit;
     if (lexer_integer(l, &config->subsampling)) goto config_exit;
     if (lexer_ident(l)) goto config_exit;
     if (strcmp(CSTR(l->store), "wavelength-range") == 0) {

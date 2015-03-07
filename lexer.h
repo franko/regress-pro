@@ -37,6 +37,7 @@ extern void      lexer_next(lexer_t *l);
 extern int       lexer_string_store(lexer_t *l, int tk_ident);
 extern int       lexer_integer(lexer_t *l, int *value);
 extern int       lexer_number(lexer_t *l, double *value);
+extern int       lexer_check_ident(lexer_t *l, const char *id);
 
 #define lexer_string(a) lexer_string_store(a, 0)
 #define lexer_ident(a) lexer_string_store(a, 1)

@@ -106,6 +106,16 @@ lexer_string_store(lexer_t *l, int tk_ident)
 }
 
 int
+lexer_check_ident(lexer_t *l, const char *id)
+{
+    if (l->current.tk == TK_IDENT && strcmp(l->current.value.str, id) == 0) {
+        lexer_next(l);
+        return 0;
+    }
+    return 1;
+}
+
+int
 lexer_integer(lexer_t *l, int *value)
 {
     if (l->current.tk == TK_INTEGER) {

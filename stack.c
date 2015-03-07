@@ -204,7 +204,7 @@ stack_t *
 stack_read(lexer_t *l)
 {
     int i, nb;
-    if (lexer_ident(l) || strcmp(CSTR(l->store), "stack")) return NULL;
+    if (lexer_check_ident(l, "stack")) return NULL;
     if (lexer_integer(l, &nb)) return NULL;
     stack_t *s = emalloc(sizeof(stack_t));
     stack_init_raw(s, nb);
