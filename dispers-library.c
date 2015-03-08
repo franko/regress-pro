@@ -35,6 +35,7 @@ struct disp_list user_lib[1] = {{NULL, NULL}};
 /* Register a table-based dispersion with an unique id. */
 struct disp_table_entry {
     const char *id;
+    const char *name;
     struct disp_table *disp_table;
 };
 
@@ -78,6 +79,7 @@ make_poly_dispers()
         dt->table_ref     = (struct data_table *) &poly_comp[j];
 
         lib_entry->id = comp_name[j];
+        lib_entry->name = poly_comp_name[j];
         lib_entry->disp_table = dt;
     }
 
@@ -106,7 +108,8 @@ dispers_library_init()
     prev = NULL;
 
     /* Silicon PAPER */
-    current = disp_new_with_name(DISP_TABLE, "Si from paper");
+    const char * const si_paper_name = "Si from paper";
+    current = disp_new_with_name(DISP_TABLE, si_paper_name);
     dt = & current->disp.table;
 
     dt->points_number = si_data_table.rows;
@@ -117,6 +120,7 @@ dispers_library_init()
 
     lib_disp_table[lib_si_index].id = "si-paper-1";
     lib_disp_table[lib_si_index].disp_table = dt;
+    lib_disp_table[lib_si_index].name = si_paper_name;
 
     node = node_prealloc + idx;
     add_dispersion_node(node, prev, "si", current);
@@ -264,6 +268,7 @@ lib_disp_table_get(const char *id)
     for (i = 0; i < lib_end_index; i++, p++) {
         if (strcmp(p->id, id) == 0) {
             disp_t *d = disp_new_with_name(DISP_TABLE, p->id);
+            str_copy_c(d->name, p->name);
             d->disp.table = *p->disp_table;
             return d;
         }
