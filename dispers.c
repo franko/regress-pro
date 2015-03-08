@@ -11,6 +11,7 @@
 #include "cmpl.h"
 #include "str.h"
 #include "fit-params.h"
+#include "dispers-library.h"
 
 disp_t *
 load_nk_table(const char * filename)
@@ -270,10 +271,22 @@ decode_fit_param(fit_param_t *fp, const str_t str)
     return 1;
 }
 
+static int
+write_library_id(writer_t *w, const char *id)
+{
+    writer_printf(w, "library \"%s\"", id);
+    writer_newline(w);
+    return 0;
+}
+
 int
 disp_write(writer_t *w, const disp_t *d)
 {
     assert(d->dclass != NULL);
+    const char *lib_id = lib_disp_table_lookup(d);
+    if (lib_id) {
+        return write_library_id(w, lib_id);
+    }
     return d->dclass->write(w, d);
 }
 
@@ -296,6 +309,10 @@ disp_read_header(lexer_t *l)
 disp_t *
 disp_read(lexer_t *l)
 {
+    if (lexer_check_ident(l, "library") == 0) {
+        if (lexer_string(l)) return NULL;
+        return lib_disp_table_get(CSTR(l->store));
+    }
     disp_t *d = disp_read_header(l);
     if (!d || d->dclass->read == NULL || d->dclass->read(l, d)) {
         disp_free(d);

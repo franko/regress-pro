@@ -24,6 +24,9 @@ extern struct disp_node * disp_list_add(struct disp_list *lst, disp_t *d);
 extern void               disp_list_remove(struct disp_list *lst, struct disp_node *prev);
 extern void               disp_list_free(struct disp_list *lst);
 
+extern const char *lib_disp_table_lookup(const disp_t *d);
+extern disp_t *lib_disp_table_get(const char *id);
+
 extern struct disp_list user_lib[1];
 
 __END_DECLS

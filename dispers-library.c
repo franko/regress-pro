@@ -32,6 +32,17 @@ static struct disp_list_node *dispers_library_list;
 
 struct disp_list user_lib[1] = {{NULL, NULL}};
 
+/* Register a table-based dispersion with an unique id. */
+struct disp_table_entry {
+    const char *id;
+    struct disp_table *disp_table;
+};
+
+static struct disp_table_entry lib_disp_table[6];
+const int lib_poly_index = 0;
+const int lib_si_index = 5;
+const int lib_end_index = 6;
+
 void
 add_dispersion_node(struct disp_list_node *curr, struct disp_list_node *prev,
                     const char *id, disp_t *disp)
@@ -44,12 +55,14 @@ add_dispersion_node(struct disp_list_node *curr, struct disp_list_node *prev,
 static disp_t *
 make_poly_dispers()
 {
+    static const char *comp_name[5] = {"siamoimp-1", "siamo-1", "poly-1", "poly-as-1", "si-w-1"};
     disp_t *lookup_disp;
     const int nb_comp = 5;
     struct lookup_comp *comp_data = malloc(nb_comp * sizeof(struct lookup_comp));
     int j = 0;
 
-    for(j = 0; j < nb_comp; j++) {
+    struct disp_table_entry *lib_entry = &lib_disp_table[lib_poly_index];
+    for(j = 0; j < nb_comp; j++, lib_entry++) {
         struct lookup_comp *comp = comp_data + j;
         struct disp_table *dt;
 
@@ -63,6 +76,9 @@ make_poly_dispers()
         dt->lambda_max    = 780.0;
         dt->lambda_stride = 2.0;
         dt->table_ref     = (struct data_table *) &poly_comp[j];
+
+        lib_entry->id = comp_name[j];
+        lib_entry->disp_table = dt;
     }
 
     lookup_disp = disp_new_lookup("Poly", 5, comp_data, 0.5);
@@ -98,6 +114,9 @@ dispers_library_init()
     dt->lambda_max    = SI_PAPER_WVLEN_MAX;
     dt->lambda_stride = SI_PAPER_WVLEN_STRIDE;
     dt->table_ref     = (struct data_table *) & si_data_table;
+
+    lib_disp_table[lib_si_index].id = "si-paper-1";
+    lib_disp_table[lib_si_index].disp_table = dt;
 
     node = node_prealloc + idx;
     add_dispersion_node(node, prev, "si", current);
@@ -220,4 +239,34 @@ disp_list_free(struct disp_list *lst)
     }
     lst->first = NULL;
     lst->last = NULL;
+}
+
+const char *
+lib_disp_table_lookup(const disp_t *d)
+{
+    if (d->type != DISP_TABLE) return NULL;
+    const struct disp_table *dt = &d->disp.table;
+    struct disp_table_entry *p = lib_disp_table;
+    int i;
+    for (i = 0; i < lib_end_index; i++, p++) {
+        if (p->disp_table->table_ref == dt->table_ref) {
+            return p->id;
+        }
+    }
+    return NULL;
+}
+
+disp_t *
+lib_disp_table_get(const char *id)
+{
+    struct disp_table_entry *p = lib_disp_table;
+    int i;
+    for (i = 0; i < lib_end_index; i++, p++) {
+        if (strcmp(p->id, id) == 0) {
+            disp_t *d = disp_new_with_name(DISP_TABLE, p->id);
+            d->disp.table = *p->disp_table;
+            return d;
+        }
+    }
+    return NULL;
 }
