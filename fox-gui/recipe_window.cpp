@@ -111,6 +111,7 @@ void recipe_window::setup_parameters_list()
         fit_parameters_free(param_list);
     }
     param_list = listbox_populate_all_parameters(param_listbox, recipe->stack);
+    seed_dirty = true;
 }
 
 recipe_window::~recipe_window()
@@ -346,4 +347,13 @@ bool range_correct_format(const char *txt, double ps[])
 {
     int nass = sscanf(txt, "%lf-%lf", ps, ps+1);
     return (nass == 2 && ps[1] > ps[0]);
+}
+
+void
+recipe_window::bind_new_fit_recipe(fit_recipe *rcp)
+{
+    recipe = rcp;
+    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    setup_parameters_list();
+    setup_config_parameters();
 }

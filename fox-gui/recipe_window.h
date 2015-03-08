@@ -19,6 +19,7 @@ public:
 
     void setup_parameters_list();
     void setup_config_parameters();
+    void bind_new_fit_recipe(fit_recipe *rcp);
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);

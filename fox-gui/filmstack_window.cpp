@@ -102,13 +102,15 @@ filmstack_window::on_cmd_film_menu(FXObject*sender, FXSelector sel, void *ptr)
 }
 
 void
-filmstack_window::rebuild_stack_window()
+filmstack_window::rebuild_stack_window(bool notify)
 {
     delete stack_window;
     stack_window = setup_stack_window(this);
     stack_window->create();
     resize(getWidth(), getDefaultHeight());
-    notify_stack_change();
+    if (notify) {
+        notify_stack_change();
+    }
 }
 
 void
@@ -211,7 +213,7 @@ filmstack_window::on_change_thickness(FXObject*, FXSelector sel, void *data)
 }
 
 void
-filmstack_window::bind_new_filmstack(stack_t *s) {
+filmstack_window::bind_new_filmstack(stack_t *s, bool notify) {
     stack = s;
-    rebuild_stack_window();
+    rebuild_stack_window(notify);
 }

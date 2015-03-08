@@ -29,7 +29,7 @@ public:
        that will be used as target to notify changes in film stack. */
     void set_target_stack_changes(FXObject *rcp, FXuint sel_change, FXuint sel_shift);
 
-    void bind_new_filmstack(stack_t *s);
+    void bind_new_filmstack(stack_t *s, bool notify = true);
 
     long on_cmd_film_menu(FXObject*,FXSelector,void* ptr);
     long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
@@ -57,7 +57,7 @@ public:
 
 private:
     FXWindow *setup_stack_window(FXComposite *);
-    void rebuild_stack_window();
+    void rebuild_stack_window(bool notify = true);
     void notify_stack_change();
     void notify_stack_shift(shift_info *);
 

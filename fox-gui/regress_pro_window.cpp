@@ -1062,12 +1062,16 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
             lexer_free(l);
             return 1;
         }
-        delete recipe;
+        lexer_free(l);
+        fit_recipe *old_recipe = recipe;
         recipe = new_recipe;
         if (my_recipe_window) {
-            my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+            my_recipe_window->bind_new_fit_recipe(recipe);
         }
-        lexer_free(l);
+        if (my_filmstack_window) {
+            my_filmstack_window->bind_new_filmstack(recipe->stack, false);
+        }
+        delete old_recipe;
     }
     return 1;
 }
