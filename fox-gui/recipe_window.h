@@ -4,6 +4,14 @@
 #include <fx.h>
 #include "fit_recipe.h"
 
+struct multi_sample_recipe {
+    multi_sample_recipe();
+    ~multi_sample_recipe();
+
+    fit_parameters *iparameters;
+    fit_parameters *cparameters;
+};
+
 class recipe_window : public FXDialogBox {
     FXDECLARE(recipe_window)
 
@@ -31,6 +39,7 @@ public:
     long on_changed_subsampling(FXObject*, FXSelector, void*);
     long on_cmd_stack_change(FXObject*, FXSelector, void*);
     long on_select_parameter(FXObject*, FXSelector, void*);
+    long on_cmd_multi_sample(FXObject *, FXSelector, void *ptr);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,
@@ -44,6 +53,9 @@ public:
         ID_ITERATIONS,
         ID_SUBSAMPLE,
         ID_STACK_CHANGE,
+        ID_MULTI_SAMPLE,
+        ID_PARAM_INDIV,
+        ID_PARAM_CONSTR,
         ID_LAST
     };
 
@@ -56,7 +68,9 @@ private:
     void clear_grid_textfields();
     void fit_list_append_parameter(const fit_param_t *fp, const seed_t *value);
     void fit_list_update_parameter(int i, const fit_param_t *fp, const seed_t *value);
+    void enable_multi_sample();
 
+    FXHorizontalFrame *top_frame;
     FXListBox *param_listbox;
     FXTextField *seed_tf;
     FXTextField *grid_min_tf, *grid_max_tf, *grid_step_tf;
@@ -65,7 +79,10 @@ private:
 
     fit_recipe *recipe;
     fit_parameters *param_list;
+    multi_sample_recipe *ms_recipe;
     bool seed_dirty;
+
+    FXList *iparams_listbox, *cparams_listbox;
 };
 
 #endif
