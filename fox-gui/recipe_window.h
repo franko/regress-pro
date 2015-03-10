@@ -40,6 +40,9 @@ public:
     long on_cmd_stack_change(FXObject*, FXSelector, void*);
     long on_select_parameter(FXObject*, FXSelector, void*);
     long on_cmd_multi_sample(FXObject *, FXSelector, void *ptr);
+    long on_cmd_add_indiv(FXObject *, FXSelector, void *);
+    long on_cmd_add_constr(FXObject *, FXSelector, void *);
+    long on_select_param(FXObject *, FXSelector sel, void *);
 
     enum {
         ID_PARAM_SELECT = FXDialogBox::ID_LAST,
@@ -56,6 +59,8 @@ public:
         ID_MULTI_SAMPLE,
         ID_PARAM_INDIV,
         ID_PARAM_CONSTR,
+        ID_ADD_INDIV,
+        ID_ADD_CONSTR,
         ID_LAST
     };
 
@@ -71,6 +76,7 @@ private:
     void enable_multi_sample();
 
     FXHorizontalFrame *top_frame;
+    FXGroupBox *params_group;
     FXListBox *param_listbox;
     FXTextField *seed_tf;
     FXTextField *grid_min_tf, *grid_max_tf, *grid_step_tf;

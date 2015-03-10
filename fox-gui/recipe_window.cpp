@@ -22,6 +22,10 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_STACK_CHANGE, recipe_window::on_cmd_stack_change),
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_DELETE, recipe_window::onCmdHide),
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_MULTI_SAMPLE, recipe_window::on_cmd_multi_sample),
+    FXMAPFUNC(SEL_COMMAND, recipe_window::ID_ADD_INDIV, recipe_window::on_cmd_add_indiv),
+    FXMAPFUNC(SEL_COMMAND, recipe_window::ID_ADD_CONSTR, recipe_window::on_cmd_add_constr),
+    FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAM_INDIV, recipe_window::on_select_param),
+    FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAM_CONSTR, recipe_window::on_select_param),
 };
 
 FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_window_map));
@@ -58,8 +62,8 @@ recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXi
     FXSpring *botspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
     FXHorizontalFrame *bhf = new FXHorizontalFrame(botspr, LAYOUT_FILL_Y);
 
-    FXGroupBox *plgroup = new FXGroupBox(bhf, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    param_listbox = new FXListBox(plgroup, this, ID_PARAM_SELECT);
+    params_group = new FXGroupBox(bhf, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT);
     param_listbox->setNumVisible(8);
 
     setup_parameters_list();
@@ -368,6 +372,13 @@ recipe_window::enable_multi_sample()
     FXGroupBox *csgroup = new FXGroupBox(top_frame, "Constraints", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     cparams_listbox = new FXList(csgroup, this, ID_PARAM_CONSTR, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
 
+    FXButton *b1 = new FXButton(params_group, "Sample", NULL, this, ID_ADD_INDIV);
+    FXButton *b2 = new FXButton(params_group, "Constraints", NULL, this, ID_ADD_CONSTR);
+
+    b1->create();
+    b2->create();
+    params_group->recalc();
+
     ipgroup->create();
     csgroup->create();
     this->resize(700, 420);
@@ -398,4 +409,48 @@ multi_sample_recipe::~multi_sample_recipe()
 {
     fit_parameters_free(iparameters);
     fit_parameters_free(cparameters);
+}
+
+long recipe_window::on_cmd_add_indiv(FXObject *, FXSelector, void *)
+{
+    const fit_param_t *fp = selected_parameter();
+    int i = fit_parameters_find(ms_recipe->iparameters, fp);
+    if (i < 0) {
+        fit_parameters_add(ms_recipe->iparameters, fp);
+        iparams_listbox->appendItem(format_fit_parameter(fp));
+    }
+    return 1;
+}
+
+long recipe_window::on_cmd_add_constr(FXObject *, FXSelector, void *)
+{
+    const fit_param_t *fp = selected_parameter();
+    int i = fit_parameters_find(ms_recipe->cparameters, fp);
+    if (i < 0) {
+        fit_parameters_add(ms_recipe->cparameters, fp);
+        cparams_listbox->appendItem(format_fit_parameter(fp));
+    }
+    return 1;
+}
+
+
+long recipe_window::on_select_param(FXObject *, FXSelector sel, void *)
+{
+    int id = FXSELID(sel);
+    const fit_param_t *selfp;
+    if (id == ID_PARAM_INDIV) {
+        FXint index = iparams_listbox->getCurrentItem();
+        /* Get the selected fit parameter. */
+        selfp = &ms_recipe->iparameters->values[index];
+    } else {
+        FXint index = cparams_listbox->getCurrentItem();
+        /* Get the selected fit parameter. */
+        selfp = &ms_recipe->cparameters->values[index];
+    }
+    /* Find the index of the fit parameter in the list of all
+       possible parameters. */
+    int fp_index = fit_parameters_find(param_list, selfp);
+    /* Select in the listbox the given parameter. */
+    listbox_select_parameter(param_listbox, fp_index);
+    return 1;
 }
