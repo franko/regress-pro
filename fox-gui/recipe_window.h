@@ -74,6 +74,7 @@ private:
     void fit_list_append_parameter(const fit_param_t *fp, const seed_t *value);
     void fit_list_update_parameter(int i, const fit_param_t *fp, const seed_t *value);
     void enable_multi_sample();
+    void disable_multi_sample();
 
     FXHorizontalFrame *top_frame;
     FXGroupBox *params_group;
@@ -88,6 +89,8 @@ private:
     multi_sample_recipe *ms_recipe;
     bool seed_dirty;
 
+    FXGroupBox *iparams_group, *cparams_group;
+    FXButton *sample_add_button, *constr_add_button;
     FXList *iparams_listbox, *cparams_listbox;
 };
 

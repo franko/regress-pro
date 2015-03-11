@@ -367,21 +367,32 @@ recipe_window::bind_new_fit_recipe(fit_recipe *rcp)
 void
 recipe_window::enable_multi_sample()
 {
-    FXGroupBox *ipgroup = new FXGroupBox(top_frame, "Sample", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    iparams_listbox = new FXList(ipgroup, this, ID_PARAM_INDIV, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
-    FXGroupBox *csgroup = new FXGroupBox(top_frame, "Constraints", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    cparams_listbox = new FXList(csgroup, this, ID_PARAM_CONSTR, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
+    iparams_group = new FXGroupBox(top_frame, "Sample", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    iparams_listbox = new FXList(iparams_group, this, ID_PARAM_INDIV, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
+    cparams_group = new FXGroupBox(top_frame, "Constraints", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    cparams_listbox = new FXList(cparams_group, this, ID_PARAM_CONSTR, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
 
-    FXButton *b1 = new FXButton(params_group, "Sample", NULL, this, ID_ADD_INDIV);
-    FXButton *b2 = new FXButton(params_group, "Constraints", NULL, this, ID_ADD_CONSTR);
+    sample_add_button = new FXButton(params_group, "Sample", NULL, this, ID_ADD_INDIV);
+    constr_add_button = new FXButton(params_group, "Constraints", NULL, this, ID_ADD_CONSTR);
 
-    b1->create();
-    b2->create();
+    sample_add_button->create();
+    constr_add_button->create();
     params_group->recalc();
 
-    ipgroup->create();
-    csgroup->create();
+    iparams_group->create();
+    cparams_group->create();
     this->resize(700, 420);
+}
+
+void
+recipe_window::disable_multi_sample()
+{
+    delete iparams_group;
+    delete cparams_group;
+    delete sample_add_button;
+    delete constr_add_button;
+    params_group->recalc();
+    this->resize(540, 420);
 }
 
 long
@@ -394,6 +405,7 @@ recipe_window::on_cmd_multi_sample(FXObject *, FXSelector, void *ptr)
     } else if (!ptr && ms_recipe) {
         delete ms_recipe;
         ms_recipe = NULL;
+        disable_multi_sample();
         return 1;
     }
     return 0;
