@@ -63,7 +63,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_FILM_STACK, regress_pro_window::onCmdFilmStack),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_EDIT, regress_pro_window::onCmdRecipeEdit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_MSAMPLE_EDIT, regress_pro_window::onCmdMultiSampleEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
@@ -110,7 +109,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
-      my_filmstack_window(NULL), my_recipe_window(NULL), my_multifit_window(NULL),
+      my_filmstack_window(NULL), my_recipe_window(NULL),
       my_dataset_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
 {
     // Menubar
@@ -131,7 +130,6 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     editmenu = new FXMenuPane(this);
     new FXMenuCommand(editmenu, "Film Stack", NULL, this, ID_FILM_STACK);
     new FXMenuCommand(editmenu, "Recipe", NULL, this, ID_RECIPE_EDIT);
-    new FXMenuCommand(editmenu, "Multi Sample", NULL, this, ID_MSAMPLE_EDIT);
     new FXMenuCommand(editmenu, "Dataset", NULL, this, ID_DATASET_EDIT);
     new FXMenuTitle(menubar, "&Edit", NULL, editmenu);
 
@@ -485,15 +483,16 @@ regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdRunMultiFitNew(FXObject*,FXSelector,void *)
 {
-    if (!my_dataset_window || !my_multifit_window) {
+    if (!my_dataset_window || !my_recipe_window || !my_recipe_window->ms_recipe) {
         return 0;
     }
 
     struct multi_fit_engine *fit;
+    multi_sample_recipe *ms_recipe = my_recipe_window->ms_recipe;
+    const fit_parameters *iparams = ms_recipe->iparameters;
+    const fit_parameters *cparams = ms_recipe->cparameters;
     dataset_table *dataset = my_dataset_window->dataset();
     int samples_number = dataset->samples_number();
-    const fit_parameters *iparams = my_multifit_window->indiv_parameters();
-    const fit_parameters *cparams = my_multifit_window->constr_parameters();
     fit = multi_fit_engine_new(recipe->config, samples_number);
     multi_fit_engine_bind(fit, recipe->stack, recipe->parameters, iparams);
     double *constr_values = new double[cparams->number];
@@ -853,9 +852,6 @@ regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
     if (my_recipe_window) {
         my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
     }
-    if (my_multifit_window) {
-        my_multifit_window->handle(this, FXSEL(SEL_COMMAND, multifit_window::ID_STACK_CHANGE), NULL);
-    }
     return 1;
 }
 
@@ -863,9 +859,6 @@ long
 regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
 {
     recipe->shift_fit_parameters((shift_info *)ptr);
-    if (my_multifit_window) {
-        my_multifit_window->handle(this, FXSEL(SEL_COMMAND, multifit_window::ID_STACK_SHIFT), ptr);
-    }
     return 1;
 }
 
@@ -949,16 +942,6 @@ regress_pro_window::setErrorRegion(int sl, int el)
     }
 
     scripttext->changeStyle(ns, next, 1);
-}
-
-long regress_pro_window::onCmdMultiSampleEdit(FXObject *, FXSelector, void *)
-{
-    if (!my_multifit_window) {
-        my_multifit_window = new multifit_window(recipe, this);
-        my_multifit_window->create();
-    }
-    my_multifit_window->show(PLACEMENT_SCREEN);
-    return 1;
 }
 
 float

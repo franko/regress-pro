@@ -64,6 +64,8 @@ public:
         ID_LAST
     };
 
+    multi_sample_recipe *ms_recipe;
+
 private:
     const fit_param_t *selected_parameter();
     void set_fit_parameter(const fit_param_t *fp, const seed_t *value);
@@ -86,7 +88,6 @@ private:
 
     fit_recipe *recipe;
     fit_parameters *param_list;
-    multi_sample_recipe *ms_recipe;
     bool seed_dirty;
 
     FXGroupBox *iparams_group, *cparams_group;

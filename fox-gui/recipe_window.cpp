@@ -32,7 +32,7 @@ FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_windo
 
 recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXDialogBox(topwin, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
-    recipe(rcp), param_list(NULL), ms_recipe(NULL), seed_dirty(true)
+    ms_recipe(NULL), recipe(rcp), param_list(NULL), seed_dirty(true)
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);
