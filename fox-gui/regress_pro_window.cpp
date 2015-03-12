@@ -852,6 +852,10 @@ regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
     if (my_recipe_window) {
         my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
     }
+    if (my_dataset_window) {
+        dataset_table *dataset = my_dataset_window->dataset();
+        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
+    }
     return 1;
 }
 
@@ -1053,6 +1057,10 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
         }
         if (my_filmstack_window) {
             my_filmstack_window->bind_new_filmstack(recipe->stack, false);
+        }
+        if (my_dataset_window) {
+            dataset_table *dataset = my_dataset_window->dataset();
+            dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         }
         delete old_recipe;
     }

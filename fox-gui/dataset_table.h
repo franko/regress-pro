@@ -33,18 +33,21 @@ public:
 
     long on_cmd_select_column(FXObject *, FXSelector, void *);
     long on_cmd_fit_param(FXObject *, FXSelector, void *);
+    long on_cmd_stack_change(FXObject *, FXSelector, void *);
 
     enum {
-        ID_FIT_PARAM = FXTable::ID_LAST,
+        ID_STACK_CHANGE = FXTable::ID_LAST,
+        ID_FIT_PARAM,
         ID_FIT_PARAM_LAST = ID_FIT_PARAM + 256,
         ID_LAST,
     };
 
 private:
+    void stack_change_update(stack_t *stack);
+
     FXMenuPane *popupmenu;
 
     int entries_no;
-    fit_recipe *recipe;
     fit_parameters *fit_params;
     int popup_col;
 

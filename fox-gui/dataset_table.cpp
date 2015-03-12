@@ -12,14 +12,15 @@ struct fit_param_node {
 // Map
 FXDEFMAP(dataset_table) dataset_table_map[]= {
     FXMAPFUNC(SEL_COMMAND, dataset_table::ID_SELECT_COLUMN_INDEX, dataset_table::on_cmd_select_column),
+    FXMAPFUNC(SEL_COMMAND, dataset_table::ID_STACK_CHANGE, dataset_table::on_cmd_stack_change),
     FXMAPFUNCS(SEL_COMMAND, dataset_table::ID_FIT_PARAM, dataset_table::ID_FIT_PARAM_LAST, dataset_table::on_cmd_fit_param),
 };
 
 FXIMPLEMENT(dataset_table,FXTable,dataset_table_map,ARRAYNUMBER(dataset_table_map));
 
-dataset_table::dataset_table(fit_recipe *rcp, FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb)
+dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb)
     : FXTable(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), entries_no(0),
-    recipe(rcp), fplink(NULL)
+    fplink(NULL)
 {
     fit_params = fit_parameters_new();
     stack_get_all_parameters(recipe->stack, fit_params);
@@ -29,6 +30,21 @@ dataset_table::dataset_table(fit_recipe *rcp, FXComposite *p,FXObject* tgt,FXSel
 dataset_table::~dataset_table()
 {
     delete popupmenu;
+}
+
+void dataset_table::stack_change_update(stack_t *stack)
+{
+    fit_parameters_clear(fit_params);
+    stack_get_all_parameters(stack, fit_params);
+    delete popupmenu;
+    popupmenu = fit_parameters_menu(this, this, ID_FIT_PARAM, fit_params);
+    popupmenu->create();
+}
+
+long dataset_table::on_cmd_stack_change(FXObject *, FXSelector, void *data)
+{
+    stack_change_update((stack_t *)data);
+    return 1;
 }
 
 void dataset_table::create()
