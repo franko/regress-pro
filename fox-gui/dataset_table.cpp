@@ -1,14 +1,6 @@
 #include "dataset_table.h"
 #include "fit_params_utils.h"
 
-struct fit_param_node {
-    fit_param_t fp;
-    int column;
-    fit_param_node *next;
-
-    fit_param_node(const fit_param_t *_fp, int col): fp(*_fp), column(col), next(NULL) {}
-};
-
 // Map
 FXDEFMAP(dataset_table) dataset_table_map[]= {
     FXMAPFUNC(SEL_COMMAND, dataset_table::ID_SELECT_COLUMN_INDEX, dataset_table::on_cmd_select_column),
@@ -19,8 +11,7 @@ FXDEFMAP(dataset_table) dataset_table_map[]= {
 FXIMPLEMENT(dataset_table,FXTable,dataset_table_map,ARRAYNUMBER(dataset_table_map));
 
 dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb)
-    : FXTable(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), entries_no(0),
-    fplink(NULL)
+    : FXTable(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), entries_no(0)
 {
     fit_params = fit_parameters_new();
     stack_get_all_parameters(recipe->stack, fit_params);
@@ -82,27 +73,28 @@ long dataset_table::on_cmd_select_column(FXObject *obj, FXSelector sel, void *pt
     return 1;
 }
 
-void dataset_table::link_parameter(const fit_param_t *fp, int column)
+void dataset_table::link_parameter(const fit_param_t *fp, const int column)
 {
-    for (fit_param_node *p = fplink; p; p = p->next) {
+    for (fit_param_node *p = fplink.top; p; p = p->next) {
         if (p->column == column) {
-            p->fp = *fp;
+            fplink.params->values[p->fp_index] = *fp;
             return;
         }
     }
-    fit_param_node *link = new fit_param_node(fp, column);
-    link->next = fplink;
-    fplink = link;
+    int fp_index = fit_parameters_add(fplink.params, fp);
+    fit_param_node *new_node = new fit_param_node(fp_index, column);
+    new_node->next = fplink.top;
+    fplink.top = new_node;
 }
 
 long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
 {
-    int fpindex = FXSELID(sel) - ID_FIT_PARAM;
-    const fit_param_t *fp = fit_params->values + fpindex;
+    int fp_index = FXSELID(sel) - ID_FIT_PARAM;
+    const fit_param_t *fp = fit_params->values + fp_index;
     link_parameter(fp, popup_col);
     str_t name;
     str_init(name, 16);
-    get_full_param_name(fp, name);
+    get_full_param_name(fit_params->values + fp_index, name);
     setColumnText(popup_col, CSTR(name));
     str_free(name);
     return 1;
@@ -126,10 +118,11 @@ bool dataset_table::get_values(int row, const fit_parameters *fps, double value_
 {
     FXString cell_text;
     for (unsigned i = 0; i < fps->number; i++) {
-        const fit_param_t fp = fps->values[i];
+        const fit_param_t *fp = &fps->values[i];
         const char *ctext = NULL;
-        for (fit_param_node *p = fplink; p; p = p->next) {
-            if (fit_param_compare(&p->fp, &fp) == 0) {
+        for (fit_param_node *p = fplink.top; p; p = p->next) {
+            const fit_param_t *xfp = &fplink.params->values[p->fp_index];
+            if (fit_param_compare(xfp, fp) == 0) {
                 cell_text = getItemText(row, p->column);
                 ctext = cell_text.text();
                 char *endptr;

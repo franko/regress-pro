@@ -8,7 +8,26 @@
 /* Used to hold a simple linked list of fit parameters. Each node
  * represent the association of a fit parameter with a given column
  * of the dataset table. */
-struct fit_param_node;
+struct fit_param_node {
+    int fp_index;
+    int column;
+    fit_param_node *next;
+
+    fit_param_node(int index, int col): fp_index(index), column(col), next(NULL) {}
+};
+
+struct fit_param_link {
+    fit_parameters *params;
+    fit_param_node *top;
+
+    fit_param_link(): top(NULL) {
+        params = fit_parameters_new();
+    }
+
+    ~fit_param_link() {
+        fit_parameters_free(params);
+    }
+};
 
 class dataset_table : public FXTable {
     FXDECLARE(dataset_table)
@@ -26,7 +45,7 @@ public:
     virtual void create();
 
     void append_filenames(FXString *filenames);
-    void link_parameter(const fit_param_t *fp, int column);
+    void link_parameter(const fit_param_t *fp, const int column);
     bool get_spectra_list(spectrum *spectra_list[], FXString& error_filename);
     bool get_values(int row, const fit_parameters *fps, double value_array[], int& error_col);
     int samples_number() { return entries_no; }
@@ -51,7 +70,7 @@ private:
     fit_parameters *fit_params;
     int popup_col;
 
-    fit_param_node *fplink;
+    fit_param_link fplink;
 };
 
 #endif
