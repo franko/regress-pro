@@ -126,7 +126,7 @@ fit_parameters_clear(struct fit_parameters *s)
     s->number = 0;
 }
 
-void
+int
 fit_parameters_add(struct fit_parameters *lst, fit_param_t const * fp)
 {
     size_t idx = lst->number;
@@ -135,7 +135,7 @@ fit_parameters_add(struct fit_parameters *lst, fit_param_t const * fp)
 
     memcpy(lst->values + idx, fp, sizeof(fit_param_t));
 
-    lst->number ++;
+    return lst->number++;
 }
 
 void
