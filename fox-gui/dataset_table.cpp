@@ -5,6 +5,7 @@
 FXDEFMAP(dataset_table) dataset_table_map[]= {
     FXMAPFUNC(SEL_COMMAND, dataset_table::ID_SELECT_COLUMN_INDEX, dataset_table::on_cmd_select_column),
     FXMAPFUNC(SEL_COMMAND, dataset_table::ID_STACK_CHANGE, dataset_table::on_cmd_stack_change),
+    FXMAPFUNC(SEL_COMMAND, dataset_table::ID_STACK_SHIFT, dataset_table::on_cmd_stack_shift),
     FXMAPFUNCS(SEL_COMMAND, dataset_table::ID_FIT_PARAM, dataset_table::ID_FIT_PARAM_LAST, dataset_table::on_cmd_fit_param),
 };
 
@@ -13,6 +14,7 @@ FXIMPLEMENT(dataset_table,FXTable,dataset_table_map,ARRAYNUMBER(dataset_table_ma
 dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb)
     : FXTable(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), entries_no(0)
 {
+    str_init(buffer, 20);
     fit_params = fit_parameters_new();
     stack_get_all_parameters(recipe->stack, fit_params);
     popupmenu = fit_parameters_menu(this, this, ID_FIT_PARAM, fit_params);
@@ -21,6 +23,7 @@ dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FX
 dataset_table::~dataset_table()
 {
     delete popupmenu;
+    str_free(buffer);
 }
 
 void dataset_table::stack_change_update(stack_t *stack)
@@ -35,6 +38,16 @@ void dataset_table::stack_change_update(stack_t *stack)
 long dataset_table::on_cmd_stack_change(FXObject *, FXSelector, void *data)
 {
     stack_change_update((stack_t *)data);
+    return 1;
+}
+
+long dataset_table::on_cmd_stack_shift(FXObject *, FXSelector, void *data)
+{
+    fit_parameters_fix_layer_shift(fplink.params, *(shift_info *)data);
+    for (fit_param_node *p = fplink.top; p; p = p->next) {
+        const fit_param_t *fp = &fplink.params->values[p->fp_index];
+        set_column_parameter_name(fp, p->column);
+    }
     return 1;
 }
 
@@ -87,16 +100,18 @@ void dataset_table::link_parameter(const fit_param_t *fp, const int column)
     fplink.top = new_node;
 }
 
+void dataset_table::set_column_parameter_name(const fit_param_t *fp, int column)
+{
+    get_full_param_name(fp, buffer);
+    setColumnText(column, CSTR(buffer));
+}
+
 long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
 {
     int fp_index = FXSELID(sel) - ID_FIT_PARAM;
     const fit_param_t *fp = fit_params->values + fp_index;
     link_parameter(fp, popup_col);
-    str_t name;
-    str_init(name, 16);
-    get_full_param_name(fit_params->values + fp_index, name);
-    setColumnText(popup_col, CSTR(name));
-    str_free(name);
+    set_column_parameter_name(fit_params->values + fp_index, popup_col);
     return 1;
 }
 

@@ -53,9 +53,11 @@ public:
     long on_cmd_select_column(FXObject *, FXSelector, void *);
     long on_cmd_fit_param(FXObject *, FXSelector, void *);
     long on_cmd_stack_change(FXObject *, FXSelector, void *);
+    long on_cmd_stack_shift(FXObject *, FXSelector, void *);
 
     enum {
         ID_STACK_CHANGE = FXTable::ID_LAST,
+        ID_STACK_SHIFT,
         ID_FIT_PARAM,
         ID_FIT_PARAM_LAST = ID_FIT_PARAM + 256,
         ID_LAST,
@@ -63,6 +65,7 @@ public:
 
 private:
     void stack_change_update(stack_t *stack);
+    void set_column_parameter_name(const fit_param_t *fp, int column);
 
     FXMenuPane *popupmenu;
 
@@ -71,6 +74,7 @@ private:
     int popup_col;
 
     fit_param_link fplink;
+    str_t buffer; // Used to store temporary column name.
 };
 
 #endif

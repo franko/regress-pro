@@ -863,6 +863,10 @@ long
 regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
 {
     recipe->shift_fit_parameters((shift_info *)ptr);
+    if (my_dataset_window) {
+        dataset_table *dataset = my_dataset_window->dataset();
+        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
+    }
     return 1;
 }
 
