@@ -32,7 +32,7 @@ FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_windo
 
 recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXDialogBox(topwin, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
-    ms_recipe(NULL), recipe(rcp), param_list(NULL), seed_dirty(true)
+    recipe(rcp), param_list(NULL), seed_dirty(true)
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);
@@ -48,7 +48,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXi
     iter_textfield = new FXTextField(rmatrix, 5, this, ID_ITERATIONS, FRAME_SUNKEN|TEXTFIELD_INTEGER);
     new FXLabel(rmatrix, "Sub sampling");
     subsamp_textfield = new FXTextField(rmatrix, 5, this, ID_SUBSAMPLE, FRAME_SUNKEN|TEXTFIELD_INTEGER);
-    new FXCheckButton(sgb, "Enable multi-sample", this, ID_MULTI_SAMPLE);
+    multi_sample_button = new FXCheckButton(sgb, "Enable multi-sample", this, ID_MULTI_SAMPLE);
 
     setup_config_parameters();
 
@@ -82,6 +82,10 @@ recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXi
     grid_step_tf = new FXTextField(matrix, 10, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
     list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+
+    if (recipe->ms_setup) {
+        setup_multi_sample_parameters(false);
+    }
 }
 
 void recipe_window::setup_config_parameters()
@@ -118,6 +122,33 @@ void recipe_window::setup_parameters_list()
     }
     param_list = listbox_populate_all_parameters(param_listbox, recipe->stack);
     seed_dirty = true;
+}
+
+void recipe_window::setup_multi_sample_parameters(bool create_elements)
+{
+    if (!recipe->ms_setup) {
+        if (multi_sample_button->getCheck() == TRUE) {
+            multi_sample_button->setCheck(FALSE, FALSE);
+            disable_multi_sample();
+        }
+    } else {
+        if (multi_sample_button->getCheck() != TRUE) {
+            multi_sample_button->setCheck(TRUE, FALSE);
+            enable_multi_sample(create_elements);
+        } else {
+            iparams_listbox->clearItems();
+            cparams_listbox->clearItems();
+        }
+        multi_sample_recipe *ms = recipe->ms_setup;
+        for (unsigned i = 0; i < ms->iparameters->number; i++) {
+            const fit_param_t *fp = &ms->iparameters->values[i];
+            iparams_listbox->appendItem(format_fit_parameter(fp));
+        }
+        for (unsigned i = 0; i < ms->cparameters->number; i++) {
+            const fit_param_t *fp = &ms->cparameters->values[i];
+            cparams_listbox->appendItem(format_fit_parameter(fp));
+        }
+    }
 }
 
 recipe_window::~recipe_window()
@@ -361,11 +392,12 @@ recipe_window::bind_new_fit_recipe(fit_recipe *rcp)
     recipe = rcp;
     list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
     setup_parameters_list();
+    setup_multi_sample_parameters();
     setup_config_parameters();
 }
 
 void
-recipe_window::enable_multi_sample()
+recipe_window::enable_multi_sample(bool create_elements)
 {
     iparams_group = new FXGroupBox(top_frame, "Sample", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     iparams_listbox = new FXList(iparams_group, this, ID_PARAM_INDIV, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
@@ -375,12 +407,14 @@ recipe_window::enable_multi_sample()
     sample_add_button = new FXButton(params_group, "Sample", NULL, this, ID_ADD_INDIV);
     constr_add_button = new FXButton(params_group, "Constraints", NULL, this, ID_ADD_CONSTR);
 
-    sample_add_button->create();
-    constr_add_button->create();
-    params_group->recalc();
+    if (create_elements) {
+        sample_add_button->create();
+        constr_add_button->create();
+        params_group->recalc();
 
-    iparams_group->create();
-    cparams_group->create();
+        iparams_group->create();
+        cparams_group->create();
+    }
     this->resize(700, 420);
 }
 
@@ -398,37 +432,25 @@ recipe_window::disable_multi_sample()
 long
 recipe_window::on_cmd_multi_sample(FXObject *, FXSelector, void *ptr)
 {
-    if (ptr && !ms_recipe) {
-        ms_recipe = new multi_sample_recipe();
+    if (ptr && !recipe->ms_setup) {
+        recipe->ms_setup = new multi_sample_recipe();
         enable_multi_sample();
         return 1;
-    } else if (!ptr && ms_recipe) {
-        delete ms_recipe;
-        ms_recipe = NULL;
+    } else if (!ptr && recipe->ms_setup) {
+        delete recipe->ms_setup;
+        recipe->ms_setup = NULL;
         disable_multi_sample();
         return 1;
     }
     return 0;
 }
 
-multi_sample_recipe::multi_sample_recipe()
-{
-    iparameters = fit_parameters_new();
-    cparameters = fit_parameters_new();
-}
-
-multi_sample_recipe::~multi_sample_recipe()
-{
-    fit_parameters_free(iparameters);
-    fit_parameters_free(cparameters);
-}
-
 long recipe_window::on_cmd_add_indiv(FXObject *, FXSelector, void *)
 {
     const fit_param_t *fp = selected_parameter();
-    int i = fit_parameters_find(ms_recipe->iparameters, fp);
+    int i = fit_parameters_find(recipe->ms_setup->iparameters, fp);
     if (i < 0) {
-        fit_parameters_add(ms_recipe->iparameters, fp);
+        fit_parameters_add(recipe->ms_setup->iparameters, fp);
         iparams_listbox->appendItem(format_fit_parameter(fp));
     }
     return 1;
@@ -437,9 +459,9 @@ long recipe_window::on_cmd_add_indiv(FXObject *, FXSelector, void *)
 long recipe_window::on_cmd_add_constr(FXObject *, FXSelector, void *)
 {
     const fit_param_t *fp = selected_parameter();
-    int i = fit_parameters_find(ms_recipe->cparameters, fp);
+    int i = fit_parameters_find(recipe->ms_setup->cparameters, fp);
     if (i < 0) {
-        fit_parameters_add(ms_recipe->cparameters, fp);
+        fit_parameters_add(recipe->ms_setup->cparameters, fp);
         cparams_listbox->appendItem(format_fit_parameter(fp));
     }
     return 1;
@@ -449,15 +471,16 @@ long recipe_window::on_cmd_add_constr(FXObject *, FXSelector, void *)
 long recipe_window::on_select_param(FXObject *, FXSelector sel, void *)
 {
     int id = FXSELID(sel);
+    multi_sample_recipe *ms = recipe->ms_setup;
     const fit_param_t *selfp;
     if (id == ID_PARAM_INDIV) {
         FXint index = iparams_listbox->getCurrentItem();
         /* Get the selected fit parameter. */
-        selfp = &ms_recipe->iparameters->values[index];
+        selfp = &ms->iparameters->values[index];
     } else {
         FXint index = cparams_listbox->getCurrentItem();
         /* Get the selected fit parameter. */
-        selfp = &ms_recipe->cparameters->values[index];
+        selfp = &ms->cparameters->values[index];
     }
     /* Find the index of the fit parameter in the list of all
        possible parameters. */

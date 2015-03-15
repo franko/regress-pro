@@ -4,14 +4,6 @@
 #include <fx.h>
 #include "fit_recipe.h"
 
-struct multi_sample_recipe {
-    multi_sample_recipe();
-    ~multi_sample_recipe();
-
-    fit_parameters *iparameters;
-    fit_parameters *cparameters;
-};
-
 class recipe_window : public FXDialogBox {
     FXDECLARE(recipe_window)
 
@@ -25,8 +17,6 @@ public:
     recipe_window(fit_recipe *r, FXWindow* w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~recipe_window();
 
-    void setup_parameters_list();
-    void setup_config_parameters();
     void bind_new_fit_recipe(fit_recipe *rcp);
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
@@ -64,8 +54,6 @@ public:
         ID_LAST
     };
 
-    multi_sample_recipe *ms_recipe;
-
 private:
     const fit_param_t *selected_parameter();
     void set_fit_parameter(const fit_param_t *fp, const seed_t *value);
@@ -75,7 +63,10 @@ private:
     void clear_grid_textfields();
     void fit_list_append_parameter(const fit_param_t *fp, const seed_t *value);
     void fit_list_update_parameter(int i, const fit_param_t *fp, const seed_t *value);
-    void enable_multi_sample();
+    void setup_parameters_list();
+    void setup_config_parameters();
+    void enable_multi_sample(bool create_elements = true);
+    void setup_multi_sample_parameters(bool create_elements = true);
     void disable_multi_sample();
 
     FXHorizontalFrame *top_frame;
@@ -93,6 +84,7 @@ private:
     FXGroupBox *iparams_group, *cparams_group;
     FXButton *sample_add_button, *constr_add_button;
     FXList *iparams_listbox, *cparams_listbox;
+    FXCheckButton *multi_sample_button;
 };
 
 #endif

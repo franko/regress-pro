@@ -483,14 +483,13 @@ regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdRunMultiFitNew(FXObject*,FXSelector,void *)
 {
-    if (!my_dataset_window || !my_recipe_window || !my_recipe_window->ms_recipe) {
+    if (!my_dataset_window || !my_recipe_window || !recipe->ms_setup) {
         return 0;
     }
 
     struct multi_fit_engine *fit;
-    multi_sample_recipe *ms_recipe = my_recipe_window->ms_recipe;
-    const fit_parameters *iparams = ms_recipe->iparameters;
-    const fit_parameters *cparams = ms_recipe->cparameters;
+    const fit_parameters *iparams = recipe->ms_setup->iparameters;
+    const fit_parameters *cparams = recipe->ms_setup->cparameters;
     dataset_table *dataset = my_dataset_window->dataset();
     int samples_number = dataset->samples_number();
     fit = multi_fit_engine_new(recipe->config, samples_number);
@@ -1016,7 +1015,6 @@ long
 regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this, "Save Recipe As");
-    // open.setFilename(scriptFile);
     open.setPatternList(patterns_recipe);
 
     if(open.execute()) {

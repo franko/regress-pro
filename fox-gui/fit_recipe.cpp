@@ -1,7 +1,7 @@
 #include "fit_recipe.h"
 #include "dispers-library.h"
 
-fit_recipe::fit_recipe()
+fit_recipe::fit_recipe(): ms_setup(NULL)
 {
     fit_config_set_default(config);
     stack = (stack_t*) emalloc(sizeof(stack_t));
@@ -10,8 +10,8 @@ fit_recipe::fit_recipe()
     seeds_list = seed_list_new();
 }
 
-fit_recipe::fit_recipe(stack_t *s, const fit_config *cfg, fit_parameters *fps, seeds *sl)
-: stack(s), parameters(fps), seeds_list(sl)
+fit_recipe::fit_recipe(stack_t *s, const fit_config *cfg, fit_parameters *fps, seeds *sl, multi_sample_recipe *mss)
+: stack(s), parameters(fps), seeds_list(sl), ms_setup(mss)
 {
     *config = *cfg;
 }
@@ -21,6 +21,7 @@ fit_recipe::~fit_recipe()
     seed_list_free(seeds_list);
     fit_parameters_free(parameters);
     stack_free(stack);
+    delete ms_setup;
 }
 
 
@@ -45,19 +46,18 @@ int fit_recipe::write(writer_t *w)
     fit_config_write(w, config);
     fit_parameters_write(w, parameters);
     seed_list_write(w, seeds_list);
+    if (ms_setup) {
+        ms_setup->write(w);
+    }
     return 0;
 }
-
-    fit_config config[1];
-    stack_t *stack;
-    fit_parameters *parameters;
-    seeds *seeds_list;
 
 fit_recipe *fit_recipe::read(lexer_t *l)
 {
     fit_config config[1];
     fit_parameters *parameters;
     seeds *seeds_list;
+    multi_sample_recipe *mss;
     stack_t *stack = stack_read(l);
     if (!stack) return NULL;
     if (fit_config_read(l, config)) goto stack_fail;
@@ -65,7 +65,8 @@ fit_recipe *fit_recipe::read(lexer_t *l)
     if (!parameters) goto stack_fail;
     seeds_list = seed_list_read(l);
     if (!seeds_list) goto params_fail;
-    return new fit_recipe(stack, config, parameters, seeds_list);
+    mss = multi_sample_recipe::read(l);
+    return new fit_recipe(stack, config, parameters, seeds_list, mss);
 params_fail:
     fit_parameters_free(parameters);
 stack_fail:
