@@ -49,6 +49,7 @@
 #include "lexer.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
+static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config);
 
 #ifdef WIN32
 #define SCRIPT_FONT_NAME "Courier New"
@@ -558,6 +559,17 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fit_engine_disable(fit);
 }
 
+fit_engine *
+prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config)
+{
+    if (parameters->number == 0 || check_fit_parameters(stack, parameters) != 0) {
+        return NULL;
+    }
+    fit_engine *fit = fit_engine_new();
+    fit_engine_bind(fit, stack, config, parameters);
+    return fit;
+}
+
 long
 regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 {
@@ -565,13 +577,11 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
         return 0;
     }
     reg_check_point(this);
-    if (recipe->parameters->number == 0 ||
-        check_fit_parameters(recipe->stack, recipe->parameters) != 0) {
+    fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config);
+    if (!fit) {
         // ADD a proper ERROR MESSAGE here.
         return 0;
     }
-    fit_engine *fit = fit_engine_new();
-    fit_engine_bind(fit, recipe->stack, recipe->config, recipe->parameters);
     run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
     getApp()->endWaitCursor();
@@ -587,12 +597,8 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 
     reg_check_point(this);
 
-    if(! update_fit_strategy()) {
-        return 1;
-    }
-
-    struct seeds *seeds;
-    struct fit_engine *fit = build_fit_engine(symtab, &seeds);
+    stack_t *fit_stack = (stack_result ? stack_result : recipe->stack);
+    fit_engine *fit = prepare_fit_engine(fit_stack, recipe->parameters, recipe->config);
 
     if(fit == NULL) {
         reportErrors();
