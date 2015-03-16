@@ -94,10 +94,8 @@ public:
     long onCmdPlotDispers(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
     long onCmdRunFit(FXObject*,FXSelector,void*);
-    long onCmdRunFitNew(FXObject*,FXSelector,void*);
     long onCmdInteractiveFit(FXObject*,FXSelector,void*);
     long onCmdRunMultiFit(FXObject*,FXSelector,void*);
-    long onCmdRunMultiFitNew(FXObject*,FXSelector,void*);
     long onCmdRunSimul(FXObject*,FXSelector,void*);
     long onCmdRunBatch(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
@@ -122,10 +120,8 @@ public:
         ID_DISP_PLOT,
         ID_DISP_OPTIM,
         ID_RUN_FIT,
-        ID_RUN_FIT_NEW,
         ID_INTERACTIVE_FIT,
         ID_RUN_MULTI_FIT,
-        ID_RUN_MULTI_FIT_NEW,
         ID_RUN_BATCH,
         ID_RUN_SIMUL,
         ID_ABOUT,

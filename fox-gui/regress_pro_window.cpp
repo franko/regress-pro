@@ -70,10 +70,8 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT_NEW, regress_pro_window::onCmdRunFitNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT_NEW, regress_pro_window::onCmdRunMultiFitNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
@@ -137,13 +135,11 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
     // Fit menu
     fitmenu = new FXMenuPane(this);
-    new FXMenuCommand(fitmenu, "Run (NEW) Fitting",NULL,this,ID_RUN_FIT_NEW);
-    new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_EDIT_FILMSTACK_RESULT);
     new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
-    new FXMenuCommand(fitmenu, "Run (NEW) Multiple Fit",NULL,this,ID_RUN_MULTI_FIT_NEW);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_EDIT_FILMSTACK_RESULT);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
     helpmenu = new FXMenuPane(this);
@@ -380,7 +376,7 @@ regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 }
 
 long
-regress_pro_window::onCmdRunMultiFitNew(FXObject*,FXSelector,void *)
+regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 {
     if (!my_dataset_window || !my_recipe_window || !recipe->ms_setup) {
         return 0;
@@ -468,59 +464,6 @@ regress_pro_window::onCmdRunMultiFitNew(FXObject*,FXSelector,void *)
     resulttext->setModified(TRUE);
 
     seed_list_free(iseeds);
-    multi_fit_engine_disable(fit);
-    multi_fit_engine_free(fit);
-
-    return 1;
-}
-
-long
-regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
-{
-    struct multi_fit_engine *fit;
-    Str analysis;
-    struct {
-        struct seeds *common;
-        struct seeds *individual;
-    } seeds;
-
-    if(! update_fit_strategy()) {
-        return 1;
-    }
-
-    fit = build_multi_fit_engine(this->symtab, &seeds.common, &seeds.individual);
-
-    if(fit == NULL) {
-        return 1;
-    }
-
-    Str fit_error_msgs;
-    ProgressInfo progress(this->getApp(), this);
-
-    lmfit_multi(fit, seeds.common, seeds.individual,
-                analysis.str(), fit_error_msgs.str(),
-                LMFIT_GET_RESULTING_STACK,
-                process_foxgui_events, &progress);
-
-    progress.hide();
-
-    if(fit_error_msgs.length() > 0) {
-        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages",
-                                  fit_error_msgs.cstr());
-        clean_error_msgs();
-    }
-
-    FXString text_fit_result;
-
-    Str fp_results;
-    multi_fit_engine_print_fit_results(fit, fp_results.str());
-    text_fit_result.append(fp_results.cstr());
-
-    text_fit_result.append(analysis.cstr());
-
-    resulttext->setText(text_fit_result);
-    resulttext->setModified(TRUE);
-
     multi_fit_engine_disable(fit);
     multi_fit_engine_free(fit);
 
@@ -617,37 +560,6 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
 long
 regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
-{
-    if(! check_spectrum("Fitting")) {
-        return 0;
-    }
-
-    reg_check_point(this);
-
-    if(! update_fit_strategy()) {
-        return 1;
-    }
-
-    struct seeds *seeds;
-    struct fit_engine *fit;
-
-    fit = build_fit_engine(this->symtab, &seeds);
-
-    if(fit == NULL) {
-        reportErrors();
-        return 1;
-    }
-
-    run_fit(fit, seeds, this->spectrum);
-    fit_engine_free(fit);
-
-    getApp()->endWaitCursor();
-
-    return 1;
-}
-
-long
-regress_pro_window::onCmdRunFitNew(FXObject*,FXSelector,void *)
 {
     if(! check_spectrum("Fitting")) {
         return 0;
