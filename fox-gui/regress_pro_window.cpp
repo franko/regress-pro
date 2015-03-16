@@ -64,9 +64,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_FILM_STACK, regress_pro_window::onCmdFilmStack),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_EDIT, regress_pro_window::onCmdRecipeEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SCRIPT, regress_pro_window::onCmdLoadScript),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_SCRIPT, regress_pro_window::onCmdSaveScript),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVEAS_SCRIPT, regress_pro_window::onCmdSaveAsScript),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_RECIPE, regress_pro_window::onCmdSaveRecipe),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_RECIPE, regress_pro_window::onCmdLoadRecipe),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
@@ -88,9 +85,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
 FXIMPLEMENT(regress_pro_window,FXMainWindow,regress_pro_window_map,ARRAYNUMBER(regress_pro_window_map));
 
 
-const FXchar regress_pro_window::patterns_fit[] =
-    "Fit Strategy (*.fit)"
-    "\nAll Files (*)";
 const FXchar regress_pro_window::patterns_spectr[] =
     "Fit Strategy (*.dat)"
     "\nAll Files (*)";
@@ -118,13 +112,10 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
     // Script menu
     filemenu=new FXMenuPane(this);
-    new FXMenuCommand(filemenu,"&Load",NULL,this,ID_LOAD_SCRIPT);
-    new FXMenuCommand(filemenu,"&Save",NULL,this,ID_SAVE_SCRIPT);
-    new FXMenuCommand(filemenu,"Save As",NULL,this,ID_SAVEAS_SCRIPT);
-    new FXMenuCommand(filemenu,"Save Recipe",NULL,this,ID_SAVE_RECIPE);
-    new FXMenuCommand(filemenu,"Load Recipe",NULL,this,ID_LOAD_RECIPE);
+    new FXMenuCommand(filemenu,"Save",NULL,this,ID_SAVE_RECIPE);
+    new FXMenuCommand(filemenu,"Load",NULL,this,ID_LOAD_RECIPE);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
-    new FXMenuTitle(menubar,"&Script",NULL,filemenu);
+    new FXMenuTitle(menubar,"&Recipe",NULL,filemenu);
 
     // Edit menu
     editmenu = new FXMenuPane(this);
@@ -232,98 +223,6 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
     }
 
     return 0;
-}
-
-long
-regress_pro_window::onCmdLoadScript(FXObject*,FXSelector,void *)
-{
-    reg_check_point(this);
-
-    FXFileDialog open(this,"Open Script");
-    open.setFilename(scriptFile);
-    open.setPatternList(patterns_fit);
-
-    if(open.execute()) {
-        scriptFile = open.getFilename();
-        Str script_text;
-
-        if(str_loadfile(scriptFile.text(), script_text.str()) != 0) {
-            return 0;
-        }
-
-#ifdef ENABLE_SCRIPT_REL_PATH
-        str_init_from_c(script_file, scriptFile.text());
-        str_dirname(this->symtab->env->script_dir, script_file, DIR_SEPARATOR);
-        str_free(script_file);
-#endif
-
-        scripttext->setText(script_text.cstr());
-        set_fit_strategy(script_text.cstr());
-        scripttext->setModified(FALSE);
-
-        m_title_dirty = true;
-    }
-
-    return 1;
-}
-
-bool
-regress_pro_window::save_script_as(const FXString& save_as)
-{
-    FILE *f = fopen(save_as.text(), "w");
-
-    if(f == NULL) {
-        FXMessageBox::information(this, MBOX_OK, "Script save",
-                                  "Cannot write file %s\n", scriptFile.text());
-        return false;
-    }
-
-    if(fputs(scripttext->getText().text(), f) == EOF) {
-        FXMessageBox::information(this, MBOX_OK, "Script save",
-                                  "Cannot write file %s\n", scriptFile.text());
-        fclose(f);
-        return false;
-    }
-
-    fputc('\n', f);
-    fclose(f);
-
-    update_fit_strategy();
-
-    scripttext->setModified(FALSE);
-
-    m_title_dirty = true;
-
-    return true;
-}
-
-long
-regress_pro_window::onCmdSaveAsScript(FXObject*,FXSelector,void *)
-{
-    reg_check_point(this);
-
-    FXFileDialog open(this, "Save Script As");
-    open.setFilename(scriptFile);
-    open.setPatternList(patterns_fit);
-
-    if(open.execute()) {
-        FXString new_filename = open.getFilename();
-        if(save_script_as(new_filename)) {
-            scriptFile = new_filename;
-        }
-        return 1;
-    }
-
-    return 0;
-}
-
-long
-regress_pro_window::onCmdSaveScript(FXObject*,FXSelector,void *)
-{
-    reg_check_point(this);
-
-    save_script_as(scriptFile);
-    return 1;
 }
 
 long

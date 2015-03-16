@@ -70,7 +70,6 @@ protected:
 
     FXFont            *scriptfont;
 
-    static const FXchar patterns_fit[];
     static const FXchar patterns_recipe[];
     static const FXchar patterns_spectr[];
 
@@ -89,9 +88,6 @@ public:
     long onCmdFilmStack(FXObject*,FXSelector,void*);
     long onCmdRecipeEdit(FXObject*,FXSelector,void*);
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
-    long onCmdLoadScript(FXObject*,FXSelector,void*);
-    long onCmdSaveScript(FXObject*,FXSelector,void*);
-    long onCmdSaveAsScript(FXObject*,FXSelector,void *);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
     long onCmdSaveRecipe(FXObject*,FXSelector,void*);
     long onCmdLoadRecipe(FXObject*,FXSelector,void*);
@@ -120,10 +116,7 @@ public:
 
 public:
     enum {
-        ID_LOAD_SCRIPT = FXMainWindow::ID_LAST,
-        ID_SAVE_SCRIPT,
-        ID_SAVEAS_SCRIPT,
-        ID_SAVE_RECIPE,
+        ID_SAVE_RECIPE = FXMainWindow::ID_LAST,
         ID_LOAD_RECIPE,
         ID_LOAD_SPECTRA,
         ID_DISP_PLOT,
