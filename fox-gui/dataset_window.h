@@ -18,15 +18,10 @@ private:
 public:
     dataset_window(fit_recipe *rcp, FXWindow *w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
 
-    long on_cmd_add_files(FXObject *, FXSelector, void *);
-    long on_cmd_remove_files(FXObject *, FXSelector, void *);
-
     dataset_table *dataset() const { return table; }
 
     enum {
         ID_TABLE = FXDialogBox::ID_LAST,
-        ID_ADD_FILES,
-        ID_REMOVE_FILES,
         ID_LAST,
     };
 

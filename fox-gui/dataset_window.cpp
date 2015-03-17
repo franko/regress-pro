@@ -2,8 +2,6 @@
 
 // Map
 FXDEFMAP(dataset_window) dataset_window_map[]= {
-    FXMAPFUNC(SEL_COMMAND, dataset_window::ID_ADD_FILES, dataset_window::on_cmd_add_files),
-    FXMAPFUNC(SEL_COMMAND, dataset_window::ID_REMOVE_FILES, dataset_window::on_cmd_remove_files),
 };
 
 FXIMPLEMENT(dataset_window,FXDialogBox,dataset_window_map,ARRAYNUMBER(dataset_window_map));
@@ -18,25 +16,6 @@ dataset_window::dataset_window(fit_recipe *rcp, FXWindow *topwin, FXuint opts, F
     table->setColumnText(0, "Filename");
 
     FXVerticalFrame *bframe = new FXVerticalFrame(hframe, LAYOUT_FILL_Y);
-    new FXButton(bframe, "Add Files", NULL, this, ID_ADD_FILES);
-    new FXButton(bframe, "Remove all", NULL, this, ID_REMOVE_FILES);
-}
-
-long dataset_window::on_cmd_add_files(FXObject *, FXSelector, void *)
-{
-    FXFileDialog open(this,"Open Spectra");
-    open.setSelectMode(SELECTFILE_MULTIPLE_ALL);
-    open.setPatternList("Spectra File (*.dat)\nAny Files (*)");
-    if (open.execute()) {
-        FXString *filenames = open.getFilenames();
-        if (filenames) {
-            table->append_filenames(filenames);
-        }
-    }
-    return 1;
-}
-
-long dataset_window::on_cmd_remove_files(FXObject *, FXSelector, void *)
-{
-    return 0;
+    new FXButton(bframe, "Add Files", NULL, table, dataset_table::ID_ADD_FILES);
+    new FXButton(bframe, "Remove all", NULL, table, dataset_table::ID_REMOVE_FILES);
 }

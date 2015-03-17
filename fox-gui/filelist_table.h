@@ -4,6 +4,8 @@
 #include <fx.h>
 
 class filelist_table : public FXTable {
+    FXDECLARE(filelist_table)
+
 protected:
     filelist_table() {};
 private:
@@ -15,6 +17,15 @@ public:
 
     void append_filenames(FXString *filenames);
     int samples_number() { return entries_no; }
+
+    long on_cmd_add_files(FXObject *, FXSelector, void *);
+    long on_cmd_remove_files(FXObject *, FXSelector, void *);
+
+    enum {
+        ID_ADD_FILES = FXTable::ID_LAST,
+        ID_REMOVE_FILES,
+        ID_LAST
+    };
 
 protected:
     int entries_no;
