@@ -34,10 +34,19 @@ int batch_window::batch_run(fit_recipe *recipe, FXString error_msg)
         return 1;
     }
 
+    str_t pname;
+    str_init(pname, 15);
+    for (unsigned j = 0; j < recipe->parameters->number; j++) {
+        get_param_name(&recipe->parameters->values[j], pname);
+        table->setColumnText(j + 1, CSTR(pname));
+    }
+    table->setColumnText(recipe->parameters->number + 1, "ChiSq");
+    str_free(pname);
+
     fit_engine *fit = fit_engine_new();
     fit_engine_bind(fit, recipe->stack, recipe->config, recipe->parameters);
-    // run_fit(fit, recipe->seeds_list, this->spectrum);
 
+    FXString result;
     for (int i = 0; i < table->samples_number(); i++) {
         FXString name = table->getItemText(i, 0);
         spectrum *s = load_gener_spectrum(name.text());
@@ -49,6 +58,15 @@ int batch_window::batch_run(fit_recipe *recipe, FXString error_msg)
         fit_engine_prepare(fit, s);
         lmfit_grid(fit, recipe->seeds_list, &chisq, NULL, NULL, LMFIT_PRESERVE_STACK,
                    window_process_events, this);
+
+        unsigned j;
+        for (j = 0; j < recipe->parameters->number; j++) {
+            result.format("%g", gsl_vector_get(fit->run->results, j));
+            table->setItemText(i, j + 1, result);
+        }
+        result.format("%g", chisq);
+        table->setItemText(i, j + 1, result);
+
         fit_engine_disable(fit);
         spectra_free(s);
     }
