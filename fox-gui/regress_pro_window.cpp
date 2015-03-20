@@ -46,6 +46,7 @@
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "interactive_fit.h"
+#include "batch_window.h"
 #include "lexer.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
@@ -78,6 +79,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT_NEW, regress_pro_window::onCmdRunMultiFitNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH_NEW, regress_pro_window::onCmdRunBatchNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_EDIT_FILMSTACK_RESULT, regress_pro_window::onCmdEditFilmStackResult),
@@ -153,6 +155,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "Run (NEW) Multiple Fit",NULL,this,ID_RUN_MULTI_FIT_NEW);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "Run Batch (NEW)",NULL,this,ID_RUN_BATCH_NEW);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
     helpmenu = new FXMenuPane(this);
@@ -477,6 +480,15 @@ regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 
     fit_engine_free(fit);
 
+    return 1;
+}
+
+long
+regress_pro_window::onCmdRunBatchNew(FXObject *, FXSelector, void *)
+{
+    reg_check_point(this);
+    batch_window bwindow(this);
+    bwindow.execute();
     return 1;
 }
 

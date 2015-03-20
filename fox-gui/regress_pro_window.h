@@ -86,6 +86,8 @@ public:
         return (elliss_app*) getApp();
     }
 
+    fit_recipe *get_current_recipe() const { return recipe; }
+
     long onCmdFilmStack(FXObject*,FXSelector,void*);
     long onCmdRecipeEdit(FXObject*,FXSelector,void*);
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
@@ -104,6 +106,7 @@ public:
     long onCmdRunMultiFitNew(FXObject*,FXSelector,void*);
     long onCmdRunSimul(FXObject*,FXSelector,void*);
     long onCmdRunBatch(FXObject*,FXSelector,void*);
+    long onCmdRunBatchNew(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
@@ -134,6 +137,7 @@ public:
         ID_RUN_MULTI_FIT,
         ID_RUN_MULTI_FIT_NEW,
         ID_RUN_BATCH,
+        ID_RUN_BATCH_NEW,
         ID_RUN_SIMUL,
         ID_ABOUT,
         ID_SCRIPT_TEXT,

@@ -11,9 +11,6 @@ dataset_window::dataset_window(fit_recipe *rcp, FXWindow *topwin, FXuint opts, F
 {
     FXHorizontalFrame *hframe = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     table = new dataset_table(rcp, hframe, this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    table->setTableSize(20, 6);
-    table->setRowHeaderWidth(28);
-    table->setColumnText(0, "Filename");
 
     FXVerticalFrame *bframe = new FXVerticalFrame(hframe, LAYOUT_FILL_Y);
     new FXButton(bframe, "Add Files", NULL, table, dataset_table::ID_ADD_FILES);

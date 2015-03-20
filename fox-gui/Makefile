@@ -40,7 +40,7 @@ SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp regress_pro_window.cpp \
 	dispers_chooser.cpp dispers_ui_edit.cpp icons_all.cpp \
 	fit_params_utils.cpp multi_sample_recipe.cpp recipe_window.cpp \
 	fit_recipe.cpp dispers_edit_window.cpp filelist_table.cpp dataset_table.cpp \
-	dataset_window.cpp main.cpp
+	dataset_window.cpp batch_window.cpp main.cpp
 PRG = regress.exe
 
 REG_SRC_FILES := registration.c registered_app.cpp
