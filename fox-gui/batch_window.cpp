@@ -34,14 +34,25 @@ int batch_window::batch_run(fit_recipe *recipe, FXString error_msg)
         return 1;
     }
 
+    int missing_columns = recipe->parameters->number + 2 - table->getNumColumns();
+    if (missing_columns > 0) {
+        table->insertColumns(table->getNumColumns(), missing_columns);
+    }
+
     str_t pname;
     str_init(pname, 15);
-    for (unsigned j = 0; j < recipe->parameters->number; j++) {
+    int j;
+    for (j = 0; j < int(recipe->parameters->number); j++) {
         get_param_name(&recipe->parameters->values[j], pname);
         table->setColumnText(j + 1, CSTR(pname));
     }
-    table->setColumnText(recipe->parameters->number + 1, "ChiSq");
+    table->setColumnText(j + 1, "Chi Square");
     str_free(pname);
+    for (j++; j + 1 < table->getNumColumns(); j++) {
+        table->setColumnText(j + 1, "");
+    }
+
+    table->removeRange(0, table->samples_number() - 1, 1, table->getNumColumns() - 1);
 
     fit_engine *fit = fit_engine_new();
     fit_engine_bind(fit, recipe->stack, recipe->config, recipe->parameters);

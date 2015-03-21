@@ -11,7 +11,7 @@ FXIMPLEMENT(filelist_table,FXTable,filelist_table_map,ARRAYNUMBER(filelist_table
 filelist_table::filelist_table(FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb)
     : FXTable(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), entries_no(0)
 {
-    setTableSize(20, 6);
+    setTableSize(FILELIST_MIN_ROWS, FILELIST_MIN_COLUMNS);
     setRowHeaderWidth(28);
     setColumnText(0, "Filename");
 }

@@ -27,6 +27,11 @@ public:
         ID_LAST
     };
 
+    enum {
+        FILELIST_MIN_COLUMNS = 6,
+        FILELIST_MIN_ROWS = 20,
+    };
+
 protected:
     int entries_no;
 };
