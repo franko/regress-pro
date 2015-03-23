@@ -46,6 +46,9 @@
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "interactive_fit.h"
+#include "recipe_window.h"
+#include "filmstack_window.h"
+#include "dataset_window.h"
 #include "batch_window.h"
 #include "lexer.h"
 

@@ -27,12 +27,13 @@
 
 #include "elliss_app.h"
 #include "plot_canvas.h"
-#include "recipe_window.h"
 #include "spectra.h"
 #include "symtab.h"
 #include "fit_recipe.h"
-#include "filmstack_window.h"
-#include "dataset_window.h"
+
+class recipe_window;
+class filmstack_window;
+class dataset_window;
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
