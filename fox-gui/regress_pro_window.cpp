@@ -45,6 +45,7 @@
 #include "disp_chooser.h"
 #include "disp_fit_manager.h"
 #include "fit_window.h"
+#include "disp_fit_window.h"
 #include "interactive_fit.h"
 #include "recipe_window.h"
 #include "filmstack_window.h"
@@ -383,22 +384,15 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
     reg_check_point(this);
 
-    if(! update_fit_strategy()) {
-        return 1;
-    }
-
     struct disp_fit_engine *fit = disp_fit_engine_new();
 
-    if(disp_chooser(getApp(), this->symtab, fit)) {
-        elliss_app *app = get_elliss_app();
-        disp_fit_manager *mgr = new disp_fit_manager(fit);
-        fit_window *fitwin = new fit_window(mgr, app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
-        fitwin->create();
-        fitwin->show(FX::PLACEMENT_SCREEN);
-    } else {
-        disp_fit_engine_free(fit);
-    }
+    fit->ref_disp = dispers_library_search("sio2");
+    fit->model_disp = dispers_library_search("sio2");
 
+    disp_fit_manager *mgr = new disp_fit_manager(fit);
+    disp_fit_window *fitwin = new disp_fit_window(mgr, getApp(), "Dispersion Fit", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
+    fitwin->create();
+    fitwin->show(FX::PLACEMENT_SCREEN);
 
     return 1;
 }
