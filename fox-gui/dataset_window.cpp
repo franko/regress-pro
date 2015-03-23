@@ -2,6 +2,7 @@
 
 // Map
 FXDEFMAP(dataset_window) dataset_window_map[]= {
+    FXMAPFUNC(SEL_COMMAND, dataset_window::ID_DELETE, dataset_window::onCmdHide),
 };
 
 FXIMPLEMENT(dataset_window,FXDialogBox,dataset_window_map,ARRAYNUMBER(dataset_window_map));
