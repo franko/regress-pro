@@ -23,27 +23,40 @@ fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXi
     : FXHorizontalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
       m_canvas(0), m_fit(fit)
 {
-    FXScrollWindow *iw = new FXScrollWindow(this, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
+    scroll_window = new FXScrollWindow(this, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
+    m_bold_font = new FXFont(getApp(), "helvetica", 9, FXFont::Bold, FXFont::Italic);
+    setup();
+}
 
-    FXMatrix *matrix = new FXMatrix(iw, 2, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
+fit_panel::~fit_panel()
+{
+    delete m_fit;
+    delete m_bold_font;
+}
 
-    new FXLabel(matrix, "Range");
-    m_wl_entry = new FXTextField(matrix, 10, this, ID_SPECTR_RANGE, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
+void fit_panel::clear()
+{
+    delete param_matrix;
+    delete m_canvas;
+}
 
-    {
-        double wls, wle, wld;
-        m_fit->get_sampling(wls, wle, wld);
+void fit_panel::setup()
+{
+    param_matrix = new FXMatrix(scroll_window, 2, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
 
-        if(wld == 0.0) {
-            m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
-        } else {
-            m_wl_entry->setText(FXStringFormat("%.3g-%.3g,%g", wls, wle, wld));
-        }
+    new FXLabel(param_matrix, "Range");
+    m_wl_entry = new FXTextField(param_matrix, 10, this, ID_SPECTR_RANGE, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
+
+    double wls, wle, wld;
+    m_fit->get_sampling(wls, wle, wld);
+
+    if(wld == 0.0) {
+        m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
+    } else {
+        m_wl_entry->setText(FXStringFormat("%.3g-%.3g,%g", wls, wle, wld));
     }
 
     m_parameters.resize(m_fit->parameters_number());
-
-    m_bold_font = new FXFont(getApp(), "helvetica", 9, FXFont::Bold, FXFont::Italic);
 
     Str pname;
     FXString label_text;
@@ -55,15 +68,15 @@ fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXi
         if(p->fp.id == PID_LAYER_N && p->fp.layer_nb != current_layer) {
             current_layer = p->fp.layer_nb;
             label_text.format("Layer %i", current_layer);
-            FXLabel *lab = new FXLabel(matrix, label_text);
+            FXLabel *lab = new FXLabel(param_matrix, label_text);
             lab->setFont(m_bold_font);
-            new FXLabel(matrix, "");
+            new FXLabel(param_matrix, "");
         }
 
         get_param_name(&p->fp, pname.str());
         FXString fxpname((const FXchar *) pname.cstr());
-        FXCheckButton* bt = new FXCheckButton(matrix, fxpname, this, ID_PARAM_SELECT);
-        FXTextField* tf = new fx_numeric_field(matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+        FXCheckButton* bt = new FXCheckButton(param_matrix, fxpname, this, ID_PARAM_SELECT);
+        FXTextField* tf = new fx_numeric_field(param_matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
         tf->setUserData(p);
         bt->setUserData(p);
@@ -74,14 +87,15 @@ fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXi
     }
 
     m_canvas = new plot_canvas(this, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
     m_fit->config_plot(m_canvas);
 }
 
-fit_panel::~fit_panel()
+void fit_panel::reload()
 {
-    delete m_fit;
-    delete m_bold_font;
+    clear();
+    setup();
+    param_matrix->create();
+    m_canvas->create();
 }
 
 long

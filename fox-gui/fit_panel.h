@@ -20,6 +20,8 @@ class fit_panel : public FXHorizontalFrame {
     agg::pod_array<param_info> m_parameters;
 
     FXFont* m_bold_font;
+    FXScrollWindow *scroll_window;
+    FXMatrix *param_matrix;
 
     FXTextField* m_wl_entry;
     plot_canvas* m_canvas;
@@ -36,6 +38,9 @@ class fit_panel : public FXHorizontalFrame {
         return p - m_parameters.data();
     }
 
+    void clear();
+    void setup();
+
 protected:
     fit_panel() {};
 private:
@@ -45,6 +50,8 @@ private:
 public:
     fit_panel(fit_manager* fit, FXComposite *p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=DEFAULT_SPACING, FXint pr=DEFAULT_SPACING, FXint pt=DEFAULT_SPACING, FXint pb=DEFAULT_SPACING, FXint hs=DEFAULT_SPACING, FXint vs=DEFAULT_SPACING);
     virtual ~fit_panel();
+
+    void reload();
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_param_change(FXObject*, FXSelector, void*);
