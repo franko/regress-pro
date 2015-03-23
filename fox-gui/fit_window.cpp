@@ -28,20 +28,17 @@ FXDEFMAP(fit_window) fit_window_map[]= {
 FXIMPLEMENT(fit_window,FXMainWindow,fit_window_map,ARRAYNUMBER(fit_window_map));
 
 fit_window::fit_window(fit_manager* fit, FXApp* a,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
-    : FXMainWindow(a, "Dispersion Fit", ic, mi, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+    : FXMainWindow(a, name, ic, mi, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
 {
-    // Menubar
     menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
     statusbar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
 
     m_fit_panel = new fit_panel(fit, this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    // fit menu
     fitmenu = new FXMenuPane(this);
     new FXMenuCommand(fitmenu, "&Run", NULL, m_fit_panel, fit_panel::ID_RUN_FIT);
     new FXMenuTitle(menubar, "&Fit", NULL, fitmenu);
 
-    // plot menu
     plotmenu = new FXMenuPane(this);
     new FXMenuCommand(plotmenu, "&Auto Scale", NULL, m_fit_panel, fit_panel::ID_PLOT_SCALE);
     new FXMenuTitle(menubar, "&Plot", NULL, plotmenu);
