@@ -34,6 +34,7 @@
 class recipe_window;
 class filmstack_window;
 class dataset_window;
+class batch_window;
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -52,6 +53,7 @@ protected:
     filmstack_window *my_filmstack_window;
     recipe_window *my_recipe_window;
     dataset_window *my_dataset_window;
+    batch_window *my_batch_window;
     filmstack_window *result_filmstack_window;
 
     FXMenuBar         *menubar;

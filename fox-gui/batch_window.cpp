@@ -9,6 +9,7 @@ extern "C" {
 // Map
 FXDEFMAP(batch_window) batch_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, batch_window::ID_RUN_BATCH, batch_window::on_cmd_run_batch),
+    FXMAPFUNC(SEL_COMMAND, batch_window::ID_DELETE, batch_window::onCmdHide),
 };
 
 FXIMPLEMENT(batch_window,FXDialogBox,batch_window_map,ARRAYNUMBER(batch_window_map));

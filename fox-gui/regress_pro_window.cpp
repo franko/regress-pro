@@ -115,7 +115,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
       my_filmstack_window(NULL), my_recipe_window(NULL),
-      my_dataset_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
+      my_dataset_window(NULL), my_batch_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -490,8 +490,11 @@ long
 regress_pro_window::onCmdRunBatchNew(FXObject *, FXSelector, void *)
 {
     reg_check_point(this);
-    batch_window bwindow(this);
-    bwindow.execute();
+    if (!my_batch_window) {
+        my_batch_window = new batch_window(this);
+        my_batch_window->create();
+    }
+    my_batch_window->show(PLACEMENT_SCREEN);
     return 1;
 }
 
