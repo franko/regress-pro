@@ -9,25 +9,12 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]= {
 };
 
 // Object implementation
-FXIMPLEMENT(disp_fit_window,FXMainWindow,disp_fit_window_map,ARRAYNUMBER(disp_fit_window_map));
+FXIMPLEMENT(disp_fit_window,fit_window,disp_fit_window_map,ARRAYNUMBER(disp_fit_window_map));
 
 disp_fit_window::disp_fit_window(disp_fit_manager* fit, FXApp* a, const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
-    FXMainWindow(a, name, ic, mi, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
+    fit_window(fit, a, name, ic, mi, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
     m_fit_manager(fit)
 {
-    menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-    statusbar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
-
-    m_fit_panel = new fit_panel(fit, this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-    fitmenu = new FXMenuPane(this);
-    new FXMenuCommand(fitmenu, "&Run", NULL, m_fit_panel, fit_panel::ID_RUN_FIT);
-    new FXMenuTitle(menubar, "&Fit", NULL, fitmenu);
-
-    plotmenu = new FXMenuPane(this);
-    new FXMenuCommand(plotmenu, "&Auto Scale", NULL, m_fit_panel, fit_panel::ID_PLOT_SCALE);
-    new FXMenuTitle(menubar, "&Plot", NULL, plotmenu);
-
     dispmenu = new FXMenuPane(this);
     new FXMenuCommand(dispmenu, "Select Reference", NULL, this, ID_SELECT_REF);
     new FXMenuCommand(dispmenu, "Select Model", NULL, this, ID_SELECT_MODEL);
@@ -36,8 +23,6 @@ disp_fit_window::disp_fit_window(disp_fit_manager* fit, FXApp* a, const FXString
 
 disp_fit_window::~disp_fit_window()
 {
-    delete fitmenu;
-    delete plotmenu;
     delete dispmenu;
 }
 

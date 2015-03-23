@@ -28,10 +28,6 @@
 class fit_window : public FXMainWindow {
     FXDECLARE(fit_window)
 
-    FXMenuBar *menubar;
-    FXStatusBar *statusbar;
-    FXMenuPane *fitmenu, *plotmenu;
-    fit_panel *m_fit_panel;
 protected:
     fit_window() {};
 private:
@@ -41,6 +37,12 @@ private:
 public:
     fit_window(fit_manager* fit,FXApp* a,const FXString& name,FXIcon *ic=NULL,FXIcon *mi=NULL,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~fit_window();
+
+protected:
+    FXMenuBar *menubar;
+    FXStatusBar *statusbar;
+    FXMenuPane *fitmenu, *plotmenu;
+    fit_panel *m_fit_panel;
 };
 
 #endif

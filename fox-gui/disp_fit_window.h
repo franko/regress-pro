@@ -3,10 +3,11 @@
 #include <fx.h>
 
 #include "fit_panel.h"
+#include "fit_window.h"
 
 class disp_fit_manager;
 
-class disp_fit_window : public FXMainWindow {
+class disp_fit_window : public fit_window {
     FXDECLARE(disp_fit_window)
 protected:
     disp_fit_window() {};
@@ -21,16 +22,13 @@ public:
     long on_cmd_select(FXObject *, FXSelector, void *);
 
     enum {
-        ID_SELECT_REF = FXMainWindow::ID_LAST,
+        ID_SELECT_REF = fit_window::ID_LAST,
         ID_SELECT_MODEL,
         ID_LAST
     };
 
-private:
-    FXMenuBar *menubar;
-    FXStatusBar *statusbar;
-    FXMenuPane *fitmenu, *plotmenu, *dispmenu;
-    fit_panel *m_fit_panel;
+protected:
+    FXMenuPane *dispmenu;
     disp_fit_manager *m_fit_manager;
 };
 
