@@ -28,7 +28,6 @@
 #include "elliss_app.h"
 #include "plot_canvas.h"
 #include "spectra.h"
-#include "symtab.h"
 #include "fit_recipe.h"
 
 class recipe_window;
@@ -42,7 +41,6 @@ class regress_pro_window : public FXMainWindow {
 protected:
     struct spectrum *spectrum;
     struct stack *stack_result;
-    struct symtab symtab[1];
     fit_recipe *recipe;
 
     FXString scriptFile;
@@ -110,11 +108,6 @@ public:
     long onCmdEditFilmStackResult(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
 
-    bool save_script_as(const FXString& save_as);
-    bool set_fit_strategy(const char *script_text);
-    bool update_fit_strategy();
-    void setErrorRegion(int sl, int el);
-    void cleanScriptErrors();
     void reportErrors();
 
 public:

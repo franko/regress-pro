@@ -34,10 +34,10 @@ INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
 SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp disp_fit_window.cpp regress_pro_window.cpp \
-	BatchDialog.cpp dispers_dialog.cpp dispers_win.cpp sampling_win.cpp \
-	fx_numeric_field.cpp disp_chooser.cpp fit_panel.cpp fit_window.cpp colors.cpp \
+	dispers_dialog.cpp dispers_win.cpp sampling_win.cpp \
+	fx_numeric_field.cpp fit_panel.cpp fit_window.cpp colors.cpp \
 	plot_units.cpp plot_canvas.cpp utils.cpp filmstack_window.cpp \
-	dispers_chooser.cpp dispers_ui_edit.cpp icons_all.cpp \
+	dispers_ui_edit.cpp icons_all.cpp dispers_chooser.cpp \
 	fit_params_utils.cpp multi_sample_recipe.cpp recipe_window.cpp \
 	fit_recipe.cpp dispers_edit_window.cpp filelist_table.cpp dataset_table.cpp \
 	dataset_window.cpp batch_window.cpp main.cpp

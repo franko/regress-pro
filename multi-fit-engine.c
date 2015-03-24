@@ -1,8 +1,3 @@
-
-/*
-  $Id$
- */
-
 #include <assert.h>
 #include <string.h>
 
@@ -13,8 +8,6 @@
 #include "elliss-multifit.h"
 #include "refl-multifit.h"
 #include "multi-fit-engine.h"
-#include "symtab.h"
-
 
 static int  mengine_apply_param_common(struct multi_fit_engine *fit,
                                        const fit_param_t *fp,
@@ -326,69 +319,6 @@ multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, const struct fit
     for(k = 0; k < fps->number; k++) {
         stack_apply_param(fit->stack_list[k], fps->values + k, value[k]);
     }
-}
-
-extern struct multi_fit_engine *
-build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
-                       struct seeds **indiv) {
-    stack_t *stack;
-    struct strategy *strategy;
-    struct multi_fit_info *inf;
-    struct multi_fit_engine *fit;
-    int fit_parameters_error;
-    double *seed_array;
-    int j, k, index;
-
-    stack    = retrieve_parsed_object(symtab, TL_TYPE_STACK,
-                                      symtab->directives->stack);
-    strategy = retrieve_parsed_object(symtab, TL_TYPE_STRATEGY,
-                                      symtab->directives->strategy);
-    inf      = retrieve_parsed_object(symtab, TL_TYPE_MULTI_FIT,
-                                      symtab->directives->multi_fit);
-
-    if(stack == NULL || strategy == NULL || inf == NULL) {
-        return NULL;
-    }
-
-    fit_parameters_error =					       \
-            check_fit_parameters(stack, strategy->parameters) ||	       \
-            check_fit_parameters(stack, inf->constraints.parameters) ||       \
-            check_fit_parameters(stack, inf->individual.parameters);
-
-    if(fit_parameters_error) {
-        notify_error_msg(SCRIPT_ERROR,
-                         "some of the fit parameters are not valid");
-        return NULL;
-    }
-
-    *comm  = strategy->seeds;
-    *indiv = inf->individual.seeds;
-
-    fit = multi_fit_engine_new(symtab->config_table, inf->samples_number);
-    multi_fit_engine_bind(fit, stack, strategy->parameters, inf->individual.parameters);
-
-    struct fit_parameters *constr = inf->constraints.parameters;
-    seed_array = emalloc(constr->number * sizeof(double));
-
-    for(index = 0, k = 0; k < fit->samples_number; k++) {
-        for(j = 0; j < constr->number; j++, index++) {
-            seed_array[j] = inf->constraints.seeds->values[index].seed;
-        }
-        multi_fit_engine_apply_parameters(fit, constr, seed_array);
-    }
-    free(seed_array);
-
-    for(k = 0; k < fit->samples_number; k++) {
-        /* we just keep a reference, we don't own the data */
-        fit->spectra_list[k] = inf->spectra_list[k];
-    }
-
-    if(multi_fit_engine_prepare(fit) != 0) {
-        multi_fit_engine_free(fit);
-        return NULL;
-    }
-
-    return fit;
 }
 
 void

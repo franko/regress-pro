@@ -11,7 +11,6 @@
 #include "fit-engine.h"
 #include "cmpl.h"
 #include "fit-engine-common.h"
-#include "symtab.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -62,11 +61,6 @@ extern void multi_fit_engine_disable(struct multi_fit_engine *f);
 
 extern int  multi_fit_engine_commit_parameters(struct multi_fit_engine *fit,
         const gsl_vector *x);
-
-extern struct multi_fit_engine *			\
-build_multi_fit_engine(struct symtab *symtab,
-                       struct seeds **comm,
-                       struct seeds **indiv);
 
 extern void multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
         str_t text);

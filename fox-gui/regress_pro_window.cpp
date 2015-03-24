@@ -28,7 +28,6 @@
 
 #include "regress_pro_window.h"
 #include "dispers_dialog.h"
-#include "BatchDialog.h"
 #include "interactive_fit.h"
 #include "Strcpp.h"
 #include "error-messages.h"
@@ -37,12 +36,10 @@
 #include "lmfit-multi.h"
 #include "fit-params.h"
 #include "spectra.h"
-#include "symtab.h"
 #include "grid-search.h"
 #include "str.h"
 #include "str-util.h"
 #include "dispers-library.h"
-#include "disp_chooser.h"
 #include "disp_fit_manager.h"
 #include "fit_window.h"
 #include "disp_fit_window.h"
@@ -177,8 +174,6 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
     lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
     bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-
-    symbol_table_init(this->symtab);
 
     init_class_list();
 
@@ -339,9 +334,6 @@ regress_pro_window::~regress_pro_window()
         spectra_free(m_model_spectr);
     }
 
-    symbol_table_clean(this->symtab);
-    symbol_table_free(this->symtab);
-
     clean_error_msgs();
 }
 
@@ -450,15 +442,6 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     multi_fit_engine_free(fit);
 
     return 1;
-}
-
-bool
-regress_pro_window::update_fit_strategy()
-{
-    if(scripttext->isModified()) {
-        return set_fit_strategy(scripttext->getText().text());
-    }
-    return true;
 }
 
 bool
@@ -667,33 +650,6 @@ regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
     return 1;
 }
 
-bool
-regress_pro_window::set_fit_strategy(const char *script_text)
-{
-    cleanScriptErrors();
-
-    if(parse_strategy(this->symtab, script_text) != 0) {
-        int fline, lline;
-        str_t errmsg;
-        str_init(errmsg, 128);
-
-        if(get_script_error_region(&fline, &lline) == 0) {
-            setErrorRegion(fline, lline);
-        }
-
-        get_errors_list(errmsg);
-
-        FXMessageBox::information(this, MBOX_OK, "Script parsing",
-                                  "The parsing of the script has been"
-                                  " unsuccessful :\n%s", CSTR(errmsg));
-
-        str_free(errmsg);
-        return false;
-    }
-
-    return true;
-}
-
 void
 regress_pro_window::reportErrors()
 {
@@ -704,49 +660,6 @@ regress_pro_window::reportErrors()
                               "The parsing of the script has been"
                               " unsuccessful :\n%s", CSTR(errmsg));
     str_free(errmsg);
-}
-
-void
-regress_pro_window::cleanScriptErrors()
-{
-    scripttext->changeStyle(0, scripttext->getLength(), 0);
-}
-
-void
-regress_pro_window::setErrorRegion(int sl, int el)
-{
-    int cl = 1, ns = 0, next;
-    FXString text(scripttext->getText());
-    const char *base = text.text();
-
-    while(cl < sl) {
-        const char *ptr = strchr(base, '\n');
-        if(! ptr) {
-            break;
-        }
-        ptr ++;
-        ns += ptr - base;
-        base = ptr;
-        cl ++;
-    }
-
-    if(cl < sl) {
-        return;
-    }
-
-    next = 0;
-    while(cl <= el) {
-        const char *ptr = strchr(base, '\n');
-        if(! ptr) {
-            break;
-        }
-        ptr ++;
-        next += ptr - base;
-        base = ptr;
-        cl ++;
-    }
-
-    scripttext->changeStyle(ns, next, 1);
 }
 
 float

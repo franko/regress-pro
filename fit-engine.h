@@ -70,7 +70,6 @@ struct fit_engine {
 #define GET_SE_TYPE(sk) (sk == SYSTEM_ELLISS_AB ? SE_ALPHA_BETA : SE_PSI_DEL)
 
 struct seeds;
-struct symtab;
 
 extern struct fit_engine *fit_engine_new();
 
@@ -106,9 +105,6 @@ extern void build_stack_cache(struct stack_cache *cache,
                               int th_only_optimize);
 
 extern void dispose_stack_cache(struct stack_cache *cache);
-
-extern struct fit_engine * build_fit_engine(struct symtab *symtab,
-        struct seeds **seeds);
 
 extern void set_default_extra_param(struct extra_params *extra);
 

@@ -25,7 +25,6 @@
 #include "refl-kernel.h"
 #include "elliss-fit.h"
 #include "elliss.h"
-#include "symtab.h"
 #include "error-messages.h"
 #include "minsampling.h"
 
@@ -424,32 +423,6 @@ fit_engine_yield_stack(struct fit_engine *fit)
     stack_t *s = fit->stack;
     fit->stack = NULL;
     return s;
-}
-
-struct fit_engine *
-build_fit_engine(struct symtab *symtab, struct seeds **seeds) {
-    stack_t *stack;
-    struct strategy *strategy;
-
-    stack    = retrieve_parsed_object(symtab, TL_TYPE_STACK,
-                                      symtab->directives->stack);
-
-    strategy = retrieve_parsed_object(symtab, TL_TYPE_STRATEGY,
-                                      symtab->directives->strategy);
-
-    if(stack == NULL || strategy == NULL) {
-        return NULL;
-    }
-
-    if(check_fit_parameters(stack, strategy->parameters) != 0) {
-        return NULL;
-    }
-
-    *seeds = strategy->seeds;
-
-    struct fit_engine *fit = fit_engine_new();
-    fit_engine_bind(fit, stack, symtab->config_table, strategy->parameters);
-    return fit;
 }
 
 void
