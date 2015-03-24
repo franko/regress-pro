@@ -79,7 +79,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH_NEW, regress_pro_window::onCmdRunBatchNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_EDIT_FILMSTACK_RESULT, regress_pro_window::onCmdEditFilmStackResult),
@@ -146,7 +145,6 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
-    new FXMenuCommand(fitmenu, "Run Batch (NEW)",NULL,this,ID_RUN_BATCH_NEW);
     new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_EDIT_FILMSTACK_RESULT);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
@@ -348,36 +346,7 @@ regress_pro_window::~regress_pro_window()
 }
 
 long
-regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
-{
-    struct seeds *seeds;
-    struct fit_engine *fit;
-
-    reg_check_point(this);
-
-    fit = build_fit_engine(this->symtab, &seeds);
-
-    if(fit == NULL) {
-        return 0;
-    }
-
-    BatchDialog batch(this, fit, seeds);
-    batch.setFilename(batchFileId);
-
-    FXString result;
-    batch.execute(result);
-    resulttext->setText(result);
-    resulttext->setModified(TRUE);
-
-    batchFileId = batch.getFilename();
-
-    fit_engine_free(fit);
-
-    return 1;
-}
-
-long
-regress_pro_window::onCmdRunBatchNew(FXObject *, FXSelector, void *)
+regress_pro_window::onCmdRunBatch(FXObject *, FXSelector, void *)
 {
     reg_check_point(this);
     if (!my_batch_window) {

@@ -103,7 +103,6 @@ public:
     long onCmdRunMultiFit(FXObject*,FXSelector,void*);
     long onCmdRunSimul(FXObject*,FXSelector,void*);
     long onCmdRunBatch(FXObject*,FXSelector,void*);
-    long onCmdRunBatchNew(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
@@ -129,7 +128,6 @@ public:
         ID_INTERACTIVE_FIT,
         ID_RUN_MULTI_FIT,
         ID_RUN_BATCH,
-        ID_RUN_BATCH_NEW,
         ID_RUN_SIMUL,
         ID_ABOUT,
         ID_SCRIPT_TEXT,
