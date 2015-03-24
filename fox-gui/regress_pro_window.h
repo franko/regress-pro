@@ -27,12 +27,14 @@
 
 #include "elliss_app.h"
 #include "plot_canvas.h"
-#include "recipe_window.h"
 #include "spectra.h"
 #include "symtab.h"
 #include "fit_recipe.h"
-#include "filmstack_window.h"
-#include "dataset_window.h"
+
+class recipe_window;
+class filmstack_window;
+class dataset_window;
+class batch_window;
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -51,6 +53,7 @@ protected:
     filmstack_window *my_filmstack_window;
     recipe_window *my_recipe_window;
     dataset_window *my_dataset_window;
+    batch_window *my_batch_window;
     filmstack_window *result_filmstack_window;
 
     FXMenuBar         *menubar;
@@ -85,6 +88,8 @@ public:
         return (elliss_app*) getApp();
     }
 
+    fit_recipe *get_current_recipe() const { return recipe; }
+
     long onCmdFilmStack(FXObject*,FXSelector,void*);
     long onCmdRecipeEdit(FXObject*,FXSelector,void*);
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
@@ -98,6 +103,7 @@ public:
     long onCmdRunMultiFit(FXObject*,FXSelector,void*);
     long onCmdRunSimul(FXObject*,FXSelector,void*);
     long onCmdRunBatch(FXObject*,FXSelector,void*);
+    long onCmdRunBatchNew(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
@@ -123,6 +129,7 @@ public:
         ID_INTERACTIVE_FIT,
         ID_RUN_MULTI_FIT,
         ID_RUN_BATCH,
+        ID_RUN_BATCH_NEW,
         ID_RUN_SIMUL,
         ID_ABOUT,
         ID_SCRIPT_TEXT,

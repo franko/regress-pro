@@ -9,10 +9,10 @@ FXDEFMAP(dataset_table) dataset_table_map[]= {
     FXMAPFUNCS(SEL_COMMAND, dataset_table::ID_FIT_PARAM, dataset_table::ID_FIT_PARAM_LAST, dataset_table::on_cmd_fit_param),
 };
 
-FXIMPLEMENT(dataset_table,FXTable,dataset_table_map,ARRAYNUMBER(dataset_table_map));
+FXIMPLEMENT(dataset_table,filelist_table,dataset_table_map,ARRAYNUMBER(dataset_table_map));
 
 dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FXSelector sel,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb)
-    : FXTable(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb), entries_no(0)
+    : filelist_table(p, tgt, sel, opts, x, y, w, h, pl, pr, pt, pb)
 {
     str_init(buffer, 20);
     fit_params = fit_parameters_new();
@@ -57,24 +57,6 @@ void dataset_table::create()
     popupmenu->create();
 }
 
-void dataset_table::append_filenames(FXString *filenames)
-{
-    int count = 0;
-    for(FXString *p = filenames; *p != ""; p++, count++) ;
-    if (entries_no + count > getNumRows()) {
-        int del = entries_no + count - getNumRows();
-        insertRows(entries_no, del);
-    }
-    char rowlabel[64];
-    for (int i = 0; filenames[i] != ""; i++) {
-        int n = entries_no + i;
-        sprintf(rowlabel, "%d", n + 1);
-        setRowText(n, rowlabel);
-        setItemText(n, 0, filenames[i]);
-    }
-    entries_no += count;
-}
-
 long dataset_table::on_cmd_select_column(FXObject *obj, FXSelector sel, void *ptr)
 {
     popup_col = (FXint)(FXival)ptr;
@@ -117,7 +99,7 @@ long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
 
 bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_filename)
 {
-    for (int i = 0; i < entries_no; i++) {
+    for (int i = 0; i < samples_number(); i++) {
         FXString name = getItemText(i, 0);
         spectrum *s = load_gener_spectrum(name.text());
         if (!s) {

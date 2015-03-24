@@ -3,6 +3,7 @@
 
 #include <fx.h>
 
+#include "filelist_table.h"
 #include "fit_recipe.h"
 
 /* Used to hold a simple linked list of fit parameters. Each node
@@ -29,7 +30,7 @@ struct fit_param_link {
     }
 };
 
-class dataset_table : public FXTable {
+class dataset_table : public filelist_table {
     FXDECLARE(dataset_table)
 
 protected:
@@ -44,7 +45,6 @@ public:
 
     virtual void create();
 
-    void append_filenames(FXString *filenames);
     void link_parameter(const fit_param_t *fp, const int column);
     bool get_spectra_list(spectrum *spectra_list[], FXString& error_filename);
     bool get_values(int row, const fit_parameters *fps, double value_array[], int& error_col);
@@ -56,7 +56,7 @@ public:
     long on_cmd_stack_shift(FXObject *, FXSelector, void *);
 
     enum {
-        ID_STACK_CHANGE = FXTable::ID_LAST,
+        ID_STACK_CHANGE = filelist_table::ID_LAST,
         ID_STACK_SHIFT,
         ID_FIT_PARAM,
         ID_FIT_PARAM_LAST = ID_FIT_PARAM + 256,
@@ -69,7 +69,6 @@ private:
 
     FXMenuPane *popupmenu;
 
-    int entries_no;
     fit_parameters *fit_params;
     int popup_col;
 

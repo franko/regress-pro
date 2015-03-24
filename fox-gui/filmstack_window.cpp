@@ -15,7 +15,7 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_REPLACE_LAYER, filmstack_window::on_cmd_replace_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_EDIT_LAYER, filmstack_window::on_cmd_edit_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_SAVE_USERLIB, filmstack_window::on_cmd_save_userlib),
-    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, recipe_window::onCmdHide),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, filmstack_window::onCmdHide),
 };
 
 FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));

@@ -45,7 +45,12 @@
 #include "disp_chooser.h"
 #include "disp_fit_manager.h"
 #include "fit_window.h"
+#include "disp_fit_window.h"
 #include "interactive_fit.h"
+#include "recipe_window.h"
+#include "filmstack_window.h"
+#include "dataset_window.h"
+#include "batch_window.h"
 #include "lexer.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
@@ -74,6 +79,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH_NEW, regress_pro_window::onCmdRunBatchNew),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_EDIT_FILMSTACK_RESULT, regress_pro_window::onCmdEditFilmStackResult),
@@ -103,7 +109,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
       spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
       spectrFile("untitled"), batchFileId("untitled####.dat"),
       my_filmstack_window(NULL), my_recipe_window(NULL),
-      my_dataset_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
+      my_dataset_window(NULL), my_batch_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -140,6 +146,7 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "Run Batch (NEW)",NULL,this,ID_RUN_BATCH_NEW);
     new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_EDIT_FILMSTACK_RESULT);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
@@ -273,22 +280,15 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
     reg_check_point(this);
 
-    if(! update_fit_strategy()) {
-        return 1;
-    }
-
     struct disp_fit_engine *fit = disp_fit_engine_new();
 
-    if(disp_chooser(getApp(), this->symtab, fit)) {
-        elliss_app *app = get_elliss_app();
-        disp_fit_manager *mgr = new disp_fit_manager(fit);
-        fit_window *fitwin = new fit_window(mgr, app, "Dispersion Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
-        fitwin->create();
-        fitwin->show(FX::PLACEMENT_SCREEN);
-    } else {
-        disp_fit_engine_free(fit);
-    }
+    fit->ref_disp = dispers_library_search("sio2");
+    fit->model_disp = dispers_library_search("sio2");
 
+    disp_fit_manager *mgr = new disp_fit_manager(fit);
+    disp_fit_window *fitwin = new disp_fit_window(mgr, getApp(), "Dispersion Fit", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
+    fitwin->create();
+    fitwin->show(FX::PLACEMENT_SCREEN);
 
     return 1;
 }
@@ -373,6 +373,18 @@ regress_pro_window::onCmdRunBatch(FXObject*,FXSelector,void *)
 
     fit_engine_free(fit);
 
+    return 1;
+}
+
+long
+regress_pro_window::onCmdRunBatchNew(FXObject *, FXSelector, void *)
+{
+    reg_check_point(this);
+    if (!my_batch_window) {
+        my_batch_window = new batch_window(this);
+        my_batch_window->create();
+    }
+    my_batch_window->show(PLACEMENT_SCREEN);
     return 1;
 }
 
