@@ -137,6 +137,10 @@ public:
         m_fit_engine->model_disp = d;
     }
 
+    disp_t * get_model() {
+        return disp_copy(m_fit_engine->model_disp);
+    }
+
 private:
     void set_fit_param(fit_param_t* fp, int param_nb) {
         fp->id       = PID_LAYER_N;

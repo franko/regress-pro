@@ -1,11 +1,13 @@
 #include "disp_fit_window.h"
 #include "disp_fit_manager.h"
 #include "dispers_chooser.h"
+#include "dispers-library.h"
 
 // Map
 FXDEFMAP(disp_fit_window) disp_fit_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SELECT_REF, disp_fit_window::on_cmd_select),
     FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SELECT_MODEL, disp_fit_window::on_cmd_select),
+    FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SAVE_USERLIB, disp_fit_window::on_cmd_save_userlib)
 };
 
 // Object implementation
@@ -18,6 +20,7 @@ disp_fit_window::disp_fit_window(disp_fit_manager* fit, FXApp* a, const FXString
     dispmenu = new FXMenuPane(this);
     new FXMenuCommand(dispmenu, "Select Reference", NULL, this, ID_SELECT_REF);
     new FXMenuCommand(dispmenu, "Select Model", NULL, this, ID_SELECT_MODEL);
+    new FXMenuCommand(dispmenu, "Save Model to User Library", NULL, this, ID_SAVE_USERLIB);
     new FXMenuTitle(menubar, "&Dispersion", NULL, dispmenu);
 }
 
@@ -41,5 +44,11 @@ long disp_fit_window::on_cmd_select(FXObject *, FXSelector sel, void *)
         }
         m_fit_panel->reload();
     }
+    return 1;
+}
+
+long disp_fit_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
+{
+    disp_list_add(user_lib, m_fit_manager->get_model());
     return 1;
 }
