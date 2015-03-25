@@ -43,9 +43,8 @@ protected:
     struct stack *stack_result;
     fit_recipe *recipe;
 
-    FXString scriptFile;
+    FXString recipeFilename;
     FXString spectrFile;
-    FXString batchFileId;
 
 protected:
     filmstack_window *my_filmstack_window;
@@ -65,8 +64,7 @@ protected:
     FXMenuPane        *helpmenu;
 
     FXTabBook         *tabbook;
-    FXTabItem         *tabscript, *tabplot;
-    FXText            *scripttext;
+    FXTabItem         *tabplot;
     FXText            *resulttext;
 
     FXFont            *scriptfont;
@@ -148,7 +146,6 @@ private:
     plot_canvas* m_canvas;
 
     bool m_title_dirty;
-    bool m_title_modified;
 };
 
 extern "C" {

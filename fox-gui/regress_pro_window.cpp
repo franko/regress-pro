@@ -102,8 +102,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 // Make some windows
 regress_pro_window::regress_pro_window(elliss_app* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
-      spectrum(NULL), stack_result(NULL), scriptFile("untitled"),
-      spectrFile("untitled"), batchFileId("untitled####.dat"),
+      spectrum(NULL), stack_result(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       my_filmstack_window(NULL), my_recipe_window(NULL),
       my_dataset_window(NULL), my_batch_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
 {
@@ -155,19 +154,11 @@ regress_pro_window::regress_pro_window(elliss_app* a)
 
     tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
-    // First item is a list
-    tabscript = new FXTabItem(tabbook,"Script",NULL);
-    FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-    FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-    scripttext = new FXText(bf,this,ID_SCRIPT_TEXT,TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    scripttext->setStyled(TRUE);
-    scripttext->setHiliteStyles(tstyles);
     scriptfont = new FXFont(getApp(), SCRIPT_FONT_NAME, 10);
-    scripttext->setFont(scriptfont);
 
     new FXTabItem(tabbook,"Fit Results",NULL);
-    lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
-    bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
+    FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
+    FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
     resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(scriptfont);
 
@@ -185,7 +176,6 @@ regress_pro_window::regress_pro_window(elliss_app* a)
     m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     m_title_dirty = true;
-    m_title_modified = false;
 }
 
 
@@ -201,20 +191,16 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
 {
     FXMainWindow::onUpdate(sender, sel, ptr);
 
-    bool is_mod = scripttext->isModified();
-
-    if(m_title_dirty || (is_mod != m_title_modified)) {
+    if(m_title_dirty) {
         bool is_reg = get_elliss_app()->is_registered();
 
-        FXString filename = scriptFile.rafter(DIR_SEPARATOR);
-        FXString pathname = scriptFile.rbefore(DIR_SEPARATOR);
-        FXString flag(is_mod ? "*" : "");
+        FXString filename = recipeFilename.rafter(DIR_SEPARATOR);
+        FXString pathname = recipeFilename.rbefore(DIR_SEPARATOR);
         FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
 
-        this->setTitle(flag + filename + " - " + pathname + " - " + appname);
+        this->setTitle(filename + " - " + pathname + " - " + appname);
 
         m_title_dirty = false;
-        m_title_modified = is_mod;
 
         return 1;
     }
@@ -481,8 +467,8 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     FXString fitresult, row;
 
-    /* name of the fit script */
-    row.format("%s :\n", scriptFile.text());
+    /* name of the fit recipe */
+    row.format("Recipe %s :\n", recipeFilename.text());
     fitresult.append(row);
 
     /* fit parameters results */
@@ -763,6 +749,8 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
             return 1;
         }
         lexer_free(l);
+        recipeFilename = filename;
+        m_title_dirty = true;
         fit_recipe *old_recipe = recipe;
         recipe = new_recipe;
         if (my_recipe_window) {
