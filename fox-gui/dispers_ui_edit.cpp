@@ -150,8 +150,9 @@ void fx_disp_cauchy_window::setup_dialog()
     new FXLabel(matrix, "N");
     new FXLabel(matrix, "K");
 
-    for (int j = 0; j < 6; j++) {
-        create_textfield(matrix, this, ID_PARAM_0 + j);
+    for (int p = 0; p < 6; p++) {
+        int i = p / 2, j = p % 2;
+        create_textfield(matrix, this, ID_PARAM_0 + i + 3 * j);
     }
 }
 

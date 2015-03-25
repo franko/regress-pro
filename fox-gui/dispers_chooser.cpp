@@ -111,7 +111,7 @@ fx_newmodel_selector::get_dispersion()
         return disp_new_ho("*HO", 1, &param0);
     } else if (name == "Cauchy Model") {
         double n[3] = { 1.0, 0.0, 0.0 };
-        double k[3] = { 1.0, 0.0, 0.0 };
+        double k[3] = { 0.0, 0.0, 0.0 };
         return disp_new_cauchy("*cauchy", n, k);
     }
     return NULL;
