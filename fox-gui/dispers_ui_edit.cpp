@@ -1,6 +1,7 @@
 #include "dispers_ui_edit.h"
 #include "disp-ho.h"
 #include "icons_all.h"
+#include "dispers_chooser.h"
 
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
@@ -175,8 +176,73 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
         dispwin = new fx_disp_ho_window(d, comp, opts);
     } else if (d->type == DISP_CAUCHY) {
         dispwin = new fx_disp_cauchy_window(d, comp, opts);
+    } else if (d->type == DISP_LOOKUP) {
+        dispwin = new fx_disp_lookup_window(d, comp, opts);
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
     }
     return dispwin;
+}
+
+// Map
+FXDEFMAP(fx_disp_lookup_window) fx_disp_lookup_window_map[]= {
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_COMPONENT_NAME, fx_disp_lookup_window::on_cmd_component_name),
+};
+
+FXIMPLEMENT(fx_disp_lookup_window,fx_disp_window,fx_disp_lookup_window_map,ARRAYNUMBER(fx_disp_lookup_window_map));
+
+void fx_disp_lookup_window::setup_dialog()
+{
+    setup_name();
+
+    matrix = new FXMatrix(this, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    new FXLabel(matrix, "");
+    new FXLabel(matrix, "Dispersion");
+    new FXLabel(matrix, "P");
+
+    disp_lookup *lookup = &disp->disp.lookup;
+    for (int i = 0; i < lookup->nb_comps; i++) {
+        FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + i);
+        if (lookup->nb_comps == 1) { db->disable(); }
+        const char *cname = CSTR(lookup->component[i].disp->name);
+        FXTextField *tf = new FXTextField(matrix, 32, this, ID_COMPONENT_NAME, FRAME_SUNKEN);
+        tf->setText(cname);
+        create_textfield(matrix, this, ID_PARAM_0 + i);
+    }
+    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD);
+}
+
+double *fx_disp_lookup_window::map_parameter(int index)
+{
+    return &disp->disp.lookup.component[index].p;
+}
+
+void fx_disp_lookup_window::add_dispersion_element()
+{
+    dispers_chooser chooser(this->getApp());
+    if (chooser.execute() != TRUE) return;
+    disp_t *comp = chooser.get_dispersion();
+    disp_lookup *lookup = &disp->disp.lookup;
+    int n = lookup->nb_comps;
+    double p1 = lookup->component[0].p, p2 = lookup->component[n-1].p;
+    double p0 = p2 + (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
+    disp_lookup_add_comp(disp, comp, p0);
+    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n);
+    db->create();
+    FXTextField *tf1 = new FXTextField(matrix, 32, this, ID_COMPONENT_NAME, FRAME_SUNKEN);
+    tf1->setText(CSTR(lookup->component[n].disp->name));
+    FXTextField *tf2 = create_textfield(matrix, this, ID_PARAM_0 + n);
+    tf1->create();
+    tf2->create();
+    matrix->childAtRowCol(1, 0)->enable();
+    this->recalc();
+}
+
+void fx_disp_lookup_window::delete_dispersion_element(int index)
+{
+}
+
+long fx_disp_lookup_window::on_cmd_component_name(FXObject *, FXSelector, void *)
+{
+    return 0;
 }
