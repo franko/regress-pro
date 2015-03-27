@@ -204,15 +204,16 @@ lookup_read(lexer_t *l, disp_t *d_gen)
     return 0;
 }
 
-void disp_lookup_add_comp(struct disp_struct *d_gen, struct disp_struct *comp, double p)
+void disp_lookup_add_comp(struct disp_struct *d_gen, int index, struct disp_struct *comp, double p)
 {
     struct disp_lookup *d = &d_gen->disp.lookup;
     int n = d->nb_comps;
     struct lookup_comp *new_comp = malloc(sizeof(struct lookup_comp) * (n + 1));
-    memcpy(new_comp, d->component, sizeof(struct lookup_comp) * n);
+    memcpy(new_comp, d->component, sizeof(struct lookup_comp) * index);
+    memcpy(new_comp + index + 1, d->component + index, sizeof(struct lookup_comp) * (n - index));
     d->component = new_comp;
-    d->component[n].p = p;
-    d->component[n].disp = comp;
+    d->component[index].p = p;
+    d->component[index].disp = comp;
     d->nb_comps ++;
 }
 

@@ -18,11 +18,7 @@ fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts,FXint x,FX
 {
     delete_icon = new FXGIFIcon(getApp(), delete_gif);
     add_icon = new FXGIFIcon(getApp(), new_gif);
-}
 
-void
-fx_disp_window::setup_name()
-{
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
     new FXLabel(namehf, "Name ");
     FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
@@ -84,8 +80,6 @@ static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *ta
 
 void fx_disp_ho_window::setup_dialog()
 {
-    setup_name();
-
     matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
     new FXLabel(matrix, "Nosc");
@@ -145,8 +139,6 @@ void fx_disp_ho_window::delete_dispersion_element(int index)
 
 void fx_disp_cauchy_window::setup_dialog()
 {
-    setup_name();
-
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "N");
     new FXLabel(matrix, "K");
@@ -193,7 +185,9 @@ FXIMPLEMENT(fx_disp_lookup_window,fx_disp_window,fx_disp_lookup_window_map,ARRAY
 
 void fx_disp_lookup_window::setup_dialog()
 {
-    setup_name();
+    FXHorizontalFrame *thf = new FXHorizontalFrame(this);
+    new FXLabel(thf, "P");
+    new FXTextField(thf, 16, this, ID_DISP_P_VALUE);
 
     matrix = new FXMatrix(this, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
@@ -226,7 +220,7 @@ void fx_disp_lookup_window::add_dispersion_element()
     int n = lookup->nb_comps;
     double p1 = lookup->component[0].p, p2 = lookup->component[n-1].p;
     double p0 = p2 + (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
-    disp_lookup_add_comp(disp, comp, p0);
+    disp_lookup_add_comp(disp, n, comp, p0);
     FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n);
     db->create();
     FXTextField *tf1 = new FXTextField(matrix, 32, this, ID_COMPONENT_NAME, FRAME_SUNKEN);
