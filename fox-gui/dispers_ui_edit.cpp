@@ -18,11 +18,6 @@ fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts,FXint x,FX
 {
     delete_icon = new FXGIFIcon(getApp(), delete_gif);
     add_icon = new FXGIFIcon(getApp(), new_gif);
-
-    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
-    new FXLabel(namehf, "Name ");
-    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
-    tf->setText(CSTR(disp->name));
 }
 
 fx_disp_window::~fx_disp_window()
@@ -31,10 +26,27 @@ fx_disp_window::~fx_disp_window()
     delete add_icon;
 }
 
-void fx_disp_window::create()
+void fx_disp_window::setup()
 {
-    this->setup_dialog();
-    FXVerticalFrame::create();
+    setup_name();
+    setup_dialog();
+}
+
+void fx_disp_window::reload()
+{
+    for (FXWindow *w = this->getFirst(); w; w = this->getFirst()) {
+        delete w;
+    }
+    this->setup();
+    this->create();
+}
+
+void fx_disp_window::setup_name()
+{
+    FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
+    new FXLabel(namehf, "Name ");
+    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
+    tf->setText(CSTR(disp->name));
 }
 
 long
@@ -131,10 +143,7 @@ void fx_disp_ho_window::add_dispersion_element()
 void fx_disp_ho_window::delete_dispersion_element(int index)
 {
     disp_delete_ho(disp, index);
-    for (FXWindow *w = this->getFirst(); w; w = this->getFirst()) {
-        delete w;
-    }
-    this->create();
+    reload();
 }
 
 void fx_disp_cauchy_window::setup_dialog()
@@ -173,6 +182,7 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
     }
+    dispwin->setup();
     return dispwin;
 }
 
@@ -234,6 +244,8 @@ void fx_disp_lookup_window::add_dispersion_element()
 
 void fx_disp_lookup_window::delete_dispersion_element(int index)
 {
+    disp_lookup_delete_comp(disp, index);
+    reload();
 }
 
 long fx_disp_lookup_window::on_cmd_component_name(FXObject *, FXSelector, void *)
