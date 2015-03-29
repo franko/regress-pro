@@ -6,6 +6,6 @@
 #include "dispers.h"
 
 extern disp_t *ui_edit_dispersion(FXWindow *win, disp_t *disp);
-extern disp_t *ui_choose_dispersion(FXApp *app);
+extern disp_t *ui_choose_dispersion(FXWindow *win);
 
 #endif

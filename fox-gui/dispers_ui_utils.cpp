@@ -14,9 +14,9 @@ disp_t *ui_edit_dispersion(FXWindow *win, disp_t *disp)
     return NULL;
 }
 
-disp_t *ui_choose_dispersion(FXApp *app)
+disp_t *ui_choose_dispersion(FXWindow *win)
 {
-    dispers_chooser chooser(app);
+    dispers_chooser chooser(win);
     if (chooser.execute() != TRUE) return NULL;
     return chooser.get_dispersion();
 }

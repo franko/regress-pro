@@ -30,7 +30,7 @@ private:
     dispers_chooser &operator=(const dispers_chooser&);
 
 public:
-    dispers_chooser(FXApp* a, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    dispers_chooser(FXWindow *win, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~dispers_chooser();
 
     // Transfer the ownership of the dispersion.

@@ -32,7 +32,7 @@ disp_fit_window::~disp_fit_window()
 long disp_fit_window::on_cmd_select(FXObject *, FXSelector sel, void *)
 {
     FXuint id = FXSELID(sel);
-    disp_t *d = ui_choose_dispersion(getApp());
+    disp_t *d = ui_choose_dispersion(this);
     if (!d) return 1;
     if (id == ID_SELECT_REF) {
         m_fit_manager->set_reference(d);

@@ -131,7 +131,7 @@ filmstack_window::notify_stack_shift(shift_info *info)
 long
 filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
 {
-    disp_t *d = ui_choose_dispersion(this->getApp());
+    disp_t *d = ui_choose_dispersion(this);
     if (!d) return 1;
     stack_insert_layer(stack, current_layer, d, 0.0);
     shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer)};
@@ -143,7 +143,7 @@ filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
 long
 filmstack_window::on_cmd_replace_layer(FXObject*,FXSelector,void*)
 {
-    disp_t *d = ui_choose_dispersion(this->getApp());
+    disp_t *d = ui_choose_dispersion(this);
     if (!d) return 1;
     disp_free(stack->disp[current_layer]);
     stack->disp[current_layer] = d;

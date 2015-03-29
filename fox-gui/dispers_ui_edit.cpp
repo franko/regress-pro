@@ -268,7 +268,7 @@ double *fx_disp_lookup_window::map_parameter(int index)
 
 void fx_disp_lookup_window::add_dispersion_element()
 {
-    disp_t *comp = ui_choose_dispersion(getApp());
+    disp_t *comp = ui_choose_dispersion(this);
     if (!comp) return;
     disp_lookup *lookup = &disp->disp.lookup;
     int n = lookup->nb_comps;
@@ -288,7 +288,7 @@ long fx_disp_lookup_window::on_cmd_delete_comp(FXObject *, FXSelector, void *)
 
 long fx_disp_lookup_window::on_cmd_insert_comp(FXObject *, FXSelector, void *)
 {
-    disp_t *comp = ui_choose_dispersion(getApp());
+    disp_t *comp = ui_choose_dispersion(this);
     if (!comp) return 1;
     disp_lookup *lookup = &disp->disp.lookup;
     const int i = selected_component;
@@ -323,7 +323,7 @@ long fx_disp_lookup_window::on_cmd_replace_comp(FXObject *, FXSelector, void *)
 {
     const int i = selected_component;
     disp_lookup *lookup = &disp->disp.lookup;
-    disp_t *new_disp = ui_choose_dispersion(getApp());
+    disp_t *new_disp = ui_choose_dispersion(this);
     if (!new_disp) return 1;
     disp_free(lookup->component[i].disp);
     lookup->component[i].disp = new_disp;
