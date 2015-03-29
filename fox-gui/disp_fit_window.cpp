@@ -1,6 +1,6 @@
 #include "disp_fit_window.h"
 #include "disp_fit_manager.h"
-#include "dispers_chooser.h"
+#include "dispers_ui_utils.h"
 #include "dispers-library.h"
 
 // Map
@@ -32,18 +32,14 @@ disp_fit_window::~disp_fit_window()
 long disp_fit_window::on_cmd_select(FXObject *, FXSelector sel, void *)
 {
     FXuint id = FXSELID(sel);
-    dispers_chooser chooser(this->getApp());
-    disp_t *d;
-    if (chooser.execute() == TRUE) {
-        d = chooser.get_dispersion();
-        if (!d) return 1;
-        if (id == ID_SELECT_REF) {
-            m_fit_manager->set_reference(d);
-        } else {
-            m_fit_manager->set_model(d);
-        }
-        m_fit_panel->reload();
+    disp_t *d = ui_choose_dispersion(getApp());
+    if (!d) return 1;
+    if (id == ID_SELECT_REF) {
+        m_fit_manager->set_reference(d);
+    } else {
+        m_fit_manager->set_model(d);
     }
+    m_fit_panel->reload();
     return 1;
 }
 

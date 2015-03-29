@@ -1,9 +1,8 @@
 #include "filmstack_window.h"
-#include "dispers_chooser.h"
 #include "recipe_window.h"
 #include "fit-params.h"
-#include "dispers_edit_window.h"
 #include "dispers-library.h"
+#include "dispers_ui_utils.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -132,32 +131,24 @@ filmstack_window::notify_stack_shift(shift_info *info)
 long
 filmstack_window::on_cmd_insert_layer(FXObject*,FXSelector,void*)
 {
-    dispers_chooser *chooser = new dispers_chooser(this->getApp());
-    if (chooser->execute() == TRUE) {
-        disp_t *d = chooser->get_dispersion();
-        if (!d) return 0;
-        stack_insert_layer(stack, current_layer, d, 0.0);
-        shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer)};
-        notify_stack_shift(&info);
-        rebuild_stack_window();
-        return 1;
-    }
-    return 0;
+    disp_t *d = ui_choose_dispersion(this->getApp());
+    if (!d) return 1;
+    stack_insert_layer(stack, current_layer, d, 0.0);
+    shift_info info = {short(SHIFT_INSERT_LAYER), short(current_layer)};
+    notify_stack_shift(&info);
+    rebuild_stack_window();
+    return 1;
 }
 
 long
 filmstack_window::on_cmd_replace_layer(FXObject*,FXSelector,void*)
 {
-    dispers_chooser *chooser = new dispers_chooser(this->getApp());
-    if (chooser->execute() == TRUE) {
-        disp_t *d = chooser->get_dispersion();
-        if (!d) return 0;
-        disp_free(stack->disp[current_layer]);
-        stack->disp[current_layer] = d;
-        rebuild_stack_window();
-        return 1;
-    }
-    return 0;
+    disp_t *d = ui_choose_dispersion(this->getApp());
+    if (!d) return 1;
+    disp_free(stack->disp[current_layer]);
+    stack->disp[current_layer] = d;
+    rebuild_stack_window();
+    return 1;
 }
 
 long
@@ -174,15 +165,11 @@ long
 filmstack_window::on_cmd_edit_layer(FXObject*, FXSelector, void*)
 {
     disp_t *current_disp = stack->disp[current_layer];
-    disp_t *edit_disp = disp_copy(current_disp);
-    dispers_edit_window *edit_win = new dispers_edit_window(edit_disp, this, DECOR_TITLE|DECOR_BORDER, 0, 0, 400, 320);
-    if (edit_win->execute() == TRUE) {
-        stack->disp[current_layer] = edit_disp;
-        disp_free(current_disp);
+    disp_t *new_disp = ui_edit_dispersion(this, current_disp);
+    if (new_disp) {
+        stack->disp[current_layer] = new_disp;
         rebuild_stack_window();
         return 1;
-    } else {
-        disp_free(edit_disp);
     }
     return 1;
 }
