@@ -1,7 +1,7 @@
 #include "dispers_ui_edit.h"
 #include "disp-ho.h"
 #include "icons_all.h"
-#include "dispers_chooser.h"
+#include "dispers_ui_utils.h"
 
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
@@ -101,13 +101,13 @@ void fx_disp_ho_window::setup_dialog()
     new FXLabel(matrix, "Phi");
 
     for (int i = 0; i < disp->disp.ho.nb_hos; i++) {
-        FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + i);
+        FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
         if (disp->disp.ho.nb_hos == 1) { db->disable(); }
         for (int j = 5*i; j < 5*(i+1); j++) {
             create_textfield(matrix, this, ID_PARAM_0 + j);
         }
     }
-    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD);
+    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 double *fx_disp_ho_window::map_parameter(int index)
@@ -130,7 +130,7 @@ void fx_disp_ho_window::add_dispersion_element()
 {
     int n = disp->disp.ho.nb_hos;
     disp_add_ho(disp);
-    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n);
+    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
     db->create();
     for (int j = 5*n; j < 5*(n+1); j++) {
         FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j);
@@ -188,67 +188,166 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
 
 // Map
 FXDEFMAP(fx_disp_lookup_window) fx_disp_lookup_window_map[]= {
-    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_COMPONENT_NAME, fx_disp_lookup_window::on_cmd_component_name),
+    FXMAPFUNCS(SEL_CHANGED, fx_disp_lookup_window::ID_COMPONENT_NAME, fx_disp_lookup_window::ID_COMPONENT_NAME_LAST, fx_disp_lookup_window::on_changed_component_name),
+    FXMAPFUNCS(SEL_LEFTBUTTONPRESS, fx_disp_lookup_window::ID_MENU_COMPONENT, fx_disp_lookup_window::ID_MENU_COMPONENT_LAST, fx_disp_lookup_window::on_button_menu_component),
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_DELETE_COMP, fx_disp_lookup_window::on_cmd_delete_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_INSERT_COMP, fx_disp_lookup_window::on_cmd_insert_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_EDIT_COMP, fx_disp_lookup_window::on_cmd_edit_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_REPLACE_COMP, fx_disp_lookup_window::on_cmd_replace_comp),
 };
 
 FXIMPLEMENT(fx_disp_lookup_window,fx_disp_window,fx_disp_lookup_window_map,ARRAYNUMBER(fx_disp_lookup_window_map));
+
+fx_disp_lookup_window::fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+{
+    small_font = new FXFont(getApp(), "helvetica", 9, FXFont::Normal, FXFont::Straight);
+
+    popupmenu = new FXMenuPane(this);
+    new FXMenuCommand(popupmenu,"Remove Component", NULL, this, ID_DELETE_COMP);
+    new FXMenuCommand(popupmenu,"Replace Component", NULL, this, ID_REPLACE_COMP);
+    new FXMenuCommand(popupmenu,"Insert Component", NULL, this, ID_INSERT_COMP);
+    new FXMenuCommand(popupmenu,"Edit Component", NULL, this, ID_EDIT_COMP);
+}
+
+fx_disp_lookup_window::~fx_disp_lookup_window()
+{
+    delete small_font;
+    delete popupmenu;
+}
+
+void fx_disp_lookup_window::create()
+{
+    fx_disp_window::create();
+    popupmenu->create();
+}
+
+void fx_disp_lookup_window::add_matrix_component(int index, bool create)
+{
+    FXString istr;
+    istr.format("%d", index + 1);
+    FXButton *db = new FXButton(matrix, istr, NULL, this, ID_MENU_COMPONENT + index, FRAME_SUNKEN);
+    FXTextField *tf1 = new FXTextField(matrix, 24, this, ID_COMPONENT_NAME + index, FRAME_SUNKEN);
+    tf1->setText(CSTR(disp->disp.lookup.component[index].disp->name));
+    FXTextField *tf2 = create_textfield(matrix, this, ID_PARAM_0 + 1 + index);
+    if (create) {
+        db->create();
+        tf1->create();
+        tf2->create();
+    }
+}
 
 void fx_disp_lookup_window::setup_dialog()
 {
     FXHorizontalFrame *thf = new FXHorizontalFrame(this);
     new FXLabel(thf, "P");
-    new FXTextField(thf, 16, this, ID_DISP_P_VALUE);
+    create_textfield(thf, this, ID_PARAM_0);
 
     matrix = new FXMatrix(this, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
-    new FXLabel(matrix, "Dispersion");
-    new FXLabel(matrix, "P");
+    FXLabel *h1 = new FXLabel(matrix, "-- Dispersion --");
+    h1->setFont(small_font);
+    h1->setTextColor(FXRGB(3,12,180));
+    FXLabel *h2 = new FXLabel(matrix, "-- P --");
+    h2->setFont(small_font);
+    h2->setTextColor(FXRGB(3,12,180));
 
-    disp_lookup *lookup = &disp->disp.lookup;
-    for (int i = 0; i < lookup->nb_comps; i++) {
-        FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + i);
-        if (lookup->nb_comps == 1) { db->disable(); }
-        const char *cname = CSTR(lookup->component[i].disp->name);
-        FXTextField *tf = new FXTextField(matrix, 32, this, ID_COMPONENT_NAME, FRAME_SUNKEN);
-        tf->setText(cname);
-        create_textfield(matrix, this, ID_PARAM_0 + i);
+    for (int i = 0; i < disp->disp.lookup.nb_comps; i++) {
+        add_matrix_component(i);
     }
-    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD);
+    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 double *fx_disp_lookup_window::map_parameter(int index)
 {
-    return &disp->disp.lookup.component[index].p;
+    if (index == 0) {
+        return &disp->disp.lookup.p;
+    }
+    return &disp->disp.lookup.component[index - 1].p;
 }
 
 void fx_disp_lookup_window::add_dispersion_element()
 {
-    dispers_chooser chooser(this->getApp());
-    if (chooser.execute() != TRUE) return;
-    disp_t *comp = chooser.get_dispersion();
+    disp_t *comp = ui_choose_dispersion(getApp());
+    if (!comp) return;
     disp_lookup *lookup = &disp->disp.lookup;
     int n = lookup->nb_comps;
     double p1 = lookup->component[0].p, p2 = lookup->component[n-1].p;
     double p0 = p2 + (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
     disp_lookup_add_comp(disp, n, comp, p0);
-    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n);
-    db->create();
-    FXTextField *tf1 = new FXTextField(matrix, 32, this, ID_COMPONENT_NAME, FRAME_SUNKEN);
-    tf1->setText(CSTR(lookup->component[n].disp->name));
-    FXTextField *tf2 = create_textfield(matrix, this, ID_PARAM_0 + n);
-    tf1->create();
-    tf2->create();
-    matrix->childAtRowCol(1, 0)->enable();
+    add_matrix_component(n, true);
     this->recalc();
 }
 
-void fx_disp_lookup_window::delete_dispersion_element(int index)
+long fx_disp_lookup_window::on_cmd_delete_comp(FXObject *, FXSelector, void *)
 {
-    disp_lookup_delete_comp(disp, index);
+    disp_lookup_delete_comp(disp, selected_component);
     reload();
+    return 1;
 }
 
-long fx_disp_lookup_window::on_cmd_component_name(FXObject *, FXSelector, void *)
+long fx_disp_lookup_window::on_cmd_insert_comp(FXObject *, FXSelector, void *)
 {
-    return 0;
+    disp_t *comp = ui_choose_dispersion(getApp());
+    if (!comp) return 1;
+    disp_lookup *lookup = &disp->disp.lookup;
+    const int i = selected_component;
+    const int n = lookup->nb_comps;
+    double new_p;
+    if (i > 0) {
+        double p1 = lookup->component[i-1].p, p2 = lookup->component[i].p;
+        new_p = (p1 + p2) / 2.0;
+    } else {
+        double p1 = lookup->component[0].p, p2 = lookup->component[n-1].p;
+        new_p = p1 - (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
+    }
+    disp_lookup_add_comp(disp, i, comp, new_p);
+    reload();
+    return 1;
+}
+
+long fx_disp_lookup_window::on_cmd_edit_comp(FXObject *, FXSelector, void *)
+{
+    const int i = selected_component;
+    disp_lookup *lookup = &disp->disp.lookup;
+    disp_t *new_disp = ui_edit_dispersion(this, lookup->component[i].disp);
+    if (new_disp) {
+        lookup->component[i].disp = new_disp;
+        FXTextField *tf = (FXTextField *) matrix->childAtRowCol(i + 1, 1);
+        tf->setText(CSTR(new_disp->name));
+    }
+    return 1;
+}
+
+long fx_disp_lookup_window::on_cmd_replace_comp(FXObject *, FXSelector, void *)
+{
+    const int i = selected_component;
+    disp_lookup *lookup = &disp->disp.lookup;
+    disp_t *new_disp = ui_choose_dispersion(getApp());
+    if (!new_disp) return 1;
+    disp_free(lookup->component[i].disp);
+    lookup->component[i].disp = new_disp;
+    FXTextField *tf = (FXTextField *) matrix->childAtRowCol(i + 1, 1);
+    tf->setText(CSTR(new_disp->name));
+    return 1;
+}
+
+long fx_disp_lookup_window::on_changed_component_name(FXObject *, FXSelector sel, void *text)
+{
+    int index = FXSELID(sel) - ID_COMPONENT_NAME;
+    disp_lookup *lookup = &disp->disp.lookup;
+    str_copy_c(lookup->component[index].disp->name, (FXchar *)text);
+    return 1;
+}
+
+long
+fx_disp_lookup_window::on_button_menu_component(FXObject*sender, FXSelector sel, void *ptr)
+{
+    FXEvent *event = (FXEvent *) ptr;
+    selected_component = FXSELID(sel) - ID_MENU_COMPONENT;
+    if(!event->moved){
+        popupmenu->popup(NULL, event->root_x, event->root_y);
+        getApp()->runModalWhileShown(popupmenu);
+    }
+    return 1;
 }

@@ -84,25 +84,41 @@ private:
     fx_disp_lookup_window &operator=(const fx_disp_window&);
 
 public:
-    fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
-    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
-    { }
+    fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    virtual ~fx_disp_lookup_window();
+
+    virtual void create();
 
     virtual void setup_dialog();
     virtual void add_dispersion_element();
-    virtual void delete_dispersion_element(int index);
     virtual double *map_parameter(int index);
 
-    long on_cmd_component_name(FXObject *, FXSelector, void *);
+    long on_changed_component_name(FXObject *, FXSelector, void *);
+    long on_button_menu_component(FXObject *, FXSelector, void *);
+    long on_cmd_delete_comp(FXObject *, FXSelector, void *);
+    long on_cmd_insert_comp(FXObject *, FXSelector, void *);
+    long on_cmd_edit_comp(FXObject *, FXSelector, void *);
+    long on_cmd_replace_comp(FXObject *, FXSelector, void *);
 
     enum {
         ID_COMPONENT_NAME = fx_disp_window::ID_LAST,
-        ID_DISP_P_VALUE,
+        ID_COMPONENT_NAME_LAST = ID_COMPONENT_NAME + 64,
+        ID_MENU_COMPONENT,
+        ID_MENU_COMPONENT_LAST = ID_MENU_COMPONENT + 64,
+        ID_DELETE_COMP,
+        ID_REPLACE_COMP,
+        ID_INSERT_COMP,
+        ID_EDIT_COMP,
         ID_LAST
     };
 
 private:
+    void add_matrix_component(int index, bool create = false);
+
+    FXFont *small_font;
     FXMatrix *matrix;
+    FXMenuPane *popupmenu;
+    int selected_component;
 };
 
 // Create a new fx_disp_window (or a derived class instance) that corresponds to the
