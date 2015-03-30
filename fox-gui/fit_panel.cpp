@@ -1,6 +1,5 @@
 #include "fit_panel.h"
 
-// #include "elliss_app.h"
 #include "fx_numeric_field.h"
 #include "Strcpp.h"
 

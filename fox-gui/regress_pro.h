@@ -7,11 +7,11 @@
 #include "registered_app.h"
 
 template <class base_app>
-class elliss_app_gen : public base_app {
+class regress_pro_gen : public base_app {
 public:
     FXGIFIcon appicon;
 
-    elliss_app_gen() :
+    regress_pro_gen() :
         base_app("Regress Pro", "Francesco Abbate"),
         appicon(this, regressproicon)
     { }
@@ -19,7 +19,7 @@ public:
 
 #ifdef REGPRO_REGISTRATION
 
-typedef elliss_app_gen<registered_app> elliss_app;
+typedef regress_pro_gen<registered_app> regress_pro;
 
 inline void reg_check_point(FXId *win)
 {
@@ -37,11 +37,11 @@ inline void reg_form(FXId *win)
 
 #else
 
-typedef elliss_app_gen<FX::FXApp> base_type;
+typedef regress_pro_gen<FX::FXApp> base_type;
 
-class elliss_app : public base_type {
+class regress_pro : public base_type {
 public:
-    elliss_app() : base_type() {};
+    regress_pro() : base_type() {};
 
     bool is_registered() const {
         return true;

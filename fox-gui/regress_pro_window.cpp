@@ -100,7 +100,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 
 // Make some windows
-regress_pro_window::regress_pro_window(elliss_app* a)
+regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
       spectrum(NULL), stack_result(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       my_filmstack_window(NULL), my_recipe_window(NULL),
@@ -192,7 +192,7 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
     FXMainWindow::onUpdate(sender, sel, ptr);
 
     if(m_title_dirty) {
-        bool is_reg = get_elliss_app()->is_registered();
+        bool is_reg = regressProApp()->is_registered();
 
         FXString filename = recipeFilename.rafter(DIR_SEPARATOR);
         FXString pathname = recipeFilename.rbefore(DIR_SEPARATOR);
@@ -556,7 +556,7 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
     }
 
     interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
-    elliss_app *app = get_elliss_app();
+    regress_pro *app = regressProApp();
     fit_window *fitwin = new fit_window(fitmgr, app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
     fitwin->create();
     fitwin->show(FX::PLACEMENT_SCREEN);

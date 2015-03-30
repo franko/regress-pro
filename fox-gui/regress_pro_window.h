@@ -25,7 +25,7 @@
 
 #include "str.h"
 
-#include "elliss_app.h"
+#include "regress_pro.h"
 #include "plot_canvas.h"
 #include "spectra.h"
 #include "fit_recipe.h"
@@ -80,8 +80,8 @@ private:
     regress_pro_window(const regress_pro_window&);
     regress_pro_window &operator=(const regress_pro_window&);
 public:
-    elliss_app* get_elliss_app() const {
-        return (elliss_app*) getApp();
+    regress_pro* regressProApp() const {
+        return (regress_pro*) getApp();
     }
 
     fit_recipe *get_current_recipe() const { return recipe; }
@@ -133,7 +133,7 @@ public:
     };
 
 public:
-    regress_pro_window(elliss_app *a);
+    regress_pro_window(regress_pro *a);
     virtual void create();
     virtual ~regress_pro_window();
 
