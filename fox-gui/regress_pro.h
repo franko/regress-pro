@@ -15,12 +15,18 @@ class regress_pro : public registered_app {
     FXDECLARE(regress_pro)
 public:
     regress_pro();
+    virtual ~regress_pro();
 
 #ifndef REGPRO_REGISTRATION
     bool is_registered() const { return true; }
 #endif
 
     FXGIFIcon appicon;
+    FXFont small_font;
+    FXFont bold_font;
+    FXFont monospace_font;
+    FXColor blue_highlight, red_warning, black;
+    FXIcon *delete_icon, *add_icon;
 };
 
 #ifdef REGPRO_REGISTRATION

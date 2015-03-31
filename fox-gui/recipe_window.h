@@ -4,6 +4,8 @@
 #include <fx.h>
 #include "fit_recipe.h"
 
+class regress_pro;
+
 class recipe_window : public FXDialogBox {
     FXDECLARE(recipe_window)
 
@@ -16,6 +18,8 @@ private:
 public:
     recipe_window(fit_recipe *r, FXWindow* w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~recipe_window();
+
+    regress_pro* regressProApp() const { return (regress_pro*) getApp(); }
 
     void bind_new_fit_recipe(fit_recipe *rcp);
 

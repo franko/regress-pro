@@ -1,7 +1,7 @@
 #include "dispers_ui_edit.h"
 #include "disp-ho.h"
-#include "icons_all.h"
 #include "dispers_ui_utils.h"
+#include "regress_pro.h"
 
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
@@ -16,14 +16,6 @@ FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_dis
 fx_disp_window::fx_disp_window(disp_t *d, FXComposite* p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
 : FXVerticalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs), disp(d)
 {
-    delete_icon = new FXGIFIcon(getApp(), delete_gif);
-    add_icon = new FXGIFIcon(getApp(), new_gif);
-}
-
-fx_disp_window::~fx_disp_window()
-{
-    delete delete_icon;
-    delete add_icon;
 }
 
 void fx_disp_window::setup()
@@ -101,13 +93,13 @@ void fx_disp_ho_window::setup_dialog()
     new FXLabel(matrix, "Phi");
 
     for (int i = 0; i < disp->disp.ho.nb_hos; i++) {
-        FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
+        FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
         if (disp->disp.ho.nb_hos == 1) { db->disable(); }
         for (int j = 5*i; j < 5*(i+1); j++) {
             create_textfield(matrix, this, ID_PARAM_0 + j);
         }
     }
-    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+    new FXButton(this, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 double *fx_disp_ho_window::map_parameter(int index)
@@ -130,7 +122,7 @@ void fx_disp_ho_window::add_dispersion_element()
 {
     int n = disp->disp.ho.nb_hos;
     disp_add_ho(disp);
-    FXButton *db = new FXButton(matrix, "", delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
+    FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
     db->create();
     for (int j = 5*n; j < 5*(n+1); j++) {
         FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j);
@@ -201,8 +193,6 @@ FXIMPLEMENT(fx_disp_lookup_window,fx_disp_window,fx_disp_lookup_window_map,ARRAY
 fx_disp_lookup_window::fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
 {
-    small_font = new FXFont(getApp(), "helvetica", 9, FXFont::Normal, FXFont::Straight);
-
     popupmenu = new FXMenuPane(this);
     new FXMenuCommand(popupmenu,"Remove Component", NULL, this, ID_DELETE_COMP);
     new FXMenuCommand(popupmenu,"Replace Component", NULL, this, ID_REPLACE_COMP);
@@ -212,7 +202,6 @@ fx_disp_lookup_window::fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint o
 
 fx_disp_lookup_window::~fx_disp_lookup_window()
 {
-    delete small_font;
     delete popupmenu;
 }
 
@@ -239,6 +228,8 @@ void fx_disp_lookup_window::add_matrix_component(int index, bool create)
 
 void fx_disp_lookup_window::setup_dialog()
 {
+    regress_pro *app = regressProApp();
+
     FXHorizontalFrame *thf = new FXHorizontalFrame(this);
     new FXLabel(thf, "P");
     create_textfield(thf, this, ID_PARAM_0);
@@ -246,16 +237,16 @@ void fx_disp_lookup_window::setup_dialog()
     matrix = new FXMatrix(this, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
     FXLabel *h1 = new FXLabel(matrix, "-- Dispersion --");
-    h1->setFont(small_font);
-    h1->setTextColor(FXRGB(3,12,180));
+    h1->setFont(&app->small_font);
+    h1->setTextColor(app->blue_highlight);
     FXLabel *h2 = new FXLabel(matrix, "-- P --");
-    h2->setFont(small_font);
-    h2->setTextColor(FXRGB(3,12,180));
+    h2->setFont(&app->small_font);
+    h2->setTextColor(app->blue_highlight);
 
     for (int i = 0; i < disp->disp.lookup.nb_comps; i++) {
         add_matrix_component(i);
     }
-    new FXButton(this, "", add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+    new FXButton(this, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 double *fx_disp_lookup_window::map_parameter(int index)

@@ -7,6 +7,8 @@
 #include "fit_manager.h"
 #include "plot_canvas.h"
 
+class regress_pro;
+
 class fit_panel : public FXHorizontalFrame {
     FXDECLARE(fit_panel)
 
@@ -50,6 +52,8 @@ private:
 public:
     fit_panel(fit_manager* fit, FXComposite *p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=DEFAULT_SPACING, FXint pr=DEFAULT_SPACING, FXint pt=DEFAULT_SPACING, FXint pb=DEFAULT_SPACING, FXint hs=DEFAULT_SPACING, FXint vs=DEFAULT_SPACING);
     virtual ~fit_panel();
+
+    regress_pro *regressProApp() const { return (regress_pro *) getApp(); }
 
     void reload();
 

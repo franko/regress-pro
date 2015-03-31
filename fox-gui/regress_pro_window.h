@@ -80,9 +80,7 @@ private:
     regress_pro_window(const regress_pro_window&);
     regress_pro_window &operator=(const regress_pro_window&);
 public:
-    regress_pro* regressProApp() const {
-        return (regress_pro*) getApp();
-    }
+    regress_pro* regressProApp() const { return (regress_pro*) getApp(); }
 
     fit_recipe *get_current_recipe() const { return recipe; }
 

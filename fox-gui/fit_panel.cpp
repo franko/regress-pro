@@ -2,6 +2,7 @@
 
 #include "fx_numeric_field.h"
 #include "Strcpp.h"
+#include "regress_pro.h"
 
 // Map
 FXDEFMAP(fit_panel) fit_panel_map[]= {
@@ -23,14 +24,12 @@ fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXi
       m_canvas(0), m_fit(fit)
 {
     scroll_window = new FXScrollWindow(this, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
-    m_bold_font = new FXFont(getApp(), "helvetica", 9, FXFont::Bold, FXFont::Italic);
     setup();
 }
 
 fit_panel::~fit_panel()
 {
     delete m_fit;
-    delete m_bold_font;
 }
 
 void fit_panel::clear()
@@ -68,7 +67,7 @@ void fit_panel::setup()
             current_layer = p->fp.layer_nb;
             label_text.format("Layer %i", current_layer);
             FXLabel *lab = new FXLabel(param_matrix, label_text);
-            lab->setFont(m_bold_font);
+            lab->setFont(&regressProApp()->bold_font);
             new FXLabel(param_matrix, "");
         }
 
@@ -185,12 +184,12 @@ fit_panel::on_change_spectral_range(FXObject *, FXSelector, void*_txt)
     const char * txt = (const char *) _txt;
 
     if(update_spectral_range(txt)) {
-        m_wl_entry->setTextColor(FXRGB(0,0,0));
+        m_wl_entry->setTextColor(regressProApp()->black);
         if(m_canvas) {
             m_canvas->update_limits();
         }
     } else {
-        m_wl_entry->setTextColor(FXRGB(180,0,0));
+        m_wl_entry->setTextColor(regressProApp()->red_warning);
     }
 
     return 1;

@@ -4,6 +4,7 @@
 #include "recipe_window.h"
 #include "fit_params_utils.h"
 #include "stack.h"
+#include "regress_pro.h"
 
 static void set_numeric_textfield(FXTextField *tf, double value);
 static bool range_correct_format(const char *txt, double ps[]);
@@ -301,13 +302,13 @@ recipe_window::on_changed_range(FXObject *, FXSelector sel, void *ptr)
     FXchar *txt = (FXchar *) ptr;
     double ps[2];
     if (range_correct_format(txt, ps)) {
-        range_textfield->setTextColor(FXRGB(0,0,0));
+        range_textfield->setTextColor(regressProApp()->black);
         recipe->config->spectr_range.active = 1;
         recipe->config->spectr_range.min = ps[0];
         recipe->config->spectr_range.max = ps[1];
     } else {
         recipe->config->spectr_range.active = 0;
-        range_textfield->setTextColor(FXRGB(150,5,10));
+        range_textfield->setTextColor(regressProApp()->red_warning);
     }
     return 1;
 }

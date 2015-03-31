@@ -3,6 +3,7 @@
 #include "fit-params.h"
 #include "dispers-library.h"
 #include "dispers_ui_utils.h"
+#include "regress_pro.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -23,8 +24,6 @@ filmstack_window::filmstack_window(stack_t *s, const char *title, FXWindow *topw
     : FXDialogBox(topwin, title, opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
     recipe_target(NULL), recipe_sel_change(0), recipe_sel_shift(0), stack(s)
 {
-    small_font = new FXFont(getApp(), "helvetica", 9, FXFont::Normal, FXFont::Straight);
-
     stack_window = setup_stack_window(this);
 
     popupmenu = new FXMenuPane(this);
@@ -39,7 +38,6 @@ filmstack_window::filmstack_window(stack_t *s, const char *title, FXWindow *topw
 filmstack_window::~filmstack_window()
 {
     delete popupmenu;
-    delete small_font;
 }
 
 void
@@ -53,16 +51,18 @@ filmstack_window::set_target_stack_changes(FXObject *rcp, FXuint sel_change, FXu
 FXWindow *
 filmstack_window::setup_stack_window(FXComposite *cont)
 {
+    regress_pro *app = regressProApp();
+
     FXVerticalFrame *vf = new FXVerticalFrame(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXMatrix *matrix = new FXMatrix(vf, 3, LAYOUT_FILL_X|LAYOUT_BOTTOM|MATRIX_BY_COLUMNS);
 
     new FXVerticalFrame(matrix);
     FXLabel *lab1 = new FXLabel(matrix, "-- film material --");
-    lab1->setFont(small_font);
-    lab1->setTextColor(FXRGB(3,12,180));
+    lab1->setFont(&app->small_font);
+    lab1->setTextColor(app->blue_highlight);
     FXLabel *lab2 = new FXLabel(matrix, "-- thickness --");
-    lab2->setFont(small_font);
-    lab2->setTextColor(FXRGB(3,12,180));
+    lab2->setFont(&app->small_font);
+    lab2->setTextColor(app->blue_highlight);
 
     FXString nstr;
     for (int i = 0; i < stack->nb; i++) {

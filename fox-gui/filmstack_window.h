@@ -5,6 +5,8 @@
 
 #include "stack.h"
 
+class regress_pro;
+
 class filmstack_window : public FXDialogBox {
     FXDECLARE(filmstack_window)
 
@@ -19,6 +21,8 @@ public:
     virtual ~filmstack_window();
 
     virtual void create();
+
+    regress_pro * regressProApp() { return (regress_pro *) getApp(); }
 
 private:
     FXMenuPane *popupmenu;
@@ -62,7 +66,6 @@ private:
     void notify_stack_shift(shift_info *);
 
     FXWindow *stack_window;
-    FXFont *small_font;
 
     // If not NULL will send a message to the given target with the selectors below.
     FXObject *recipe_target;

@@ -53,12 +53,6 @@
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config);
 
-#ifdef WIN32
-#define SCRIPT_FONT_NAME "Courier New"
-#else
-#define SCRIPT_FONT_NAME "Monospace"
-#endif
-
 // Map
 FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_UPDATE,  0, regress_pro_window::onUpdate),
@@ -154,13 +148,11 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
 
-    scriptfont = new FXFont(getApp(), SCRIPT_FONT_NAME, 10);
-
     new FXTabItem(tabbook,"Fit Results",NULL);
     FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
     FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_THICK|FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
     resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    resulttext->setFont(scriptfont);
+    resulttext->setFont(&regressProApp()->monospace_font);
 
     tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
     lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
@@ -183,7 +175,6 @@ void
 regress_pro_window::create()
 {
     FXMainWindow::create();
-    scriptfont->create();
 }
 
 long
@@ -298,7 +289,6 @@ regress_pro_window::onCmdRegister(FXObject *, FXSelector, void *)
 // Clean up
 regress_pro_window::~regress_pro_window()
 {
-    delete scriptfont;
     delete filemenu;
     delete editmenu;
     delete spectrmenu;
