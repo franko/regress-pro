@@ -4,22 +4,26 @@
 #include <fx.h>
 #include "icon.h"
 
+
+#ifdef REGPRO_REGISTRATION
 #include "registered_app.h"
+#else
+typedef FX::FXApp registered_app;
+#endif
 
-template <class base_app>
-class regress_pro_gen : public base_app {
+class regress_pro : public registered_app {
+    FXDECLARE(regress_pro)
 public:
-    FXGIFIcon appicon;
+    regress_pro();
 
-    regress_pro_gen() :
-        base_app("Regress Pro", "Francesco Abbate"),
-        appicon(this, regressproicon)
-    { }
+#ifndef REGPRO_REGISTRATION
+    bool is_registered() const { return true; }
+#endif
+
+    FXGIFIcon appicon;
 };
 
 #ifdef REGPRO_REGISTRATION
-
-typedef regress_pro_gen<registered_app> regress_pro;
 
 inline void reg_check_point(FXId *win)
 {
@@ -36,17 +40,6 @@ inline void reg_form(FXId *win)
 }
 
 #else
-
-typedef regress_pro_gen<FX::FXApp> base_type;
-
-class regress_pro : public base_type {
-public:
-    regress_pro() : base_type() {};
-
-    bool is_registered() const {
-        return true;
-    }
-};
 
 inline void reg_check_point(FXId *win) { }
 inline void reg_form(FXId *win) { }
