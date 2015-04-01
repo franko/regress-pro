@@ -84,7 +84,10 @@ static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *ta
 
 void fx_disp_ho_window::setup_dialog()
 {
-    matrix = new FXMatrix(this, 6, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    matrix = new FXMatrix(vframe, 6, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
     new FXLabel(matrix, "Nosc");
     new FXLabel(matrix, "En");
@@ -99,7 +102,7 @@ void fx_disp_ho_window::setup_dialog()
             create_textfield(matrix, this, ID_PARAM_0 + j);
         }
     }
-    new FXButton(this, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 double *fx_disp_ho_window::map_parameter(int index)
@@ -129,7 +132,7 @@ void fx_disp_ho_window::add_dispersion_element()
         tf->create();
     }
     matrix->childAtRowCol(1, 0)->enable();
-    this->recalc();
+    vframe->recalc();
 }
 
 void fx_disp_ho_window::delete_dispersion_element(int index)
@@ -230,11 +233,14 @@ void fx_disp_lookup_window::setup_dialog()
 {
     regress_pro *app = regressProApp();
 
-    FXHorizontalFrame *thf = new FXHorizontalFrame(this);
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
     new FXLabel(thf, "P");
     create_textfield(thf, this, ID_PARAM_0);
 
-    matrix = new FXMatrix(this, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    matrix = new FXMatrix(vframe, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
     FXLabel *h1 = new FXLabel(matrix, "-- Dispersion --");
     h1->setFont(&app->small_font);
@@ -246,7 +252,7 @@ void fx_disp_lookup_window::setup_dialog()
     for (int i = 0; i < disp->disp.lookup.nb_comps; i++) {
         add_matrix_component(i);
     }
-    new FXButton(this, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 double *fx_disp_lookup_window::map_parameter(int index)
@@ -267,7 +273,7 @@ void fx_disp_lookup_window::add_dispersion_element()
     double p0 = p2 + (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
     disp_lookup_add_comp(disp, n, comp, p0);
     add_matrix_component(n, true);
-    this->recalc();
+    vframe->recalc();
 }
 
 long fx_disp_lookup_window::on_cmd_delete_comp(FXObject *, FXSelector, void *)

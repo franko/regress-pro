@@ -63,6 +63,7 @@ public:
     virtual double *map_parameter(int index);
 private:
     FXMatrix *matrix;
+    FXVerticalFrame *vframe;
 };
 
 class fx_disp_cauchy_window : public fx_disp_window {
@@ -118,6 +119,7 @@ private:
 
     FXFont *small_font;
     FXMatrix *matrix;
+    FXVerticalFrame *vframe;
     FXMenuPane *popupmenu;
     int selected_component;
 };
