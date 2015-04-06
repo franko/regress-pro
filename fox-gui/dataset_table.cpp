@@ -111,30 +111,127 @@ bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_f
     return true;
 }
 
+int dataset_table::get_cell_value(int i, int j, double *pvalue)
+{
+    FXString cell_text = getItemText(i, j);
+    const char *ctext = cell_text.text();
+    char *endptr;
+    *pvalue = strtod(ctext, &endptr);
+    if (endptr == ctext) {
+        return 1;
+    }
+    return 0;
+}
+
 bool dataset_table::get_values(int row, const fit_parameters *fps, double value_array[], int& error_col)
 {
     FXString cell_text;
     for (unsigned i = 0; i < fps->number; i++) {
         const fit_param_t *fp = &fps->values[i];
-        const char *ctext = NULL;
-        for (fit_param_node *p = fplink.top; p; p = p->next) {
+        fit_param_node *p;
+        for (p = fplink.top; p; p = p->next) {
             const fit_param_t *xfp = &fplink.params->values[p->fp_index];
             if (fit_param_compare(xfp, fp) == 0) {
-                cell_text = getItemText(row, p->column);
-                ctext = cell_text.text();
-                char *endptr;
-                value_array[i] = strtod(ctext, &endptr);
-                if (endptr == ctext) {
+                if (get_cell_value(row, p->column, &value_array[i])) {
                     error_col = p->column;
                     return false;
                 }
                 break;
             }
         }
-        if (ctext == NULL) { /* Fit parameter not found. */
+        if (p == NULL) { /* Fit parameter not found. */
             error_col = -1;
             return false;
         }
     }
     return true;
+}
+
+int dataset_table::write(writer_t *w)
+{
+    int n = samples_number();
+    int m = 0;
+    fit_parameters *active_params = fit_parameters_new();
+    for (fit_param_node *p = fplink.top; p; p = p->next, m++) {
+        fit_parameters_add(active_params, &fplink.params->values[p->fp_index]);
+    }
+    writer_printf(w, "dataset %d %d", n, m);
+    writer_newline_enter(w);
+    fit_parameters_write(w, active_params);
+    writer_printf(w, "samples");
+    writer_newline_enter(w);
+    for (int i = 0; i < n; i++) {
+        FXString name = getItemText(i, 0);
+        // IMPORTANT: TODO, use escaped string here!
+        writer_printf(w, "\"%s\"", name.text());
+        for (fit_param_node *p = fplink.top; p; p = p->next) {
+            double cell_value;
+            if (get_cell_value(i, p->column, &cell_value)) {
+                writer_printf(w, " undef");
+            } else {
+                writer_printf(w, " %g", cell_value);
+            }
+        }
+        writer_newline(w);
+    }
+    writer_newline_exit(w);
+    writer_newline_exit(w);
+    return 0;
+}
+
+int dataset_table::read_update(lexer_t *l)
+{
+    if (lexer_check_ident(l, "dataset")) return 1;
+    int n, m;
+    if (lexer_integer(l, &n)) return 1;
+    if (lexer_integer(l, &m)) return 1;
+    fit_parameters *new_params = fit_parameters_read(l);
+    if (!new_params) return 1;
+    if (int(new_params->number) != m) {
+        fit_parameters_free(new_params);
+        return 1;
+    }
+    fit_param_link new_fplink(new_params);
+
+    fit_param_node *current_node = NULL;
+    for (int j = 0; j < m; j++) {
+        int jcolumn = j + 1;
+        fit_param_node *new_node = new fit_param_node(j, jcolumn);
+        if (current_node) {
+            current_node->next = new_node;
+        } else {
+            new_fplink.top = new_node;
+        }
+        current_node = new_node;
+    }
+
+    clear_samples();
+    append_rows(n);
+
+    if (lexer_check_ident(l, "samples")) return 1;
+    FXString cell;
+    for (int i = 0; i < n; i++) {
+        if (lexer_string(l)) return 1;
+        set_filename(i, CSTR(l->store));
+        for (int j = 0; j < m; j++) {
+            if (lexer_check_ident(l, "undef")) {
+                double val;
+                if (lexer_number(l, &val)) return 1;
+                cell.format("%g", val);
+                setItemText(i, j + 1, cell);
+            } else {
+                setItemText(i, j + 1, "");
+            }
+        }
+    }
+
+    for (int j = 0; j < m; j++) {
+        set_column_parameter_name(&new_fplink.params->values[j], j + 1);
+    }
+    for (int j = m + 1; j < getNumColumns(); j++) {
+        setColumnText(j, "");
+    }
+    fplink.set_to(&new_fplink);
+
+    return 0;
 }

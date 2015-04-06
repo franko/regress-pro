@@ -5,6 +5,8 @@
 
 #include "filelist_table.h"
 #include "fit_recipe.h"
+#include "writer.h"
+#include "lexer.h"
 
 /* Used to hold a simple linked list of fit parameters. Each node
  * represent the association of a fit parameter with a given column
@@ -21,12 +23,33 @@ struct fit_param_link {
     fit_parameters *params;
     fit_param_node *top;
 
+    fit_param_link(fit_parameters *fps): params(fps), top(NULL) { }
+
     fit_param_link(): top(NULL) {
         params = fit_parameters_new();
     }
 
     ~fit_param_link() {
-        fit_parameters_free(params);
+        free_nodes();
+        if (params) {
+            fit_parameters_free(params);
+        }
+    }
+
+    // Implement "move" semantics.
+    void set_to(fit_param_link *other) {
+        params = other->params;
+        top = other->top;
+        other->top = NULL;
+        other->params = NULL;
+    }
+
+    void free_nodes() {
+        fit_param_node *pnext;
+        for (fit_param_node *p = top; p; p = pnext) {
+            pnext = p->next;
+            delete p;
+        }
     }
 };
 
@@ -63,7 +86,11 @@ public:
         ID_LAST,
     };
 
+    int write(writer_t *w);
+    int read_update(lexer_t *l);
+
 private:
+    int get_cell_value(int i, int j, double *pvalue);
     void stack_change_update(stack_t *stack);
     void set_column_parameter_name(const fit_param_t *fp, int column);
 

@@ -377,6 +377,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
             FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing parameter");
             delete [] iseed_values;
             seed_list_free(iseeds);
+            multi_fit_engine_disable(fit);
             multi_fit_engine_free(fit);
             return 1;
         }
@@ -708,6 +709,9 @@ regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
         FXString new_filename = open.getFilename();
         writer_t *w = writer_new();
         recipe->write(w);
+        if (recipe->ms_setup && my_dataset_window) {
+            my_dataset_window->dataset()->write(w);
+        }
         FILE *f = fopen(new_filename.text(), "wb");
         if (f) {
             fputs(CSTR(w->text), f);
@@ -737,6 +741,13 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
         if (!new_recipe) {
             lexer_free(l);
             return 1;
+        }
+        if (l->current.tk != TK_EOF) {
+            if (!my_dataset_window) {
+                my_dataset_window = new dataset_window(recipe, this);
+                my_dataset_window->create();
+            }
+            my_dataset_window->dataset()->read_update(l);
         }
         lexer_free(l);
         recipeFilename = filename;

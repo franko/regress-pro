@@ -16,22 +16,28 @@ filelist_table::filelist_table(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
     setColumnText(0, "Filename");
 }
 
-void filelist_table::append_filenames(FXString *filenames)
+void filelist_table::set_filename(int i, const char *filename)
 {
-    int count = 0;
-    for(FXString *p = filenames; *p != ""; p++, count++) ;
-    if (entries_no + count > getNumRows()) {
-        int del = entries_no + count - getNumRows();
-        insertRows(entries_no, del);
-    }
     char rowlabel[64];
-    for (int i = 0; filenames[i] != ""; i++) {
-        int n = entries_no + i;
-        sprintf(rowlabel, "%d", n + 1);
-        setRowText(n, rowlabel);
-        setItemText(n, 0, filenames[i]);
+    sprintf(rowlabel, "%d", i + 1);
+    setRowText(i, rowlabel);
+    setItemText(i, 0, filename);
+}
+
+void filelist_table::append_rows(int n)
+{
+    if (entries_no + n > getNumRows()) {
+        int add_no = entries_no + n - getNumRows();
+        insertRows(entries_no, add_no);
     }
-    entries_no += count;
+    entries_no += n;
+}
+
+void filelist_table::clear_samples()
+{
+    removeRows(0, entries_no);
+    insertRows(0, FILELIST_MIN_ROWS);
+    entries_no = 0;
 }
 
 long filelist_table::on_cmd_add_files(FXObject *, FXSelector, void *)
@@ -41,8 +47,14 @@ long filelist_table::on_cmd_add_files(FXObject *, FXSelector, void *)
     open.setPatternList("Spectra File (*.dat)\nAny Files (*)");
     if (open.execute()) {
         FXString *filenames = open.getFilenames();
-        if (filenames) {
-            append_filenames(filenames);
+        int count = 0;
+        for (int i = 0; filenames && filenames[i] != ""; i++) {
+            count++;
+        }
+        int n = entries_no;
+        append_rows(count);
+        for (int i = 0; filenames && filenames[i] != ""; i++) {
+            set_filename(n + i, filenames[i].text());
         }
     }
     return 1;
