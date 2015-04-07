@@ -97,8 +97,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
       spectrum(NULL), stack_result(NULL), recipeFilename("untitled"), spectrFile("untitled"),
-      my_filmstack_window(NULL), my_recipe_window(NULL),
-      my_dataset_window(NULL), my_batch_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
+      my_batch_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -166,6 +165,12 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     recipe->setup_default_stack();
 
     m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    my_filmstack_window = new filmstack_window(recipe->stack, "Fit Stack", this);
+    my_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
+
+    my_recipe_window = new recipe_window(recipe, this);
+    my_dataset_window = new dataset_window(recipe, this);
 
     m_title_dirty = true;
 }
@@ -328,7 +333,7 @@ regress_pro_window::onCmdRunBatch(FXObject *, FXSelector, void *)
 long
 regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 {
-    if (!my_dataset_window || !my_recipe_window || !recipe->ms_setup) {
+    if (!recipe->ms_setup) {
         return 0;
     }
 
@@ -452,7 +457,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     if(fit_error_msgs.length() > 0) {
         FXMessageBox::information(this, MBOX_OK, "Fit messages",
-                                  fit_error_msgs.cstr());
+                                  "%s", fit_error_msgs.cstr());
         clean_error_msgs();
     }
 
@@ -557,11 +562,6 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
 {
-    if (!my_filmstack_window) {
-        my_filmstack_window = new filmstack_window(recipe->stack, "Fit Stack", this);
-        my_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
-        my_filmstack_window->create();
-    }
     my_filmstack_window->show(PLACEMENT_SCREEN);
     return 1;
 }
@@ -583,11 +583,6 @@ regress_pro_window::onCmdEditFilmStackResult(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
 {
-    if (!my_recipe_window) {
-        recipe_window *w = new recipe_window(recipe, this);
-        my_recipe_window = w;
-        w->create();
-    }
     my_recipe_window->show(PLACEMENT_SCREEN);
     return 1;
 }
@@ -595,10 +590,6 @@ regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
 {
-    if (!my_dataset_window) {
-        my_dataset_window = new dataset_window(recipe, this);
-        my_dataset_window->create();
-    }
     my_dataset_window->show(PLACEMENT_SCREEN);
     return 1;
 }
@@ -606,13 +597,9 @@ regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
 {
-    if (my_recipe_window) {
-        my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
-    }
-    if (my_dataset_window) {
-        dataset_table *dataset = my_dataset_window->dataset();
-        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
-    }
+    my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+    dataset_table *dataset = my_dataset_window->dataset();
+    dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
     return 1;
 }
 
@@ -620,10 +607,8 @@ long
 regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
 {
     recipe->shift_fit_parameters((shift_info *)ptr);
-    if (my_dataset_window) {
-        dataset_table *dataset = my_dataset_window->dataset();
-        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
-    }
+    dataset_table *dataset = my_dataset_window->dataset();
+    dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
     return 1;
 }
 
@@ -709,7 +694,7 @@ regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
         FXString new_filename = open.getFilename();
         writer_t *w = writer_new();
         recipe->write(w);
-        if (recipe->ms_setup && my_dataset_window) {
+        if (recipe->ms_setup) {
             my_dataset_window->dataset()->write(w);
         }
         FILE *f = fopen(new_filename.text(), "wb");
@@ -742,28 +727,19 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
             lexer_free(l);
             return 1;
         }
+
+        dataset_table *dataset = my_dataset_window->dataset();
         if (l->current.tk != TK_EOF) {
-            if (!my_dataset_window) {
-                my_dataset_window = new dataset_window(recipe, this);
-                my_dataset_window->create();
-            }
-            my_dataset_window->dataset()->read_update(l);
+            dataset->read_update(l);
         }
         lexer_free(l);
         recipeFilename = filename;
         m_title_dirty = true;
         fit_recipe *old_recipe = recipe;
         recipe = new_recipe;
-        if (my_recipe_window) {
-            my_recipe_window->bind_new_fit_recipe(recipe);
-        }
-        if (my_filmstack_window) {
-            my_filmstack_window->bind_new_filmstack(recipe->stack, false);
-        }
-        if (my_dataset_window) {
-            dataset_table *dataset = my_dataset_window->dataset();
-            dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
-        }
+        my_recipe_window->bind_new_fit_recipe(recipe);
+        my_filmstack_window->bind_new_filmstack(recipe->stack, false);
+        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         delete old_recipe;
     }
     return 1;
