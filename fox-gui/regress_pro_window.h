@@ -132,6 +132,7 @@ public:
 
 private:
     bool check_spectrum(const char *context);
+    void set_stack_result(stack_t *s);
     void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
 
     struct spectrum* m_model_spectr;

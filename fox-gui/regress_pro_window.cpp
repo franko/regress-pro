@@ -418,6 +418,8 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     resulttext->setText(text_fit_result);
     resulttext->setModified(TRUE);
 
+    set_stack_result(stack_copy(fit->stack_list[0]));
+
     seed_list_free(iseeds);
     multi_fit_engine_disable(fit);
     multi_fit_engine_free(fit);
@@ -435,6 +437,14 @@ regress_pro_window::check_spectrum(const char *context)
     }
 
     return true;
+}
+
+void
+regress_pro_window::set_stack_result(stack_t *s)
+{
+    stack_free(stack_result);
+    stack_result = s;
+    result_filmstack_window->bind_new_filmstack(stack_result);
 }
 
 void
@@ -492,12 +502,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     spectra_plot(m_canvas, fspectrum, m_model_spectr);
 
-    stack_free(this->stack_result);
-
-    this->stack_result = fit_engine_yield_stack(fit);
-    if (result_filmstack_window) {
-        result_filmstack_window->bind_new_filmstack(this->stack_result);
-    }
+    set_stack_result(fit_engine_yield_stack(fit));
 
     fit_engine_disable(fit);
 }
