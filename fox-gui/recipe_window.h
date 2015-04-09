@@ -6,7 +6,7 @@
 
 class regress_pro;
 
-class recipe_window : public FXDialogBox {
+class recipe_window : public FXPacker {
     FXDECLARE(recipe_window)
 
 protected:
@@ -16,7 +16,7 @@ private:
     recipe_window &operator=(const recipe_window&);
 
 public:
-    recipe_window(fit_recipe *r, FXWindow* w, FXuint opts=DECOR_ALL,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    recipe_window(fit_recipe *r, FXComposite *p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=DEFAULT_SPACING, FXint pr=DEFAULT_SPACING, FXint pt=DEFAULT_SPACING, FXint pb=DEFAULT_SPACING, FXint hs=DEFAULT_SPACING, FXint vs=DEFAULT_SPACING);
     virtual ~recipe_window();
 
     regress_pro* regressProApp() const { return (regress_pro*) getApp(); }
@@ -39,7 +39,7 @@ public:
     long on_select_param(FXObject *, FXSelector sel, void *);
 
     enum {
-        ID_PARAM_SELECT = FXDialogBox::ID_LAST,
+        ID_PARAM_SELECT = FXPacker::ID_LAST,
         ID_PARAMETER,
         ID_SEED,
         ID_GRID_MIN,

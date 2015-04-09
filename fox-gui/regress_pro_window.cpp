@@ -58,8 +58,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_UPDATE,  0, regress_pro_window::onUpdate),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_FILM_STACK, regress_pro_window::onCmdFilmStack),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_EDIT, regress_pro_window::onCmdRecipeEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_RECIPE, regress_pro_window::onCmdSaveRecipe),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_RECIPE, regress_pro_window::onCmdLoadRecipe),
@@ -72,7 +70,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_EDIT_FILMSTACK_RESULT, regress_pro_window::onCmdEditFilmStackResult),
 };
 
 
@@ -95,9 +92,9 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,700,460),
-      spectrum(NULL), stack_result(NULL), recipeFilename("untitled"), spectrFile("untitled"),
-      my_batch_window(NULL), result_filmstack_window(NULL), m_model_spectr(0)
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,460),
+      spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
+      result_filmstack_window(NULL), my_batch_window(NULL), m_model_spectr(0)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -112,8 +109,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     // Edit menu
     editmenu = new FXMenuPane(this);
-    new FXMenuCommand(editmenu, "Film Stack", NULL, this, ID_FILM_STACK);
-    new FXMenuCommand(editmenu, "Recipe", NULL, this, ID_RECIPE_EDIT);
     new FXMenuCommand(editmenu, "Dataset", NULL, this, ID_DATASET_EDIT);
     new FXMenuTitle(menubar, "&Edit", NULL, editmenu);
 
@@ -134,7 +129,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
-    new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_EDIT_FILMSTACK_RESULT);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
     helpmenu = new FXMenuPane(this);
@@ -146,6 +140,9 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     FXHorizontalFrame *cont = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+
+    new FXTabItem(tabbook,"Recipe",NULL);
+    FXHorizontalFrame *rcphf = new FXHorizontalFrame(tabbook,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN);
 
     new FXTabItem(tabbook,"Fit Results",NULL);
     FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_THICK|FRAME_RAISED);
@@ -163,14 +160,21 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     recipe = new fit_recipe();
     recipe->setup_default_stack();
+    stack_result = stack_copy(recipe->stack);
 
     m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    my_filmstack_window = new filmstack_window(recipe->stack, "Fit Stack", this);
-    my_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
+    main_filmstack_window = new filmstack_window(recipe->stack, rcphf, LAYOUT_FILL_Y);
+    main_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
 
-    my_recipe_window = new recipe_window(recipe, this);
+    new FXVerticalSeparator(rcphf, SEPARATOR_LINE|LAYOUT_FILL_Y);
+
+    main_recipe_window = new recipe_window(recipe, rcphf, LAYOUT_FILL_Y);
     my_dataset_window = new dataset_window(recipe, this);
+
+    new FXVerticalSeparator(rcphf, SEPARATOR_LINE|LAYOUT_FILL_Y);
+
+    result_filmstack_window = new filmstack_window(stack_result, rcphf, LAYOUT_FILL_Y);
 
     m_title_dirty = true;
 }
@@ -242,12 +246,9 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
 {
-    if(this->stack_result) {
-        dispers_dialog dialog(this, this->stack_result);
-        dialog.execute();
-        return 1;
-    }
-    return 0;
+    dispers_dialog dialog(this, this->stack_result);
+    dialog.execute();
+    return 1;
 }
 
 long
@@ -307,9 +308,7 @@ regress_pro_window::~regress_pro_window()
         spectra_free(this->spectrum);
     }
 
-    if(this->stack_result) {
-        stack_free(this->stack_result);
-    }
+    stack_free(this->stack_result);
 
     if(m_model_spectr) {
         spectra_free(m_model_spectr);
@@ -493,9 +492,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     spectra_plot(m_canvas, fspectrum, m_model_spectr);
 
-    if(this->stack_result) {
-        stack_free(this->stack_result);
-    }
+    stack_free(this->stack_result);
 
     this->stack_result = fit_engine_yield_stack(fit);
     if (result_filmstack_window) {
@@ -543,8 +540,7 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 
     reg_check_point(this);
 
-    stack_t *fit_stack = (stack_result ? stack_result : recipe->stack);
-    fit_engine *fit = prepare_fit_engine(fit_stack, recipe->parameters, recipe->config);
+    fit_engine *fit = prepare_fit_engine(stack_result, recipe->parameters, recipe->config);
 
     if(fit == NULL) {
         reportErrors();
@@ -560,34 +556,6 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 }
 
 long
-regress_pro_window::onCmdFilmStack(FXObject*,FXSelector,void*)
-{
-    my_filmstack_window->show(PLACEMENT_SCREEN);
-    return 1;
-}
-
-long
-regress_pro_window::onCmdEditFilmStackResult(FXObject*,FXSelector,void*)
-{
-    if (!stack_result) {
-        return 0;
-    }
-    if (!result_filmstack_window) {
-        result_filmstack_window = new filmstack_window(stack_result, "Result Stack", this);
-        result_filmstack_window->create();
-    }
-    result_filmstack_window->show(PLACEMENT_SCREEN);
-    return 1;
-}
-
-long
-regress_pro_window::onCmdRecipeEdit(FXObject*,FXSelector,void*)
-{
-    my_recipe_window->show(PLACEMENT_SCREEN);
-    return 1;
-}
-
-long
 regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
 {
     my_dataset_window->show(PLACEMENT_SCREEN);
@@ -597,7 +565,7 @@ regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
 long
 regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
 {
-    my_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+    main_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
     dataset_table *dataset = my_dataset_window->dataset();
     dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
     return 1;
@@ -737,8 +705,8 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
         m_title_dirty = true;
         fit_recipe *old_recipe = recipe;
         recipe = new_recipe;
-        my_recipe_window->bind_new_fit_recipe(recipe);
-        my_filmstack_window->bind_new_filmstack(recipe->stack, false);
+        main_recipe_window->bind_new_fit_recipe(recipe);
+        main_filmstack_window->bind_new_filmstack(recipe->stack, false);
         dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         delete old_recipe;
     }

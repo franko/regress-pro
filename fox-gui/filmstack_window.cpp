@@ -18,10 +18,10 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, filmstack_window::onCmdHide),
 };
 
-FXIMPLEMENT(filmstack_window,FXDialogBox,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
+FXIMPLEMENT(filmstack_window,FXPacker,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
 
-filmstack_window::filmstack_window(stack_t *s, const char *title, FXWindow *topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(topwin, title, opts, 0, 0, 340, 200, pl, pr, pt, pb, hs, vs),
+filmstack_window::filmstack_window(stack_t *s, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXPacker(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
     recipe_target(NULL), recipe_sel_change(0), recipe_sel_shift(0), stack(s)
 {
     stack_window = setup_stack_window(this);
@@ -57,18 +57,18 @@ filmstack_window::setup_stack_window(FXComposite *cont)
     FXMatrix *matrix = new FXMatrix(vf, 3, LAYOUT_FILL_X|LAYOUT_BOTTOM|MATRIX_BY_COLUMNS);
 
     new FXVerticalFrame(matrix);
-    FXLabel *lab1 = new FXLabel(matrix, "-- film material --");
+    FXLabel *lab1 = new FXLabel(matrix, "film material");
     lab1->setFont(&app->small_font);
     lab1->setTextColor(app->blue_highlight);
-    FXLabel *lab2 = new FXLabel(matrix, "-- thickness --");
+    FXLabel *lab2 = new FXLabel(matrix, "thickness");
     lab2->setFont(&app->small_font);
     lab2->setTextColor(app->blue_highlight);
 
     FXString nstr;
     for (int i = 0; i < stack->nb; i++) {
         nstr.format("%d", i);
-        new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i);
-        FXTextField *filmtf = new FXTextField(matrix, 24, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
+        new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i, FRAME_SUNKEN);
+        FXTextField *filmtf = new FXTextField(matrix, 16, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
         filmtf->setText(CSTR(stack->disp[i]->name));
         if (i > 0 && i < stack->nb - 1) {
             FXTextField *thktf = new FXTextField(matrix, 6, this, ID_FILM_THICKNESS + i, FRAME_SUNKEN|TEXTFIELD_REAL);
@@ -83,7 +83,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
 
 void filmstack_window::create()
 {
-    FXDialogBox::create();
+    FXPacker::create();
     popupmenu->create();
     resize(getWidth(), getDefaultHeight());
 }

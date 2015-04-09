@@ -29,10 +29,10 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAM_CONSTR, recipe_window::on_select_param),
 };
 
-FXIMPLEMENT(recipe_window,FXDialogBox,recipe_window_map,ARRAYNUMBER(recipe_window_map));
+FXIMPLEMENT(recipe_window,FXPacker,recipe_window_map,ARRAYNUMBER(recipe_window_map));
 
-recipe_window::recipe_window(fit_recipe *rcp, FXWindow* topwin, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(topwin, "Recipe Edit", opts, 0, 0, 540, 420, pl, pr, pt, pb, hs, vs),
+recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXPacker(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
     recipe(rcp), param_list(NULL), seed_dirty(true)
 {
     FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);

@@ -47,11 +47,12 @@ protected:
     FXString spectrFile;
 
 protected:
-    filmstack_window *my_filmstack_window;
-    recipe_window *my_recipe_window;
+    filmstack_window *main_filmstack_window;
+    recipe_window *main_recipe_window;
+    filmstack_window *result_filmstack_window;
+
     dataset_window *my_dataset_window;
     batch_window *my_batch_window;
-    filmstack_window *result_filmstack_window;
 
     FXMenuBar         *menubar;
     FXStatusBar       *statusbar;
@@ -84,8 +85,6 @@ public:
 
     fit_recipe *get_current_recipe() const { return recipe; }
 
-    long onCmdFilmStack(FXObject*,FXSelector,void*);
-    long onCmdRecipeEdit(FXObject*,FXSelector,void*);
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
     long onCmdSaveRecipe(FXObject*,FXSelector,void*);
@@ -101,7 +100,6 @@ public:
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
     long onCmdStackShift(FXObject*,FXSelector,void*);
-    long onCmdEditFilmStackResult(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
 
     void reportErrors();
@@ -121,9 +119,6 @@ public:
         ID_ABOUT,
         ID_SCRIPT_TEXT,
         ID_REGISTER,
-        ID_FILM_STACK,
-        ID_EDIT_FILMSTACK_RESULT,
-        ID_RECIPE_EDIT,
         ID_DATASET_EDIT,
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,
