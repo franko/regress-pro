@@ -73,7 +73,11 @@ struct seeds;
 
 extern struct fit_engine *fit_engine_new();
 
-extern void fit_engine_bind(struct fit_engine *fit, stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters);
+/* Bind the fit_engine to the given film stack, config and fit parameters.
+   It makes internally a copy of the stack and of the config.
+   It holds only a reference to the fit parameters and this latter can be
+   NULL if the parameters are given later. */
+extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters);
 
 extern void fit_engine_free(struct fit_engine *fit);
 

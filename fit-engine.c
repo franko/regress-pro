@@ -409,7 +409,7 @@ fit_engine_new()
 }
 
 void
-fit_engine_bind(struct fit_engine *fit, stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters)
+fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters)
 {
     fit->config[0] = *config;
     /* fit is not the owner of the "parameters", we just keep a reference */
