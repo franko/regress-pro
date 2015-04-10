@@ -94,7 +94,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,520),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
-      result_filmstack_window(NULL), my_batch_window(NULL), m_model_spectr(0)
+      result_filmstack_window(NULL), my_batch_window(NULL)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -151,10 +151,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
 
-    tabplot = new FXTabItem(tabbook,"Plot Result",NULL);
-    lf = new FXHorizontalFrame(tabbook,FRAME_RAISED);
-    bf = new FXHorizontalFrame(lf,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-
     init_class_list();
 
     dispers_library_init();
@@ -162,8 +158,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     recipe = new fit_recipe();
     recipe->setup_default_stack();
     stack_result = stack_copy(recipe->stack);
-
-    m_canvas = new plot_canvas(bf, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     main_filmstack_window = new filmstack_window(recipe->stack, rcphf, LAYOUT_FILL_Y);
     main_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
@@ -179,7 +173,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     m_title_dirty = true;
 }
-
 
 void
 regress_pro_window::create()
@@ -227,17 +220,11 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
             FXMessageBox::information(this, MBOX_OK, "Spectra loading",
                                       "Cannot load spectra %s", spectrFile.text());
         } else {
-            m_canvas->clear_plots();
-
-            if(this->spectrum) {
-                spectra_free(this->spectrum);
+            if(spectrum) {
+                spectra_free(spectrum);
             }
-
-            this->spectrum = new_spectrum;
-
-            spectra_plot_simple(m_canvas, this->spectrum);
+            spectrum = new_spectrum;
         }
-
         return 1;
     }
 
@@ -247,7 +234,7 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
 {
-    dispers_dialog dialog(this, this->stack_result);
+    dispers_dialog dialog(this, stack_result);
     dialog.execute();
     return 1;
 }
@@ -309,12 +296,7 @@ regress_pro_window::~regress_pro_window()
         spectra_free(this->spectrum);
     }
 
-    stack_free(this->stack_result);
-
-    if(m_model_spectr) {
-        spectra_free(m_model_spectr);
-    }
-
+    stack_free(stack_result);
     clean_error_msgs();
 }
 
@@ -493,18 +475,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     resulttext->setText(fitresult);
     resulttext->setModified(TRUE);
 
-    if(m_model_spectr) {
-        spectra_free(m_model_spectr);
-    }
-
-    m_model_spectr = spectra_alloc(fspectrum);
-
-    fit_engine_generate_spectrum(fit, fspectrum, m_model_spectr);
-
-    spectra_plot(m_canvas, fspectrum, m_model_spectr);
-
     set_stack_result(fit_engine_yield_stack(fit));
-
     fit_engine_disable(fit);
 }
 
@@ -546,13 +517,8 @@ regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 
     reg_check_point(this);
 
-    fit_engine *fit = prepare_fit_engine(stack_result, recipe->parameters, recipe->config);
-
-    if(fit == NULL) {
-        reportErrors();
-        return 1;
-    }
-
+    fit_engine *fit = fit_engine_new();
+    fit_engine_bind(fit, stack_result, recipe->config, NULL);
     interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
     regress_pro *app = regressProApp();
     fit_window *fitwin = new fit_window(fitmgr, app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
@@ -713,6 +679,7 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
         recipe = new_recipe;
         main_recipe_window->bind_new_fit_recipe(recipe);
         main_filmstack_window->bind_new_filmstack(recipe->stack, false);
+        set_stack_result(stack_copy(recipe->stack));
         dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         delete old_recipe;
     }
