@@ -106,6 +106,19 @@ public:
         spectra_plot(canvas, m_ref_spectr, m_model_spectr);
     }
 
+    int update(const fit_engine *src_fit) {
+        if (src_fit->stack->nb != m_fit_engine->stack->nb) {
+            return 1;
+        }
+        for(unsigned k = 0; k < m_all_parameters->number; k++) {
+            const fit_param_t *fp = &m_all_parameters->values[k];
+            double val = fit_engine_get_parameter_value(src_fit, fp);
+            fit_engine_apply_param(m_fit_engine, fp, val);
+        }
+        fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
+        return 0;
+    }
+
     virtual ~interactive_fit() {
         fit_engine_free(m_fit_engine);
         fit_parameters_free(m_all_parameters);

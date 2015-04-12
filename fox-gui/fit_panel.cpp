@@ -243,3 +243,11 @@ long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
 
     return 1;
 }
+
+void fit_panel::refresh()
+{
+    for(unsigned k = 0; k < m_parameters.size(); k++) {
+        m_parameters[k].is_dirty = true;
+    }
+    m_canvas->set_dirty(true);
+}

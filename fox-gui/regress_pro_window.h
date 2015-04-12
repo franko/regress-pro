@@ -34,6 +34,7 @@ class recipe_window;
 class filmstack_window;
 class dataset_window;
 class batch_window;
+class interactive_fit;
 class fit_window;
 
 class regress_pro_window : public FXMainWindow {
@@ -133,9 +134,11 @@ public:
 private:
     bool check_spectrum(const char *context);
     void set_stack_result(stack_t *s);
+    void update_interactive_fit(const fit_engine *fit);
     void set_spectrum(struct spectrum *s);
     void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
 
+    interactive_fit *m_interactive_fit; // Owned by m_fit_window.
     fit_window *m_fit_window;
 
     bool m_title_dirty;

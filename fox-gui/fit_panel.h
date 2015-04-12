@@ -56,7 +56,7 @@ public:
     regress_pro *regressProApp() const { return (regress_pro *) getApp(); }
 
     void bind_fit_manager(fit_manager *f);
-
+    void refresh();
     void reload();
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);

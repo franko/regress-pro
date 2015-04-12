@@ -39,6 +39,7 @@ public:
     virtual ~fit_window();
 
     void bind_fit_manager(fit_manager *f) { m_fit_panel->bind_fit_manager(f); }
+    void refresh() { m_fit_panel->refresh(); }
 
 protected:
     FXMenuBar *menubar;

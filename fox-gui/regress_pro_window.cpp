@@ -94,7 +94,8 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,520),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
-      result_filmstack_window(NULL), my_batch_window(NULL)
+      result_filmstack_window(NULL), my_batch_window(NULL),
+      m_interactive_fit(NULL)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -212,8 +213,8 @@ regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
     }
     spectrum = new_spectrum;
 
-    interactive_fit *fmgr = new interactive_fit(stack_result, recipe->config, spectrum);
-    m_fit_window->bind_fit_manager(fmgr);
+    m_interactive_fit = new interactive_fit(stack_result, recipe->config, spectrum);
+    m_fit_window->bind_fit_manager(m_interactive_fit);
 }
 
 long
@@ -440,13 +441,21 @@ regress_pro_window::set_stack_result(stack_t *s)
     stack_result = s;
     result_filmstack_window->bind_new_filmstack(stack_result);
 
-    fit_manager *fmgr;
     if (spectrum) {
-        fmgr = new interactive_fit(stack_result, recipe->config, spectrum);
+        m_interactive_fit = new interactive_fit(stack_result, recipe->config, spectrum);
+        m_fit_window->bind_fit_manager(m_interactive_fit);
     } else {
-        fmgr = new empty_fit_manager();
+        m_fit_window->bind_fit_manager(new empty_fit_manager());
     }
-    m_fit_window->bind_fit_manager(fmgr);
+}
+
+void
+regress_pro_window::update_interactive_fit(const fit_engine *fit)
+{
+    if (m_interactive_fit) {
+        m_interactive_fit->update(fit);
+        m_fit_window->refresh();
+    }
 }
 
 void
@@ -494,7 +503,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     resulttext->setText(fitresult);
     resulttext->setModified(TRUE);
 
-    set_stack_result(fit_engine_yield_stack(fit));
+    update_interactive_fit(fit);
     fit_engine_disable(fit);
 }
 
