@@ -22,13 +22,14 @@
 
 // Map
 FXDEFMAP(fit_window) fit_window_map[]= {
+    FXMAPFUNC(SEL_COMMAND, fit_window::ID_DELETE, fit_window::onCmdHide),
 };
 
 // Object implementation
-FXIMPLEMENT(fit_window,FXMainWindow,fit_window_map,ARRAYNUMBER(fit_window_map));
+FXIMPLEMENT(fit_window,FXDialogBox,fit_window_map,ARRAYNUMBER(fit_window_map));
 
-fit_window::fit_window(fit_manager* fit, FXApp* a,const FXString& name,FXIcon *ic,FXIcon *mi,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
-    : FXMainWindow(a, name, ic, mi, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+fit_window::fit_window(fit_manager* fit, FXWindow *win, const FXString& name, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : FXDialogBox(win, name, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
 {
     menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
     statusbar = new FXStatusBar(this, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);

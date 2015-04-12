@@ -25,7 +25,7 @@
 
 #include "fit_panel.h"
 
-class fit_window : public FXMainWindow {
+class fit_window : public FXDialogBox {
     FXDECLARE(fit_window)
 
 protected:
@@ -35,8 +35,10 @@ private:
     fit_window &operator=(const fit_window&);
 
 public:
-    fit_window(fit_manager* fit,FXApp* a,const FXString& name,FXIcon *ic=NULL,FXIcon *mi=NULL,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    fit_window(fit_manager* fit, FXWindow* a, const FXString& name, FXuint opts=DECOR_TITLE|DECOR_BORDER, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=0, FXint pr=0, FXint pt=0, FXint pb=0, FXint hs=0, FXint vs=0);
     virtual ~fit_window();
+
+    void bind_fit_manager(fit_manager *f) { m_fit_panel->bind_fit_manager(f); }
 
 protected:
     FXMenuBar *menubar;

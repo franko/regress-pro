@@ -30,10 +30,10 @@
 
 class interactive_fit : public fit_manager {
 public:
-    interactive_fit(struct fit_engine *fit, struct spectrum *user_spectr) :
-        m_fit_engine(fit) {
+    interactive_fit(stack_t *s, const fit_config *config, struct spectrum *user_spectr) {
+        m_fit_engine = fit_engine_new();
+        fit_engine_bind(m_fit_engine, s, config, NULL);
         m_ref_spectr = spectra_copy(user_spectr);
-
         m_all_parameters = fit_engine_get_all_parameters(m_fit_engine);
 
         m_fit_engine->config->spectr_range.active = 0;

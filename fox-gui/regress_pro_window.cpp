@@ -28,7 +28,6 @@
 
 #include "regress_pro_window.h"
 #include "dispers_dialog.h"
-#include "interactive_fit.h"
 #include "Strcpp.h"
 #include "error-messages.h"
 #include "fit-engine.h"
@@ -41,6 +40,7 @@
 #include "str-util.h"
 #include "dispers-library.h"
 #include "disp_fit_manager.h"
+#include "empty_fit_manager.h"
 #include "fit_window.h"
 #include "disp_fit_window.h"
 #include "interactive_fit.h"
@@ -171,6 +171,8 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     result_filmstack_window = new filmstack_window(stack_result, rcphf, LAYOUT_FILL_Y);
 
+    m_fit_window = new fit_window(new empty_fit_manager(), this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
+
     m_title_dirty = true;
 }
 
@@ -202,6 +204,18 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
     return 0;
 }
 
+void
+regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
+{
+    if(spectrum) {
+        spectra_free(spectrum);
+    }
+    spectrum = new_spectrum;
+
+    interactive_fit *fmgr = new interactive_fit(stack_result, recipe->config, spectrum);
+    m_fit_window->bind_fit_manager(fmgr);
+}
+
 long
 regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
@@ -220,10 +234,7 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
             FXMessageBox::information(this, MBOX_OK, "Spectra loading",
                                       "Cannot load spectra %s", spectrFile.text());
         } else {
-            if(spectrum) {
-                spectra_free(spectrum);
-            }
-            spectrum = new_spectrum;
+            set_spectrum(new_spectrum);
         }
         return 1;
     }
@@ -250,7 +261,7 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
     fit->model_disp = dispers_library_search("sio2");
 
     disp_fit_manager *mgr = new disp_fit_manager(fit);
-    disp_fit_window *fitwin = new disp_fit_window(mgr, getApp(), "Dispersion Fit", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
+    disp_fit_window *fitwin = new disp_fit_window(mgr, this, "Dispersion Fit", DECOR_ALL, 0, 0, 640, 480);
     fitwin->create();
     fitwin->show(FX::PLACEMENT_SCREEN);
 
@@ -428,6 +439,14 @@ regress_pro_window::set_stack_result(stack_t *s)
     stack_free(stack_result);
     stack_result = s;
     result_filmstack_window->bind_new_filmstack(stack_result);
+
+    fit_manager *fmgr;
+    if (spectrum) {
+        fmgr = new interactive_fit(stack_result, recipe->config, spectrum);
+    } else {
+        fmgr = new empty_fit_manager();
+    }
+    m_fit_window->bind_fit_manager(fmgr);
 }
 
 void
@@ -511,19 +530,8 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-    if(! check_spectrum("Fitting")) {
-        return 0;
-    }
-
     reg_check_point(this);
-
-    fit_engine *fit = fit_engine_new();
-    fit_engine_bind(fit, stack_result, recipe->config, NULL);
-    interactive_fit *fitmgr = new interactive_fit(fit, spectrum);
-    regress_pro *app = regressProApp();
-    fit_window *fitwin = new fit_window(fitmgr, app, "Interactive Fit", NULL, &app->appicon, DECOR_ALL, 0, 0, 640, 480);
-    fitwin->create();
-    fitwin->show(FX::PLACEMENT_SCREEN);
+    m_fit_window->show(FX::PLACEMENT_SCREEN);
     return 1;
 }
 
