@@ -56,7 +56,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     FXGroupBox *lgb = new FXGroupBox(top_frame, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     FXVerticalFrame *frame = new FXVerticalFrame(lgb, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN);
     fit_list = new FXList(frame, this, ID_PARAMETER, LIST_SINGLESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    fit_list->setNumVisible(16);
+    fit_list->setNumVisible(4);
 
     new FXHorizontalSeparator(vf,SEPARATOR_GROOVE|LAYOUT_FILL_X);
 
@@ -71,16 +71,16 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
 
     FXGroupBox *group = new FXGroupBox(bhf, "Initial Fit Value", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
     FXVerticalFrame *seedvf = new FXVerticalFrame(group, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    seed_tf = new FXTextField(seedvf, 12, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    seed_tf = new FXTextField(seedvf, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
     FXMatrix *matrix = new FXMatrix(seedvf, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     new FXLabel(matrix, "Grid Min", NULL, LAYOUT_FILL_ROW);
     new FXLabel(matrix, "Grid Max", NULL, LAYOUT_FILL_ROW);
     new FXLabel(matrix, "Grid Step", NULL, LAYOUT_FILL_ROW);
 
-    grid_min_tf = new FXTextField(matrix, 10, this, ID_GRID_MIN, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-    grid_max_tf = new FXTextField(matrix, 10, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-    grid_step_tf = new FXTextField(matrix, 10, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    grid_min_tf = new FXTextField(matrix, 8, this, ID_GRID_MIN, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    grid_max_tf = new FXTextField(matrix, 8, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    grid_step_tf = new FXTextField(matrix, 8, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
     list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
 
