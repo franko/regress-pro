@@ -39,6 +39,9 @@ plot_canvas::draw_plot(FXEvent* event)
 {
     int ww = getWidth(), hh = getHeight();
 
+    /* To prevent a bug related to request of creating 1x1 paint. */
+    if (ww < 16 || hh < 16) return;
+
     ensure_canvas_size(ww, hh);
 
     if(m_canvas) {
