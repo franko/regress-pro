@@ -107,9 +107,6 @@ public:
     }
 
     int update(const fit_engine *src_fit) {
-        if (src_fit->stack->nb != m_fit_engine->stack->nb) {
-            return 1;
-        }
         for(unsigned k = 0; k < m_all_parameters->number; k++) {
             const fit_param_t *fp = &m_all_parameters->values[k];
             double val = fit_engine_get_parameter_value(src_fit, fp);

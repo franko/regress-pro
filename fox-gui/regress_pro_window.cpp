@@ -95,7 +95,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,520),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
-      m_interactive_fit(NULL)
+      m_interactive_fit(NULL), m_result_stack_match(true)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -414,6 +414,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     resulttext->setModified(TRUE);
 
     set_stack_result(stack_copy(fit->stack_list[0]));
+    m_result_stack_match = true;
 
     seed_list_free(iseeds);
     multi_fit_engine_disable(fit);
@@ -450,11 +451,15 @@ regress_pro_window::set_stack_result(stack_t *s)
 }
 
 void
-regress_pro_window::update_interactive_fit(const fit_engine *fit)
+regress_pro_window::update_interactive_fit(fit_engine *fit)
 {
-    if (m_interactive_fit) {
+    if (!m_interactive_fit) return;
+    if (m_result_stack_match) {
         m_interactive_fit->update(fit);
         m_fit_window->refresh();
+    } else {
+        set_stack_result(fit_engine_yield_stack(fit));
+        m_result_stack_match = true;
     }
 }
 
@@ -557,6 +562,7 @@ regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
     main_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
     dataset_table *dataset = my_dataset_window->dataset();
     dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
+    m_result_stack_match = false;
     return 1;
 }
 
@@ -566,6 +572,7 @@ regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
     recipe->shift_fit_parameters((shift_info *)ptr);
     dataset_table *dataset = my_dataset_window->dataset();
     dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
+    m_result_stack_match = false;
     return 1;
 }
 
@@ -697,6 +704,7 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
         main_recipe_window->bind_new_fit_recipe(recipe);
         main_filmstack_window->bind_new_filmstack(recipe->stack, false);
         set_stack_result(stack_copy(recipe->stack));
+        m_result_stack_match = true;
         dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         delete old_recipe;
     }

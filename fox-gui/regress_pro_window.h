@@ -134,13 +134,14 @@ public:
 private:
     bool check_spectrum(const char *context);
     void set_stack_result(stack_t *s);
-    void update_interactive_fit(const fit_engine *fit);
+    void update_interactive_fit(fit_engine *fit);
     void set_spectrum(struct spectrum *s);
     void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
 
     interactive_fit *m_interactive_fit; // Owned by m_fit_window.
     fit_window *m_fit_window;
 
+    bool m_result_stack_match;
     bool m_title_dirty;
 };
 
