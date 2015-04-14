@@ -34,6 +34,7 @@ public:
     void set_target_stack_changes(FXObject *rcp, FXuint sel_change, FXuint sel_shift);
 
     void bind_new_filmstack(stack_t *s, bool notify = true);
+    void update_values();
 
     long on_cmd_film_menu(FXObject*,FXSelector,void* ptr);
     long on_cmd_insert_layer(FXObject*,FXSelector,void* ptr);
@@ -66,6 +67,7 @@ private:
     void notify_stack_shift(shift_info *);
 
     FXWindow *stack_window;
+    FXMatrix *matrix;
 
     // If not NULL will send a message to the given target with the selectors below.
     FXObject *recipe_target;

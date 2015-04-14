@@ -54,7 +54,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
     regress_pro *app = regressProApp();
 
     FXVerticalFrame *vf = new FXVerticalFrame(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    FXMatrix *matrix = new FXMatrix(vf, 3, LAYOUT_FILL_X|LAYOUT_BOTTOM|MATRIX_BY_COLUMNS);
+    matrix = new FXMatrix(vf, 3, LAYOUT_FILL_X|LAYOUT_BOTTOM|MATRIX_BY_COLUMNS);
 
     new FXVerticalFrame(matrix);
     FXLabel *lab1 = new FXLabel(matrix, "film material");
@@ -72,7 +72,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
         filmtf->setText(CSTR(stack->disp[i]->name));
         if (i > 0 && i < stack->nb - 1) {
             FXTextField *thktf = new FXTextField(matrix, 6, this, ID_FILM_THICKNESS + i, FRAME_SUNKEN|TEXTFIELD_REAL);
-            nstr.format("%g", stack->thickness[i - 1]);
+            nstr.format("%.4g", stack->thickness[i - 1]);
             thktf->setText(nstr);
         } else {
             new FXVerticalFrame(matrix);
@@ -203,4 +203,15 @@ void
 filmstack_window::bind_new_filmstack(stack_t *s, bool notify) {
     stack = s;
     rebuild_stack_window(notify);
+}
+
+void
+filmstack_window::update_values()
+{
+    FXString nstr;
+    for (int i = 1; i < stack->nb - 1; i++) {
+        FXTextField *thktf = (FXTextField *) matrix->childAtRowCol(i + 1, 2);
+        nstr.format("%.4g", stack->thickness[i - 1]);
+        thktf->setText(nstr);
+    }
 }

@@ -447,6 +447,7 @@ regress_pro_window::update_interactive_fit(fit_engine *fit)
     if (m_result_stack_match) {
         m_interactive_fit->update(fit);
         m_fit_window->refresh();
+        result_filmstack_window->update_values();
     } else {
         set_stack_result(fit_engine_yield_stack(fit));
         m_result_stack_match = true;
