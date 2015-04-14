@@ -27,11 +27,6 @@ fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXi
     setup();
 }
 
-fit_panel::~fit_panel()
-{
-    delete m_fit;
-}
-
 void fit_panel::clear()
 {
     delete param_matrix;

@@ -28,7 +28,7 @@ class fit_panel : public FXHorizontalFrame {
     FXTextField* m_wl_entry;
     plot_canvas* m_canvas;
 
-    fit_manager* m_fit;
+    fit_manager* m_fit; // Not owned by the class.
 
     bool verify_spectral_range(const char *txt, double ps[]);
     bool update_spectral_range(const char *txt);
@@ -51,7 +51,6 @@ private:
 
 public:
     fit_panel(fit_manager* fit, FXComposite *p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=DEFAULT_SPACING, FXint pr=DEFAULT_SPACING, FXint pt=DEFAULT_SPACING, FXint pb=DEFAULT_SPACING, FXint hs=DEFAULT_SPACING, FXint vs=DEFAULT_SPACING);
-    virtual ~fit_panel();
 
     regress_pro *regressProApp() const { return (regress_pro *) getApp(); }
 
