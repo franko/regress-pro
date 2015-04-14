@@ -7,6 +7,11 @@
 #include "fit_manager.h"
 #include "plot_canvas.h"
 
+struct fit_result_target {
+    virtual void notify_change() = 0;
+    virtual ~fit_result_target() { }
+};
+
 class regress_pro;
 
 class fit_panel : public FXHorizontalFrame {
@@ -29,6 +34,7 @@ class fit_panel : public FXHorizontalFrame {
     plot_canvas* m_canvas;
 
     fit_manager* m_fit; // Not owned by the class.
+    fit_result_target *m_results_target;
 
     bool verify_spectral_range(const char *txt, double ps[]);
     bool update_spectral_range(const char *txt);
@@ -51,6 +57,8 @@ private:
 
 public:
     fit_panel(fit_manager* fit, FXComposite *p, FXuint opts=0, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=DEFAULT_SPACING, FXint pr=DEFAULT_SPACING, FXint pt=DEFAULT_SPACING, FXint pb=DEFAULT_SPACING, FXint hs=DEFAULT_SPACING, FXint vs=DEFAULT_SPACING);
+
+    void bind_result_target(fit_result_target *tgt) { m_results_target = tgt; }
 
     regress_pro *regressProApp() const { return (regress_pro *) getApp(); }
 

@@ -21,7 +21,7 @@ FXIMPLEMENT(fit_panel,FXHorizontalFrame,fit_panel_map,ARRAYNUMBER(fit_panel_map)
 
 fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXHorizontalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-      m_canvas(0), m_fit(fit)
+      m_canvas(0), m_fit(fit), m_results_target(NULL)
 {
     scroll_window = new FXScrollWindow(this, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
     setup();
@@ -124,6 +124,9 @@ fit_panel::on_cmd_param_change(FXObject *_txt, FXSelector, void*)
     double new_val = strtod(vstr.text(), NULL);
     unsigned k = this->get_parameter_index(p);
     m_fit->set_parameter_value(k, new_val);
+    if (m_results_target) {
+        m_results_target->notify_change();
+    }
     if(m_canvas) {
         m_canvas->set_dirty(true);
     }
@@ -228,6 +231,10 @@ long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
     }
 
     fit_parameters_free(fps);
+
+    if (m_results_target) {
+        m_results_target->notify_change();
+    }
 
     return 1;
 }

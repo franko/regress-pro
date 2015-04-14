@@ -29,13 +29,20 @@
 #include "plot_canvas.h"
 #include "spectra.h"
 #include "fit_recipe.h"
+#include "fit_window.h"
+#include "filmstack_window.h"
 
 class recipe_window;
-class filmstack_window;
 class dataset_window;
 class batch_window;
 class interactive_fit;
-class fit_window;
+
+struct window_result_target : fit_result_target {
+    window_result_target() { }
+    void bind(filmstack_window *w) { window = w; }
+    virtual void notify_change() { window->update_values(); }
+    filmstack_window *window;
+};
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
@@ -142,6 +149,8 @@ private:
 
     bool m_result_stack_match;
     bool m_title_dirty;
+
+    window_result_target m_interactive_fit_target;
 };
 
 extern "C" {

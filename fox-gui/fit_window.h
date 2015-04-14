@@ -38,6 +38,7 @@ public:
     fit_window(fit_manager* fit, FXWindow* a, const FXString& name, FXuint opts=DECOR_TITLE|DECOR_BORDER, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=0, FXint pr=0, FXint pt=0, FXint pb=0, FXint hs=0, FXint vs=0);
     virtual ~fit_window();
 
+    void bind_result_target(fit_result_target *tgt) { m_fit_panel->bind_result_target(tgt); }
     void reload() { m_fit_panel->reload(); }
     void refresh() { m_fit_panel->refresh(); }
 

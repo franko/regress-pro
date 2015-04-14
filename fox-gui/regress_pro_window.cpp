@@ -171,6 +171,8 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     result_filmstack_window = new filmstack_window(m_interactive_fit->stack(), rcphf, LAYOUT_FILL_Y);
     m_fit_window = new fit_window(m_interactive_fit, this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
+    m_fit_window->bind_result_target(&m_interactive_fit_target);
+    m_interactive_fit_target.bind(result_filmstack_window);
 
     m_title_dirty = true;
 }
