@@ -42,7 +42,6 @@ class regress_pro_window : public FXMainWindow {
 
 protected:
     struct spectrum *spectrum;
-    struct stack *stack_result;
     fit_recipe *recipe;
 
     FXString recipeFilename;
@@ -138,7 +137,7 @@ private:
     void set_spectrum(struct spectrum *s);
     void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
 
-    interactive_fit *m_interactive_fit; // Owned by m_fit_window.
+    interactive_fit *m_interactive_fit;
     fit_window *m_fit_window;
 
     bool m_result_stack_match;

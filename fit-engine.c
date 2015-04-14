@@ -417,6 +417,15 @@ fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_c
     fit->stack = stack_copy(stack);
 }
 
+void
+fit_engine_bind_stack(struct fit_engine *fit, const stack_t *stack)
+{
+    if (fit->stack) {
+        stack_free(fit->stack);
+    }
+    fit->stack = stack;
+}
+
 stack_t *
 fit_engine_yield_stack(struct fit_engine *fit)
 {

@@ -30,18 +30,48 @@
 
 class interactive_fit : public fit_manager {
 public:
-    interactive_fit(stack_t *s, const fit_config *config, struct spectrum *user_spectr) {
+    interactive_fit(stack_t *s, const fit_config *config):
+        m_ref_spectr(NULL), m_model_spectr(NULL)
+    {
         m_fit_engine = fit_engine_new();
         fit_engine_bind(m_fit_engine, s, config, NULL);
-        m_ref_spectr = spectra_copy(user_spectr);
         m_all_parameters = fit_engine_get_all_parameters(m_fit_engine);
 
         m_fit_engine->config->spectr_range.active = 0;
         m_fit_engine->config->subsampling = 0;
+    }
 
+    void dispose_spectra() {
+        if (m_ref_spectr) {
+            spectra_free(m_ref_spectr);
+        }
+        if (m_model_spectr) {
+            spectra_free(m_model_spectr);
+        }
+    }
+
+    bool spectra_loaded() const { return m_ref_spectr && m_model_spectr; }
+
+    void generate_spectra() {
+        if (spectra_loaded()) {
+            fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
+        }
+    }
+
+    void bind_spectrum(struct spectrum *user_spectr) {
+        dispose_spectra();
+        m_ref_spectr = spectra_copy(user_spectr);
         m_model_spectr = spectra_alloc(m_ref_spectr);
         fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
     }
+
+    void bind_stack(stack_t *s) {
+        fit_engine_bind_stack(m_fit_engine, s);
+        fit_parameters_free(m_all_parameters);
+        m_all_parameters = fit_engine_get_all_parameters(m_fit_engine);
+    }
+
+    stack_t *stack() { return m_fit_engine->stack; }
 
     virtual unsigned parameters_number() {
         return m_all_parameters->number;
@@ -55,7 +85,7 @@ public:
     virtual void set_parameter_value(unsigned k, double val) {
         fit_param_t* fp = &m_all_parameters->values[k];
         fit_engine_apply_param(m_fit_engine, fp, val);
-        fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
+        generate_spectra();
     }
 
     virtual double get_parameter_value(unsigned k) {
@@ -64,22 +94,29 @@ public:
     }
 
     virtual void get_sampling(double& s_start, double& s_end, double& s_step) {
-        int n = spectra_points(m_ref_spectr);
-        s_start = floor(data_view_get(m_ref_spectr->table, 0, 0));
-        s_end   = ceil(data_view_get(m_ref_spectr->table, n-1, 0));
+        if (spectra_loaded()) {
+            int n = spectra_points(m_ref_spectr);
+            s_start = floor(data_view_get(m_ref_spectr->table, 0, 0));
+            s_end   = ceil(data_view_get(m_ref_spectr->table, n-1, 0));
+        } else {
+            s_start = 250.0;
+            s_end = 750.0;
+        }
         s_step  = 0.0;
     }
 
     virtual bool set_sampling(double s_start, double s_end, double s_step) {
-        spectr_cut_range(m_ref_spectr, s_start, s_end);
-
-        spectra_resize(m_model_spectr, m_ref_spectr->table->rows);
-        fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
-
+        if (spectra_loaded()) {
+            spectr_cut_range(m_ref_spectr, s_start, s_end);
+            spectra_resize(m_model_spectr, m_ref_spectr->table->rows);
+            fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
+        }
         return true;
     }
 
     virtual void run(struct fit_parameters* fps) {
+        if (!spectra_loaded()) return;
+
         m_fit_engine->parameters = fps;
 
         fit_engine_prepare(m_fit_engine, m_ref_spectr);
@@ -103,7 +140,9 @@ public:
     }
 
     virtual void config_plot(plot_canvas* canvas) {
-        spectra_plot(canvas, m_ref_spectr, m_model_spectr);
+        if (spectra_loaded()) {
+            spectra_plot(canvas, m_ref_spectr, m_model_spectr);
+        }
     }
 
     int update(const fit_engine *src_fit) {
@@ -112,15 +151,14 @@ public:
             double val = fit_engine_get_parameter_value(src_fit, fp);
             fit_engine_apply_param(m_fit_engine, fp, val);
         }
-        fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
+        generate_spectra();
         return 0;
     }
 
     virtual ~interactive_fit() {
         fit_engine_free(m_fit_engine);
         fit_parameters_free(m_all_parameters);
-        spectra_free(m_ref_spectr);
-        spectra_free(m_model_spectr);
+        dispose_spectra();
     }
 
 private:

@@ -79,6 +79,10 @@ extern struct fit_engine *fit_engine_new();
    NULL if the parameters are given later. */
 extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters);
 
+/* Bind the fit_engine to the provided film stack by taking the ownership.
+   No copy of the film stack is made. */
+extern void fit_engine_bind_stack(struct fit_engine *fit, const stack_t *stack);
+
 extern void fit_engine_free(struct fit_engine *fit);
 
 extern int  fit_engine_prepare(struct fit_engine *f,

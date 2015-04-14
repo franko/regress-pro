@@ -40,7 +40,6 @@
 #include "str-util.h"
 #include "dispers-library.h"
 #include "disp_fit_manager.h"
-#include "empty_fit_manager.h"
 #include "fit_window.h"
 #include "disp_fit_window.h"
 #include "interactive_fit.h"
@@ -95,7 +94,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,520),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
-      m_interactive_fit(NULL), m_result_stack_match(true)
+      m_result_stack_match(true)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -158,7 +157,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     recipe = new fit_recipe();
     recipe->setup_default_stack();
-    stack_result = stack_copy(recipe->stack);
+    m_interactive_fit = new interactive_fit(recipe->stack, recipe->config);
 
     main_filmstack_window = new filmstack_window(recipe->stack, rcphf, LAYOUT_FILL_Y);
     main_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
@@ -170,9 +169,8 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     new FXVerticalSeparator(rcphf, SEPARATOR_LINE|LAYOUT_FILL_Y);
 
-    result_filmstack_window = new filmstack_window(stack_result, rcphf, LAYOUT_FILL_Y);
-
-    m_fit_window = new fit_window(new empty_fit_manager(), this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
+    result_filmstack_window = new filmstack_window(m_interactive_fit->stack(), rcphf, LAYOUT_FILL_Y);
+    m_fit_window = new fit_window(m_interactive_fit, this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
 
     m_title_dirty = true;
 }
@@ -213,8 +211,8 @@ regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
     }
     spectrum = new_spectrum;
 
-    m_interactive_fit = new interactive_fit(stack_result, recipe->config, spectrum);
-    m_fit_window->bind_fit_manager(m_interactive_fit);
+    m_interactive_fit->bind_spectrum(spectrum);
+    m_fit_window->reload();
 }
 
 long
@@ -246,7 +244,7 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
 {
-    dispers_dialog dialog(this, stack_result);
+    dispers_dialog dialog(this, m_interactive_fit->stack());
     dialog.execute();
     return 1;
 }
@@ -307,8 +305,8 @@ regress_pro_window::~regress_pro_window()
     if(this->spectrum) {
         spectra_free(this->spectrum);
     }
+    delete m_interactive_fit;
 
-    stack_free(stack_result);
     clean_error_msgs();
 }
 
@@ -436,24 +434,16 @@ regress_pro_window::check_spectrum(const char *context)
 }
 
 void
-regress_pro_window::set_stack_result(stack_t *s)
+regress_pro_window::set_stack_result(stack_t *new_stack)
 {
-    stack_free(stack_result);
-    stack_result = s;
-    result_filmstack_window->bind_new_filmstack(stack_result);
-
-    if (spectrum) {
-        m_interactive_fit = new interactive_fit(stack_result, recipe->config, spectrum);
-        m_fit_window->bind_fit_manager(m_interactive_fit);
-    } else {
-        m_fit_window->bind_fit_manager(new empty_fit_manager());
-    }
+    m_interactive_fit->bind_stack(new_stack);
+    m_fit_window->reload();
+    result_filmstack_window->bind_new_filmstack(new_stack);
 }
 
 void
 regress_pro_window::update_interactive_fit(fit_engine *fit)
 {
-    if (!m_interactive_fit) return;
     if (m_result_stack_match) {
         m_interactive_fit->update(fit);
         m_fit_window->refresh();

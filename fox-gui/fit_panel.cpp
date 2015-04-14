@@ -38,13 +38,6 @@ void fit_panel::clear()
     delete m_canvas;
 }
 
-void fit_panel::bind_fit_manager(fit_manager *fmgr)
-{
-    delete m_fit;
-    m_fit = fmgr;
-    reload();
-}
-
 void fit_panel::setup()
 {
     param_matrix = new FXMatrix(scroll_window, 2, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
