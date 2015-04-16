@@ -72,7 +72,6 @@ protected:
     FXMenuPane        *fitmenu;
     FXMenuPane        *helpmenu;
 
-    FXTabBook         *tabbook;
     FXText            *resulttext;
 
     FXFont            *scriptfont;

@@ -91,7 +91,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,520),
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,600),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
       m_result_stack_match(true)
@@ -137,18 +137,13 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
 
     // Container
-    FXHorizontalFrame *cont = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXVerticalFrame *cont = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    tabbook = new FXTabBook(cont,NULL,0,PACK_UNIFORM_WIDTH|PACK_UNIFORM_HEIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_RIGHT);
+    FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RIDGE);
 
-    new FXTabItem(tabbook,"Recipe",NULL);
-    FXHorizontalFrame *hf1 = new FXHorizontalFrame(tabbook,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RAISED);
-    FXHorizontalFrame *rcphf = new FXHorizontalFrame(hf1,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_SUNKEN);
-
-    new FXTabItem(tabbook,"Fit Results",NULL);
-    FXHorizontalFrame *lf = new FXHorizontalFrame(tabbook,FRAME_RAISED);
-    FXHorizontalFrame *bf = new FXHorizontalFrame(lf,FRAME_SUNKEN|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0,0,0,0, 0,0,0,0);
-    resulttext = new FXText(bf,NULL,0,TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXSpring *resultspring = new FXSpring(cont, FRAME_RIDGE|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 18);
+    resulttext = new FXText(resultspring, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
 
     init_class_list();
