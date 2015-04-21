@@ -92,7 +92,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,780,600),
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,600),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
       m_result_stack_match(true)
@@ -141,10 +141,10 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     // Container
     FXVerticalFrame *cont = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *resultspring = new FXSpring(cont, FRAME_LINE|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 18);
+    FXSpring *resultspring = new FXSpring(cont, FRAME_LINE|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 20);
     resulttext = new FXText(resultspring, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
 
