@@ -107,6 +107,7 @@ public:
     long onCmdStackChange(FXObject*,FXSelector,void*);
     long onCmdStackShift(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
+    long onCmdResultStack(FXObject*,FXSelector,void*);
 
     void reportErrors();
 
@@ -128,6 +129,7 @@ public:
         ID_DATASET_EDIT,
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,
+        ID_RESULT_STACK,
         ID_LAST
     };
 
@@ -145,6 +147,7 @@ private:
 
     interactive_fit *m_interactive_fit;
     fit_window *m_fit_window;
+    FXDialogBox *m_filmstack_dialog;
 
     bool m_result_stack_match;
     bool m_title_dirty;

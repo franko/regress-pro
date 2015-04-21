@@ -69,6 +69,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RESULT_STACK, regress_pro_window::onCmdResultStack),
 };
 
 
@@ -91,7 +92,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,840,600),
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,780,600),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
       m_result_stack_match(true)
@@ -129,6 +130,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_RESULT_STACK);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
     helpmenu = new FXMenuPane(this);
@@ -140,9 +142,9 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     FXVerticalFrame *cont = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 82, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-    FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_RIDGE);
+    FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *resultspring = new FXSpring(cont, FRAME_RIDGE|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 18);
+    FXSpring *resultspring = new FXSpring(cont, FRAME_LINE|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 18);
     resulttext = new FXText(resultspring, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
 
@@ -159,12 +161,11 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     new FXVerticalSeparator(rcphf, SEPARATOR_LINE|LAYOUT_FILL_Y);
 
-    main_recipe_window = new recipe_window(recipe, rcphf, LAYOUT_FILL_Y);
+    main_recipe_window = new recipe_window(recipe, rcphf, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     my_dataset_window = new dataset_window(recipe, this);
 
-    new FXVerticalSeparator(rcphf, SEPARATOR_LINE|LAYOUT_FILL_Y);
-
-    result_filmstack_window = new filmstack_window(m_interactive_fit->stack(), rcphf, LAYOUT_FILL_Y);
+    m_filmstack_dialog = new FXDialogBox(this, "Result Film Stack", DECOR_ALL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    result_filmstack_window = new filmstack_window(m_interactive_fit->stack(), m_filmstack_dialog, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_fit_window = new fit_window(m_interactive_fit, this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
     m_fit_window->bind_result_target(&m_interactive_fit_target);
     m_interactive_fit_target.bind(result_filmstack_window);
@@ -697,5 +698,11 @@ regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
         dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         delete old_recipe;
     }
+    return 1;
+}
+
+long regress_pro_window::onCmdResultStack(FXObject *, FXSelector, void *)
+{
+    m_filmstack_dialog->show(PLACEMENT_OWNER);
     return 1;
 }
