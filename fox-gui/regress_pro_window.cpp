@@ -58,8 +58,9 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_SAVE_RECIPE, regress_pro_window::onCmdSaveRecipe),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_RECIPE, regress_pro_window::onCmdLoadRecipe),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE, regress_pro_window::onCmdRecipeSave),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE_AS, regress_pro_window::onCmdRecipeSaveAs),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_LOAD, regress_pro_window::onCmdRecipeLoad),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
@@ -103,8 +104,9 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     // Script menu
     filemenu=new FXMenuPane(this);
-    new FXMenuCommand(filemenu,"Save",NULL,this,ID_SAVE_RECIPE);
-    new FXMenuCommand(filemenu,"Load",NULL,this,ID_LOAD_RECIPE);
+    new FXMenuCommand(filemenu,"&Save",NULL,this,ID_RECIPE_SAVE);
+    new FXMenuCommand(filemenu,"Save As...",NULL,this,ID_RECIPE_SAVE_AS);
+    new FXMenuCommand(filemenu,"Load",NULL,this,ID_RECIPE_LOAD);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
     new FXMenuTitle(menubar,"&Recipe",NULL,filemenu);
 
@@ -638,31 +640,67 @@ process_foxgui_events(void *data, float progr, const char *msg)
     return 0;
 }
 
+static int
+write_recipe_to_file(fit_recipe *recipe, dataset_table *dataset, const char *filename)
+{
+    writer_t *w = writer_new();
+    recipe->write(w);
+    if (dataset) {
+        dataset->write(w);
+    }
+    FILE *f = fopen(filename, "wb");
+    if (f) {
+        fputs(CSTR(w->text), f);
+        fclose(f);
+        writer_free(w);
+        return 0;
+    }
+    writer_free(w);
+    return 1;
+}
+
+void
+regress_pro_window::save_recipe_as(const FXString& filename)
+{
+    dataset_table *dataset = recipe->ms_setup ? my_dataset_window->dataset() : NULL;
+    if (write_recipe_to_file(recipe, dataset, filename.text())) {
+        FXMessageBox::error(this, MBOX_OK, "Error Saving Recipe", "Cannot write file \"%s\"", filename.text());
+    } else {
+        recipeFilename = filename;
+        m_title_dirty = true;
+   }
+}
+
 long
-regress_pro_window::onCmdSaveRecipe(FXObject *, FXSelector, void *)
+regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this, "Save Recipe As");
     open.setPatternList(patterns_recipe);
 
-    if(open.execute()) {
+    while (open.execute()) {
         FXString new_filename = open.getFilename();
-        writer_t *w = writer_new();
-        recipe->write(w);
-        if (recipe->ms_setup) {
-            my_dataset_window->dataset()->write(w);
+        if (FXStat::exists(new_filename)) {
+            if (MBOX_CLICKED_OK == FXMessageBox::question(this, MBOX_OK_CANCEL, "Save Recipe Warning", "The file \"%s\" already exists\nAre you sure you want to overwrite it ?", new_filename.text())) {
+                save_recipe_as(new_filename);
+                break;
+            }
+        } else {
+            save_recipe_as(new_filename);
+            break;
         }
-        FILE *f = fopen(new_filename.text(), "wb");
-        if (f) {
-            fputs(CSTR(w->text), f);
-            fclose(f);
-        }
-        writer_free(w);
     }
     return 1;
 }
 
 long
-regress_pro_window::onCmdLoadRecipe(FXObject *, FXSelector, void *)
+regress_pro_window::onCmdRecipeSave(FXObject *, FXSelector, void *)
+{
+    save_recipe_as(recipeFilename);
+    return 1;
+}
+
+long
+regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this, "Open Fit Recipe");
     open.setPatternList(patterns_recipe);

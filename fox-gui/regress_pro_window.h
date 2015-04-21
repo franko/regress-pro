@@ -93,8 +93,9 @@ public:
 
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
-    long onCmdSaveRecipe(FXObject*,FXSelector,void*);
-    long onCmdLoadRecipe(FXObject*,FXSelector,void*);
+    long onCmdRecipeSave(FXObject*,FXSelector,void*);
+    long onCmdRecipeSaveAs(FXObject*,FXSelector,void*);
+    long onCmdRecipeLoad(FXObject*,FXSelector,void*);
     long onCmdPlotDispers(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
     long onCmdRunFit(FXObject*,FXSelector,void*);
@@ -113,8 +114,9 @@ public:
 
 public:
     enum {
-        ID_SAVE_RECIPE = FXMainWindow::ID_LAST,
-        ID_LOAD_RECIPE,
+        ID_RECIPE_SAVE = FXMainWindow::ID_LAST,
+        ID_RECIPE_SAVE_AS,
+        ID_RECIPE_LOAD,
         ID_LOAD_SPECTRA,
         ID_DISP_PLOT,
         ID_DISP_OPTIM,
@@ -144,6 +146,7 @@ private:
     void update_interactive_fit(fit_engine *fit);
     void set_spectrum(struct spectrum *s);
     void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
+    void save_recipe_as(const FXString& filename);
 
     interactive_fit *m_interactive_fit;
     fit_window *m_fit_window;
