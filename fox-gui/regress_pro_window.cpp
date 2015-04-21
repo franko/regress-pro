@@ -434,6 +434,7 @@ void
 regress_pro_window::set_stack_result(stack_t *new_stack)
 {
     m_interactive_fit->bind_stack(new_stack);
+    m_interactive_fit->generate_spectra();
     m_fit_window->reload();
     result_filmstack_window->bind_new_filmstack(new_stack);
 }
