@@ -1,6 +1,7 @@
 #include "batch_window.h"
 #include "grid-search.h"
 #include "regress_pro_window.h"
+#include "error-messages.h"
 
 extern "C" {
     static int window_process_events(void *data, float p, const char *msg);
@@ -27,11 +28,10 @@ batch_window::batch_window(regress_pro_window *w, FXuint opts, FXint pl, FXint p
     new FXButton(bframe, "Run", NULL, this, ID_RUN_BATCH);
 }
 
-int batch_window::batch_run(fit_recipe *recipe, FXString error_msg)
+int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
 {
     if (recipe->parameters->number == 0 ||
-        check_fit_parameters(recipe->stack, recipe->parameters) != 0) {
-        error_msg = "Missing fitting parameters";
+        check_fit_parameters(recipe->stack, recipe->parameters, error_msg) != 0) {
         return 1;
     }
 
@@ -61,9 +61,8 @@ int batch_window::batch_run(fit_recipe *recipe, FXString error_msg)
     FXString result;
     for (int i = 0; i < table->samples_number(); i++) {
         FXString name = table->getItemText(i, 0);
-        spectrum *s = load_gener_spectrum(name.text());
+        spectrum *s = load_gener_spectrum(name.text(), error_msg);
         if (!s) {
-            error_msg.format("Error loading spectra from file: %s", name.text());
             return 1;
         }
         double chisq;
@@ -91,9 +90,10 @@ long batch_window::on_cmd_run_batch(FXObject *, FXSelector, void *)
 {
     fit_recipe *recipe = app_window->get_current_recipe();
     if (recipe) {
-        FXString error_msg;
-        if (batch_run(recipe, error_msg)) {
-            FXMessageBox::information(this, MBOX_OK, "Running batch", "Error running the batch: %s\n", error_msg.text());
+        str_ptr error_msg;
+        if (batch_run(recipe, &error_msg)) {
+            FXMessageBox::information(this, MBOX_OK, "Running batch", "%s\n", CSTR(error_msg));
+            free_error_message(error_msg);
         }
     }
     return 1;

@@ -50,7 +50,7 @@
 #include "lexer.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
-static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config);
+static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config, str_ptr *error_msg);
 
 // Map
 FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
@@ -227,11 +227,12 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
     if(open.execute()) {
         spectrFile = open.getFilename();
 
-        struct spectrum *new_spectrum = load_gener_spectrum(spectrFile.text());
+        str_ptr error_msg;
+        struct spectrum *new_spectrum = load_gener_spectrum(spectrFile.text(), &error_msg);
 
         if(new_spectrum == NULL) {
-            FXMessageBox::information(this, MBOX_OK, "Spectra loading",
-                                      "Cannot load spectra %s", spectrFile.text());
+            FXMessageBox::information(this, MBOX_OK, "Spectra loading", "%s.", CSTR(error_msg));
+            free_error_message(error_msg);
         } else {
             set_spectrum(new_spectrum);
         }
@@ -306,8 +307,6 @@ regress_pro_window::~regress_pro_window()
         spectra_free(this->spectrum);
     }
     delete m_interactive_fit;
-
-    clean_error_msgs();
 }
 
 long
@@ -341,7 +340,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
         int error_col;
         bool ok = dataset->get_values(i, cparams, constr_values, error_col);
         if (!ok) {
-            FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing parameter");
+            FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing required parameter in dataset.");
             delete [] constr_values;
             multi_fit_engine_free(fit);
             return 1;
@@ -353,13 +352,13 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     FXString error_filename;
     bool ok = dataset->get_spectra_list(fit->spectra_list, error_filename);
     if (!ok) {
-        FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "error opening: %s", error_filename.text());
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "error opening: \"%s\".", error_filename.text());
         multi_fit_engine_free(fit);
         return 1;
     }
 
     if(multi_fit_engine_prepare(fit) != 0) {
-        FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Error preparing multi fit calculatin");
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Error preparing multi fit calculations.");
         multi_fit_engine_free(fit);
         return 1;
     }
@@ -371,7 +370,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
         int error_col;
         bool ok = dataset->get_values(i, iparams, iseed_values, error_col);
         if (!ok) {
-            FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing parameter");
+            FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing required parameter in dataset.");
             delete [] iseed_values;
             seed_list_free(iseeds);
             multi_fit_engine_disable(fit);
@@ -396,8 +395,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     progress.hide();
 
     if(fit_error_msgs.length() > 0) {
-        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages", "%s", fit_error_msgs.cstr());
-        clean_error_msgs();
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages", "%s.", fit_error_msgs.cstr());
     }
 
     FXString text_fit_result;
@@ -475,7 +473,6 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     if(fit_error_msgs.length() > 0) {
         FXMessageBox::information(this, MBOX_OK, "Fit messages",
                                   "%s", fit_error_msgs.cstr());
-        clean_error_msgs();
     }
 
     FXString fitresult, row;
@@ -505,9 +502,13 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 }
 
 fit_engine *
-prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config)
+prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config, str_ptr *error_msg)
 {
-    if (parameters->number == 0 || check_fit_parameters(stack, parameters) != 0) {
+    if (parameters->number == 0) {
+        *error_msg = new_error_message(FIT_ERROR, "No fitting parameter defined");
+        return NULL;
+    }
+    if (check_fit_parameters(stack, parameters, error_msg) != 0) {
         return NULL;
     }
     fit_engine *fit = fit_engine_new();
@@ -522,10 +523,12 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
         return 0;
     }
     reg_check_point(this);
-    fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config);
+    str_ptr error_msg;
+    fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
     if (!fit) {
-        // ADD a proper ERROR MESSAGE here.
-        return 0;
+        FXMessageBox::error(this, MBOX_OK, "Fit running message", "%s.", CSTR(error_msg));
+        free_error_message(error_msg);
+        return 1;
     }
     run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
@@ -566,18 +569,6 @@ regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
     dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
     m_result_stack_match = false;
     return 1;
-}
-
-void
-regress_pro_window::reportErrors()
-{
-    str_t errmsg;
-    str_init(errmsg, 128);
-    get_errors_list(errmsg);
-    FXMessageBox::information(this, MBOX_OK, "Script parsing",
-                              "The parsing of the script has been"
-                              " unsuccessful :\n%s", CSTR(errmsg));
-    str_free(errmsg);
 }
 
 float
@@ -664,7 +655,7 @@ regress_pro_window::save_recipe_as(const FXString& filename)
 {
     dataset_table *dataset = recipe->ms_setup ? my_dataset_window->dataset() : NULL;
     if (write_recipe_to_file(recipe, dataset, filename.text())) {
-        FXMessageBox::error(this, MBOX_OK, "Error Saving Recipe", "Cannot write file \"%s\"", filename.text());
+        FXMessageBox::error(this, MBOX_OK, "Error Saving Recipe", "Cannot write file \"%s\".", filename.text());
     } else {
         recipeFilename = filename;
         m_title_dirty = true;
@@ -710,19 +701,25 @@ regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
         Str content;
 
         if(str_loadfile(filename.text(), content.str()) != 0) {
+            FXMessageBox::error(this, MBOX_OK, "Recipe load", "Cannot read file \"%s\".", filename.text());
             return 1;
         }
 
         lexer_t *l = lexer_new(content.cstr());
         fit_recipe *new_recipe = fit_recipe::read(l);
         if (!new_recipe) {
+            FXMessageBox::error(this, MBOX_OK, "Recipe load", "Invalid recipe file \"%s\".", filename.text());
             lexer_free(l);
             return 1;
         }
 
         dataset_table *dataset = my_dataset_window->dataset();
         if (l->current.tk != TK_EOF) {
-            dataset->read_update(l);
+            if (dataset->read_update(l)) {
+                FXMessageBox::error(this, MBOX_OK, "Recipe load", "Invalid dataset section in recipe file \"%s\".", filename.text());
+                lexer_free(l);
+                return 1;
+            }
         }
         lexer_free(l);
         recipeFilename = filename;

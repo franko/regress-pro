@@ -129,7 +129,7 @@ disp_table_n_value(const disp_t *disp, double lam)
 }
 
 struct disp_struct *
-disp_table_new_from_nk_file(const char * filename) {
+disp_table_new_from_nk_file(const char * filename, str_ptr *error_msg) {
     struct disp_struct *disp;
     struct disp_table *table;
     FILE * f;
@@ -142,14 +142,13 @@ disp_table_new_from_nk_file(const char * filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "Cannot open %s", filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
     nread = fscanf(f, "%*i %f %f %i\n", & wlmin, & wlmax, &npt);
     if(nread < 3) {
-        notify_error_msg(LOADING_FILE_ERROR, "File %s not in NK format",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" not in NK format", filename);
         return NULL;
     }
 
@@ -160,7 +159,7 @@ disp_table_new_from_nk_file(const char * filename) {
 
         nread = fscanf(f, "%f %f\n", & nr, & ni);
         if(nread < 2) {
-            notify_error_msg(LOADING_FILE_ERROR, "invalid format for nk table");
+            *error_msg = new_error_message(LOADING_FILE_ERROR, "invalid format for nk table");
             goto disp_nk_free;
         }
 

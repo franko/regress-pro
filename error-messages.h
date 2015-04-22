@@ -6,21 +6,14 @@
 
 __BEGIN_DECLS
 
-enum err_contest {
-    SYNTAX_ERROR,
-    SCRIPT_ERROR,
+enum error_type_e {
     LOADING_FILE_ERROR,
-    INVALID_STRATEGY,
+    RECIPE_CHECK,
     FIT_ERROR
 };
 
-extern void     notify_script_err_msg(enum err_contest c, int fline,
-                                      int lline, const char * msg, ...);
-extern void     notify_error_msg(enum err_contest c,
-                                 const char * msg, ...);
-extern void     get_errors_list(str_t text);
-extern void     clean_error_msgs(void);
-extern int      get_script_error_region(int *fline, int *lline);
+extern str_ptr new_error_message(enum error_type_e c, const char * msg, ...);
+extern void    free_error_message(str_ptr error_msg);
 
 __END_DECLS
 

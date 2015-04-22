@@ -79,8 +79,8 @@ struct disp_struct {
 
 typedef struct disp_struct disp_t;
 
-extern disp_t * load_nk_table(const char * filename);
-extern disp_t * load_mat_dispers(const char * filename);
+extern disp_t * load_nk_table(const char * filename, str_ptr *error_msg);
+extern disp_t * load_mat_dispers(const char * filename, str_ptr *error_msg);
 extern cmpl     n_value(const disp_t *mat, double lam);
 extern void     n_value_cpp(const disp_t *mat, double lam,
                             double *nr, double *ni);

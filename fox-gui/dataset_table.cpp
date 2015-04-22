@@ -1,5 +1,6 @@
 #include "dataset_table.h"
 #include "fit_params_utils.h"
+#include "error-messages.h"
 
 // Map
 FXDEFMAP(dataset_table) dataset_table_map[]= {
@@ -101,9 +102,11 @@ bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_f
 {
     for (int i = 0; i < samples_number(); i++) {
         FXString name = getItemText(i, 0);
-        spectrum *s = load_gener_spectrum(name.text());
+        str_ptr error_msg;
+        spectrum *s = load_gener_spectrum(name.text(), &error_msg);
         if (!s) {
             error_filename = name;
+            free_error_message(error_msg);
             return false;
         }
         spectra_list[i] = s;

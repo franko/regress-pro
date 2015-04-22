@@ -253,7 +253,7 @@ fit_engine_disable(struct fit_engine *fit)
 }
 
 int
-check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
+check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *error_msg)
 {
     size_t j, nb_med = (size_t) stack->nb;
 
@@ -261,7 +261,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
 
     for(j = 0; j < nb_med; j++) {
         if(disp_integrity_check(stack->disp[j])) {
-            notify_error_msg(INVALID_STRATEGY, "corrupted material card");
+            *error_msg = new_error_message(RECIPE_CHECK, "corrupted material card");
             return 1;
         }
     }
@@ -273,17 +273,13 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
             break;
         case PID_THICKNESS:
             if(fp->layer_nb == 0 || fp->layer_nb >= nb_med - 1) {
-                notify_error_msg(INVALID_STRATEGY,
-                                 "reference to thickness of layer %i",
-                                 fp->layer_nb);
+                *error_msg = new_error_message(RECIPE_CHECK, "reference to thickness of layer %i", fp->layer_nb);
                 return 1;
             }
             break;
         case PID_LAYER_N:
             if(fp->layer_nb >= nb_med) {
-                notify_error_msg(INVALID_STRATEGY,
-                                 "Reference to parameter of material number %i",
-                                 fp->layer_nb);
+                *error_msg = new_error_message(RECIPE_CHECK, "Reference to parameter of material number %i", fp->layer_nb);
                 return 1;
             }
 
@@ -291,7 +287,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
                 str_t pname;
                 str_init(pname, 16);
                 get_param_name(fp, pname);
-                notify_error_msg(INVALID_STRATEGY,
+                *error_msg = new_error_message(RECIPE_CHECK,
                                  "Parameter %s makes no sense for layer %i",
                                  CSTR(pname), fp->layer_nb);
                 str_free(pname);
@@ -299,7 +295,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
             }
             break;
         default:
-            notify_error_msg(INVALID_STRATEGY, "ill-formed fit parameter");
+            *error_msg = new_error_message(RECIPE_CHECK, "ill-formed fit parameter");
             return 1;
         }
     }
@@ -418,7 +414,7 @@ fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_c
 }
 
 void
-fit_engine_bind_stack(struct fit_engine *fit, const stack_t *stack)
+fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack)
 {
     if (fit->stack) {
         stack_free(fit->stack);

@@ -81,7 +81,7 @@ extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const 
 
 /* Bind the fit_engine to the provided film stack by taking the ownership.
    No copy of the film stack is made. */
-extern void fit_engine_bind_stack(struct fit_engine *fit, const stack_t *stack);
+extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 
 extern void fit_engine_free(struct fit_engine *fit);
 
@@ -94,8 +94,7 @@ extern void fit_engine_disable(struct fit_engine *f);
    caller function. */
 extern stack_t *fit_engine_yield_stack(struct fit_engine *f);
 
-extern int  check_fit_parameters(struct stack *stack,
-                                 struct fit_parameters *fps);
+extern int  check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *error_msg);
 
 extern void fit_engine_commit_parameters(struct fit_engine *fit,
         const gsl_vector *x);

@@ -7,19 +7,18 @@
 
 #include "dispers.h"
 #include "common.h"
-#include "error-messages.h"
 #include "cmpl.h"
 #include "str.h"
 #include "fit-params.h"
 #include "dispers-library.h"
 
 disp_t *
-load_nk_table(const char * filename)
+load_nk_table(const char * filename, str_ptr *error_msg)
 {
     const char *bname;
     disp_t * disp;
 
-    disp = disp_table_new_from_nk_file(filename);
+    disp = disp_table_new_from_nk_file(filename, error_msg);
 
     if(disp == NULL) {
         return NULL;
@@ -36,9 +35,9 @@ load_nk_table(const char * filename)
 }
 
 disp_t *
-load_mat_dispers(const char * filename)
+load_mat_dispers(const char * filename, str_ptr *error_msg)
 {
-    return disp_sample_table_new_from_mat_file(filename);
+    return disp_sample_table_new_from_mat_file(filename, error_msg);
 }
 
 
@@ -93,8 +92,6 @@ get_model_param_deriv(const disp_t *disp, struct deriv_info *deriv_info,
                       const fit_param_t *fp, double lambda,
                       double *dnr, double *dni)
 {
-    enum disp_type disp_type;
-    const struct disp_lookup * lookup;
     cmpl val;
 
     assert(disp->dclass != NULL);

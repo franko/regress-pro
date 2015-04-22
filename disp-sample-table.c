@@ -100,7 +100,7 @@ disp_sample_table_n_value(const disp_t *disp, double _lam)
 }
 
 disp_t *
-disp_sample_table_new_from_mat_file(const char * filename)
+disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 {
     FILE * f;
     str_t row;
@@ -112,7 +112,7 @@ disp_sample_table_new_from_mat_file(const char * filename)
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "Cannot open %s", filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
@@ -126,8 +126,7 @@ disp_sample_table_new_from_mat_file(const char * filename)
     } else if(strncasecmp(CSTR(row), "ev", 2) == 0) {
         convert_ev = 1;
     } else if(strncasecmp(CSTR(row), "nm", 2) != 0) {
-        notify_error_msg(LOADING_FILE_ERROR, "Invalide MAT format: %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalide MAT file: \"%s\"", filename);
         goto close_exit;
     }
 
@@ -138,8 +137,7 @@ disp_sample_table_new_from_mat_file(const char * filename)
         dtype = DISP_SAMPLE_TABLE;
         provide_diel_k = 1;
     } else {
-        notify_error_msg(LOADING_FILE_ERROR, "Invalide MAT format: %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalide MAT file: \"%s\"", filename);
         goto close_exit;
     }
 
@@ -205,7 +203,7 @@ disp_sample_table_new_from_mat_file(const char * filename)
         break;
     }
     case DISP_CAUCHY:
-        notify_error_msg(LOADING_FILE_ERROR, "cauchy MAT files");
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "cauchy MAT format is unsupported");
         break;
 #if 0
         cn = disp->disp.cauchy.n;
@@ -217,7 +215,7 @@ disp_sample_table_new_from_mat_file(const char * filename)
         break;
 #endif
     default:
-        notify_error_msg(LOADING_FILE_ERROR, "corrupted material card");
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "corrupted material card");
         break;
     }
 

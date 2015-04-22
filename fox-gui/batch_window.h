@@ -30,7 +30,7 @@ public:
     };
 
 private:
-    int batch_run(fit_recipe *recipe, FXString error_msg);
+    int batch_run(fit_recipe *recipe, str_ptr *error_msg);
 
     regress_pro_window *app_window;
     filelist_table *table;

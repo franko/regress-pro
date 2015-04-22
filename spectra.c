@@ -9,11 +9,11 @@
 #include "str.h"
 
 
-static struct spectrum * load_ellips_spectrum(const char *filename);
+static struct spectrum * load_ellips_spectrum(const char *filename, str_ptr *error_msg);
 
 
 struct spectrum *
-load_ellips_spectrum(const char *filename) {
+load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
     struct spectrum *s;
     struct system_config *cfg;
     struct data_table *data_table;
@@ -24,8 +24,7 @@ load_ellips_spectrum(const char *filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "error loading spectra %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
@@ -104,8 +103,7 @@ load_ellips_spectrum(const char *filename) {
 
     return s;
 invalid_s:
-    notify_error_msg(LOADING_FILE_ERROR, "format of spectra %s is incorrect",
-                     filename);
+    *error_msg = new_error_message(LOADING_FILE_ERROR, "Format of spectra %s is incorrect", filename);
     free(s);
     str_free(ln);
     fclose(f);
@@ -127,7 +125,8 @@ spectra_free(struct spectrum *s)
 }
 
 struct spectrum *
-load_gener_spectrum(const char *filename) {
+load_gener_spectrum(const char *filename, str_ptr *error_msg)
+{
     struct spectrum *spectr;
     str_t ln;
     FILE *f;
@@ -135,8 +134,7 @@ load_gener_spectrum(const char *filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "error loading spectra file %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
@@ -146,9 +144,9 @@ load_gener_spectrum(const char *filename) {
     fclose(f);
 
     if(strstr(CSTR(ln), "SE ALPHA BETA") || strstr(CSTR(ln), "SE PSI DELTA")) {
-        spectr = load_ellips_spectrum(filename);
+        spectr = load_ellips_spectrum(filename, error_msg);
     } else {
-        spectr = load_refl_data(filename);
+        spectr = load_refl_data(filename, error_msg);
     }
 
     str_free(ln);

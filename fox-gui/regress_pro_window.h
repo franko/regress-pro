@@ -110,8 +110,6 @@ public:
     long onUpdate(FXObject*,FXSelector,void*);
     long onCmdResultStack(FXObject*,FXSelector,void*);
 
-    void reportErrors();
-
 public:
     enum {
         ID_RECIPE_SAVE = FXMainWindow::ID_LAST,
