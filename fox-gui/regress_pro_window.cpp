@@ -27,7 +27,6 @@
 #include <gsl/gsl_vector.h>
 
 #include "regress_pro_window.h"
-#include "dispers_dialog.h"
 #include "Strcpp.h"
 #include "error-messages.h"
 #include "fit-engine.h"
@@ -62,7 +61,6 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE_AS, regress_pro_window::onCmdRecipeSaveAs),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_LOAD, regress_pro_window::onCmdRecipeLoad),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_PLOT, regress_pro_window::onCmdPlotDispers),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
@@ -122,7 +120,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     // Dispersion menu
     dispmenu = new FXMenuPane(this);
-    new FXMenuCommand(dispmenu, "&Plot Dispersion",NULL,this,ID_DISP_PLOT);
     new FXMenuCommand(dispmenu, "Dispersion Optimize",NULL,this,ID_DISP_OPTIM);
     new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
 
@@ -240,14 +237,6 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
     }
 
     return 0;
-}
-
-long
-regress_pro_window::onCmdPlotDispers(FXObject*,FXSelector,void*)
-{
-    dispers_dialog dialog(this, m_interactive_fit->stack());
-    dialog.execute();
-    return 1;
 }
 
 long

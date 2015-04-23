@@ -96,7 +96,6 @@ public:
     long onCmdRecipeSave(FXObject*,FXSelector,void*);
     long onCmdRecipeSaveAs(FXObject*,FXSelector,void*);
     long onCmdRecipeLoad(FXObject*,FXSelector,void*);
-    long onCmdPlotDispers(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
     long onCmdRunFit(FXObject*,FXSelector,void*);
     long onCmdInteractiveFit(FXObject*,FXSelector,void*);
@@ -116,7 +115,6 @@ public:
         ID_RECIPE_SAVE_AS,
         ID_RECIPE_LOAD,
         ID_LOAD_SPECTRA,
-        ID_DISP_PLOT,
         ID_DISP_OPTIM,
         ID_RUN_FIT,
         ID_INTERACTIVE_FIT,

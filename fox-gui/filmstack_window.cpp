@@ -3,6 +3,7 @@
 #include "fit-params.h"
 #include "dispers-library.h"
 #include "dispers_ui_utils.h"
+#include "dispers_win.h"
 #include "regress_pro.h"
 
 // Map
@@ -16,6 +17,7 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_EDIT_LAYER, filmstack_window::on_cmd_edit_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_SAVE_USERLIB, filmstack_window::on_cmd_save_userlib),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, filmstack_window::onCmdHide),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_PLOT_DISP, filmstack_window::on_cmd_plot_dispersion),
 };
 
 FXIMPLEMENT(filmstack_window,FXPacker,filmstack_window_map,ARRAYNUMBER(filmstack_window_map));
@@ -32,7 +34,8 @@ filmstack_window::filmstack_window(stack_t *s, FXComposite *p, FXuint opts, FXin
     new FXMenuCommand(popupmenu,"Insert Layer Above", NULL, this, ID_INSERT_LAYER);
     new FXMenuCommand(popupmenu,"Edit Dispersion", NULL, this, ID_EDIT_LAYER);
     new FXMenuSeparator(popupmenu);
-    new FXMenuCommand(popupmenu,"Save into User Library", NULL, this, ID_SAVE_USERLIB);
+    new FXMenuCommand(popupmenu,"Save to User Library", NULL, this, ID_SAVE_USERLIB);
+    new FXMenuCommand(popupmenu,"Plot\t\tPlot dispersion", NULL, this, ID_PLOT_DISP);
 }
 
 filmstack_window::~filmstack_window()
@@ -214,4 +217,12 @@ filmstack_window::update_values()
         nstr.format("%.4g", stack->thickness[i - 1]);
         thktf->setText(nstr);
     }
+}
+
+long
+filmstack_window::on_cmd_plot_dispersion(FXObject *, FXSelector, void *)
+{
+    dispers_win dwin(this, stack->disp[current_layer]);
+    dwin.execute();
+    return 1;
 }
