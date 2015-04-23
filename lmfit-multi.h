@@ -16,8 +16,7 @@ __BEGIN_DECLS
 int
 lmfit_multi(struct multi_fit_engine *fit,
             struct seeds *seeds_common, struct seeds *seeds_priv,
-            str_ptr analysis,
-            str_ptr error_msg, int preserve_init_stack,
+            str_ptr analysis, str_ptr error_msg,
             gui_hook_func_t hfun, void *hdata);
 
 __END_DECLS

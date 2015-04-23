@@ -130,7 +130,7 @@ public:
         }
 
         double chisq;
-        lmfit_simple(m_fit_engine, x, &chisq, 0, 0, 0, 0, 0);
+        lmfit_simple(m_fit_engine, x, &chisq, 0, 0, 0, 0);
 
         fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
 

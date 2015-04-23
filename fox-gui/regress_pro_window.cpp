@@ -378,7 +378,6 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     Str analysis;
     lmfit_multi(fit, recipe->seeds_list, iseeds,
                 analysis.str(), fit_error_msgs.str(),
-                LMFIT_GET_RESULTING_STACK,
                 process_foxgui_events, &progress);
 
     progress.hide();

@@ -10,25 +10,21 @@
 
 int
 lmfit_simple(struct fit_engine *fit, gsl_vector *x,
-             double * chisq, str_ptr analysis,
-             str_ptr error_msg, int preserve_init_stack,
+             double * chisq, str_ptr analysis, str_ptr error_msg,
              gui_hook_func_t hfun, void *hdata)
 {
     const gsl_multifit_fdfsolver_type *T;
     gsl_multifit_fdfsolver *s;
     gsl_multifit_function_fdf *f;
     struct fit_config *cfg = fit->config;
-    int nb, j, iter;
+    int iter;
     double chi;
     int status;
-    stack_t *initial_stack;
     int stop_request;
 
     assert(fit->run);
 
     f = &fit->run->mffun;
-
-    nb = fit->parameters->number;
 
     /* We choose Levenberg-Marquardt algorithm, scaled version*/
     T = gsl_multifit_fdfsolver_lmsder;
@@ -73,15 +69,8 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
         }
     }
 
-    if(preserve_init_stack) {
-        /* we restore the initial stack */
-        stack_t *tmp_stack = fit->stack;
-        fit->stack = initial_stack;
-        stack_free(tmp_stack);
-    } else {
-        /* we take care to commit the results obtained from the fit */
-        fit_engine_commit_parameters(fit, x);
-    }
+    /* we take care to commit the results obtained from the fit */
+    fit_engine_commit_parameters(fit, x);
 
     gsl_vector_memcpy(fit->run->results, x);
 
