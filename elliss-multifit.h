@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 #ifndef ELLIS_MULTIFIT_H
 #define ELLIS_MULTIFIT_H
 

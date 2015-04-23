@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 #ifndef FIT_ENGINE_COMMON_H
 #define FIT_ENGINE_COMMON_H
 

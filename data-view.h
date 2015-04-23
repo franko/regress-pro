@@ -1,7 +1,3 @@
-/*
-  $Id$
- */
-
 #ifndef DATA_VIEW_H
 #define DATA_VIEW_H
 

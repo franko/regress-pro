@@ -1,7 +1,3 @@
-/*
-  $Id$
- */
-
 #ifndef MULTI_FIT_ENGINE_H
 #define MULTI_FIT_ENGINE_H
 

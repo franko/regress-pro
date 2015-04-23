@@ -1,8 +1,3 @@
-
-/*
-  $Id$
- */
-
 #ifndef LMFIT_MULTI_H
 #define LMFIT_MULTI_H
 

@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 #include "elliss-multifit.h"
 #include "multi-fit-engine.h"
 #include "elliss.h"
