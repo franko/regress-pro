@@ -56,6 +56,7 @@ long filelist_table::on_cmd_add_files(FXObject *, FXSelector, void *)
         for (int i = 0; filenames && filenames[i] != ""; i++) {
             set_filename(n + i, filenames[i].text());
         }
+        delete [] filenames;
     }
     return 1;
 }

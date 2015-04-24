@@ -24,6 +24,7 @@ dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FX
 dataset_table::~dataset_table()
 {
     delete popupmenu;
+    fit_parameters_free(fit_params);
     str_free(buffer);
 }
 
@@ -107,6 +108,10 @@ bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_f
         if (!s) {
             error_filename = name;
             free_error_message(error_msg);
+            for (int k = 0; k < i; k++) {
+                spectra_free(spectra_list[k]);
+                spectra_list[k] = NULL;
+            }
             return false;
         }
         spectra_list[i] = s;

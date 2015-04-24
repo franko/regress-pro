@@ -310,6 +310,13 @@ regress_pro_window::onCmdRunBatch(FXObject *, FXSelector, void *)
     return 1;
 }
 
+static void free_spectra_list(int n, struct spectrum **spectra_list)
+{
+    for (int i = 0; i < n; i++) {
+        spectra_free(spectra_list[i]);
+    }
+}
+
 long
 regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 {
@@ -348,6 +355,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 
     if(multi_fit_engine_prepare(fit) != 0) {
         FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Error preparing multi fit calculations.");
+        free_spectra_list(samples_number, fit->spectra_list);
         multi_fit_engine_free(fit);
         return 1;
     }
@@ -363,6 +371,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
             delete [] iseed_values;
             seed_list_free(iseeds);
             multi_fit_engine_disable(fit);
+            free_spectra_list(samples_number, fit->spectra_list);
             multi_fit_engine_free(fit);
             return 1;
         }
@@ -402,6 +411,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 
     seed_list_free(iseeds);
     multi_fit_engine_disable(fit);
+    free_spectra_list(samples_number, fit->spectra_list);
     multi_fit_engine_free(fit);
 
     return 1;

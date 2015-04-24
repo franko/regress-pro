@@ -38,6 +38,9 @@ struct fit_param_link {
 
     // Implement "move" semantics.
     void set_to(fit_param_link *other) {
+        if (params) {
+            fit_parameters_free(params);
+        }
         params = other->params;
         top = other->top;
         other->top = NULL;
