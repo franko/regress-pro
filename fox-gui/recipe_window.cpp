@@ -64,7 +64,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     FXHorizontalFrame *bhf = new FXHorizontalFrame(botspr, LAYOUT_FILL_Y);
 
     params_group = new FXGroupBox(bhf, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT);
+    param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT, FRAME_SUNKEN|LISTBOX_NORMAL);
     param_listbox->setNumVisible(8);
 
     setup_parameters_list();
