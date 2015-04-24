@@ -50,6 +50,11 @@ public:
         }
     }
 
+    void update_parameters_list() {
+        fit_parameters_free(m_all_parameters);
+        m_all_parameters = fit_engine_get_all_parameters(m_fit_engine);
+    }
+
     bool spectra_loaded() const { return m_ref_spectr && m_model_spectr; }
 
     void generate_spectra() {
@@ -145,7 +150,7 @@ public:
         }
     }
 
-    int update(const fit_engine *src_fit) {
+    int update_from_fit_results(const fit_engine *src_fit) {
         for(unsigned k = 0; k < m_all_parameters->number; k++) {
             const fit_param_t *fp = &m_all_parameters->values[k];
             double val = fit_engine_get_parameter_value(src_fit, fp);

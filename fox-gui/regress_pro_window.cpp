@@ -165,6 +165,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     m_filmstack_dialog = new FXDialogBox(this, "Result Film Stack", DECOR_ALL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     result_filmstack_window = new filmstack_window(m_interactive_fit->stack(), m_filmstack_dialog, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    result_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
     m_fit_window = new fit_window(m_interactive_fit, this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
     m_fit_window->bind_result_target(&m_interactive_fit_target);
     m_interactive_fit_target.bind(result_filmstack_window);
@@ -435,14 +436,14 @@ regress_pro_window::set_stack_result(stack_t *new_stack)
     m_interactive_fit->bind_stack(new_stack);
     m_interactive_fit->generate_spectra();
     m_fit_window->reload();
-    result_filmstack_window->bind_new_filmstack(new_stack);
+    result_filmstack_window->bind_new_filmstack(new_stack, false);
 }
 
 void
 regress_pro_window::update_interactive_fit(fit_engine *fit)
 {
     if (m_result_stack_match) {
-        m_interactive_fit->update(fit);
+        m_interactive_fit->update_from_fit_results(fit);
         m_fit_window->refresh();
         result_filmstack_window->update_values();
     } else {
@@ -550,22 +551,30 @@ regress_pro_window::onCmdDatasetEdit(FXObject*,FXSelector,void*)
 }
 
 long
-regress_pro_window::onCmdStackChange(FXObject*,FXSelector,void*)
+regress_pro_window::onCmdStackChange(FXObject *sender,FXSelector,void *)
 {
-    main_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
-    dataset_table *dataset = my_dataset_window->dataset();
-    dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
-    m_result_stack_match = false;
+    if ((filmstack_window *) sender == main_filmstack_window) {
+        main_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+        dataset_table *dataset = my_dataset_window->dataset();
+        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
+        m_result_stack_match = false;
+    } else if ((filmstack_window *) sender == result_filmstack_window) {
+        m_interactive_fit->update_parameters_list();
+        m_interactive_fit->generate_spectra();
+        m_fit_window->reload();
+        m_result_stack_match = false;
+    }
     return 1;
 }
 
 long
-regress_pro_window::onCmdStackShift(FXObject *, FXSelector, void *ptr)
+regress_pro_window::onCmdStackShift(FXObject *sender, FXSelector, void *ptr)
 {
-    recipe->shift_fit_parameters((shift_info *)ptr);
-    dataset_table *dataset = my_dataset_window->dataset();
-    dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
-    m_result_stack_match = false;
+    if ((filmstack_window *) sender == main_filmstack_window) {
+        recipe->shift_fit_parameters((shift_info *)ptr);
+        dataset_table *dataset = my_dataset_window->dataset();
+        dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_SHIFT), (shift_info *)ptr);
+    }
     return 1;
 }
 
