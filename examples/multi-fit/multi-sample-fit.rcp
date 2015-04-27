@@ -1,0 +1,44 @@
+stack 5
+  450 90 7.5
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  ho "Thermal SiO2" 1
+    145 15.7884 0 0.3333 0
+  ho "! SiN" 1
+    74.3444 8.35617 0.474468 0.333333 -0.0120003
+  ho "Thermal SiO2" 1
+    145 15.7884 0 0.3333 0
+  library "si-paper-1"
+fit-config
+  max-iterations 80
+  subsampling 1
+  epsilon 1e-007 1e-007
+fit-parameters 4
+  n 2 ho 0
+  n 2 ho 1
+  n 2 ho 2
+  n 2 ho 4
+seed-list 4
+  value 74
+  value 8
+  value 0.4
+  value 0
+multi-sample
+  fit-parameters 2
+    thickness 1
+    thickness 2
+  fit-parameters 0
+
+dataset 5 2
+  fit-parameters 2
+    thickness 2
+    thickness 1
+  samples
+    "c:\fra\dev\regress-pro\examples\multi-fit\samples\test2771.dat" 89 422
+    "c:\fra\dev\regress-pro\examples\multi-fit\samples\test2783.dat" 89 291
+    "c:\fra\dev\regress-pro\examples\multi-fit\samples\test2784.dat" 89 353
+    "c:\fra\dev\regress-pro\examples\multi-fit\samples\test2787.dat" 89 328
+    "c:\fra\dev\regress-pro\examples\multi-fit\samples\test2790.dat" 89 250
+
+

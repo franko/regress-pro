@@ -1,0 +1,22 @@
+stack 5
+  450 90 7.5
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  ho "Thermal SiO2" 1
+    145 15.7884 0 0.3333 0
+  ho "! SiN optimized" 1
+    144.28 11.5966 0.567532 0.333333 -0.00714724
+  ho "Thermal SiO2" 1
+    145 15.7884 0 0.3333 0
+  library "si-paper-1"
+fit-config
+  max-iterations 80
+  subsampling 1
+  epsilon 1e-007 1e-007
+fit-parameters 2
+  thickness 1
+  thickness 2
+seed-list 2
+  range 100 500 10
+  value 90
