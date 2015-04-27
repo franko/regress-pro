@@ -123,6 +123,100 @@ fx_newmodel_selector::reset()
     combo->setCurrentItem(0);
 }
 
+static const FXchar disp_file_patterns[] =
+    "MAT files (*.mat)"
+    "\nDispersion files (*.dsp)"
+    "\nAll Files (*)";
+
+class fx_file_disp_selector : public fx_dispers_selector {
+    FXDECLARE(fx_file_disp_selector)
+protected:
+    fx_file_disp_selector() {};
+private:
+    fx_file_disp_selector(const fx_file_disp_selector&);
+    fx_file_disp_selector &operator=(const fx_file_disp_selector&);
+public:
+    fx_file_disp_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    ~fx_file_disp_selector();
+    virtual disp_t *get_dispersion();
+    virtual void reset();
+
+    long on_cmd_choose_file(FXObject *, FXSelector, void *);
+
+    enum {
+        ID_CHOOSE_FILE = fx_dispers_selector::ID_LAST,
+        ID_LAST
+    };
+private:
+    void set_dispersion(disp_t *d);
+
+    disp_t *m_disp;
+    FXWindow *m_chooser;
+};
+
+// Map
+FXDEFMAP(fx_file_disp_selector) fx_file_disp_selector_map[]= {
+    FXMAPFUNC(SEL_COMMAND, fx_file_disp_selector::ID_CHOOSE_FILE, fx_file_disp_selector::on_cmd_choose_file),
+};
+
+FXIMPLEMENT(fx_file_disp_selector,fx_dispers_selector,fx_file_disp_selector_map,ARRAYNUMBER(fx_file_disp_selector_map));
+
+fx_file_disp_selector::fx_file_disp_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
+    : fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
+    m_disp(NULL), m_chooser(chooser)
+{
+    new FXButton(this, "Choose", NULL, this, ID_CHOOSE_FILE);
+}
+
+fx_file_disp_selector::~fx_file_disp_selector()
+{
+    if (m_disp) {
+        disp_free(m_disp);
+    }
+}
+
+void fx_file_disp_selector::set_dispersion(disp_t *d)
+{
+    if (m_disp) {
+        disp_free(m_disp);
+    }
+    m_disp = d;
+}
+
+long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
+{
+    FXFileDialog open(this,"Open a Dispersion File");
+    // open.setFilename(spectrFile);
+    open.setPatternList(disp_file_patterns);
+
+    if(open.execute()) {
+        FXString filename = open.getFilename();
+        str_ptr error_message;
+        disp_t *disp = load_mat_dispers(filename.text(), &error_message);
+        if (!disp) {
+            FXMessageBox::error(this, MBOX_OK, "Fit running message", "%s.", CSTR(error_message));
+            return 1;
+        }
+        m_disp = disp;
+        m_chooser->handle(this, FXSEL(SEL_COMMAND, dispers_chooser::ID_DISPERS), NULL);
+    }
+    return 1;
+}
+
+disp_t *
+fx_file_disp_selector::get_dispersion()
+{
+    disp_t *d = m_disp;
+    m_disp = NULL;
+    return d;
+}
+
+void
+fx_file_disp_selector::reset()
+{
+    set_dispersion(NULL);
+}
+
 // Map
 FXDEFMAP(dispers_chooser) dispers_chooser_map[]= {
     FXMAPFUNC(SEL_COMMAND, dispers_chooser::ID_CATEGORY, dispers_chooser::on_cmd_category),
@@ -147,7 +241,7 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     vframe = new FXVerticalFrame(vframespring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
     choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|FRAME_GROOVE);
     new fx_library_selector(this, choose_switcher);
-    new fx_dispers_selector(this, choose_switcher);
+    new fx_file_disp_selector(this, choose_switcher);
     new fx_newmodel_selector(this, choose_switcher);
     new fx_userlib_selector(this, choose_switcher);
 
