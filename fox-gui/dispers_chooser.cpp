@@ -2,6 +2,7 @@
 
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
+#include "error-messages.h"
 
 FXIMPLEMENT(fx_dispers_selector,FXHorizontalFrame,NULL,0);
 
@@ -125,6 +126,7 @@ fx_newmodel_selector::reset()
 
 static const FXchar disp_file_patterns[] =
     "MAT files (*.mat)"
+    "\nNK tables (*.nk)"
     "\nDispersion files (*.dsp)"
     "\nAll Files (*)";
 
@@ -154,7 +156,6 @@ private:
     FXWindow *m_chooser;
 };
 
-// Map
 FXDEFMAP(fx_file_disp_selector) fx_file_disp_selector_map[]= {
     FXMAPFUNC(SEL_COMMAND, fx_file_disp_selector::ID_CHOOSE_FILE, fx_file_disp_selector::on_cmd_choose_file),
 };
@@ -186,15 +187,23 @@ void fx_file_disp_selector::set_dispersion(disp_t *d)
 long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this,"Open a Dispersion File");
-    // open.setFilename(spectrFile);
     open.setPatternList(disp_file_patterns);
 
     if(open.execute()) {
         FXString filename = open.getFilename();
         str_ptr error_message;
-        disp_t *disp = load_mat_dispers(filename.text(), &error_message);
+        disp_t *disp = NULL;
+        if (filename.right(4) == ".mat") {
+            disp = load_mat_dispers(filename.text(), &error_message);
+        } else if (filename.right(3) == ".nk") {
+            disp = load_nk_table(filename.text(), &error_message);
+        } else {
+            FXMessageBox::error(this, MBOX_OK, "Dispersion Open", "Unknown extension.");
+            return 1;
+        }
         if (!disp) {
-            FXMessageBox::error(this, MBOX_OK, "Fit running message", "%s.", CSTR(error_message));
+            FXMessageBox::error(this, MBOX_OK, "Dispersion Open", "%s.", CSTR(error_message));
+            free_error_message(error_message);
             return 1;
         }
         m_disp = disp;

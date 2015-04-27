@@ -116,9 +116,10 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
         return NULL;
     }
 
+    str_t name;
+    str_init(name, 64);
     str_init(row, 64);
-
-    str_getline(row, f);
+    str_getline(name, f);
     str_getline(row, f);
 
     if(strncasecmp(CSTR(row), "CAUCHY", 6) == 0) {
@@ -149,6 +150,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
         int j, lines;
 
         disp = disp_new(DISP_SAMPLE_TABLE);
+        str_copy(disp->name, name);
         dt = & disp->disp.sample_table;
         disp_sample_table_clear(dt);
 
@@ -221,6 +223,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 
 close_exit:
     fclose(f);
+    str_free(name);
     str_free(row);
     return disp;
 }
