@@ -45,6 +45,7 @@ public:
     long on_change_thickness(FXObject*,FXSelector,void* ptr);
     long on_cmd_save_userlib(FXObject*,FXSelector,void* ptr);
     long on_cmd_plot_dispersion(FXObject *, FXSelector, void *);
+    long on_cmd_disp_save_tofile(FXObject *, FXSelector, void *);
 
     enum {
         ID_FILM_MENU = FXPacker::ID_LAST,
@@ -59,6 +60,7 @@ public:
         ID_REPLACE_LAYER,
         ID_SAVE_USERLIB,
         ID_PLOT_DISP,
+        ID_DISP_SAVEFILE,
         ID_LAST
     };
 

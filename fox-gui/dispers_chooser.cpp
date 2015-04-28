@@ -3,6 +3,8 @@
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
 #include "error-messages.h"
+#include "str-util.h"
+#include "lexer.h"
 
 FXIMPLEMENT(fx_dispers_selector,FXHorizontalFrame,NULL,0);
 
@@ -197,6 +199,22 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
             disp = load_mat_dispers(filename.text(), &error_message);
         } else if (filename.right(3) == ".nk") {
             disp = load_nk_table(filename.text(), &error_message);
+        } else if (filename.right(4) == ".dsp") {
+            str_t disp_text;
+            str_init(disp_text, 128);
+            if(str_loadfile(filename.text(), disp_text) != 0) {
+                FXMessageBox::error(this, MBOX_OK, "Dispersion Open", "Cannot read file \"%s\".", filename.text());
+                str_free(disp_text);
+                return 1;
+            }
+
+            lexer_t *l = lexer_new(CSTR(disp_text));
+            disp = disp_read(l);
+            lexer_free(l);
+            str_free(disp_text);
+            if (!disp) {
+                error_message = new_error_message(LOADING_FILE_ERROR, "Cannot open dispersion file \"%s\"", filename.text());
+            }
         } else {
             FXMessageBox::error(this, MBOX_OK, "Dispersion Open", "Unknown extension.");
             return 1;

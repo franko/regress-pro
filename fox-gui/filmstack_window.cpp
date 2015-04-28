@@ -5,6 +5,11 @@
 #include "dispers_ui_utils.h"
 #include "dispers_win.h"
 #include "regress_pro.h"
+#include "writer.h"
+
+static const FXchar disp_patterns[] =
+    "Dispersion files (*.dsp)"
+    "\nAll Files (*)";
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -16,6 +21,7 @@ FXDEFMAP(filmstack_window) filmstack_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_REPLACE_LAYER, filmstack_window::on_cmd_replace_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_EDIT_LAYER, filmstack_window::on_cmd_edit_layer),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_SAVE_USERLIB, filmstack_window::on_cmd_save_userlib),
+    FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DISP_SAVEFILE, filmstack_window::on_cmd_disp_save_tofile),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_DELETE, filmstack_window::onCmdHide),
     FXMAPFUNC(SEL_COMMAND, filmstack_window::ID_PLOT_DISP, filmstack_window::on_cmd_plot_dispersion),
 };
@@ -35,6 +41,7 @@ filmstack_window::filmstack_window(stack_t *s, FXComposite *p, FXuint opts, FXin
     new FXMenuCommand(popupmenu,"Edit Dispersion", NULL, this, ID_EDIT_LAYER);
     new FXMenuSeparator(popupmenu);
     new FXMenuCommand(popupmenu,"Save to User Library", NULL, this, ID_SAVE_USERLIB);
+    new FXMenuCommand(popupmenu,"Save to File", NULL, this, ID_DISP_SAVEFILE);
     new FXMenuCommand(popupmenu,"Plot\t\tPlot dispersion", NULL, this, ID_PLOT_DISP);
 }
 
@@ -224,5 +231,27 @@ filmstack_window::on_cmd_plot_dispersion(FXObject *, FXSelector, void *)
 {
     dispers_win dwin(this, stack->disp[current_layer]);
     dwin.execute();
+    return 1;
+}
+
+long
+filmstack_window::on_cmd_disp_save_tofile(FXObject *, FXSelector, void *)
+{
+    FXFileDialog open(this, "Save Dispersion As");
+    open.setPatternList(disp_patterns);
+    if (open.execute()) {
+        disp_t *d = stack->disp[current_layer];
+        FXString filename = open.getFilename();
+        writer_t *w = writer_new();
+        if (disp_write(w, d)) {
+            FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error saving dispersion file.");
+            writer_free(w);
+            return 1;
+        }
+        if (writer_save_tofile(w, filename.text())) {
+            FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error writing file %s.", filename.text());
+        }
+        writer_free(w);
+    }
     return 1;
 }
