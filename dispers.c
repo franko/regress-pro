@@ -9,13 +9,13 @@
 #include "common.h"
 #include "cmpl.h"
 #include "str.h"
+#include "str-util.h"
 #include "fit-params.h"
 #include "dispers-library.h"
 
 disp_t *
 load_nk_table(const char * filename, str_ptr *error_msg)
 {
-    const char *bname;
     disp_t * disp;
 
     disp = disp_table_new_from_nk_file(filename, error_msg);
@@ -24,12 +24,7 @@ load_nk_table(const char * filename, str_ptr *error_msg)
         return NULL;
     }
 
-    bname = strrchr(filename, '/');
-    if(bname) {
-        bname++;
-    }
-
-    str_copy_c(disp->name, bname);
+    str_path_basename(disp->name, filename);
 
     return disp;
 }
