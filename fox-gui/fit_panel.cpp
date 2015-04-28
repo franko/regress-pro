@@ -246,3 +246,12 @@ void fit_panel::refresh()
     }
     m_canvas->set_dirty(true);
 }
+
+void fit_panel::kill_focus()
+{
+    for (int i = 0; i < param_matrix->getNumRows(); i++) {
+        for (int j = 0; j < param_matrix->getNumColumns(); j++) {
+            param_matrix->childAtRowCol(i, j)->killFocus();
+        }
+    }
+}

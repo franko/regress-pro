@@ -64,6 +64,7 @@ public:
 
     void refresh();
     void reload();
+    void kill_focus();
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_param_change(FXObject*, FXSelector, void*);

@@ -529,6 +529,8 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
         free_error_message(error_msg);
         return 1;
     }
+    m_fit_window->kill_focus();
+    getApp()->runWhileEvents();
     run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
     getApp()->endWaitCursor();
