@@ -646,15 +646,9 @@ write_recipe_to_file(fit_recipe *recipe, dataset_table *dataset, const char *fil
     if (dataset) {
         dataset->write(w);
     }
-    FILE *f = fopen(filename, "wb");
-    if (f) {
-        fputs(CSTR(w->text), f);
-        fclose(f);
-        writer_free(w);
-        return 0;
-    }
+    int status = writer_save_tofile(w, filename);
     writer_free(w);
-    return 1;
+    return status;
 }
 
 void

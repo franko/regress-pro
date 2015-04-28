@@ -70,3 +70,15 @@ writer_indent(writer_t *w, int n)
 {
     w->indent += n;
 }
+
+int
+writer_save_tofile(writer_t *w, const char *filename)
+{
+    FILE *f = fopen(filename, "wb");
+    if (f) {
+        fputs(CSTR(w->text), f);
+        fclose(f);
+        return 0;
+    }
+    return 1;
+}
