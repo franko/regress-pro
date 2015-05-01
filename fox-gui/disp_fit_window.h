@@ -20,11 +20,13 @@ public:
     virtual ~disp_fit_window();
 
     long on_cmd_select(FXObject *, FXSelector, void *);
+    long on_cmd_edit_model(FXObject *, FXSelector, void *);
     long on_cmd_save_userlib(FXObject *, FXSelector, void *);
 
     enum {
         ID_SELECT_REF = fit_window::ID_LAST,
         ID_SELECT_MODEL,
+        ID_EDIT_MODEL,
         ID_SAVE_USERLIB,
         ID_LAST
     };

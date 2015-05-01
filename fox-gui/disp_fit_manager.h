@@ -137,8 +137,12 @@ public:
         m_fit_engine->model_disp = d;
     }
 
-    disp_t * get_model() {
-        return disp_copy(m_fit_engine->model_disp);
+    disp_t * model_ref() {
+        return m_fit_engine->model_disp;
+    }
+
+    void set_model_ref(disp_t *d) {
+        m_fit_engine->model_disp = d;
     }
 
 private:
