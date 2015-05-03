@@ -3,11 +3,13 @@
 
 #include "defs.h"
 #include "dispers.h"
+#include "str.h"
 
 __BEGIN_DECLS
 
 struct disp_node {
     disp_t *content;
+    str_ptr id;
     struct disp_node *next;
 };
 
@@ -16,17 +18,17 @@ struct disp_list {
     struct disp_node *last;
 };
 
-extern void     dispers_library_init(void);
-extern disp_t * dispers_library_search(const char *id);
-extern disp_t * dispers_library_get(int index, char const ** lname);
+extern int dispers_library_init();
 
-extern struct disp_node * disp_list_add(struct disp_list *lst, disp_t *d);
+extern struct disp_node * disp_list_add(struct disp_list *lst, disp_t *d, const char *id);
 extern void               disp_list_remove(struct disp_list *lst, struct disp_node *prev);
 extern void               disp_list_free(struct disp_list *lst);
+extern disp_t *           disp_list_search(struct disp_list *lst, const char *id);
 
 extern const char *lib_disp_table_lookup(const disp_t *d);
 extern disp_t *lib_disp_table_get(const char *id);
 
+extern struct disp_list app_lib[1];
 extern struct disp_list user_lib[1];
 
 __END_DECLS

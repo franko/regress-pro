@@ -247,8 +247,8 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 
     struct disp_fit_engine *fit = disp_fit_engine_new();
 
-    fit->ref_disp = dispers_library_search("sio2");
-    fit->model_disp = dispers_library_search("sio2");
+    fit->ref_disp = disp_list_search(app_lib, "sio2");
+    fit->model_disp = disp_list_search(app_lib, "sio2");
 
     disp_fit_manager *mgr = new disp_fit_manager(fit);
     disp_fit_window *fitwin = new disp_fit_window(mgr, this, "Dispersion Fit", DECOR_ALL, 0, 0, 640, 480);

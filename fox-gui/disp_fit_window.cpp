@@ -51,7 +51,7 @@ long disp_fit_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
     disp_t *disp = disp_copy(m_fit_manager->model_ref());
     dispers_edit_window edit_win(disp, this, DECOR_TITLE|DECOR_BORDER, 0, 0, 400, 320);
     if (edit_win.execute() == TRUE) {
-        disp_list_add(user_lib, disp);
+        disp_list_add(user_lib, disp, NULL);
     }
     return 1;
 }

@@ -18,8 +18,9 @@ private:
     FXComboBox *combo;
 };
 
-fx_library_selector::fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
-: fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+fx_library_selector::fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
+    fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
+    iter(app_lib)
 {
     new FXLabel(this, "Library Model");
     int nb_disp = iter.length();
@@ -52,12 +53,13 @@ public:
     virtual disp_t *get_dispersion();
     virtual void reset();
 private:
-    userlib_iter iter;
+    disp_library_iter iter;
     FXComboBox *combo;
 };
 
-fx_userlib_selector::fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs)
-: fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+fx_userlib_selector::fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
+    fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
+    iter(user_lib)
 {
     new FXLabel(this, "User Model");
     int nb_disp = iter.length();

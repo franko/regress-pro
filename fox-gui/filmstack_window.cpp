@@ -188,7 +188,7 @@ long
 filmstack_window::on_cmd_save_userlib(FXObject*, FXSelector, void*)
 {
     disp_t *d = disp_copy(stack->disp[current_layer]);
-    disp_list_add(user_lib, d);
+    disp_list_add(user_lib, d, NULL);
     return 1;
 }
 

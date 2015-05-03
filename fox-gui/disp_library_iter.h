@@ -44,39 +44,30 @@ struct disp_iterator {
 };
 
 class disp_library_iter : public disp_iterator {
-    int m_lib_iter;
+    disp_list *m_list;
+    disp_node *m_node;
 
 public:
-    disp_library_iter() : m_lib_iter(0) { }
+    disp_library_iter(disp_list *list): m_list(list), m_node(list->first) { }
 
     void reset() {
-        m_lib_iter = 0;
+        m_node = m_list->first;
     }
 
     disp_t *next_disp()  {
-        const char* name;
-        return dispers_library_get(m_lib_iter ++, &name);
+        if (m_node) {
+            disp_t *d = m_node->content;
+            m_node = m_node->next;
+            return d;
+        }
+        return NULL;
     }
 
     virtual disp_t* get(int index) {
-        const char* name;
-        disp_t *d = dispers_library_get(index, &name);
-        return (d ? disp_copy(d) : NULL);
-    }
-};
-
-class userlib_iter : public disp_iterator {
-    disp_node *m_current;
-public:
-    userlib_iter(): m_current(user_lib->first) { }
-
-    void reset() { m_current = user_lib->first; }
-
-    disp_t *next_disp() {
-        if (m_current) {
-            disp_t *d = m_current->content;
-            m_current = m_current->next;
-            return d;
+        for (disp_node *n = m_list->first; n; n = n->next, index--) {
+            if (index == 0) {
+                return disp_copy(n->content);
+            }
         }
         return NULL;
     }
