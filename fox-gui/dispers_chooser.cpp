@@ -128,41 +128,7 @@ fx_newmodel_selector::reset()
     combo->setCurrentItem(0);
 }
 
-struct disp_list_cpp {
-    struct node {
-        disp_t *disp;
-        node *next;
-        node(disp_t *d, node *_next = 0): disp(d), next(_next) {}
-        ~node() { disp_free(disp); }
-    };
-    disp_list_cpp(): top(0) {}
-    ~disp_list_cpp() {
-        node *n = top;
-        while (n) {
-            node *next = n->next;
-            delete n;
-            n = next;
-        }
-    }
-    int number() const {
-        int count = 0;
-        for (node *n = top; n; n = n->next)
-            count ++;
-        return count;
-    }
-    void add(disp_t *d) { top = new node(d, top); }
-    void append(disp_t *d) {
-        node *new_node = new node(d);
-        for (node *n = top; n; n = n->next) {
-            if (n->next == NULL) {
-                n->next = new_node;
-                return;
-            }
-        }
-        top = new_node;
-    }
-    node *top;
-};
+static disp_list files_list[1] = {{NULL, NULL}};
 
 static const FXchar disp_file_patterns[] =
     "MAT files (*.mat)"
@@ -189,13 +155,9 @@ public:
         ID_LAST
     };
 private:
-    static disp_list_cpp loaded_disp_list;
-
     FXWindow *m_chooser;
     FXComboBox *m_combo;
 };
-
-disp_list_cpp fx_file_disp_selector::loaded_disp_list;
 
 FXDEFMAP(fx_file_disp_selector) fx_file_disp_selector_map[]= {
     FXMAPFUNC(SEL_COMMAND, fx_file_disp_selector::ID_CHOOSE_FILE, fx_file_disp_selector::on_cmd_choose_file),
@@ -208,11 +170,11 @@ fx_file_disp_selector::fx_file_disp_selector(FXWindow *chooser, FXComposite *p, 
     m_chooser(chooser)
 {
     m_combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
-    int nb_loaded_disp = loaded_disp_list.number();
+    int nb_loaded_disp = disp_list_length(files_list); // loaded_disp_list.number();
     m_combo->setNumVisible(nb_loaded_disp + 1);
     m_combo->appendItem("-- select a file");
-    for(disp_list_cpp::node *nd = loaded_disp_list.top; nd; nd = nd->next) {
-        m_combo->appendItem(CSTR(nd->disp->name));
+    for (disp_node *nd = files_list->first; nd; nd = nd->next) {
+        m_combo->appendItem(CSTR(nd->content->name));
     }
     if (nb_loaded_disp == 0) {
         m_combo->disable();
@@ -258,7 +220,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
             free_error_message(error_message);
             return 1;
         }
-        loaded_disp_list.append(disp);
+        disp_list_add(files_list, disp, NULL);
         m_combo->appendItem(CSTR(disp->name));
         int items_nb = m_combo->getNumItems();
         m_combo->setCurrentItem(items_nb - 1);
@@ -278,11 +240,7 @@ fx_file_disp_selector::get_dispersion()
 {
     FXint index = m_combo->getCurrentItem() - 1;
     if (index < 0) return NULL;
-    disp_list_cpp::node *nd;
-    for (nd = loaded_disp_list.top; index > 0; nd = nd->next) {
-        index --;
-    }
-    return disp_copy(nd->disp);
+    return disp_list_get_by_index(files_list, index);
 }
 
 void
