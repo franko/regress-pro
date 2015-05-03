@@ -86,6 +86,29 @@ disp_list_search(struct disp_list *lst, const char *id)
     return NULL;
 }
 
+disp_t *
+disp_list_get_by_index(struct disp_list *lst, int index)
+{
+    struct disp_node *n;
+    for (n = lst->first; n; n = n->next, index--) {
+        if (index == 0) {
+            return disp_copy(n->content);
+        }
+    }
+    return NULL;
+}
+
+int
+disp_list_length(struct disp_list *lst)
+{
+    int count = 0;
+    struct disp_node *n;
+    for (n = lst->first; n; n = n->next) {
+        count++;
+    }
+    return count;
+}
+
 const char *
 lib_disp_table_lookup(const disp_t *d)
 {

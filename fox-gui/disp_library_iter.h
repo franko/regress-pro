@@ -64,12 +64,7 @@ public:
     }
 
     virtual disp_t* get(int index) {
-        for (disp_node *n = m_list->first; n; n = n->next, index--) {
-            if (index == 0) {
-                return disp_copy(n->content);
-            }
-        }
-        return NULL;
+        return disp_list_get_by_index(m_list, index);
     }
 };
 
