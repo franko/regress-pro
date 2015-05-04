@@ -58,6 +58,11 @@ ifeq ($(PRODUCT_REGISTRATION),yes)
   LIBS += $(REG_LIBS)
 endif
 
+ifneq ($(ENABLE_RELEASE),yes)
+  OBJ_FILES += gitversion.o
+  DEFS += -DGIT_BUILD
+endif
+
 .PHONY: clean all
 
 all: $(PRG)
@@ -67,7 +72,10 @@ include $(BASEDIR)/makerules
 $(PRG): $(OBJ_FILES) ../libefit.a
 	$(CXX) -o $@ $(OBJ_FILES) ../libefit.a $(LIBS)
 
+gitversion.cpp: $(BASEDIR)/.git/HEAD $(BASEDIR)/.git/index
+	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
+
 clean:
-	rm -f $(OBJ_FILES) $(PRG)
+	rm -f gitversion.cpp $(OBJ_FILES) $(PRG)
 
 -include $(DEP_FILES)

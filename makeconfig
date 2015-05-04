@@ -1,6 +1,7 @@
 
 PRODUCT_REGISTRATION = yes
 ENABLE_DEBUG = no
+ENABLE_RELEASE = no
 
 CC = gcc
 CXX = gcc
