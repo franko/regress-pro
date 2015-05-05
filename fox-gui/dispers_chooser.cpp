@@ -101,10 +101,11 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 {
     new FXLabel(this, "New Model");
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
-    combo->setNumVisible(3);
+    combo->setNumVisible(4);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy Model");
+    combo->appendItem("Lookup Model");
 }
 
 disp_t *
@@ -118,6 +119,11 @@ fx_newmodel_selector::get_dispersion()
         double n[3] = { 1.0, 0.0, 0.0 };
         double k[3] = { 0.0, 0.0, 0.0 };
         return disp_new_cauchy("*cauchy", n, k);
+    } else if (name == "Lookup Model") {
+        disp_t *comp = disp_list_search(app_lib, "sio2");
+        if (comp) {
+            return disp_lookup_new_from_comp("*lookup", comp);
+        }
     }
     return NULL;
 }
