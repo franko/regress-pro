@@ -124,6 +124,62 @@ private:
     int selected_component;
 };
 
+struct table_nk_iterator {
+    table_nk_iterator() {}
+    virtual ~table_nk_iterator() {}
+    virtual int rows() const = 0;
+    virtual float get_nk_row(int index, float *n, float *k) = 0;
+};
+
+struct disp_table_rows_iter : table_nk_iterator {
+    disp_table_rows_iter(disp_table *dt): m_table(dt) {}
+    virtual int rows() const { return m_table->points_number; }
+    virtual float get_nk_row(int index, float *n, float *k) {
+        *n = data_table_get(m_table->table_ref, index, 0);
+        *k = data_table_get(m_table->table_ref, index, 1);
+        return m_table->lambda_min + m_table->lambda_stride * index;
+    }
+private:
+    disp_table *m_table;
+};
+
+struct disp_sample_table_rows_iter : table_nk_iterator {
+    disp_sample_table_rows_iter(disp_sample_table *dt): m_table(dt) {}
+    virtual int rows() const { return m_table->nb; }
+    virtual float get_nk_row(int index, float *n, float *k) {
+        *n = data_table_get(m_table->table_ref, index, 1);
+        *k = data_table_get(m_table->table_ref, index, 2);
+        return data_table_get(m_table->table_ref, index, 0);
+    }
+private:
+    disp_sample_table *m_table;
+};
+
+static table_nk_iterator *new_table_iterator(disp_t *d) {
+    if (d->type == DISP_TABLE) {
+        return new disp_table_rows_iter(&d->disp.table);
+    } else if (d->type == DISP_SAMPLE_TABLE) {
+        return new disp_sample_table_rows_iter(&d->disp.sample_table);
+    }
+    return NULL;
+}
+
+class fx_disp_table_window : public fx_disp_window {
+public:
+    fx_disp_table_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING):
+        fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
+        m_iterator(new_table_iterator(d))
+    {}
+    virtual ~fx_disp_table_window() {
+        delete m_iterator;
+    }
+
+    virtual void setup_dialog();
+private:
+    table_nk_iterator *m_iterator;
+    FXTable *m_table;
+};
+
 // Create a new fx_disp_window (or a derived class instance) that corresponds to the
 // given dispersion.
 extern fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp);

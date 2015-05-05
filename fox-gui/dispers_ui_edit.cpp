@@ -174,6 +174,8 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
         dispwin = new fx_disp_cauchy_window(d, comp, opts);
     } else if (d->type == DISP_LOOKUP) {
         dispwin = new fx_disp_lookup_window(d, comp, opts);
+    } else if (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE) {
+        dispwin = new fx_disp_table_window(d, comp, opts);
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
     }
@@ -347,4 +349,25 @@ fx_disp_lookup_window::on_button_menu_component(FXObject*sender, FXSelector sel,
         getApp()->runModalWhileShown(popupmenu);
     }
     return 1;
+}
+
+void fx_disp_table_window::setup_dialog()
+{
+    int rows = m_iterator->rows();
+
+    m_table = new FXTable(this, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY);
+    m_table->setTableSize(rows, 3);
+
+    m_table->setRowHeaderWidth(0);
+    m_table->setColumnText(0, "Wavelength (nm)");
+    m_table->setColumnText(1, "n");
+    m_table->setColumnText(2, "k");
+
+    for (int i = 0; i < rows; i++) {
+        float n, k;
+        float wl = m_iterator->get_nk_row(i, &n, &k);
+        m_table->setItemText(i, 0, FXStringFormat("%g", wl));
+        m_table->setItemText(i, 1, FXStringFormat("%g", n));
+        m_table->setItemText(i, 2, FXStringFormat("%g", k));
+    }
 }
