@@ -13,6 +13,17 @@
 #include "fit-params.h"
 #include "dispers-library.h"
 
+static void
+remove_filename_extension(str_t name)
+{
+    const char *base = CSTR(name);
+    const char *p = strrchr(base, '.');
+    if (p) {
+        int len = p - base;
+        str_trunc(name, len);
+    }
+}
+
 disp_t *
 load_nk_table(const char * filename, str_ptr *error_msg)
 {
@@ -25,6 +36,7 @@ load_nk_table(const char * filename, str_ptr *error_msg)
     }
 
     str_path_basename(disp->name, filename);
+    remove_filename_extension(disp->name);
 
     return disp;
 }
