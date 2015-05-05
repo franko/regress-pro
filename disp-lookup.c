@@ -55,6 +55,17 @@ disp_new_lookup(const char *name, int nb_comps, struct lookup_comp *comp,
     return d;
 }
 
+disp_t *
+disp_lookup_new_from_comp(const char *name, disp_t *comp) {
+    disp_t *d = disp_new_with_name(DISP_LOOKUP, name);
+    d->disp.lookup.p = 0.0;
+    d->disp.lookup.nb_comps = 1;
+    d->disp.lookup.component = emalloc(sizeof(struct lookup_comp));
+    d->disp.lookup.component->p = 0.0;
+    d->disp.lookup.component->disp = comp;
+    return d;
+}
+
 void
 lookup_free(disp_t *d)
 {

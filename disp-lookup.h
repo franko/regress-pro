@@ -24,7 +24,7 @@ extern struct disp_class disp_lookup_class;
 extern struct disp_struct *
 disp_new_lookup(const char *name, int nb_comps, struct lookup_comp *comp,
                 double p0);
-
+extern struct disp_struct *disp_lookup_new_from_comp(const char *name, struct disp_struct *comp);
 extern void disp_lookup_add_comp(struct disp_struct *d, int index, struct disp_struct *comp, double p);
 extern void disp_lookup_delete_comp(struct disp_struct *d, int index);
 
