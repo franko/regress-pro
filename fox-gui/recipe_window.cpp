@@ -74,12 +74,12 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     seed_tf = new FXTextField(seedvf, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
     FXMatrix *matrix = new FXMatrix(seedvf, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    new FXLabel(matrix, "Grid Min", NULL, LAYOUT_FILL_ROW);
-    new FXLabel(matrix, "Grid Max", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Grid Value", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Grid Delta", NULL, LAYOUT_FILL_ROW);
     new FXLabel(matrix, "Grid Step", NULL, LAYOUT_FILL_ROW);
 
-    grid_min_tf = new FXTextField(matrix, 8, this, ID_GRID_MIN, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-    grid_max_tf = new FXTextField(matrix, 8, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    grid_seed_tf = new FXTextField(matrix, 8, this, ID_GRID_MIN, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    grid_delta_tf = new FXTextField(matrix, 8, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     grid_step_tf = new FXTextField(matrix, 8, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
     list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
@@ -168,8 +168,8 @@ recipe_window::selected_parameter()
 void
 recipe_window::clear_grid_textfields()
 {
-    grid_min_tf->setText("");
-    grid_max_tf->setText("");
+    grid_seed_tf->setText("");
+    grid_delta_tf->setText("");
     grid_step_tf->setText("");
 }
 
@@ -187,8 +187,8 @@ recipe_window::set_seed_fields(const seed_t *s)
         clear_grid_textfields();
     } else if (s->type == SEED_RANGE) {
         clear_seed_textfield();
-        set_numeric_textfield(grid_min_tf, s->min);
-        set_numeric_textfield(grid_max_tf, s->max);
+        set_numeric_textfield(grid_seed_tf, s->seed);
+        set_numeric_textfield(grid_delta_tf, s->delta);
         set_numeric_textfield(grid_step_tf, s->step);
     } else {
         clear_seed_textfield();
@@ -251,12 +251,16 @@ recipe_window::on_cmd_seed(FXObject *, FXSelector sel, void *)
     int id = FXSELID(sel);
     seed_t s[1];
     if (id == ID_SEED) {
-        s->type = SEED_SIMPLE;
-        s->seed = strtod(seed_tf->getText().text(), NULL);
+        if (seed_tf->getText() == "") {
+            s->type = SEED_UNDEF;
+        } else {
+            s->type = SEED_SIMPLE;
+            s->seed = strtod(seed_tf->getText().text(), NULL);
+        }
     } else if (id >= ID_GRID_MIN && id <= ID_GRID_STEP) {
         s->type = SEED_RANGE;
-        s->min = strtod(grid_min_tf->getText().text(), NULL);
-        s->max = strtod(grid_max_tf->getText().text(), NULL);
+        s->seed = strtod(grid_seed_tf->getText().text(), NULL);
+        s->delta = strtod(grid_delta_tf->getText().text(), NULL);
         s->step = strtod(grid_step_tf->getText().text(), NULL);
     }
     set_fit_parameter(selfp, s);

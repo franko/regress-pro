@@ -77,7 +77,7 @@ private:
     FXGroupBox *params_group;
     FXListBox *param_listbox;
     FXTextField *seed_tf;
-    FXTextField *grid_min_tf, *grid_max_tf, *grid_step_tf;
+    FXTextField *grid_seed_tf, *grid_delta_tf, *grid_step_tf;
     FXList *fit_list;
     FXTextField *range_textfield, *chisq_textfield, *iter_textfield, *subsamp_textfield;
 

@@ -129,6 +129,9 @@ extern double
 fit_engine_get_parameter_value(const struct fit_engine *fit,
                                const fit_param_t *fp);
 
+extern double
+fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, const seed_t *s);
+
 extern void
 fit_config_set_default(struct fit_config *cfg);
 

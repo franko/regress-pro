@@ -340,6 +340,15 @@ fit_engine_get_parameter_value(const struct fit_engine *fit,
     return 0.0;
 }
 
+double
+fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, const seed_t *s)
+{
+    if (s->type == SEED_UNDEF) {
+        return fit_engine_get_parameter_value(fit, fp);
+    }
+    return s->seed;
+}
+
 void
 fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
                              struct spectrum *synth)

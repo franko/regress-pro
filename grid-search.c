@@ -44,14 +44,14 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     xarr = x->data;
 
     for(j = 0; j < nb; j++) {
-        xarr[j] = (vseed[j].type == SEED_RANGE ? vseed[j].min : vseed[j].seed);
+        xarr[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
     }
 
     nb_grid_pts = 1;
     for(j = nb-1; j >= 0; j--) {
         if(vseed[j].type == SEED_RANGE) {
             seed_t *cs = &vseed[j];
-            nb_grid_pts *= (cs->max - cs->min) / cs->step + 1;
+            nb_grid_pts *= cs->delta / cs->step + 1;
         }
     }
 
@@ -100,8 +100,8 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         for(j = nb-1; j >= 0; j--) {
             if(vseed[j].type == SEED_RANGE) {
                 xarr[j] += vseed[j].step;
-                if(xarr[j] > vseed[j].max) {
-                    xarr[j] = vseed[j].min;
+                if(xarr[j] > vseed[j].seed + vseed[j].delta) {
+                    xarr[j] = vseed[j].seed - vseed[j].delta;
                     continue;
                 }
                 break;

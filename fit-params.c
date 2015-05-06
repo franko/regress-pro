@@ -92,22 +92,6 @@ get_disp_param_name(const fit_param_t *fp, str_ptr buf)
     }
 }
 
-int
-parse_fit_string(const char *s, seed_t *seed)
-{
-    int n;
-
-    n = sscanf(s, "%lf-%lf,%lf", & seed->min, & seed->max, & seed->step);
-
-    if(n == 3) {
-        seed->type = SEED_RANGE;
-        seed->seed = (seed->min + seed->max) / 2.0;
-        return 0;
-    }
-
-    return 1;
-}
-
 struct fit_parameters *
 fit_parameters_new(void) {
     return (struct fit_parameters *) ARRAY_NEW(fit_param_t);
@@ -198,7 +182,7 @@ seed_write(writer_t *w, const seed_t *s)
     if (s->type == SEED_SIMPLE) {
         writer_printf(w, "value %g", s->seed);
     } else if (s->type == SEED_RANGE) {
-        writer_printf(w, "range %g %g %g", s->min, s->max, s->step);
+        writer_printf(w, "range %g %g %g", s->seed, s->delta, s->step);
     } else {
         writer_printf(w, "undef");
     }
@@ -214,8 +198,8 @@ seed_read(lexer_t *l, seed_t *seed)
         if (lexer_number(l, &seed->seed)) return 1;
     } else if (strcmp(CSTR(l->store), "range") == 0) {
         seed->type = SEED_RANGE;
-        if (lexer_number(l, &seed->min)) return 1;
-        if (lexer_number(l, &seed->max)) return 1;
+        if (lexer_number(l, &seed->seed)) return 1;
+        if (lexer_number(l, &seed->delta)) return 1;
         if (lexer_number(l, &seed->step)) return 1;
     } else if (strcmp(CSTR(l->store), "undef") == 0) {
         seed->type = SEED_UNDEF;
