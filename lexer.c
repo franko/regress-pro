@@ -53,7 +53,7 @@ read_ident(const char *text, str_ptr buffer, const char **tail)
 void
 lexer_next(lexer_t *l)
 {
-    while (*l->text == ' ' || *l->text == '\n') {
+    while (*l->text == ' ' || *l->text == '\t' || *l->text == '\r' || *l->text == '\n') {
         l->text ++;
     }
     char c = l->text[0];
