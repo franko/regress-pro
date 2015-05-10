@@ -349,6 +349,59 @@ fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, c
     return s->seed;
 }
 
+static double
+compute_rsquare(const gsl_vector *ref, const gsl_vector *b)
+{
+    double ssq = 0;
+    unsigned int i;
+    for (i = 0; i < ref->size; i++) {
+        ssq += gsl_vector_get(ref, i) * gsl_vector_get(ref, i);
+    }
+
+    double rsq = 0;
+    for (i = 0; i < ref->size; i++) {
+        double diff = gsl_vector_get(b, i) - gsl_vector_get(ref, i);
+        rsq += diff * diff;
+    }
+    return rsq / ssq;
+}
+
+double
+fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x, const fit_param_t *fp, double delta)
+{
+    int fp_index = fit_parameters_find(fit->parameters, fp);
+
+    gsl_vector *y0 = gsl_vector_alloc(fit->run->mffun.n);
+    gsl_vector *y1 = gsl_vector_alloc(fit->run->mffun.n);
+    gsl_vector *xtest = gsl_vector_alloc(fit->run->mffun.p);
+    gsl_matrix *jacob = gsl_matrix_alloc(fit->run->mffun.n, fit->run->mffun.p);
+
+    gsl_vector_view jview = gsl_matrix_column(jacob, fp_index);
+    fit->run->mffun.df(x, fit, jacob);
+
+    gsl_vector_memcpy(xtest, x);
+    fit->run->mffun.f(xtest, fit, y0);
+
+    while (1) {
+        gsl_vector_set(xtest, fp_index, gsl_vector_get(x, fp_index) + delta);
+        fit->run->mffun.f(xtest, fit, y1);
+
+        gsl_vector_sub(y1, y0);
+        gsl_vector_scale(y1, 1.0 / delta);
+
+        double r2 = compute_rsquare(&jview.vector, y1);
+        if (r2 < 0.2) break;
+
+        delta /= 2;
+    }
+
+    gsl_vector_free(y0);
+    gsl_vector_free(y1);
+    gsl_vector_free(xtest);
+    gsl_matrix_free(jacob);
+    return delta;
+}
+
 void
 fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
                              struct spectrum *synth)

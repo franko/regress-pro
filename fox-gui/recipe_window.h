@@ -42,9 +42,7 @@ public:
         ID_PARAM_SELECT = FXPacker::ID_LAST,
         ID_PARAMETER,
         ID_SEED,
-        ID_GRID_MIN,
-        ID_GRID_MAX,
-        ID_GRID_STEP,
+        ID_RANGE,
         ID_SPECTRA_RANGE,
         ID_CHISQ_THRESHOLD,
         ID_ITERATIONS,
@@ -64,7 +62,7 @@ private:
     void update_seed_value(const fit_param_t *fp);
     void set_seed_fields(const seed_t *s);
     void clear_seed_textfield();
-    void clear_grid_textfields();
+    void clear_range_textfield();
     void fit_list_append_parameter(const fit_param_t *fp, const seed_t *value);
     void fit_list_update_parameter(int i, const fit_param_t *fp, const seed_t *value);
     void setup_parameters_list();
@@ -74,10 +72,10 @@ private:
     void disable_multi_sample();
 
     FXHorizontalFrame *top_frame;
-    FXGroupBox *params_group;
+    FXPacker *params_group;
     FXListBox *param_listbox;
     FXTextField *seed_tf;
-    FXTextField *grid_seed_tf, *grid_delta_tf, *grid_step_tf;
+    FXTextField *range_tf;
     FXList *fit_list;
     FXTextField *range_textfield, *chisq_textfield, *iter_textfield, *subsamp_textfield;
 

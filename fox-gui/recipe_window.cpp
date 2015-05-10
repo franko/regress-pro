@@ -14,8 +14,8 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAM_SELECT, recipe_window::on_cmd_param_select),
     FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAMETER, recipe_window::on_keypress_parameter),
     FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAMETER, recipe_window::on_select_parameter),
-    FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_cmd_seed),
-    FXMAPFUNCS(SEL_UPDATE, recipe_window::ID_SEED, recipe_window::ID_GRID_STEP, recipe_window::on_update_seed),
+    FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_RANGE, recipe_window::on_cmd_seed),
+    FXMAPFUNCS(SEL_UPDATE, recipe_window::ID_SEED, recipe_window::ID_RANGE, recipe_window::on_update_seed),
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_SPECTRA_RANGE, recipe_window::on_changed_range),
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_CHISQ_THRESHOLD, recipe_window::on_changed_threshold),
     FXMAPFUNC(SEL_CHANGED, recipe_window::ID_ITERATIONS, recipe_window::on_changed_iterations),
@@ -63,24 +63,18 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     FXSpring *botspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
     FXHorizontalFrame *bhf = new FXHorizontalFrame(botspr, LAYOUT_FILL_Y);
 
-    params_group = new FXGroupBox(bhf, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    FXGroupBox *fpgroup = new FXGroupBox(bhf, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
+    params_group = new FXPacker(fpgroup, LAYOUT_FILL_Y|LAYOUT_SIDE_LEFT);
     param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT, FRAME_SUNKEN|LISTBOX_NORMAL);
     param_listbox->setNumVisible(8);
 
     setup_parameters_list();
 
-    FXGroupBox *group = new FXGroupBox(bhf, "Initial Fit Value", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_LINE);
-    FXVerticalFrame *seedvf = new FXVerticalFrame(group, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    seed_tf = new FXTextField(seedvf, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-
-    FXMatrix *matrix = new FXMatrix(seedvf, 3, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    new FXLabel(matrix, "Grid Value", NULL, LAYOUT_FILL_ROW);
-    new FXLabel(matrix, "Grid Delta", NULL, LAYOUT_FILL_ROW);
-    new FXLabel(matrix, "Grid Step", NULL, LAYOUT_FILL_ROW);
-
-    grid_seed_tf = new FXTextField(matrix, 8, this, ID_GRID_MIN, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-    grid_delta_tf = new FXTextField(matrix, 8, this, ID_GRID_MAX, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
-    grid_step_tf = new FXTextField(matrix, 8, this, ID_GRID_STEP, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    FXMatrix *matrix = new FXMatrix(fpgroup, 2, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_SIDE_RIGHT);
+    new FXLabel(matrix, "Value", NULL, LAYOUT_FILL_ROW);
+    seed_tf = new FXTextField(matrix, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    new FXLabel(matrix, "Range", NULL, LAYOUT_FILL_ROW);
+    range_tf = new FXTextField(matrix, 8, this, ID_RANGE, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
 
     list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
 
@@ -166,11 +160,9 @@ recipe_window::selected_parameter()
 }
 
 void
-recipe_window::clear_grid_textfields()
+recipe_window::clear_range_textfield()
 {
-    grid_seed_tf->setText("");
-    grid_delta_tf->setText("");
-    grid_step_tf->setText("");
+    range_tf->setText("");
 }
 
 void
@@ -184,15 +176,13 @@ recipe_window::set_seed_fields(const seed_t *s)
 {
     if (s->type == SEED_SIMPLE) {
         set_numeric_textfield(seed_tf, s->seed);
-        clear_grid_textfields();
+        clear_range_textfield();
     } else if (s->type == SEED_RANGE) {
-        clear_seed_textfield();
-        set_numeric_textfield(grid_seed_tf, s->seed);
-        set_numeric_textfield(grid_delta_tf, s->delta);
-        set_numeric_textfield(grid_step_tf, s->step);
+        set_numeric_textfield(seed_tf, s->seed);
+        set_numeric_textfield(range_tf, s->delta);
     } else {
         clear_seed_textfield();
-        clear_grid_textfields();
+        clear_range_textfield();
     }
 }
 
@@ -204,7 +194,7 @@ recipe_window::update_seed_value(const fit_param_t *fp)
         set_seed_fields(&recipe->seeds_list->values[i]);
     } else {
         clear_seed_textfield();
-        clear_grid_textfields();
+        clear_range_textfield();
     }
 }
 
@@ -212,6 +202,7 @@ long
 recipe_window::on_cmd_param_select(FXObject* sender, FXSelector, void *)
 {
     seed_dirty = true;
+    // seed_tf->setFocus();
     return 1;
 }
 
@@ -248,21 +239,20 @@ recipe_window::on_cmd_seed(FXObject *, FXSelector sel, void *)
 {
     const fit_param_t *selfp = selected_parameter();
     if (selfp == NULL) return 0;
-    int id = FXSELID(sel);
     seed_t s[1];
-    if (id == ID_SEED) {
+    if (range_tf->getText() == "") {
         if (seed_tf->getText() == "") {
             s->type = SEED_UNDEF;
         } else {
             s->type = SEED_SIMPLE;
             s->seed = strtod(seed_tf->getText().text(), NULL);
         }
-    } else if (id >= ID_GRID_MIN && id <= ID_GRID_STEP) {
+    } else {
         s->type = SEED_RANGE;
-        s->seed = strtod(grid_seed_tf->getText().text(), NULL);
-        s->delta = strtod(grid_delta_tf->getText().text(), NULL);
-        s->step = strtod(grid_step_tf->getText().text(), NULL);
+        s->seed = strtod(seed_tf->getText().text(), NULL);
+        s->delta = strtod(range_tf->getText().text(), NULL);
     }
+
     set_fit_parameter(selfp, s);
     return 1;
 }

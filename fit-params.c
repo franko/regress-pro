@@ -182,7 +182,7 @@ seed_write(writer_t *w, const seed_t *s)
     if (s->type == SEED_SIMPLE) {
         writer_printf(w, "value %g", s->seed);
     } else if (s->type == SEED_RANGE) {
-        writer_printf(w, "range %g %g %g", s->seed, s->delta, s->step);
+        writer_printf(w, "range %g %g", s->seed, s->delta);
     } else {
         writer_printf(w, "undef");
     }
@@ -200,7 +200,6 @@ seed_read(lexer_t *l, seed_t *seed)
         seed->type = SEED_RANGE;
         if (lexer_number(l, &seed->seed)) return 1;
         if (lexer_number(l, &seed->delta)) return 1;
-        if (lexer_number(l, &seed->step)) return 1;
     } else if (strcmp(CSTR(l->store), "undef") == 0) {
         seed->type = SEED_UNDEF;
     } else {

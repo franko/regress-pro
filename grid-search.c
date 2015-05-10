@@ -43,15 +43,28 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     xarr = x->data;
 
+    gsl_vector *pstep = gsl_vector_alloc(nb);
     for(j = 0; j < nb; j++) {
         xarr[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
+        gsl_vector_set(xbest, j, xarr[j]);
+        if(vseed[j].type == SEED_RANGE) {
+            xarr[j] -= vseed[j].delta;
+        }
+    }
+
+    for(j = 0; j < nb; j++) {
+        if(vseed[j].type != SEED_RANGE) continue;
+        fit_param_t fp = fit->parameters->values[j];
+        double delta = vseed[j].delta;
+        double es = fit_engine_estimate_param_grid_step(fit, xbest, &fp, delta);
+        gsl_vector_set(pstep, j, es);
     }
 
     nb_grid_pts = 1;
     for(j = nb-1; j >= 0; j--) {
         if(vseed[j].type == SEED_RANGE) {
             seed_t *cs = &vseed[j];
-            nb_grid_pts *= cs->delta / cs->step + 1;
+            nb_grid_pts *= cs->delta / gsl_vector_get(pstep, j) + 1;
         }
     }
 
@@ -99,7 +112,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
         for(j = nb-1; j >= 0; j--) {
             if(vseed[j].type == SEED_RANGE) {
-                xarr[j] += vseed[j].step;
+                xarr[j] += gsl_vector_get(pstep, j);
                 if(xarr[j] > vseed[j].seed + vseed[j].delta) {
                     xarr[j] = vseed[j].seed - vseed[j].delta;
                     continue;
@@ -151,6 +164,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     gsl_vector_free(x);
     gsl_vector_free(xbest);
+    gsl_vector_free(pstep);
 
     gsl_multifit_fdfsolver_free(s);
 

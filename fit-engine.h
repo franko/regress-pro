@@ -130,6 +130,9 @@ fit_engine_get_parameter_value(const struct fit_engine *fit,
                                const fit_param_t *fp);
 
 extern double
+fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x, const fit_param_t *fp, double delta);
+
+extern double
 fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, const seed_t *s);
 
 extern void

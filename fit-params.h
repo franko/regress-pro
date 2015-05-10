@@ -45,7 +45,7 @@ enum seed_type_id {
 typedef struct {
     enum seed_type_id type;
     double seed;
-    double delta, step;
+    double delta;
 } seed_t;
 
 typedef struct {
