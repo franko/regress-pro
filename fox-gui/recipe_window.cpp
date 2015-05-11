@@ -12,6 +12,7 @@ static bool range_correct_format(const char *txt, double ps[]);
 // Map
 FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAM_SELECT, recipe_window::on_cmd_param_select),
+    FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAM_SELECT, recipe_window::on_keypress_param_select),
     FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAMETER, recipe_window::on_keypress_parameter),
     FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAMETER, recipe_window::on_select_parameter),
     FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_RANGE, recipe_window::on_cmd_seed),
@@ -206,6 +207,19 @@ recipe_window::on_cmd_param_select(FXObject* sender, FXSelector, void *)
     return 1;
 }
 
+long
+recipe_window::on_keypress_param_select(FXObject*, FXSelector sel, void *ptr)
+{
+    FXEvent* event=(FXEvent*)ptr;
+    switch(event->code) {
+    case KEY_Return:
+        return handle(this, FXSEL(SEL_COMMAND, ID_SEED), NULL);
+    default:
+        /* */ ;
+    }
+    return 0;
+}
+
 void
 recipe_window::fit_list_append_parameter(const fit_param_t *fp, const seed_t *value)
 {
@@ -234,26 +248,31 @@ recipe_window::set_fit_parameter(const fit_param_t *fp, const seed_t *value)
     }
 }
 
+seed_t recipe_window::get_seed_from_ui(const fit_param_t *fp)
+{
+    seed_t s;
+    if (range_tf->getText() == "") {
+        if (seed_tf->getText() == "") {
+            s.type = SEED_UNDEF;
+        } else {
+            s.type = SEED_SIMPLE;
+            s.seed = strtod(seed_tf->getText().text(), NULL);
+        }
+    } else {
+        s.type = SEED_RANGE;
+        s.seed = strtod(seed_tf->getText().text(), NULL);
+        s.delta = strtod(range_tf->getText().text(), NULL);
+    }
+    return s;
+}
+
 long
-recipe_window::on_cmd_seed(FXObject *, FXSelector sel, void *)
+recipe_window::on_cmd_seed(FXObject *, FXSelector, void *)
 {
     const fit_param_t *selfp = selected_parameter();
     if (selfp == NULL) return 0;
-    seed_t s[1];
-    if (range_tf->getText() == "") {
-        if (seed_tf->getText() == "") {
-            s->type = SEED_UNDEF;
-        } else {
-            s->type = SEED_SIMPLE;
-            s->seed = strtod(seed_tf->getText().text(), NULL);
-        }
-    } else {
-        s->type = SEED_RANGE;
-        s->seed = strtod(seed_tf->getText().text(), NULL);
-        s->delta = strtod(range_tf->getText().text(), NULL);
-    }
-
-    set_fit_parameter(selfp, s);
+    seed_t s = get_seed_from_ui(selfp);
+    set_fit_parameter(selfp, &s);
     return 1;
 }
 

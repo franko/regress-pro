@@ -37,6 +37,7 @@ public:
     long on_cmd_add_indiv(FXObject *, FXSelector, void *);
     long on_cmd_add_constr(FXObject *, FXSelector, void *);
     long on_select_param(FXObject *, FXSelector sel, void *);
+    long on_keypress_param_select(FXObject *, FXSelector sel, void *);
 
     enum {
         ID_PARAM_SELECT = FXPacker::ID_LAST,
@@ -58,6 +59,7 @@ public:
 
 private:
     const fit_param_t *selected_parameter();
+    seed_t get_seed_from_ui(const fit_param_t *fp);
     void set_fit_parameter(const fit_param_t *fp, const seed_t *value);
     void update_seed_value(const fit_param_t *fp);
     void set_seed_fields(const seed_t *s);
