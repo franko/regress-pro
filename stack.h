@@ -31,6 +31,7 @@ extern const
 double *        stack_get_ths_list(const stack_t *s);
 extern void     stack_get_ns_list(stack_t *s, cmpl *ns, double lambda);
 extern void     stack_get_all_parameters(stack_t *s, struct fit_parameters *fps);
+extern double   stack_get_parameter_value(const stack_t *s, const fit_param_t *fp);
 extern int      stack_write(writer_t *w, const stack_t *s);
 extern stack_t *stack_read(lexer_t *l);
 

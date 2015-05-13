@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include "stack.h"
 #include "str.h"
 
@@ -178,6 +179,22 @@ stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
             fit_parameters_add(fps, fp);
         }
     }
+}
+
+double
+stack_get_parameter_value(const stack_t *st, const fit_param_t *fp)
+{
+    if(fp->id == PID_THICKNESS) {
+        int layer_nb = fp->layer_nb;
+        assert(layer_nb > 0 && layer_nb < st->nb - 1);
+        return st->thickness[layer_nb-1];
+    } else if(fp->id == PID_LAYER_N) {
+        int layer_nb = fp->layer_nb;
+        const disp_t *d = st->disp[layer_nb];
+        assert(layer_nb > 0 && layer_nb <= st->nb - 1);
+        return disp_get_param_value(d, fp);
+    }
+    return 0.0;
 }
 
 int

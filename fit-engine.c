@@ -323,20 +323,9 @@ fit_engine_get_parameter_value(const struct fit_engine *fit,
 {
     if(fp->id == PID_FIRSTMUL) {
         return fit->extra->rmult;
-    } else if(fp->id == PID_THICKNESS) {
-        const struct stack *st = fit->stack;
-        int layer_nb = fp->layer_nb;
-        assert(layer_nb > 0 && layer_nb < st->nb - 1);
-        return st->thickness[layer_nb-1];
-    } else if(fp->id == PID_LAYER_N) {
-        const struct stack *st = fit->stack;
-        int layer_nb = fp->layer_nb;
-        const disp_t *d = st->disp[layer_nb];
-        assert(layer_nb > 0 && layer_nb <= st->nb - 1);
-        return disp_get_param_value(d, fp);
+    } else {
+        return stack_get_parameter_value(fit->stack, fp);
     }
-
-    assert(0);
     return 0.0;
 }
 

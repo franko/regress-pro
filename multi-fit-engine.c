@@ -357,3 +357,25 @@ multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
 
     str_free(pname);
 }
+
+double
+multi_fit_engine_get_parameter_value(const struct multi_fit_engine *fit, const fit_param_t *fp)
+{
+    if(fp->id == PID_FIRSTMUL) {
+        return fit->extra.rmult;
+    } else {
+        if (fit->stack_list[0]) {
+            return stack_get_parameter_value(fit->stack_list[0], fp);
+        }
+    }
+    return 0.0;
+}
+
+double
+multi_fit_engine_get_seed_value(const struct multi_fit_engine *fit, const fit_param_t *fp, const seed_t *s)
+{
+    if (s->type == SEED_UNDEF) {
+        return multi_fit_engine_get_parameter_value(fit, fp);
+    }
+    return s->seed;
+}

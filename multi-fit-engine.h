@@ -61,6 +61,9 @@ extern int  multi_fit_engine_commit_parameters(struct multi_fit_engine *fit,
 extern void multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
         str_t text);
 
+extern double multi_fit_engine_get_parameter_value(const struct multi_fit_engine *fit, const fit_param_t *fp);
+extern double multi_fit_engine_get_seed_value(const struct multi_fit_engine *fit, const fit_param_t *fp, const seed_t *s);
+
 __END_DECLS
 
 #endif
