@@ -43,12 +43,16 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     FXMatrix *rmatrix = new FXMatrix(sgb, 2, MATRIX_BY_COLUMNS);
     new FXLabel(rmatrix, "Wavelength Range");
     range_textfield = new FXTextField(rmatrix, 10, this, ID_SPECTRA_RANGE, FRAME_SUNKEN);
+    range_textfield->setTipText("Spectra Range in nanometers (\"min-max\")");
     new FXLabel(rmatrix, "ChiSq threshold");
     chisq_textfield = new FXTextField(rmatrix, 5, this, ID_CHISQ_THRESHOLD, FRAME_SUNKEN|TEXTFIELD_REAL);
+    chisq_textfield->setTipText("Chi Square threshold used in grid search");
     new FXLabel(rmatrix, "Max Iterations");
     iter_textfield = new FXTextField(rmatrix, 5, this, ID_ITERATIONS, FRAME_SUNKEN|TEXTFIELD_INTEGER);
+    iter_textfield->setTipText("Maximum number of iterations for fitting procedure");
     new FXLabel(rmatrix, "Sub sampling");
     subsamp_textfield = new FXTextField(rmatrix, 5, this, ID_SUBSAMPLE, FRAME_SUNKEN|TEXTFIELD_INTEGER);
+    subsamp_textfield->setTipText("Enable subsampling of spectra to speedup calculations");
     multi_sample_button = new FXCheckButton(sgb, "Enable multi-sample", this, ID_MULTI_SAMPLE);
 
     setup_config_parameters();
@@ -68,8 +72,10 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     FXMatrix *matrix = new FXMatrix(fpgroup, 2, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_SIDE_RIGHT);
     new FXLabel(matrix, "Value", NULL, LAYOUT_FILL_ROW);
     seed_tf = new FXTextField(matrix, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    seed_tf->setTipText("Initial value of fitting parameter");
     new FXLabel(matrix, "Range", NULL, LAYOUT_FILL_ROW);
     range_tf = new FXTextField(matrix, 8, this, ID_RANGE, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
+    range_tf->setTipText("Optional range used in grid search");
 
     list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
 
