@@ -102,7 +102,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-    statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X|FRAME_RAISED|STATUSBAR_WITH_DRAGCORNER);
+    statusbar=new FXStatusBar(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
 
     // Script menu
     filemenu=new FXMenuPane(this);
@@ -168,7 +168,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     main_recipe_window = new recipe_window(recipe, rcphf, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     my_dataset_window = new dataset_window(recipe, this);
 
-    m_filmstack_dialog = new FXDialogBox(this, "Result Film Stack", DECOR_ALL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    m_filmstack_dialog = new FXDialogBox(this, "Result Film Stack", DECOR_ALL, 0, 0, 400, 300, 0, 0, 0, 0, 0, 0);
     result_filmstack_window = new filmstack_window(m_interactive_fit->stack(), m_filmstack_dialog, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     result_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
     m_fit_window = new fit_window(m_interactive_fit, this, "Interactive Fit", DECOR_ALL, 0, 0, 640, 480);
@@ -489,8 +489,9 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     progress.hide();
 
     if(fit_error_msgs.length() > 0) {
-        FXMessageBox::information(this, MBOX_OK, "Fit messages",
-                                  "%s", fit_error_msgs.cstr());
+        statusbar->getStatusLine()->setNormalText(fit_error_msgs.cstr());
+    } else {
+        statusbar->getStatusLine()->setNormalText("Fit Successfull.");
     }
 
     FXString fitresult, row;
