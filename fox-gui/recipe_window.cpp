@@ -36,11 +36,10 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     : FXPacker(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
     recipe(rcp), param_list(NULL), seed_dirty(true)
 {
-    FXVerticalFrame *vf = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    FXSpring *topspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70);
-    top_frame = new FXHorizontalFrame(topspr, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    top_frame = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXGroupBox *sgb = new FXGroupBox(top_frame, "Fit Options", GROUPBOX_NORMAL|FRAME_GROOVE);
+    FXVerticalFrame *pframe = new FXVerticalFrame(top_frame);
+    FXGroupBox *sgb = new FXGroupBox(pframe, "Fit Options", GROUPBOX_NORMAL|FRAME_GROOVE);
     FXMatrix *rmatrix = new FXMatrix(sgb, 2, MATRIX_BY_COLUMNS);
     new FXLabel(rmatrix, "Wavelength Range");
     range_textfield = new FXTextField(rmatrix, 10, this, ID_SPECTRA_RANGE, FRAME_SUNKEN);
@@ -54,14 +53,12 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
 
     setup_config_parameters();
 
-    FXGroupBox *lgb = new FXGroupBox(top_frame, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    FXSpring *fpspr = new FXSpring(top_frame, LAYOUT_FILL_X|LAYOUT_FILL_Y, 42, 0);
+    FXGroupBox *lgb = new FXGroupBox(fpspr, "Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
     fit_list = new FXList(lgb, this, ID_PARAMETER, LIST_SINGLESELECT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     fit_list->setNumVisible(4);
 
-    FXSpring *botspr = new FXSpring(vf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
-    FXHorizontalFrame *bhf = new FXHorizontalFrame(botspr, LAYOUT_FILL_Y);
-
-    FXGroupBox *fpgroup = new FXGroupBox(bhf, "Add Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    FXGroupBox *fpgroup = new FXGroupBox(pframe, "Add Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_Y|FRAME_GROOVE);
     params_group = new FXPacker(fpgroup, LAYOUT_FILL_Y|LAYOUT_SIDE_LEFT);
     param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT, FRAME_SUNKEN|LISTBOX_NORMAL);
     param_listbox->setNumVisible(8);
@@ -410,9 +407,11 @@ recipe_window::bind_new_fit_recipe(fit_recipe *rcp)
 void
 recipe_window::enable_multi_sample(bool create_elements)
 {
-    iparams_group = new FXGroupBox(top_frame, "Sample", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    iparams_spring = new FXSpring(top_frame, LAYOUT_FILL_X|LAYOUT_FILL_Y, 29, 0);
+    FXGroupBox *iparams_group = new FXGroupBox(iparams_spring, "Sample", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
     iparams_listbox = new FXList(iparams_group, this, ID_PARAM_INDIV, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
-    cparams_group = new FXGroupBox(top_frame, "Constraints", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    cparams_spring = new FXSpring(top_frame, LAYOUT_FILL_X|LAYOUT_FILL_Y, 29, 0);
+    FXGroupBox *cparams_group = new FXGroupBox(cparams_spring, "Constraints", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
     cparams_listbox = new FXList(cparams_group, this, ID_PARAM_CONSTR, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
 
 
@@ -424,17 +423,19 @@ recipe_window::enable_multi_sample(bool create_elements)
         ms_params_frame->create();
         params_group->recalc();
 
-        iparams_group->create();
-        cparams_group->create();
+        iparams_spring->create();
+        cparams_spring->create();
+        top_frame->recalc();
     }
 }
 
 void
 recipe_window::disable_multi_sample()
 {
-    delete iparams_group;
-    delete cparams_group;
+    delete iparams_spring;
+    delete cparams_spring;
     delete ms_params_frame;
+    top_frame->recalc();
     params_group->recalc();
 }
 

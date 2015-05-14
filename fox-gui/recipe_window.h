@@ -85,7 +85,7 @@ private:
     fit_parameters *param_list;
     bool seed_dirty;
 
-    FXGroupBox *iparams_group, *cparams_group;
+    FXSpring *iparams_spring, *cparams_spring;
     FXHorizontalFrame *ms_params_frame;
     FXList *iparams_listbox, *cparams_listbox;
     FXCheckButton *multi_sample_button;

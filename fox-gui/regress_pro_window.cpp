@@ -95,7 +95,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,600),
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,520),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
       m_enlarged_window(false), m_result_stack_match(true)
@@ -144,10 +144,10 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     // Container
     FXVerticalFrame *cont = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *resultspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 20);
+    FXSpring *resultspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
     FXGroupBox *rgb = new FXGroupBox(resultspring, "Fit output", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
     resulttext = new FXText(rgb, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
@@ -204,10 +204,10 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
     }
 
     if (recipe->ms_setup && !m_enlarged_window) {
-        resize(920, 600);
+        resize(920, 520);
         m_enlarged_window = true;
     } else if (!recipe->ms_setup && m_enlarged_window) {
-        resize(720, 600);
+        resize(720, 520);
         m_enlarged_window = false;
     }
 
