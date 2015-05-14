@@ -98,7 +98,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,600),
       spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
-      m_result_stack_match(true)
+      m_enlarged_window(false), m_result_stack_match(true)
 {
     // Menubar
     menubar=new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
@@ -147,8 +147,9 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *resultspring = new FXSpring(cont, FRAME_LINE|LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 20);
-    resulttext = new FXText(resultspring, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXSpring *resultspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 20);
+    FXGroupBox *rgb = new FXGroupBox(resultspring, "Fit output", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    resulttext = new FXText(rgb, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
 
     init_class_list();
@@ -162,7 +163,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     main_filmstack_window = new filmstack_window(recipe->stack, rcphf, LAYOUT_FILL_Y);
     main_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
 
-    new FXVerticalSeparator(rcphf, SEPARATOR_LINE|LAYOUT_FILL_Y);
+    new FXVerticalSeparator(rcphf, SEPARATOR_GROOVE|LAYOUT_FILL_Y);
 
     main_recipe_window = new recipe_window(recipe, rcphf, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     my_dataset_window = new dataset_window(recipe, this);
@@ -200,6 +201,14 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
         m_title_dirty = false;
 
         return 1;
+    }
+
+    if (recipe->ms_setup && !m_enlarged_window) {
+        resize(920, 600);
+        m_enlarged_window = true;
+    } else if (!recipe->ms_setup && m_enlarged_window) {
+        resize(720, 600);
+        m_enlarged_window = false;
     }
 
     return 0;

@@ -61,6 +61,7 @@ protected:
 
     dataset_window *my_dataset_window;
     batch_window *my_batch_window;
+    bool m_enlarged_window;
 
     FXMenuBar         *menubar;
     FXStatusBar       *statusbar;

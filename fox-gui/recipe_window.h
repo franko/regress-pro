@@ -86,7 +86,7 @@ private:
     bool seed_dirty;
 
     FXGroupBox *iparams_group, *cparams_group;
-    FXButton *sample_add_button, *constr_add_button;
+    FXHorizontalFrame *ms_params_frame;
     FXList *iparams_listbox, *cparams_listbox;
     FXCheckButton *multi_sample_button;
 };
