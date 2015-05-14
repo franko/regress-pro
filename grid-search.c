@@ -146,9 +146,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
         result->status = status;
         result->iter = iter;
-        if (result->covar) {
-            gsl_multifit_covar(s->J, 1e-6, result->covar);
-        }
     }
 
     if(preserve_init_stack) {
@@ -179,10 +176,9 @@ lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
            gui_hook_func_t hfun, void *hdata)
 {
     struct fit_result result[1];
-    int want_covar_mat = (analysis ? 1 : 0);
     int status;
 
-    fit_result_init(result, fit, want_covar_mat);
+    fit_result_init(result, fit);
     status = lmfit_grid_run(fit, seeds, preserve_init_stack, result, hfun, hdata);
     if (analysis) {
         fit_result_report(result, analysis, error_msg);

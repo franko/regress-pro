@@ -5,7 +5,6 @@
 
 #include "common.h"
 #include "lmfit.h"
-#include "covariance_analysis.h"
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -104,13 +103,4 @@ lmfit_iter(gsl_vector *x, gsl_multifit_function_fdf *f,
     }
 
     return status;
-}
-
-void
-print_analysis(str_t str, gsl_multifit_function_fdf *f, gsl_multifit_fdfsolver *s)
-{
-    gsl_matrix *covar = gsl_matrix_alloc(f->p, f->p);
-    gsl_multifit_covar(s->J, 1e-6, covar);
-    print_covar_analysis(str, covar);
-    gsl_matrix_free(covar);
 }

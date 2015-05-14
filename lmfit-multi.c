@@ -79,9 +79,7 @@ lmfit_multi(struct multi_fit_engine *fit,
     }
 
     if(analysis && !stop_request) {
-        str_printf_add(analysis, "Nb of iterations to converge: %i\n",
-                       iter);
-        print_analysis(analysis, f, s);
+        str_printf_add(analysis, "Nb of iterations to converge: %i\n", iter);
     }
 
     gsl_multifit_fdfsolver_free(s);

@@ -14,10 +14,9 @@ struct fit_result {
     int iter;
     int interrupted;
     double chisq;
-    gsl_matrix *covar;
 };
 
-extern void fit_result_init(struct fit_result *r, struct fit_engine *fit, int want_cover_mat);
+extern void fit_result_init(struct fit_result *r, struct fit_engine *fit);
 extern void fit_result_free(struct fit_result *r);
 extern void fit_result_report(struct fit_result *r, str_ptr analysis, str_ptr error);
 

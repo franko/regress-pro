@@ -1,27 +1,18 @@
 #include "fit_result.h"
 #include "str.h"
 #include "vector_print.h"
-#include "covariance_analysis.h"
 
 void
-fit_result_init(struct fit_result *r, struct fit_engine *fit, int want_cover_mat)
+fit_result_init(struct fit_result *r, struct fit_engine *fit)
 {
     size_t p = fit->parameters->number;
     r->gsearch_x = gsl_vector_alloc(p);
-    if (want_cover_mat) {
-        r->covar = gsl_matrix_alloc(p, p);
-    } else {
-        r->covar = NULL;
-    }
 }
 
 void
 fit_result_free(struct fit_result *r)
 {
     gsl_vector_free(r->gsearch_x);
-    if (r->covar) {
-        gsl_matrix_free(r->covar);
-    }
 }
 
 void
@@ -50,7 +41,4 @@ fit_result_report(struct fit_result *r, str_ptr analysis, str_ptr error)
     }
 
     str_printf_add(analysis, "Nb of iterations to converge: %i\n", r->iter);
-    if (r->covar) {
-        print_covar_analysis(analysis, r->covar);
-    }
 }

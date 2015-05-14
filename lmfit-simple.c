@@ -56,7 +56,6 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
 
     if(analysis && !stop_request) {
         str_printf_add(analysis, "Nb of iterations to converge: %i\n", iter);
-        print_analysis(analysis, f, s);
     }
 
     if(stop_request) {
