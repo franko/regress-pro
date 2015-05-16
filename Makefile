@@ -9,7 +9,7 @@ INCLUDES = $(GSL_INCLUDES)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-ELL_SRC_FILES = common.c data-table.c data-view.c disp-table.c \
+ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	disp-sample-table.c disp-lookup.c str.c dispers-library.c str-util.c \
 	batch.c error-messages.c cmpl.c minsampling.c dispers.c disp-ho.c \
 	disp-bruggeman.c disp-cauchy.c dispers-classes.c stack.c lmfit.c \

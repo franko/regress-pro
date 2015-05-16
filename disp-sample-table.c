@@ -37,24 +37,95 @@ struct disp_class disp_sample_table_class = {
 };
 
 static void
-disp_sample_table_init(struct disp_sample_table dt[], int nb)
+init_interp(struct disp_sample_table *dt)
 {
-    dt->nb = nb;
-    dt->table_ref = data_table_new(nb, 3 /* columns */);
+    dt->interp_n = gsl_interp_alloc(gsl_interp_cspline, dt->len);
+    dt->interp_k = gsl_interp_alloc(gsl_interp_cspline, dt->len);
+    dt->accel = gsl_interp_accel_alloc();
 }
 
 static void
-disp_sample_table_clear(struct disp_sample_table *dt)
+init(struct disp_sample_table *dt, int len)
 {
-    dt->nb = 0;
+    dt->len = len;
+    dt->table = rc_matrix_alloc(3, len);
+    init_interp(dt);
+}
+
+static double get_wavelength(const struct disp_sample_table *dt, int index)
+{
+    return gsl_matrix_get(&dt->table->view.matrix, 0, index);
+}
+
+static double get_n(const struct disp_sample_table *dt, int index)
+{
+    return gsl_matrix_get(&dt->table->view.matrix, 1, index);
+}
+
+static double get_k(const struct disp_sample_table *dt, int index)
+{
+    return gsl_matrix_get(&dt->table->view.matrix, 2, index);
+}
+
+static double *wavelength_array(struct disp_sample_table *dt)
+{
+    return gsl_matrix_ptr(&dt->table->view.matrix, 0, 0);
+}
+
+static double *n_array(struct disp_sample_table *dt)
+{
+    return gsl_matrix_ptr(&dt->table->view.matrix, 1, 0);
+}
+
+static double *k_array(struct disp_sample_table *dt)
+{
+    return gsl_matrix_ptr(&dt->table->view.matrix, 2, 0);
+}
+
+static const double *wavelength_const_array(const struct disp_sample_table *dt)
+{
+    return gsl_matrix_ptr(&dt->table->view.matrix, 0, 0);
+}
+
+static const double *n_const_array(const struct disp_sample_table *dt)
+{
+    return gsl_matrix_ptr(&dt->table->view.matrix, 1, 0);
+}
+
+static const double *k_const_array(const struct disp_sample_table *dt)
+{
+    return gsl_matrix_ptr(&dt->table->view.matrix, 2, 0);
+}
+
+void disp_sample_table_get_sample(struct disp_sample_table *dt, int index, double *w, double *n, double *k)
+{
+    *w = get_wavelength(dt, index);
+    *n = get_n(dt, index);
+    *k = get_k(dt, index);
+}
+
+static void
+prepare_interp(struct disp_sample_table *dt)
+{
+    gsl_interp_init(dt->interp_n, wavelength_array(dt), n_array(dt), dt->len);
+    gsl_interp_init(dt->interp_k, wavelength_array(dt), k_array(dt), dt->len);
+}
+
+static void
+clear(struct disp_sample_table *dt)
+{
+    dt->len = 0;
 }
 
 void
 disp_sample_table_free(disp_t *d)
 {
     struct disp_sample_table *dt = &d->disp.sample_table;
-    if(dt->nb > 0) {
-        data_table_unref(dt->table_ref);
+    if (dt->len > 0) {
+        rc_matrix_unref(dt->table);
+        gsl_interp_accel_free(dt->accel);
+        gsl_interp_free(dt->interp_n);
+        gsl_interp_free(dt->interp_k);
     }
     disp_base_free(d);
 }
@@ -64,39 +135,26 @@ disp_sample_table_copy(const disp_t *src)
 {
     disp_t *res = disp_base_copy(src);
     struct disp_sample_table *dt = &res->disp.sample_table;
-    if(dt->nb > 0) {
-        data_table_ref(dt->table_ref);
+    if(dt->len > 0) {
+        rc_matrix_ref(dt->table);
+        init_interp(dt);
+        prepare_interp(dt);
     }
     return res;
 }
 
 cmpl
-disp_sample_table_n_value(const disp_t *disp, double _lam)
+disp_sample_table_n_value(const disp_t *disp, double lam)
 {
     const struct disp_sample_table *dt = & disp->disp.sample_table;
-    struct data_table *t = dt->table_ref;
-    float lam = _lam;
-    int j, nb = dt->nb;
-
-    for(j = 0; j < nb-1; j++) {
-        double jlam = data_table_get(t, j+1, 0);
-        if(jlam >= lam) {
-            break;
-        }
+    if (lam <= get_wavelength(dt, 0)) {
+        return get_n(dt, 0) - get_k(dt, 0) * I;
+    } else if (lam >= get_wavelength(dt, dt->len - 1)) {
+        return get_n(dt, dt->len - 1) - get_k(dt, dt->len - 1) * I;
     }
-
-    if(j >= nb-1) {
-        return data_table_get(t, j, 1) + data_table_get(t, j, 2) * I;
-    }
-
-    float lam1 = data_table_get(t, j, 0), lam2 = data_table_get(t, j+1, 0);
-    int j1 = j, j2 = j+1;
-
-    float a = (lam - lam1) / (lam2 - lam1);
-    float complex n1 = data_table_get(t, j1, 1) - data_table_get(t, j1, 2) * I;
-    float complex n2 = data_table_get(t, j2, 1) - data_table_get(t, j2, 2) * I;
-
-    return n1 + (n2 - n1) * a;
+    double nx = gsl_interp_eval(dt->interp_n, wavelength_const_array(dt), n_const_array(dt), lam, dt->accel);
+    double kx = gsl_interp_eval(dt->interp_n, wavelength_const_array(dt), k_const_array(dt), lam, dt->accel);
+    return nx - kx * I;
 }
 
 disp_t *
@@ -145,14 +203,13 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
     switch(dtype) {
     case DISP_SAMPLE_TABLE: {
         struct disp_sample_table *dt;
-        struct data_table *table;
         long start_pos = ftell(f);
         int j, lines;
 
         disp = disp_new(DISP_SAMPLE_TABLE);
         str_copy(disp->name, name);
         dt = & disp->disp.sample_table;
-        disp_sample_table_clear(dt);
+        clear(dt);
 
         start_pos = ftell(f);
 
@@ -175,33 +232,33 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 
         fseek(f, start_pos, SEEK_SET);
 
-        disp_sample_table_init(dt, lines);
+        init(dt, lines);
 
-        table = dt->table_ref;
-
-        for(j = 0; j < lines; j++) {
-            float *dptr = table->heap + 3 * j;
+        double *wptr = wavelength_array(dt);
+        double *nptr = n_array(dt);
+        double *kptr = k_array(dt);
+        for(j = 0; j < lines; j++, wptr++, nptr++, kptr++) {
             int read_status;
             do {
-                read_status = fscanf(f, "%f %f %f\n", dptr, dptr+1, dptr+2);
+                read_status = fscanf(f, "%lf %lf %lf\n", wptr, nptr, kptr);
             } while(read_status < 3 && read_status != EOF);
 
             if(convert_ev) {
-                dptr[0] = 1239.8 / dptr[0];
+                *wptr = 1239.8 / *wptr;
             }
 
             if(provide_diel_k) {
-                double e1 = dptr[1], e2 = dptr[2];
+                double e1 = *nptr, e2 = *kptr;
                 double ne = sqrt(e1*e1 + e2*e2);
-                dptr[1] = sqrt((ne + e1) / 2.0);
-                dptr[2] = sqrt((ne - e1) / 2.0);
+                *nptr = sqrt((ne + e1) / 2.0);
+                *kptr = sqrt((ne - e1) / 2.0);
             }
 
             if(read_status == EOF) {
                 break;
             }
         }
-
+        prepare_interp(dt);
         break;
     }
     case DISP_CAUCHY:
@@ -232,9 +289,9 @@ int
 disp_sample_table_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_sample_table *d = &_d->disp.sample_table;
-    writer_printf(w, "table \"%s\" %d", CSTR(_d->name), d->nb);
+    writer_printf(w, "table \"%s\" %d", CSTR(_d->name), d->len);
     writer_newline_enter(w);
-    data_table_write(w, d->table_ref);
+    rc_matrix_write(w, d->table, RC_MATRIX_TRANSPOSED);
     writer_newline_exit(w);
     return 0;
 }
@@ -243,11 +300,13 @@ int
 disp_sample_table_read(lexer_t *l, disp_t *d_gen)
 {
     struct disp_sample_table *d = &d_gen->disp.sample_table;
-    d->nb = 0;
-    int nb;
-    if (lexer_integer(l, &nb)) return 1;
-    d->table_ref = data_table_read(l);
-    if (!d->table_ref) return 1;
-    d->nb = nb;
+    d->len = 0;
+    int len;
+    if (lexer_integer(l, &len)) return 1;
+    d->table = rc_matrix_read(l, RC_MATRIX_TRANSPOSED);
+    if (!d->table) return 1;
+    d->len = len;
+    init_interp(d);
+    prepare_interp(d);
     return 0;
 }

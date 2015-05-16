@@ -145,11 +145,13 @@ private:
 
 struct disp_sample_table_rows_iter : table_nk_iterator {
     disp_sample_table_rows_iter(disp_sample_table *dt): m_table(dt) {}
-    virtual int rows() const { return m_table->nb; }
+    virtual int rows() const { return m_table->len; }
     virtual float get_nk_row(int index, float *n, float *k) {
-        *n = data_table_get(m_table->table_ref, index, 1);
-        *k = data_table_get(m_table->table_ref, index, 2);
-        return data_table_get(m_table->table_ref, index, 0);
+        double lw, ln, lk;
+        disp_sample_table_get_sample(m_table, index, &lw, &ln, &lk);
+        *n = float(ln);
+        *k = float(lk);
+        return float(lw);
     }
 private:
     disp_sample_table *m_table;
