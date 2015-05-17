@@ -18,7 +18,7 @@ else
   FOX_INCLUDES = $(shell fox-config --cflags)
 endif
 
-GSL_LIBS = -lgsl -lgslcblas -lm
+GSL_LIBS = -lgsl -lblas -lm
 GSL_INCLUDES = 
 
 REG_LIBS = -lmhash -lgmp
