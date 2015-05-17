@@ -112,13 +112,15 @@ disp_list_length(struct disp_list *lst)
 const char *
 lib_disp_table_lookup(const disp_t *d)
 {
-    if (d->type != DISP_TABLE) return NULL;
-    const struct disp_table *dt = &d->disp.table;
     struct disp_node *n;
     for (n = app_lib->first; n; n = n->next) {
-        if (n->id && n->content->type == DISP_TABLE &&
-            n->content->disp.table.table_ref == dt->table_ref) {
-            return CSTR(n->id);
+        if (n->id && n->content->type == d->type) {
+            if (d->type == DISP_TABLE && n->content->disp.table.table_ref == d->disp.table.table_ref) {
+                return CSTR(n->id);
+            }
+            if (d->type == DISP_SAMPLE_TABLE && n->content->disp.sample_table.table == d->disp.sample_table.table) {
+                return CSTR(n->id);
+            }
         }
     }
     return NULL;
@@ -129,7 +131,7 @@ lib_disp_table_get(const char *id)
 {
     struct disp_node *n;
     for (n = app_lib->first; n; n = n->next) {
-        if (n->id && n->content->type == DISP_TABLE && strcmp(CSTR(n->id), id) == 0) {
+        if (n->id && strcmp(CSTR(n->id), id) == 0) {
             return disp_copy(n->content);
         }
     }
