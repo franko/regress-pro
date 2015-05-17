@@ -27,7 +27,7 @@ fit_recipe::~fit_recipe()
 
 void fit_recipe::setup_default_stack()
 {
-    disp_t *si = disp_list_search(app_lib, "si-paper-1");
+    disp_t *si = disp_list_search(app_lib, "silicon-1");
     disp_t *sio2 = disp_list_search(app_lib, "sio2");
     disp_t *vac = disp_list_search(app_lib, "vacuum");
     stack_add_layer(stack, vac, 0.0);
