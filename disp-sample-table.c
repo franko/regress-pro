@@ -54,47 +54,47 @@ init(struct disp_sample_table *dt, int len)
 
 static double get_wavelength(const struct disp_sample_table *dt, int index)
 {
-    return gsl_matrix_get(&dt->table->view.matrix, 0, index);
+    return dt->table->view.matrix.data[index];
 }
 
 static double get_n(const struct disp_sample_table *dt, int index)
 {
-    return gsl_matrix_get(&dt->table->view.matrix, 1, index);
+    return dt->table->view.matrix.data[dt->table->view.matrix.tda + index];
 }
 
 static double get_k(const struct disp_sample_table *dt, int index)
 {
-    return gsl_matrix_get(&dt->table->view.matrix, 2, index);
+    return dt->table->view.matrix.data[2*dt->table->view.matrix.tda + index];
 }
 
 static double *wavelength_array(struct disp_sample_table *dt)
 {
-    return gsl_matrix_ptr(&dt->table->view.matrix, 0, 0);
+    return dt->table->view.matrix.data;
 }
 
 static double *n_array(struct disp_sample_table *dt)
 {
-    return gsl_matrix_ptr(&dt->table->view.matrix, 1, 0);
+    return dt->table->view.matrix.data + dt->table->view.matrix.tda;
 }
 
 static double *k_array(struct disp_sample_table *dt)
 {
-    return gsl_matrix_ptr(&dt->table->view.matrix, 2, 0);
+    return dt->table->view.matrix.data + 2 * dt->table->view.matrix.tda;
 }
 
 static const double *wavelength_const_array(const struct disp_sample_table *dt)
 {
-    return gsl_matrix_ptr(&dt->table->view.matrix, 0, 0);
+    return dt->table->view.matrix.data;
 }
 
 static const double *n_const_array(const struct disp_sample_table *dt)
 {
-    return gsl_matrix_ptr(&dt->table->view.matrix, 1, 0);
+    return dt->table->view.matrix.data + dt->table->view.matrix.tda;
 }
 
 static const double *k_const_array(const struct disp_sample_table *dt)
 {
-    return gsl_matrix_ptr(&dt->table->view.matrix, 2, 0);
+    return dt->table->view.matrix.data + 2 * dt->table->view.matrix.tda;
 }
 
 void disp_sample_table_get_sample(struct disp_sample_table *dt, int index, double *w, double *n, double *k)
