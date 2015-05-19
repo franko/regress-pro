@@ -153,7 +153,7 @@ disp_sample_table_n_value(const disp_t *disp, double lam)
         return get_n(dt, dt->len - 1) - get_k(dt, dt->len - 1) * I;
     }
     double nx = gsl_interp_eval(dt->interp_n, wavelength_const_array(dt), n_const_array(dt), lam, dt->accel);
-    double kx = gsl_interp_eval(dt->interp_n, wavelength_const_array(dt), k_const_array(dt), lam, dt->accel);
+    double kx = gsl_interp_eval(dt->interp_k, wavelength_const_array(dt), k_const_array(dt), lam, dt->accel);
     return nx - kx * I;
 }
 
