@@ -123,7 +123,7 @@ fit_panel::on_cmd_param_change(FXObject *_txt, FXSelector, void*)
     FXString vstr = txt->getText();
     double new_val = strtod(vstr.text(), NULL);
     unsigned k = this->get_parameter_index(p);
-    m_fit->set_parameter_value(k, new_val);
+    set_parameter_value(k, new_val);
     if (m_results_target) {
         m_results_target->notify_change();
     }
@@ -170,7 +170,7 @@ fit_panel::update_spectral_range(const char *txt)
     double ps[3];
 
     if(verify_spectral_range(txt, ps)) {
-        return m_fit->set_sampling(ps[0], ps[1], ps[2]);
+        return set_sampling(ps[0], ps[1], ps[2]);
     }
 
     return false;
@@ -218,7 +218,7 @@ long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
 
     if(fps->number > 0) {
 
-        m_fit->run(fps);
+        run_fit(fps);
 
         for(unsigned k = 0; k < m_parameters.size(); k++) {
             param_info& p = m_parameters[k];
@@ -254,4 +254,19 @@ void fit_panel::kill_focus()
             param_matrix->childAtRowCol(i, j)->killFocus();
         }
     }
+}
+
+void fit_panel::set_parameter_value(unsigned k, double val)
+{
+    m_fit->set_parameter_value(k, val);
+}
+
+bool fit_panel::set_sampling(double s_start, double s_end, double s_step)
+{
+    return m_fit->set_sampling(s_start, s_end, s_step);
+}
+
+void fit_panel::run_fit(fit_parameters *fps)
+{
+    m_fit->run(fps);
 }
