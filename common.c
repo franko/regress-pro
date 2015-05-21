@@ -65,10 +65,9 @@ generic_array_check_alloc(struct generic_array *s, int idx,
 }
 
 void *
-generic_array_new(size_t data_size)
+generic_array_new(size_t data_size, size_t nb_init)
 {
     struct generic_array *r;
-    const int nb_init = 8;
 
     r = emalloc(sizeof(struct generic_array));
 
