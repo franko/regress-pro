@@ -110,6 +110,18 @@ fit_parameters_clear(struct fit_parameters *s)
     s->number = 0;
 }
 
+struct fit_parameters *
+fit_parameters_copy(const struct fit_parameters *fps)
+{
+    struct fit_parameters *new_fps = (struct fit_parameters *) generic_array_new(sizeof(fit_param_t), fps->number);
+    unsigned int i;
+    for (i = 0; i < fps->number; i++) {
+        new_fps->values[i] = fps->values[i];
+    }
+    new_fps->number = fps->number;
+    return new_fps;
+}
+
 int
 fit_parameters_add(struct fit_parameters *lst, fit_param_t const * fp)
 {

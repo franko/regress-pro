@@ -78,6 +78,7 @@ extern void              strategy_free(struct strategy *s);
 extern struct fit_parameters * \
 fit_parameters_new(void);
 extern void     fit_parameters_free(struct fit_parameters *s);
+extern struct fit_parameters *fit_parameters_copy(const struct fit_parameters *fps);
 extern void     fit_parameters_clear(struct fit_parameters *s);
 extern int      fit_parameters_add(struct fit_parameters *lst,
                                    fit_param_t const * fp);
