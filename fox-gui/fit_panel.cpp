@@ -14,8 +14,9 @@ FXDEFMAP(fit_panel) fit_panel_map[]= {
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_PLOT_SCALE,   fit_panel::on_cmd_plot_autoscale),
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_SPECTR_RANGE, fit_panel::on_cmd_spectral_range),
     FXMAPFUNC(SEL_CHANGED, fit_panel::ID_SPECTR_RANGE, fit_panel::on_change_spectral_range),
+    FXMAPFUNC(SEL_UPDATE,  fit_panel::ID_SPECTR_RANGE, fit_panel::on_update_spectral_range),
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_UNDO,  fit_panel::on_cmd_undo),
-    FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_REDO,  fit_panel::on_cmd_redo),
+    FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_REDO,  fit_panel::on_cmd_undo),
 };
 
 // Object implementation
@@ -35,13 +36,8 @@ void fit_panel::clear()
     delete m_canvas;
 }
 
-void fit_panel::setup()
+void fit_panel::config_spectral_range()
 {
-    param_matrix = new FXMatrix(scroll_window, 2, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
-
-    new FXLabel(param_matrix, "Range");
-    m_wl_entry = new FXTextField(param_matrix, 10, this, ID_SPECTR_RANGE, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
-
     double wls, wle, wld;
     m_fit->get_sampling(wls, wle, wld);
 
@@ -50,6 +46,17 @@ void fit_panel::setup()
     } else {
         m_wl_entry->setText(FXStringFormat("%.3g-%.3g,%g", wls, wle, wld));
     }
+    range_dirty = false;
+}
+
+void fit_panel::setup()
+{
+    param_matrix = new FXMatrix(scroll_window, 2, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
+
+    new FXLabel(param_matrix, "Range");
+    m_wl_entry = new FXTextField(param_matrix, 10, this, ID_SPECTR_RANGE, FRAME_SUNKEN|FRAME_THICK|LAYOUT_FILL_ROW);
+
+    config_spectral_range();
 
     m_parameters.resize(m_fit->parameters_number());
 
@@ -170,11 +177,13 @@ bool
 fit_panel::update_spectral_range(const char *txt)
 {
     double ps[3];
-
     if(verify_spectral_range(txt, ps)) {
-        return set_sampling(ps[0], ps[1], ps[2]);
+        bool status = set_sampling(ps[0], ps[1], ps[2]);
+        if(status && m_canvas) {
+            m_canvas->update_limits();
+        }
+        return status;
     }
-
     return false;
 }
 
@@ -185,9 +194,6 @@ fit_panel::on_change_spectral_range(FXObject *, FXSelector, void*_txt)
 
     if(update_spectral_range(txt)) {
         m_wl_entry->setTextColor(regressProApp()->black);
-        if(m_canvas) {
-            m_canvas->update_limits();
-        }
     } else {
         m_wl_entry->setTextColor(regressProApp()->red_warning);
     }
@@ -196,13 +202,20 @@ fit_panel::on_change_spectral_range(FXObject *, FXSelector, void*_txt)
 }
 
 long
+fit_panel::on_update_spectral_range(FXObject *, FXSelector, void*_txt)
+{
+    if (range_dirty) {
+        config_spectral_range();
+        return 1;
+    }
+    return 0;
+}
+
+long
 fit_panel::on_cmd_spectral_range(FXObject *, FXSelector, void*)
 {
     FXString s = m_wl_entry->getText();
     if(update_spectral_range(s.text())) {
-        if(m_canvas) {
-            m_canvas->update_limits();
-        }
         return 1;
     }
     return 0;
@@ -247,6 +260,7 @@ void fit_panel::refresh()
         m_parameters[k].is_dirty = true;
     }
     m_canvas->set_dirty(true);
+    range_dirty = true;
 }
 
 void fit_panel::kill_focus()
@@ -292,19 +306,20 @@ void fit_panel::run_fit(fit_parameters *fps)
     m_undo_manager.record(new oper_run_fit(fps, old_values, new_values));
 }
 
-long fit_panel::on_cmd_undo(FXObject*, FXSelector, void *)
+long fit_panel::on_cmd_undo(FXObject*, FXSelector sel, void *)
 {
-    if (m_undo_manager.undo(m_fit)) {
-        refresh();
-        return 1;
+    FXuint id = FXSELID(sel);
+    bool done;
+    if (id == ID_ACTION_UNDO) {
+        done = m_undo_manager.undo(m_fit);
+    } else {
+        done = m_undo_manager.redo(m_fit);
     }
-    return 0;
-}
-
-long fit_panel::on_cmd_redo(FXObject*, FXSelector, void *)
-{
-    if (m_undo_manager.redo(m_fit)) {
+    if (done) {
         refresh();
+        if(m_canvas) {
+            m_canvas->update_limits();
+        }
         return 1;
     }
     return 0;

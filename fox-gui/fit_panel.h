@@ -32,6 +32,7 @@ class fit_panel : public FXHorizontalFrame {
     FXMatrix *param_matrix;
 
     FXTextField* m_wl_entry;
+    bool range_dirty;
     plot_canvas* m_canvas;
 
     fit_manager* m_fit; // Not owned by the class.
@@ -40,6 +41,7 @@ class fit_panel : public FXHorizontalFrame {
 
     bool verify_spectral_range(const char *txt, double ps[]);
     bool update_spectral_range(const char *txt);
+    void config_spectral_range();
 
     param_info* get_parameter_pointer(unsigned k)  {
         return m_parameters.data() + k;
@@ -79,9 +81,9 @@ public:
     long on_cmd_plot_autoscale(FXObject*, FXSelector, void*);
     long on_cmd_spectral_range(FXObject*, FXSelector, void*);
     long on_change_spectral_range(FXObject*, FXSelector, void*);
+    long on_update_spectral_range(FXObject*, FXSelector, void*);
     long on_cmd_run_fit(FXObject*, FXSelector, void*);
     long on_cmd_undo(FXObject*, FXSelector, void*);
-    long on_cmd_redo(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXHorizontalFrame::ID_LAST,
