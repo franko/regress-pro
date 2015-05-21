@@ -1,7 +1,10 @@
 #ifndef UNDO_OPERATIONS_H
 #define UNDO_OPERATIONS_H
 
+#include <agg2/agg_array.h>
+
 #include "fit-params.h"
+#include "fit_manager.h"
 
 struct fit_action {
     virtual void apply(fit_manager *fm) = 0;
@@ -14,10 +17,10 @@ struct oper_set_parameter : fit_action {
         index(k), old_value(oval), new_value(nval)
     {}
     virtual void apply(fit_manager *fm) {
-        fm->set_parameter_value(fm, index, new_value);
+        fm->set_parameter_value(index, new_value);
     }
     virtual void undo(fit_manager *fm) {
-        fm->set_parameter_value(fm, index, old_value);
+        fm->set_parameter_value(index, old_value);
     }
     unsigned index;
     double old_value, new_value;
@@ -41,18 +44,19 @@ struct oper_set_sampling : fit_action {
 struct oper_run_fit : fit_action {
     oper_run_fit(fit_parameters *fps, double *ovals, double *nvals):
         params(fit_parameters_copy(fps)), old_values(ovals), new_values(nvals)
-    {}
-    ~oper_run_fit() { fit_parameters_free(fps); }
+    { }
+
+    ~oper_run_fit() {
+        delete [] old_values;
+        delete [] old_values;
+        fit_parameters_free(params);
+    }
 
     void apply_values(fit_manager *fm, double *values) {
         for (unsigned i = 0; i < params->number; i++) {
-            for (unsigned k = 0; k < fm->parameters_number()) {
-                fit_param_t fpk;
-                fm->get_parameter(k, &fpk)
-                if (fit_param_compare(&fpk, &params->values[i]) == 0) {
-                    fm->set_parameter_value(k, values[i]);
-                    break;
-                }
+            int k = fm->lookup(&params->values[i]);
+            if (k >= 0) {
+                fm->set_parameter_value(k, values[i]);
             }
         }
     }
@@ -72,6 +76,13 @@ struct oper_run_fit : fit_action {
 class actions_record {
 private:
     agg::pod_bvector<fit_action*> m_records;
+    unsigned m_cursor;
+public:
+    actions_record(): m_cursor(0) { }
+
+    void record(fit_action *action) {
+        m_records.add(action);
+    }
 };
 
 #endif

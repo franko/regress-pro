@@ -19,6 +19,17 @@ struct fit_manager {
     virtual void config_plot(plot_canvas* canvas) = 0;
 
     virtual ~fit_manager() {}
+
+    int lookup(const fit_param_t *fp) {
+        for (unsigned k = 0; k < parameters_number(); k++) {
+            fit_param_t fpk;
+            get_parameter(k, &fpk);
+            if (fit_param_compare(&fpk, fp) == 0) {
+                return k;
+            }
+        }
+        return -1;
+    }
 };
 
 #endif

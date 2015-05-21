@@ -6,6 +6,7 @@
 
 #include "fit_manager.h"
 #include "plot_canvas.h"
+#include "undo_operations.h"
 
 struct fit_result_target {
     virtual void notify_change() = 0;
@@ -35,6 +36,7 @@ class fit_panel : public FXHorizontalFrame {
 
     fit_manager* m_fit; // Not owned by the class.
     fit_result_target *m_results_target;
+    actions_record m_undo_manager;
 
     bool verify_spectral_range(const char *txt, double ps[]);
     bool update_spectral_range(const char *txt);
@@ -52,6 +54,7 @@ class fit_panel : public FXHorizontalFrame {
     void set_parameter_value(unsigned k, double val);
     bool set_sampling(double s_start, double s_end, double s_step);
     void run_fit(fit_parameters *fps);
+    double *new_array_fit_values(fit_manager *fm, fit_parameters *fps);
 
 protected:
     fit_panel() {};

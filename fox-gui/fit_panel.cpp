@@ -258,15 +258,34 @@ void fit_panel::kill_focus()
 
 void fit_panel::set_parameter_value(unsigned k, double val)
 {
+    double old_value = m_fit->get_parameter_value(k);
     m_fit->set_parameter_value(k, val);
+    m_undo_manager.record(new oper_set_parameter(k, old_value, val));
 }
 
 bool fit_panel::set_sampling(double s_start, double s_end, double s_step)
 {
-    return m_fit->set_sampling(s_start, s_end, s_step);
+    double os, oe, op;
+    m_fit->get_sampling(os, oe, op);
+    bool status = m_fit->set_sampling(s_start, s_end, s_step);
+    m_undo_manager.record(new oper_set_sampling(os, oe, op, s_start, s_end, s_step));
+    return status;
+}
+
+double *fit_panel::new_array_fit_values(fit_manager *fm, fit_parameters *fps)
+{
+    double *values = new(std::nothrow) double[fps->number];
+    for (unsigned i = 0; i < fps->number; i++) {
+        int k = fm->lookup(&fps->values[i]);
+        values[i] = (k >= 0 ? m_fit->get_parameter_value(k) : 0.0);
+    }
+    return values;
 }
 
 void fit_panel::run_fit(fit_parameters *fps)
 {
+    double *old_values = new_array_fit_values(m_fit, fps);
     m_fit->run(fps);
+    double *new_values = new_array_fit_values(m_fit, fps);
+    m_undo_manager.record(new oper_run_fit(fps, old_values, new_values));
 }
