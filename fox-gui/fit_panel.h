@@ -80,6 +80,8 @@ public:
     long on_cmd_spectral_range(FXObject*, FXSelector, void*);
     long on_change_spectral_range(FXObject*, FXSelector, void*);
     long on_cmd_run_fit(FXObject*, FXSelector, void*);
+    long on_cmd_undo(FXObject*, FXSelector, void*);
+    long on_cmd_redo(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXHorizontalFrame::ID_LAST,
@@ -87,6 +89,8 @@ public:
         ID_SPECTR_RANGE,
         ID_RUN_FIT,
         ID_PLOT_SCALE,
+        ID_ACTION_UNDO,
+        ID_ACTION_REDO,
         ID_LAST
     };
 };

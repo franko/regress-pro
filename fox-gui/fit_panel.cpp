@@ -14,6 +14,8 @@ FXDEFMAP(fit_panel) fit_panel_map[]= {
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_PLOT_SCALE,   fit_panel::on_cmd_plot_autoscale),
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_SPECTR_RANGE, fit_panel::on_cmd_spectral_range),
     FXMAPFUNC(SEL_CHANGED, fit_panel::ID_SPECTR_RANGE, fit_panel::on_change_spectral_range),
+    FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_UNDO,  fit_panel::on_cmd_undo),
+    FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_REDO,  fit_panel::on_cmd_redo),
 };
 
 // Object implementation
@@ -288,4 +290,22 @@ void fit_panel::run_fit(fit_parameters *fps)
     m_fit->run(fps);
     double *new_values = new_array_fit_values(m_fit, fps);
     m_undo_manager.record(new oper_run_fit(fps, old_values, new_values));
+}
+
+long fit_panel::on_cmd_undo(FXObject*, FXSelector, void *)
+{
+    if (m_undo_manager.undo(m_fit)) {
+        refresh();
+        return 1;
+    }
+    return 0;
+}
+
+long fit_panel::on_cmd_redo(FXObject*, FXSelector, void *)
+{
+    if (m_undo_manager.redo(m_fit)) {
+        refresh();
+        return 1;
+    }
+    return 0;
 }

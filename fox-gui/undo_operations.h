@@ -80,8 +80,31 @@ private:
 public:
     actions_record(): m_cursor(0) { }
 
+    void clear_tail(unsigned pos) {
+        for (unsigned i = pos; i < m_records.size(); i++) {
+            delete m_records[i];
+        }
+        m_records.free_tail(pos);
+    }
+
     void record(fit_action *action) {
+        clear_tail(m_cursor);
         m_records.add(action);
+        m_cursor ++;
+    }
+
+    bool undo(fit_manager *fm) {
+        if (m_cursor == 0) return false;
+        m_cursor --;
+        m_records[m_cursor]->undo(fm);
+        return true;
+    }
+
+    bool redo(fit_manager *fm) {
+        if (m_cursor >= m_records.size()) return false;
+        m_records[m_cursor]->apply(fm);
+        m_cursor ++;
+        return true;
     }
 };
 

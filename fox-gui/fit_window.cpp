@@ -38,6 +38,8 @@ fit_window::fit_window(fit_manager* fit, FXWindow *win, const FXString& name, FX
 
     fitmenu = new FXMenuPane(this);
     new FXMenuCommand(fitmenu, "&Run", NULL, m_fit_panel, fit_panel::ID_RUN_FIT);
+    new FXMenuCommand(fitmenu, "Undo", NULL, m_fit_panel, fit_panel::ID_ACTION_UNDO);
+    new FXMenuCommand(fitmenu, "Redo", NULL, m_fit_panel, fit_panel::ID_ACTION_REDO);
     new FXMenuTitle(menubar, "&Fit", NULL, fitmenu);
 
     plotmenu = new FXMenuPane(this);
