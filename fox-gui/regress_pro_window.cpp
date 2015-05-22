@@ -463,6 +463,7 @@ regress_pro_window::update_interactive_fit(fit_engine *fit)
 {
     if (m_result_stack_match) {
         m_interactive_fit->update_from_fit_results(fit);
+        m_fit_window->reset_undo();
         m_fit_window->refresh();
         result_filmstack_window->update_values();
     } else {

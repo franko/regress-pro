@@ -90,6 +90,11 @@ public:
     bool has_undo() { return (m_cursor > 0); }
     bool has_redo() { return (m_cursor < m_records.size()); }
 
+    void clear() {
+        clear_tail(0);
+        m_cursor = 0;
+    }
+
     void record(fit_action *action) {
         clear_tail(m_cursor);
         m_records.add(action);

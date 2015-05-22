@@ -72,6 +72,7 @@ public:
     regress_pro *regressProApp() const { return (regress_pro *) getApp(); }
 
     void refresh();
+    void reset_undo() { m_undo_manager.clear(); }
     void reload();
     void kill_focus();
 

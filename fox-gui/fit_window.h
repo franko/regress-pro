@@ -41,6 +41,7 @@ public:
     void bind_result_target(fit_result_target *tgt) { m_fit_panel->bind_result_target(tgt); }
     void reload() { m_fit_panel->reload(); }
     void refresh() { m_fit_panel->refresh(); }
+    void reset_undo() { m_fit_panel->reset_undo(); }
     void kill_focus() { m_fit_panel->kill_focus(); }
 
 protected:
