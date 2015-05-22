@@ -87,6 +87,9 @@ public:
         m_records.free_tail(pos);
     }
 
+    bool has_undo() { return (m_cursor > 0); }
+    bool has_redo() { return (m_cursor < m_records.size()); }
+
     void record(fit_action *action) {
         clear_tail(m_cursor);
         m_records.add(action);

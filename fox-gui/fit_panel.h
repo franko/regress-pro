@@ -84,6 +84,7 @@ public:
     long on_update_spectral_range(FXObject*, FXSelector, void*);
     long on_cmd_run_fit(FXObject*, FXSelector, void*);
     long on_cmd_undo(FXObject*, FXSelector, void*);
+    long on_update_undo_menu(FXObject*, FXSelector, void*);
 
     enum {
         ID_PARAM_SELECT = FXHorizontalFrame::ID_LAST,

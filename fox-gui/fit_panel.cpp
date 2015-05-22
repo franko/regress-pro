@@ -17,6 +17,8 @@ FXDEFMAP(fit_panel) fit_panel_map[]= {
     FXMAPFUNC(SEL_UPDATE,  fit_panel::ID_SPECTR_RANGE, fit_panel::on_update_spectral_range),
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_UNDO,  fit_panel::on_cmd_undo),
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_REDO,  fit_panel::on_cmd_undo),
+    FXMAPFUNC(SEL_UPDATE,  fit_panel::ID_ACTION_UNDO,  fit_panel::on_update_undo_menu),
+    FXMAPFUNC(SEL_UPDATE,  fit_panel::ID_ACTION_REDO,  fit_panel::on_update_undo_menu),
 };
 
 // Object implementation
@@ -87,6 +89,8 @@ void fit_panel::setup()
         p->selected = false;
         p->is_dirty = true;
     }
+
+    m_undo_manager.clear();
 
     m_canvas = new plot_canvas(this, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_fit->config_plot(m_canvas);
@@ -320,6 +324,22 @@ long fit_panel::on_cmd_undo(FXObject*, FXSelector sel, void *)
         if(m_canvas) {
             m_canvas->update_limits();
         }
+        return 1;
+    }
+    return 0;
+}
+
+long fit_panel::on_update_undo_menu(FXObject* sender, FXSelector sel, void *)
+{
+    FXMenuCommand *menu_cmd = (FXMenuCommand *) sender;
+    bool enabled = menu_cmd->isEnabled();
+    bool available = (FXSELID(sel) == ID_ACTION_UNDO ? m_undo_manager.has_undo() : m_undo_manager.has_redo());
+    if (enabled && !available) {
+        menu_cmd->disable();
+        return 1;
+    }
+    if (!enabled && available) {
+        menu_cmd->enable();
         return 1;
     }
     return 0;
