@@ -48,7 +48,7 @@ struct oper_run_fit : fit_action {
 
     ~oper_run_fit() {
         delete [] old_values;
-        delete [] old_values;
+        delete [] new_values;
         fit_parameters_free(params);
     }
 
