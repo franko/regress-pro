@@ -9,6 +9,8 @@
 struct fit_action {
     virtual void apply(fit_manager *fm) = 0;
     virtual void undo(fit_manager *fm) = 0;
+    virtual int class_id() const = 0;
+    virtual bool fuse(fit_action *that) { return false; }
     virtual ~fit_action() {}
 };
 
@@ -22,8 +24,19 @@ struct oper_set_parameter : fit_action {
     virtual void undo(fit_manager *fm) {
         fm->set_parameter_value(index, old_value);
     }
+    virtual bool fuse(fit_action *_that) {
+        oper_set_parameter *that = (oper_set_parameter *) _that;
+        if (index == that->index) {
+            new_value = that->new_value;
+            return true;
+        }
+        return false;
+    }
+    virtual int class_id() const { return m_class_id; }
     unsigned index;
     double old_value, new_value;
+
+    static int m_class_id;
 };
 
 struct oper_set_sampling : fit_action {
@@ -37,8 +50,18 @@ struct oper_set_sampling : fit_action {
     virtual void undo(fit_manager *fm) {
         fm->set_sampling(old_start, old_end, old_step);
     }
+    virtual bool fuse(fit_action *_that) {
+        oper_set_sampling *that = (oper_set_sampling *) _that;
+        new_start = that->new_start;
+        new_end = that->new_end;
+        new_step = that->new_step;
+        return true;
+    }
+    virtual int class_id() const { return m_class_id; }
     double old_start, old_end, old_step;
     double new_start, new_end, new_step;
+
+    static int m_class_id;
 };
 
 struct oper_run_fit : fit_action {
@@ -69,9 +92,21 @@ struct oper_run_fit : fit_action {
         apply_values(fm, old_values);
     }
 
+    virtual int class_id() const { return m_class_id; }
+
     fit_parameters *params;
     double *old_values, *new_values;
+
+    static int m_class_id;
 };
+
+static bool fuse_actions(fit_action *a, fit_action *b)
+{
+    if (a->class_id() == b->class_id()) {
+        return a->fuse(b);
+    }
+    return false;
+}
 
 class actions_record {
 private:
@@ -97,8 +132,10 @@ public:
 
     void record(fit_action *action) {
         clear_tail(m_cursor);
-        m_records.add(action);
-        m_cursor ++;
+        if (m_cursor == 0 || !fuse_actions(m_records[m_cursor - 1], action)) {
+            m_records.add(action);
+            m_cursor ++;
+        }
     }
 
     bool undo(fit_manager *fm) {
