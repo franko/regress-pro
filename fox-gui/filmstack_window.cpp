@@ -242,6 +242,9 @@ filmstack_window::on_cmd_disp_save_tofile(FXObject *, FXSelector, void *)
     if (open.execute()) {
         disp_t *d = stack->disp[current_layer];
         FXString filename = open.getFilename();
+        if (filename.find('.') < 0) {
+            filename.append(".dsp");
+        }
         writer_t *w = writer_new();
         if (disp_write(w, d)) {
             FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error saving dispersion file.");

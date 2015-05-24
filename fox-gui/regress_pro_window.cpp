@@ -694,6 +694,9 @@ regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
 
     while (open.execute()) {
         FXString new_filename = open.getFilename();
+        if (new_filename.find('.') < 0) {
+            new_filename.append(".rcp");
+        }
         if (FXStat::exists(new_filename)) {
             if (MBOX_CLICKED_OK == FXMessageBox::question(this, MBOX_OK_CANCEL, "Save Recipe Warning", "The file \"%s\" already exists\nAre you sure you want to overwrite it ?", new_filename.text())) {
                 save_recipe_as(new_filename);
