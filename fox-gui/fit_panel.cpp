@@ -4,12 +4,6 @@
 #include "Strcpp.h"
 #include "regress_pro.h"
 
-// Kind of very simple RTTI needed to fuse for undo/redo
-// actions.
-int oper_set_parameter::m_class_id = 0;
-int oper_set_sampling::m_class_id = 1;
-int oper_run_fit::m_class_id = 2;
-
 // Map
 FXDEFMAP(fit_panel) fit_panel_map[]= {
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_PARAM_SELECT, fit_panel::on_cmd_param_select),

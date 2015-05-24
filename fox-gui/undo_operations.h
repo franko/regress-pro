@@ -14,6 +14,12 @@ struct fit_action {
     virtual ~fit_action() {}
 };
 
+enum {
+    action_set_parameter,
+    action_set_sampling,
+    action_run_fit,
+};
+
 struct oper_set_parameter : fit_action {
     oper_set_parameter(unsigned k, double oval, double nval):
         index(k), old_value(oval), new_value(nval)
@@ -32,11 +38,9 @@ struct oper_set_parameter : fit_action {
         }
         return false;
     }
-    virtual int class_id() const { return m_class_id; }
+    virtual int class_id() const { return action_set_parameter; }
     unsigned index;
     double old_value, new_value;
-
-    static int m_class_id;
 };
 
 struct oper_set_sampling : fit_action {
@@ -57,11 +61,9 @@ struct oper_set_sampling : fit_action {
         new_step = that->new_step;
         return true;
     }
-    virtual int class_id() const { return m_class_id; }
+    virtual int class_id() const { return action_set_sampling; }
     double old_start, old_end, old_step;
     double new_start, new_end, new_step;
-
-    static int m_class_id;
 };
 
 struct oper_run_fit : fit_action {
@@ -92,12 +94,10 @@ struct oper_run_fit : fit_action {
         apply_values(fm, old_values);
     }
 
-    virtual int class_id() const { return m_class_id; }
+    virtual int class_id() const { return action_run_fit; }
 
     fit_parameters *params;
     double *old_values, *new_values;
-
-    static int m_class_id;
 };
 
 static bool fuse_actions(fit_action *a, fit_action *b)
