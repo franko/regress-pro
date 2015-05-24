@@ -137,9 +137,7 @@ fx_newmodel_selector::reset()
 static disp_list files_list[1] = {{NULL, NULL}};
 
 static const FXchar disp_file_patterns[] =
-    "MAT files (*.mat)"
-    "\nNK tables (*.nk)"
-    "\nDispersion files (*.dsp)"
+    "Dispersion files (*.mat,*.nk,*.dsp)"
     "\nAll Files (*)";
 
 class fx_file_disp_selector : public fx_dispers_selector {
