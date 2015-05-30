@@ -50,7 +50,7 @@ multi_fit_engine_new(struct fit_config const *cfg,
 extern void multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const struct fit_parameters *cparameters, const struct fit_parameters *pparameters);
 
 extern void multi_fit_engine_free(struct multi_fit_engine *f);
-extern void multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, const struct fit_parameters *fps, const double value[]);
+extern void multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, int sample_nb, const struct fit_parameters *fps, const double value[]);
 extern int  multi_fit_engine_prepare(struct multi_fit_engine *f);
 
 extern void multi_fit_engine_disable(struct multi_fit_engine *f);

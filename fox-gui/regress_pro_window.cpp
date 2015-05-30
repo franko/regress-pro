@@ -361,7 +361,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
             multi_fit_engine_free(fit);
             return 1;
         }
-        multi_fit_engine_apply_parameters(fit, cparams, constr_values);
+        multi_fit_engine_apply_parameters(fit, i, cparams, constr_values);
     }
     delete [] constr_values;
 

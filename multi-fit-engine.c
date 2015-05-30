@@ -313,11 +313,11 @@ multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const 
 }
 
 void
-multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, const struct fit_parameters *fps, const double value[])
+multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, int sample_nb, const struct fit_parameters *fps, const double value[])
 {
     int k;
     for(k = 0; k < fps->number; k++) {
-        stack_apply_param(fit->stack_list[k], fps->values + k, value[k]);
+        stack_apply_param(fit->stack_list[sample_nb], &fps->values[k], value[k]);
     }
 }
 
