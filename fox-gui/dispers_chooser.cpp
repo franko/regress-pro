@@ -272,6 +272,7 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     catlist->appendItem("Choose File", NULL, NULL, TRUE);
     catlist->appendItem("New Model", NULL, NULL, TRUE);
     catlist->appendItem("User List", NULL, NULL, TRUE);
+    catlist->selectItem(0, FALSE);
 
     FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 80, 0);
     vframe = new FXVerticalFrame(vframespring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
