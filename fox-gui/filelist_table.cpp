@@ -63,5 +63,6 @@ long filelist_table::on_cmd_add_files(FXObject *, FXSelector, void *)
 
 long filelist_table::on_cmd_remove_files(FXObject *, FXSelector, void *)
 {
-    return 0;
+    clear_samples();
+    return 1;
 }
