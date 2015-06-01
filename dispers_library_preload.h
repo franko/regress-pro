@@ -1,5 +1,5 @@
 static const char *dispersions_data = \
-"dispers-library 5\n"
+"dispers-library 7\n"
 "library-id \"sio2\"\n"
 "table \"Thermal SiO2\" 9\n"
 "9 3\n"
@@ -126,4 +126,11 @@ static const char *dispersions_data = \
 "1008.01 3.57344 0.00031878\n"
 "library-id \"vacuum\" cauchy \"vacuum\" 1 0 0 0 0 0\n"
 "library-id \"water\" cauchy \"water\" 1.3197 4677.31 -1.0802e+08 0 0 0\n"
+"library-id \"nitride-1\" ho \"Nitride Furnace HO\" 3\n"
+"  212.604 15.0338 0 0.333333 0\n"
+"  13.4987 7.07992 1.1939 0.333333 -0.0954849\n"
+"  6.55542 6.87477 0.840153 0.333333 9.42958\n"
+"library-id \"nitride-2\" ho \"Nitride PECVD HO\" 2\n"
+"  199.662 14.0451 0 0.333333 0\n"
+"  1.37061 6.35081 1.17056 0.333333 -0.240491\n"
 ;
