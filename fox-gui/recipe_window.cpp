@@ -14,6 +14,8 @@ FXDEFMAP(recipe_window) recipe_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, recipe_window::ID_PARAM_SELECT, recipe_window::on_cmd_param_select),
     FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAM_SELECT, recipe_window::on_keypress_param_select),
     FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAMETER, recipe_window::on_keypress_parameter),
+    FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAM_INDIV, recipe_window::on_keypress_parameter),
+    FXMAPFUNC(SEL_KEYPRESS, recipe_window::ID_PARAM_CONSTR, recipe_window::on_keypress_parameter),
     FXMAPFUNC(SEL_SELECTED, recipe_window::ID_PARAMETER, recipe_window::on_select_parameter),
     FXMAPFUNCS(SEL_COMMAND, recipe_window::ID_SEED, recipe_window::ID_RANGE, recipe_window::on_cmd_seed),
     FXMAPFUNCS(SEL_UPDATE, recipe_window::ID_SEED, recipe_window::ID_RANGE, recipe_window::on_update_seed),
@@ -289,17 +291,26 @@ recipe_window::on_update_seed(FXObject *, FXSelector, void *)
 }
 
 long
-recipe_window::on_keypress_parameter(FXObject*, FXSelector sel, void *ptr)
+recipe_window::on_keypress_parameter(FXObject *sender, FXSelector sel, void *ptr)
 {
     FXEvent* event=(FXEvent*)ptr;
     switch(event->code) {
     case KEY_Delete:
     {
-        FXint index = fit_list->getCurrentItem();
-        if (index >= 0) {
+        if (sender == fit_list) {
+            FXint index = fit_list->getCurrentItem();
+            if (index < 0) return 0;
             fit_list->removeItem(index);
             fit_parameters_remove(recipe->parameters, index);
             seed_list_remove(recipe->seeds_list, index);
+            return 1;
+        } else if (sender == iparams_listbox || sender == cparams_listbox) {
+            FXList *list = (FXList *) sender;
+            fit_parameters *fps = (sender == iparams_listbox ? recipe->ms_setup->iparameters : recipe->ms_setup->cparameters);
+            FXint index = list->getCurrentItem();
+            if (index < 0) return 0;
+            list->removeItem(index);
+            fit_parameters_remove(fps, index);
             return 1;
         }
     }
