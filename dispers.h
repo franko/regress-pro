@@ -108,6 +108,7 @@ extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
 extern int      disp_base_decode_param_string(const char *param);
 extern int      disp_base_fp_number(const disp_t *src);
+extern int      disp_is_tabular(const disp_t *d);
 extern int      disp_write(writer_t *w, const disp_t *_d);
 extern disp_t * disp_read(lexer_t *l);
 

@@ -5,11 +5,7 @@
 #include "dispers_ui_utils.h"
 #include "dispers_win.h"
 #include "regress_pro.h"
-#include "writer.h"
-
-static const FXchar disp_patterns[] =
-    "Dispersion files (*.dsp)"
-    "\nAll Files (*)";
+#include "dispers_save_dialog.h"
 
 // Map
 FXDEFMAP(filmstack_window) filmstack_window_map[]= {
@@ -237,24 +233,12 @@ filmstack_window::on_cmd_plot_dispersion(FXObject *, FXSelector, void *)
 long
 filmstack_window::on_cmd_disp_save_tofile(FXObject *, FXSelector, void *)
 {
-    FXFileDialog open(this, "Save Dispersion As");
-    open.setPatternList(disp_patterns);
-    if (open.execute()) {
-        disp_t *d = stack->disp[current_layer];
-        FXString filename = open.getFilename();
-        if (filename.find('.') < 0) {
-            filename.append(".dsp");
+    disp_t *d = stack->disp[current_layer];
+    dispers_save_dialog open(d, this, "Save Dispersion As");
+    while (open.execute()) {
+        if (open.save_dispersion() == 0) {
+            break;
         }
-        writer_t *w = writer_new();
-        if (disp_write(w, d)) {
-            FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error saving dispersion file.");
-            writer_free(w);
-            return 1;
-        }
-        if (writer_save_tofile(w, filename.text())) {
-            FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error writing file %s.", filename.text());
-        }
-        writer_free(w);
     }
     return 1;
 }

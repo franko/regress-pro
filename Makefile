@@ -43,6 +43,6 @@ clean:
 	$(HOST_RM) -f $(ELL_OBJ_FILES) $(EFIT_LIB)
 
 dispers_library_preload.h: dispers_library_preload.txt
-	( echo "static const char *dispersions_data = \\"; cat $< | sed 's/"/\\"/g; s/\(.*\)/"\1\\\\n"/g'; echo ";" ) > $@
+	( echo "static const char *dispersions_data = \\"; cat $< | sed 's/"/\\"/g; s/\(.*\)/"\1\\n"/g'; echo ";" ) > $@
 
 -include $(DEP_FILES)

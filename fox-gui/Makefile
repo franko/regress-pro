@@ -36,7 +36,7 @@ CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp disp_fit_window.cpp regress_pro_window.cpp \
 	dispers_win.cpp sampling_win.cpp \
 	fx_numeric_field.cpp fit_panel.cpp fit_window.cpp colors.cpp \
-	plot_units.cpp plot_canvas.cpp utils.cpp filmstack_window.cpp \
+	plot_units.cpp plot_canvas.cpp utils.cpp dispers_save_dialog.cpp filmstack_window.cpp \
 	dispers_ui_edit.cpp icons_all.cpp dispers_chooser.cpp \
 	fit_params_utils.cpp multi_sample_recipe.cpp recipe_window.cpp \
 	fit_recipe.cpp dispers_edit_window.cpp dispers_ui_utils.cpp \

@@ -324,3 +324,9 @@ disp_read(lexer_t *l)
     }
     return d;
 }
+
+int
+disp_is_tabular(const disp_t *d)
+{
+    return (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE);
+}
