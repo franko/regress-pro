@@ -1,13 +1,11 @@
 
 #include "dispers_win.h"
 #include "sampling_win.h"
-#include "disp-util.h"
 #include "disp_vs.h"
 
 // Map
 FXDEFMAP(dispers_win) dispers_win_map[]= {
     FXMAPFUNC(SEL_COMMAND, dispers_win::ID_SPECTR_RANGE, dispers_win::on_cmd_set_range),
-    FXMAPFUNC(SEL_COMMAND, dispers_win::ID_SAVE_DISPERS, dispers_win::on_cmd_save_disp),
 };
 
 // Object implementation
@@ -22,7 +20,6 @@ dispers_win::dispers_win(FXWindow* w, disp_t* disp)
 
     // Dispersion menu
     dispmenu = new FXMenuPane(this);
-    new FXMenuCommand(dispmenu,"&Save Dispersion",NULL,this,ID_SAVE_DISPERS);
     new FXMenuCommand(dispmenu,"Spectral &Range",NULL,this,ID_SPECTR_RANGE);
     new FXMenuCommand(dispmenu,"&Close",NULL,this,ID_CANCEL);
     new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
@@ -62,20 +59,5 @@ dispers_win::on_cmd_set_range(FXObject*,FXSelector,void*)
         m_canvas->set_dirty(true);
         return 1;
     }
-    return 0;
-}
-
-long
-dispers_win::on_cmd_save_disp(FXObject*,FXSelector,void*)
-{
-    FXFileDialog save(this, "Save Dispersion Card");
-    save.setFilename("untitled.mat");
-
-    if(save.execute()) {
-        FXString fname = save.getFilename();
-        write_mat_file(fname.text(), m_dispers,
-                       m_sampling.start(), m_sampling.end(), m_sampling.stride());
-    }
-
     return 0;
 }

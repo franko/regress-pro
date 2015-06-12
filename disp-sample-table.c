@@ -97,7 +97,7 @@ static const double *k_const_array(const struct disp_sample_table *dt)
     return dt->table->view.matrix.data + 2 * dt->table->view.matrix.tda;
 }
 
-void disp_sample_table_get_sample(struct disp_sample_table *dt, int index, double *w, double *n, double *k)
+void disp_sample_table_get_sample(const struct disp_sample_table *dt, int index, double *w, double *n, double *k)
 {
     *w = get_wavelength(dt, index);
     *n = get_n(dt, index);

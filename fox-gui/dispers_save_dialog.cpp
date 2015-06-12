@@ -1,6 +1,6 @@
 #include "dispers_save_dialog.h"
 #include "writer.h"
-#include "disp-util.h"
+#include "mat_table_write.h"
 #include "textfield_utils.h"
 
 static const FXchar disp_patterns[] =
@@ -140,9 +140,24 @@ dispers_save_dialog::save_dispersion()
         }
         writer_free(w);
     } else {
-        double sstart, send, sstep;
-        if (get_sampling_values(&sstart, &send, &sstep)) return 1;
-        write_mat_file(filename.text(), m_disp, sstart, send, sstep);
+        file_writer ostream;
+        if (!ostream.open(filename.text())) return 1;
+        if (use_sampling() || m_disp->type == DISP_TABLE) {
+            double sstart, send, sstep;
+            if (use_sampling()) {
+                if (get_sampling_values(&sstart, &send, &sstep)) return 1;
+            } else {
+                sstart = m_disp->disp.table.lambda_min;
+                send = m_disp->disp.table.lambda_max;
+                sstep = m_disp->disp.table.lambda_stride;
+            }
+            uniform_sampler usampler(sstart, send, sstep);
+            disp_source<uniform_sampler> src(m_disp, &usampler);
+            mat_table_write(CSTR(m_disp->name), &ostream, &src);
+        } else if (m_disp->type == DISP_SAMPLE_TABLE) {
+            dst_source src(&m_disp->disp.sample_table);
+            mat_table_write(CSTR(m_disp->name), &ostream, &src);
+        }
     }
     return 0;
 }
