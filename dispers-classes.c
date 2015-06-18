@@ -59,6 +59,7 @@ init_class_list()
     node = class_list_add_node(& disp_table_class, node);
     node = class_list_add_node(& disp_sample_table_class, node);
     node = class_list_add_node(& disp_lookup_class, node);
+    node = class_list_add_node(& fb_disp_class, node);
 
     disp_class_list = node;
 

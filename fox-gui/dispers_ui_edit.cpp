@@ -1,5 +1,6 @@
 #include "dispers_ui_edit.h"
 #include "disp-ho.h"
+#include "disp-fb.h"
 #include "dispers_ui_utils.h"
 #include "regress_pro.h"
 
@@ -141,6 +142,66 @@ void fx_disp_ho_window::delete_dispersion_element(int index)
     reload();
 }
 
+void fx_disp_fb_window::setup_dialog()
+{
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    FXHorizontalFrame *ninf_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
+    new FXLabel(ninf_frame, "N(inf)");
+    create_textfield(ninf_frame, this, ID_PARAM_0);
+
+    matrix = new FXMatrix(vframe, 5, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    new FXLabel(matrix, "");
+    new FXLabel(matrix, "Eg");
+    new FXLabel(matrix, "A");
+    new FXLabel(matrix, "B");
+    new FXLabel(matrix, "C");
+
+    for (int i = 0; i < disp->disp.fb.n; i++) {
+        FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
+        if (disp->disp.fb.n == 1) { db->disable(); }
+        for (int j = 4*i; j < 4*(i+1); j++) {
+            create_textfield(matrix, this, ID_PARAM_0 + j + 1);
+        }
+    }
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+}
+
+double *fx_disp_fb_window::map_parameter(int index)
+{
+    if (index == 0) return &disp->disp.fb.n_inf;
+    int i = (index - 1) / 4, j = (index - 1) % 4;
+    struct fb_osc *osc = disp->disp.fb.osc + i;
+    switch (j) {
+        case 0: return &osc->eg;
+        case 1: return &osc->a;
+        case 2: return &osc->b;
+        default: ;
+    }
+    return &osc->c;
+}
+
+void fx_disp_fb_window::add_dispersion_element()
+{
+    int n = disp->disp.fb.n;
+    disp_add_osc(disp);
+    FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
+    db->create();
+    for (int j = 4*n; j < 4*(n+1); j++) {
+        FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j + 1);
+        tf->create();
+    }
+    matrix->childAtRowCol(1, 0)->enable();
+    vframe->recalc();
+}
+
+void fx_disp_fb_window::delete_dispersion_element(int index)
+{
+    disp_delete_osc(disp, index);
+    reload();
+}
+
 void fx_disp_cauchy_window::setup_dialog()
 {
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
@@ -176,6 +237,8 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
         dispwin = new fx_disp_lookup_window(d, comp, opts);
     } else if (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE) {
         dispwin = new fx_disp_table_window(d, comp, opts);
+    } else if (d->type == DISP_FB) {
+        dispwin = new fx_disp_fb_window(d, comp, opts);
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
     }

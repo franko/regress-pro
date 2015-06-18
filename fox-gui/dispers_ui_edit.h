@@ -66,6 +66,21 @@ private:
     FXVerticalFrame *vframe;
 };
 
+class fx_disp_fb_window : public fx_disp_window {
+public:
+    fx_disp_fb_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
+    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+    { }
+
+    virtual void setup_dialog();
+    virtual void add_dispersion_element();
+    virtual void delete_dispersion_element(int index);
+    virtual double *map_parameter(int index);
+private:
+    FXMatrix *matrix;
+    FXVerticalFrame *vframe;
+};
+
 class fx_disp_cauchy_window : public fx_disp_window {
 public:
     fx_disp_cauchy_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)

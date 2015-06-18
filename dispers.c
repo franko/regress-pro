@@ -170,7 +170,7 @@ disp_base_fp_number(const disp_t *src)
 }
 
 disp_t *
-disp_copy(disp_t *d)
+disp_copy(const disp_t *d)
 {
     assert(d->dclass != NULL);
     return d->dclass->copy(d);
@@ -297,7 +297,7 @@ disp_write(writer_t *w, const disp_t *d)
 static disp_t *
 disp_read_header(lexer_t *l)
 {
-    static const char *model[] = {"uniform-table", "table", "cauchy", "ho", "lookup", "bruggeman"};
+    static const char *model[] = {"uniform-table", "table", "cauchy", "ho", "lookup", "bruggeman", "fb"};
     if (lexer_ident(l)) return NULL;
     enum disp_type model_id;
     for (model_id = DISP_TABLE; model_id < DISP_END_OF_TABLE; model_id++) {
@@ -318,7 +318,8 @@ disp_read(lexer_t *l)
         return lib_disp_table_get(CSTR(l->store));
     }
     disp_t *d = disp_read_header(l);
-    if (!d || d->dclass->read == NULL || d->dclass->read(l, d)) {
+    if (!d) return NULL;
+    if (d->dclass->read == NULL || d->dclass->read(l, d)) {
         disp_free(d);
         return NULL;
     }

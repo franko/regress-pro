@@ -8,6 +8,7 @@
 #include "disp-sample-table.h"
 #include "disp-bruggeman.h"
 #include "disp-ho.h"
+#include "disp-fb.h"
 #include "disp-lookup.h"
 #include "disp-cauchy.h"
 #include "dispers-classes.h"
@@ -60,6 +61,7 @@ enum disp_type {
     DISP_HO,
     DISP_LOOKUP,
     DISP_BRUGGEMAN,
+    DISP_FB,
     DISP_END_OF_TABLE, /* Not a dispersion type */
 };
 
@@ -74,6 +76,7 @@ struct disp_struct {
         struct disp_ho ho;
         struct disp_lookup lookup;
         struct disp_bruggeman bruggeman;
+        struct disp_fb fb;
     } disp;
 };
 
@@ -93,7 +96,7 @@ extern void     get_model_param_deriv(const disp_t *d,
                                       const fit_param_t *fp, double lambda,
                                       double *dnr, double *dni);
 extern void     disp_free(disp_t *d);
-extern disp_t * disp_copy(disp_t *d);
+extern disp_t * disp_copy(const disp_t *d);
 extern disp_t * disp_new(enum disp_type tp);
 extern disp_t * disp_new_with_name(enum disp_type tp, const char *name);
 extern int      disp_get_number_of_params(const disp_t *d);

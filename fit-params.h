@@ -33,6 +33,7 @@ enum disp_model_id {
     MODEL_CAUCHY,
     MODEL_LOOKUP,
     MODEL_BRUGGEMAN,
+    MODEL_FB,
     MODEL_NONE,
 };
 
