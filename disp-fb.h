@@ -29,7 +29,6 @@
 __BEGIN_DECLS
 
 struct fb_osc {
-    double eg;
     double a;
     double b;
     double c;
@@ -38,6 +37,7 @@ struct fb_osc {
 struct disp_fb {
     int n;
     double n_inf;
+    double eg;
     struct fb_osc *osc;
 };
 
@@ -46,7 +46,7 @@ struct disp_struct;
 /* FB dispersion class */
 extern struct disp_class fb_disp_class;
 
-extern struct disp_struct * disp_new_fb(const char *name, int nb_osc, double n_inf, struct fb_osc *osc);
+extern struct disp_struct * disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
 extern void disp_add_osc(struct disp_struct *d);
 extern void disp_delete_osc(struct disp_struct *d, int index);
 

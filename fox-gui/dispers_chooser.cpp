@@ -126,8 +126,8 @@ fx_newmodel_selector::get_dispersion()
             return disp_lookup_new_from_comp("*lookup", comp);
         }
     } else if (name == "Fourouhi Bloomer Model") {
-        struct fb_osc osc0 = {1.5, 1.0, 8.0, 18.0};
-        return disp_new_fb("*FB", 1, 1.0, &osc0);
+        struct fb_osc osc0 = {1.0, 8.0, 18.0};
+        return disp_new_fb("*FB", 1, 1.0, 2.0, &osc0);
     }
     return NULL;
 }

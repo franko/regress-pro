@@ -63,17 +63,17 @@ struct disp_class fb_disp_class = {
     .read                = fb_read,
 };
 
-static const char *fb_param_names[] = {"Eg", "A", "B", "C"};
+static const char *fb_param_names[] = {"A", "B", "C"};
 
 #define FB_EV_NM 1240.0
 
-#define FB_NB_GLOBAL_PARAMS 1
+#define FB_NB_GLOBAL_PARAMS 2
 #define FB_NINF_OFFS 0
-#define FB_NB_PARAMS 4
-#define FB_EG_OFFS 0
-#define FB_A_OFFS  1
-#define FB_B_OFFS  2
-#define FB_C_OFFS  3
+#define FB_EG_OFFS 1
+#define FB_NB_PARAMS 3
+#define FB_A_OFFS  0
+#define FB_B_OFFS  1
+#define FB_C_OFFS  2
 
 #define FB_PARAM_NB(hn,pn) (FB_NB_PARAMS * (hn) + pn)
 
@@ -110,10 +110,9 @@ disp_add_osc(struct disp_struct *d)
     int n = fb->n;
     struct fb_osc *osc = emalloc(sizeof(struct fb_osc) * (n + 1));
     memcpy(osc, fb->osc, sizeof(struct fb_osc) * n);
-    osc[n].eg = 15.0;
     osc[n].a = 1.0;
-    osc[n].b = 0.0;
-    osc[n].c = 9.0;
+    osc[n].b = 8.0;
+    osc[n].c = 18.0;
 
     free(fb->osc);
     fb->osc = osc;
@@ -143,10 +142,11 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     double nsum = fb->n_inf, ksum = 0;
     double E = FB_EV_NM / lambda;
 
+    const double Eg = fb->eg;
+    cmpl dndeg = 0.0; /* Accumulate contribution to the derivative of complex n with Eg. */
     for(k = 0; k < nb; k++) {
         const struct fb_osc *osc = fb->osc + k;
         const double A = osc->a, B = osc->b, C = osc->c;
-        const double Eg = osc->eg;
         const double den = E * (E - B) + C;
         const double Q = 0.5 * sqrt(4*C - SQR(B));
         const double B0 = (A / Q) * (-SQR(B)/2 + Eg * (B - Eg) + C);
@@ -161,11 +161,11 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         if (pd) {
             const int koffs = FB_NB_GLOBAL_PARAMS + k * FB_NB_PARAMS;
 
-            /* Derivatives */
             const double k_eg = -2 * A * (E - Eg) / den;
             const double n_eg = (A / Q) * (E * B - 2*E*Eg + Eg * B - 2*C) / den;
-            cmpl_vector_set(pd, koffs + FB_EG_OFFS, n_eg - I * k_eg);
+            dndeg += n_eg - I * k_eg;
 
+            /* Derivatives */
             const double k_a = kterm / A;
             const double n_a = nterm / A;
             cmpl_vector_set(pd, koffs + FB_A_OFFS, n_a - I * k_a);
@@ -188,6 +188,7 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     if (pd) {
         /* Derivative wrt N_inf */
         cmpl_vector_set(pd, FB_NINF_OFFS, 1.0);
+        cmpl_vector_set(pd, FB_EG_OFFS, dndeg);
     }
 
     return nsum - I * ksum;
@@ -205,6 +206,7 @@ fit_param_address(struct disp_fb *d, const fit_param_t *fp)
     assert(fp->param_nb < d->n * FB_NB_PARAMS + FB_NB_GLOBAL_PARAMS);
 
     if (fp->param_nb == FB_NINF_OFFS) return &d->n_inf;
+    if (fp->param_nb == FB_EG_OFFS) return &d->eg;
 
     int no, np;
     no = (fp->param_nb - FB_NB_GLOBAL_PARAMS) / FB_NB_PARAMS;
@@ -214,9 +216,8 @@ fit_param_address(struct disp_fb *d, const fit_param_t *fp)
 
     struct fb_osc *fb = d->osc + no;
     switch(np) {
-    case 0: return &fb->eg;
-    case 1: return &fb->a;
-    case 2: return &fb->b;
+    case 0: return &fb->a;
+    case 1: return &fb->b;
     default: ;
     }
     return &fb->c;
@@ -227,6 +228,8 @@ fb_encode_param(str_t param, const fit_param_t *fp)
 {
     if (fp->param_nb == 0) {
         str_copy_c(param, "Ninf");
+    } else if (fp->param_nb == 1) {
+        str_copy_c(param, "Eg");
     } else {
         int onb = (fp->param_nb - FB_NB_GLOBAL_PARAMS) / FB_NB_PARAMS;
         int pnb = (fp->param_nb - FB_NB_GLOBAL_PARAMS) % FB_NB_PARAMS;
@@ -255,11 +258,12 @@ fb_get_param_value(const disp_t *_d, const fit_param_t *fp)
 }
 
 disp_t *
-disp_new_fb(const char *name, int nb_osc, double n_inf, struct fb_osc *osc)
+disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
 {
     disp_t *d = disp_new_with_name(DISP_FB, name);
     d->disp.fb.n = nb_osc;
     d->disp.fb.n_inf = n_inf;
+    d->disp.fb.eg = eg;
     d->disp.fb.osc = emalloc(nb_osc * sizeof(struct fb_osc));
     memcpy(d->disp.fb.osc, osc, nb_osc * sizeof(struct fb_osc));
     return d;
@@ -270,7 +274,7 @@ fb_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_fb *d = &_d->disp.fb;
     writer_printf(w, "fb \"%s\" %d", CSTR(_d->name), d->n);
-    writer_printf(w, " %g", d->n_inf);
+    writer_printf(w, " %g %g", d->n_inf, d->eg);
     writer_newline_enter(w);
     struct fb_osc *fb = d->osc;
     int i;
@@ -278,7 +282,7 @@ fb_write(writer_t *w, const disp_t *_d)
         if (i > 0) {
             writer_newline(w);
         }
-        writer_printf(w, "%g %g %g %g", fb->eg, fb->a, fb->b, fb->c);
+        writer_printf(w, "%g %g %g", fb->a, fb->b, fb->c);
     }
     writer_newline_exit(w);
     return 0;
@@ -291,13 +295,13 @@ fb_read(lexer_t *l, disp_t *d_gen)
     int n_osc;
     if (lexer_integer(l, &n_osc)) return 1;
     if (lexer_number(l, &d->n_inf)) return 1;
+    if (lexer_number(l, &d->eg)) return 1;
     d->osc = NULL;
     d->n = n_osc;
     d->osc = emalloc(n_osc * sizeof(struct fb_osc));
     struct fb_osc *fb = d->osc;
     int i;
     for (i = 0; i < n_osc; i++, fb++) {
-        if (lexer_number(l, &fb->eg)) return 1;
         if (lexer_number(l, &fb->a)) return 1;
         if (lexer_number(l, &fb->b)) return 1;
         if (lexer_number(l, &fb->c)) return 1;

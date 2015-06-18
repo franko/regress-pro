@@ -150,10 +150,11 @@ void fx_disp_fb_window::setup_dialog()
     FXHorizontalFrame *ninf_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
     new FXLabel(ninf_frame, "N(inf)");
     create_textfield(ninf_frame, this, ID_PARAM_0);
+    new FXLabel(ninf_frame, "Eg");
+    create_textfield(ninf_frame, this, ID_PARAM_0 + 1);
 
-    matrix = new FXMatrix(vframe, 5, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    matrix = new FXMatrix(vframe, 4, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
-    new FXLabel(matrix, "Eg");
     new FXLabel(matrix, "A");
     new FXLabel(matrix, "B");
     new FXLabel(matrix, "C");
@@ -161,8 +162,8 @@ void fx_disp_fb_window::setup_dialog()
     for (int i = 0; i < disp->disp.fb.n; i++) {
         FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
         if (disp->disp.fb.n == 1) { db->disable(); }
-        for (int j = 4*i; j < 4*(i+1); j++) {
-            create_textfield(matrix, this, ID_PARAM_0 + j + 1);
+        for (int j = 3*i; j < 3*(i+1); j++) {
+            create_textfield(matrix, this, ID_PARAM_0 + j + 2);
         }
     }
     new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
@@ -171,12 +172,12 @@ void fx_disp_fb_window::setup_dialog()
 double *fx_disp_fb_window::map_parameter(int index)
 {
     if (index == 0) return &disp->disp.fb.n_inf;
-    int i = (index - 1) / 4, j = (index - 1) % 4;
+    if (index == 1) return &disp->disp.fb.eg;
+    int i = (index - 2) / 3, j = (index - 2) % 3;
     struct fb_osc *osc = disp->disp.fb.osc + i;
     switch (j) {
-        case 0: return &osc->eg;
-        case 1: return &osc->a;
-        case 2: return &osc->b;
+        case 0: return &osc->a;
+        case 1: return &osc->b;
         default: ;
     }
     return &osc->c;
@@ -188,8 +189,8 @@ void fx_disp_fb_window::add_dispersion_element()
     disp_add_osc(disp);
     FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
     db->create();
-    for (int j = 4*n; j < 4*(n+1); j++) {
-        FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j + 1);
+    for (int j = 3*n; j < 3*(n+1); j++) {
+        FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j + 2);
         tf->create();
     }
     matrix->childAtRowCol(1, 0)->enable();
