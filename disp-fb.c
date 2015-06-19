@@ -130,6 +130,12 @@ fb_n_value(const disp_t *disp, double lam)
 {
     return fb_n_value_deriv(disp, lam, NULL);
 }
+
+static double egap_k(const double E, const double Eg, const double k)
+{
+    return (E > Eg ? k : 0.0);
+}
+
 cmpl
 fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
@@ -151,31 +157,31 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const double kterm = A * SQR(E - Eg) / den;
         const double nterm = (B0*E + C0) / den;
 
-        ksum += kterm;
+        ksum += egap_k(E, Eg, kterm);
         nsum += nterm;
 
         if (pd) {
             const int koffs = FB_NB_GLOBAL_PARAMS + k * FB_NB_PARAMS;
 
-            const double k_eg = -2 * A * (E - Eg) / den;
+            const double k_eg = egap_k(E, Eg, -2 * A * (E - Eg) / den);
             const double n_eg = (A / Q) * (E * B - 2*E*Eg + Eg * B - 2*C) / den;
             dndeg += n_eg - I * k_eg;
 
             /* Derivatives */
-            const double k_a = kterm / A;
+            const double k_a = egap_k(E, Eg, kterm / A);
             const double n_a = nterm / A;
             cmpl_vector_set(pd, koffs + FB_A_OFFS, n_a - I * k_a);
 
             const double dB0dB = A * (B*SQR(B) + 8*C*Eg - 2*B*(3*C+SQR(Eg))) / (8 * Q*SQR(Q));
             const double dC0dB = A * C * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
 
-            const double k_b = E * kterm / den;
+            const double k_b = egap_k(E, Eg, E * kterm / den);
             const double n_b = (dB0dB * E + dC0dB) / den + E * nterm / den;
             cmpl_vector_set(pd, koffs + FB_B_OFFS, n_b - I * k_b);
 
             const double dB0dC = A * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
             const double dC0dC = A * ((B - 4*Eg) * (2*C - SQR(B)) - 2*B*SQR(Eg)) / (8 * Q*SQR(Q));
-            const double k_c = - kterm / den;
+            const double k_c = egap_k(E, Eg, - kterm / den);
             const double n_c = (dB0dC * E + dC0dC) / den - nterm / den;
             cmpl_vector_set(pd, koffs + FB_C_OFFS, n_c - I * k_c);
         }
