@@ -28,6 +28,15 @@
 
 __BEGIN_DECLS
 
+/* Use a variant of the FB model where:
+   A = A' C'^2
+   B = 2 B'
+   C = C'^2 + B'^2
+   where A, B, C are the original FB parameter and A', B' and C' are the
+   redefined parameters used in the struct below.
+   With the redefined parameter B' is the approx position of the abs peak in eV,
+   A' is the approx height of the peak and C' is the width of the abs peak in eV
+   as well. */
 struct fb_osc {
     double a;
     double b;

@@ -106,9 +106,9 @@ disp_add_osc(struct disp_struct *d)
     int n = fb->n;
     struct fb_osc *osc = emalloc(sizeof(struct fb_osc) * (n + 1));
     memcpy(osc, fb->osc, sizeof(struct fb_osc) * n);
-    osc[n].a = 1.0;
-    osc[n].b = 8.0;
-    osc[n].c = 18.0;
+    osc[n].a = 0.0;
+    osc[n].b = 4.0;
+    osc[n].c = 0.5;
 
     free(fb->osc);
     fb->osc = osc;
@@ -136,6 +136,9 @@ static double egap_k(const double E, const double Eg, const double k)
     return (E > Eg ? k : 0.0);
 }
 
+/* Use the redefined A', B', C' parameters as described in the disp-fb.h file.
+   The calculation are done based on the original parameters A, B, C. The
+   derivatives are computed from the derivative wrt A, B, C. */
 cmpl
 fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
@@ -148,7 +151,7 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     cmpl dndeg = 0.0; /* Accumulate contribution to the derivative of complex n with Eg. */
     for(k = 0; k < nb; k++) {
         const struct fb_osc *osc = fb->osc + k;
-        const double A = osc->a, B = osc->b, C = osc->c;
+        const double A = osc->a * SQR(osc->c), B = 2 * osc->b, C = SQR(osc->c) + SQR(osc->b);
         const double den = E * (E - B) + C;
         const double Q = 0.5 * sqrt(4*C - SQR(B));
         const double B0 = (A / Q) * (-SQR(B)/2 + Eg * (B - Eg) + C);
@@ -170,20 +173,21 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             /* Derivatives */
             const double k_a = egap_k(E, Eg, kterm / A);
             const double n_a = nterm / A;
-            cmpl_vector_set(pd, koffs + FB_A_OFFS, n_a - I * k_a);
+            cmpl_vector_set(pd, koffs + FB_A_OFFS, SQR(osc->c) * (n_a - I * k_a));
 
             const double dB0dB = A * (B*SQR(B) + 8*C*Eg - 2*B*(3*C+SQR(Eg))) / (8 * Q*SQR(Q));
             const double dC0dB = A * C * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
 
             const double k_b = egap_k(E, Eg, E * kterm / den);
             const double n_b = (dB0dB * E + dC0dB) / den + E * nterm / den;
-            cmpl_vector_set(pd, koffs + FB_B_OFFS, n_b - I * k_b);
 
             const double dB0dC = A * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
             const double dC0dC = A * ((B - 4*Eg) * (2*C - SQR(B)) - 2*B*SQR(Eg)) / (8 * Q*SQR(Q));
             const double k_c = egap_k(E, Eg, - kterm / den);
             const double n_c = (dB0dC * E + dC0dC) / den - nterm / den;
-            cmpl_vector_set(pd, koffs + FB_C_OFFS, n_c - I * k_c);
+
+            cmpl_vector_set(pd, koffs + FB_B_OFFS, 2 * (n_b - I * k_b) + 2 * (n_c - I * k_c) * osc->b);
+            cmpl_vector_set(pd, koffs + FB_C_OFFS, 2 * (n_a - I * k_a) * osc->a * osc->c + 2 * (n_c - I * k_c) * osc->c);
         }
     }
 
