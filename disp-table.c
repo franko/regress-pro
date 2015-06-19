@@ -17,10 +17,7 @@ static int disp_table_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_table_class = {
     .disp_class_id       = DISP_TABLE,
-    .model_id            = MODEL_NONE,
-
-    .short_id            = "Table",
-    .full_id             = "TableDispersion",
+    .short_name          = "uniform-table",
 
     .free                = disp_table_free,
     .copy                = disp_table_copy,
@@ -31,7 +28,6 @@ struct disp_class disp_table_class = {
     .apply_param         = NULL,
     .get_param_value     = NULL,
 
-    .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
     .write               = disp_table_write,
     .read                = disp_table_read,

@@ -149,7 +149,7 @@ private:
     void set_fit_param(fit_param_t* fp, int param_nb) {
         fp->id       = PID_LAYER_N;
         fp->layer_nb = 0;
-        fp->model_id = m_fit_engine->model_disp->dclass->model_id;
+        fp->model_id = m_fit_engine->model_disp->dclass->disp_class_id;
         fp->param_nb = param_nb;
     }
 

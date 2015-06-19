@@ -4,6 +4,7 @@
 #include "cmpl.h"
 #include "fit-params.h"
 #include "str.h"
+#include "dispers-classes.h"
 #include "disp-table.h"
 #include "disp-sample-table.h"
 #include "disp-bruggeman.h"
@@ -20,13 +21,9 @@ __BEGIN_DECLS
 struct disp_struct;
 
 struct disp_class {
-    int disp_class_id;
+    enum disp_type disp_class_id;
 
-    const char *short_id;
-    const char *full_id;
-
-    /* redundant with disp_class_id, should disappear */
-    enum disp_model_id model_id;
+    const char *short_name;
 
     /* methods to copy and free dispersions */
     void (*free)(struct disp_struct *d);
@@ -43,7 +40,6 @@ struct disp_class {
     int (*write)(writer_t *w, const struct disp_struct *_d);
 
     /* class methods */
-    int (*decode_param_string)(const char *param);
     void (*encode_param)(str_t param, const fit_param_t *fp);
     int (*read)(lexer_t *l, struct disp_struct *d);
 };
@@ -51,18 +47,6 @@ struct disp_class {
 struct deriv_info {
     int is_valid;
     cmpl_vector *val;
-};
-
-enum disp_type {
-    DISP_UNSET = 0,
-    DISP_TABLE,
-    DISP_SAMPLE_TABLE,
-    DISP_CAUCHY,
-    DISP_HO,
-    DISP_LOOKUP,
-    DISP_BRUGGEMAN,
-    DISP_FB,
-    DISP_END_OF_TABLE, /* Not a dispersion type */
 };
 
 struct disp_struct {
@@ -102,14 +86,10 @@ extern disp_t * disp_new_with_name(enum disp_type tp, const char *name);
 extern int      disp_get_number_of_params(const disp_t *d);
 extern double   disp_get_param_value(const disp_t *d, const fit_param_t *fp);
 extern int      disp_integrity_check(disp_t *d);
-extern int      disp_get_model_id(disp_t *d);
 extern int      disp_check_fit_param(disp_t *d, fit_param_t *fp);
-
-int             decode_fit_param(fit_param_t *fp, const str_t str);
 
 extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
-extern int      disp_base_decode_param_string(const char *param);
 extern int      disp_base_fp_number(const disp_t *src);
 extern int      disp_is_tabular(const disp_t *d);
 extern int      disp_write(writer_t *w, const disp_t *_d);

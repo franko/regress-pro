@@ -173,7 +173,7 @@ stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
         disp_t *d = stack->disp[j];
         int k, np = disp_get_number_of_params(d);
         fp->layer_nb = j;
-        fp->model_id = disp_get_model_id(d);
+        fp->model_id = d->type;
         for(k = 0; k < np; k++) {
             fp->param_nb = k;
             fit_parameters_add(fps, fp);

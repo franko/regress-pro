@@ -30,7 +30,6 @@ static cmpl ho_n_value(const disp_t *disp, double lam);
 static cmpl ho_n_value_deriv(const disp_t *disp, double lam,
                              cmpl_vector *der);
 static int  ho_fp_number(const disp_t *disp);
-static int  ho_decode_param_string(const char *p);
 static int  ho_apply_param(struct disp_struct *d,
                            const fit_param_t *fp, double val);
 static void ho_encode_param(str_t param, const fit_param_t *fp);
@@ -43,10 +42,7 @@ static int ho_read(lexer_t *l, disp_t *d);
 
 struct disp_class ho_disp_class = {
     .disp_class_id       = DISP_HO,
-    .model_id            = MODEL_HO,
-
-    .short_id            = "HO",
-    .full_id             = "HODispersion",
+    .short_name          = "ho",
 
     .free                = ho_free,
     .copy                = ho_copy,
@@ -57,7 +53,6 @@ struct disp_class ho_disp_class = {
     .apply_param         = ho_apply_param,
     .get_param_value     = ho_get_param_value,
 
-    .decode_param_string = ho_decode_param_string,
     .encode_param        = ho_encode_param,
     .write               = ho_write,
     .read                = ho_read,
@@ -247,41 +242,6 @@ int
 ho_fp_number(const disp_t *disp)
 {
     return disp->disp.ho.nb_hos * HO_NB_PARAMS;
-}
-
-int
-ho_decode_param_string(const char *param)
-{
-    const char *snext;
-    char *tail;
-    int j, slen, nn;
-
-    snext = strchr(param, ':');
-    if(snext == NULL) {
-        return -1;
-    }
-    slen = snext - param;
-
-    for(j = 0; j < HO_NB_PARAMS; j++) {
-        const char *pname = ho_param_names[j];
-
-        if(strncmp(param, pname, slen) == 0) {
-            break;
-        }
-    }
-
-    if(j >= HO_NB_PARAMS) {
-        return -1;
-    }
-
-    param = snext + 1;
-
-    nn = strtol(param, & tail, 10);
-    if(*tail != 0 || tail == param || nn < 0) {
-        return -1;
-    }
-
-    return HO_PARAM_NB(nn, j);
 }
 
 static double *

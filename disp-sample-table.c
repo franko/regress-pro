@@ -16,10 +16,7 @@ static int disp_sample_table_read(lexer_t *l, disp_t *d);
 
 struct disp_class disp_sample_table_class = {
     .disp_class_id       = DISP_SAMPLE_TABLE,
-    .model_id            = MODEL_NONE,
-
-    .short_id            = "SampleTable",
-    .full_id             = "SampleTableDispersion",
+    .short_name          = "table",
 
     .free                = disp_sample_table_free,
     .copy                = disp_sample_table_copy,
@@ -30,7 +27,6 @@ struct disp_class disp_sample_table_class = {
     .apply_param         = NULL,
     .get_param_value     = NULL,
 
-    .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
     .write               = disp_sample_table_write,
     .read                = disp_sample_table_read,

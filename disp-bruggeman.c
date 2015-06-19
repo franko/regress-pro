@@ -11,7 +11,6 @@ static cmpl bruggeman_n_value(const disp_t *disp, double lam);
 static cmpl bruggeman_n_value_deriv(const disp_t *disp, double lam,
                                     cmpl_vector *der);
 static int  bruggeman_fp_number(const disp_t *disp);
-static int  bruggeman_decode_param_string(const char *p);
 static int  bruggeman_apply_param(struct disp_struct *d,
                                   const fit_param_t *fp, double val);
 static void bruggeman_encode_param(str_t param, const fit_param_t *fp);
@@ -21,10 +20,7 @@ static double bruggeman_get_param_value(const struct disp_struct *d,
 
 struct disp_class bruggeman_disp_class = {
     .disp_class_id       = DISP_BRUGGEMAN,
-    .model_id            = MODEL_BRUGGEMAN,
-
-    .short_id            = "BEMA",
-    .full_id             = "Bruggeman",
+    .short_name          = "bruggeman",
 
     .free                = bruggeman_free,
     .copy                = bruggeman_copy,
@@ -35,7 +31,6 @@ struct disp_class bruggeman_disp_class = {
     .apply_param         = bruggeman_apply_param,
     .get_param_value     = bruggeman_get_param_value,
 
-    .decode_param_string = bruggeman_decode_param_string,
     .encode_param        = bruggeman_encode_param,
 };
 
@@ -108,26 +103,6 @@ bruggeman_fp_number(const disp_t *disp)
     return 2;
 }
 
-int
-bruggeman_decode_param_string(const char *param)
-{
-    const char *curs = param;
-    char *tail;
-    int nb;
-
-    if(strncmp(curs, "f:", 2) != 0) {
-        return -1;
-    }
-    curs += 2;
-
-    nb = strtol(curs, & tail, 10);
-    if(tail == curs || tail[0] != 0) {
-        return -1;
-    }
-
-    return nb;
-}
-
 void
 bruggeman_encode_param(str_t param, const fit_param_t *fp)
 {
@@ -142,7 +117,7 @@ bruggeman_apply_param(struct disp_struct *d, const fit_param_t *fp,
 
     assert(d->type == DISP_BRUGGEMAN);
 
-    if(fp->model_id != MODEL_BRUGGEMAN) {
+    if(fp->model_id != DISP_BRUGGEMAN) {
         return 1;
     }
 

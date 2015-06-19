@@ -5,6 +5,7 @@
 #include "spectra.h"
 #include "str.h"
 #include "writer.h"
+#include "dispers-classes.h"
 
 __BEGIN_DECLS
 
@@ -28,15 +29,6 @@ struct shift_info {
     short int index; /* The index of the layer removed on inserted. */
 };
 
-enum disp_model_id {
-    MODEL_HO = 1,
-    MODEL_CAUCHY,
-    MODEL_LOOKUP,
-    MODEL_BRUGGEMAN,
-    MODEL_FB,
-    MODEL_NONE,
-};
-
 enum seed_type_id {
     SEED_SIMPLE,
     SEED_RANGE,
@@ -52,7 +44,7 @@ typedef struct {
 typedef struct {
     enum params_id id;
     int layer_nb;
-    enum disp_model_id model_id;
+    enum disp_type model_id;
     int param_nb;
 } fit_param_t;
 
@@ -101,7 +93,7 @@ extern int            seed_list_write(writer_t *w, const struct seeds *s);
 extern struct seeds * seed_list_read(lexer_t *l);
 
 extern void     set_model_param(fit_param_t *fpres, int lyr,
-                                enum disp_model_id model_id,
+                                enum disp_type model_id,
                                 int param_nb);
 extern void     set_thick_param(fit_param_t *fp, int lyr);
 extern void     get_param_name(const fit_param_t *fp, str_t name);

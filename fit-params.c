@@ -7,7 +7,7 @@ static void get_disp_param_name(const fit_param_t *fp, str_ptr buf);
 
 
 void
-set_model_param(fit_param_t *fpres, int lyr, enum disp_model_id model_id,
+set_model_param(fit_param_t *fpres, int lyr, enum disp_type model_id,
                 int param_nb)
 {
     fpres->id = PID_LAYER_N;
@@ -80,7 +80,7 @@ get_disp_param_name(const fit_param_t *fp, str_ptr buf)
 
     for(iter = disp_class_next(NULL); iter; iter =  disp_class_next(iter)) {
         dclass = disp_class_from_iter(iter);
-        if(dclass->model_id == fp->model_id) {
+        if(dclass->disp_class_id == fp->model_id) {
             break;
         }
     }
@@ -351,7 +351,6 @@ fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shi
 }
 
 static const char *id_name[] = {"thickness", "n", "firstmul", NULL};
-static const char *model_name[] = {"ho", "cauchy", "lookup", "bruggeman", NULL};
 
 static int
 fit_param_write(writer_t *w, const fit_param_t *fp)
@@ -361,9 +360,8 @@ fit_param_write(writer_t *w, const fit_param_t *fp)
     if (id < PID_LAYER_INDIPENDENT) {
         writer_printf(w, " %d", fp->layer_nb);
         if (id == PID_LAYER_N) {
-            const int mid = fp->model_id;
-            const char *mname = (mid >= 1 && mid < MODEL_NONE) ? model_name[mid - 1] : "unknown";
-            writer_printf(w, " %s %d", mname, fp->param_nb);
+            struct disp_class *dclass = disp_class_lookup(fp->model_id);
+            writer_printf(w, " %s %d", dclass ? dclass->short_name : "unknown", fp->param_nb);
         }
     }
     return 0;
@@ -380,14 +378,15 @@ fit_param_read(lexer_t *l, fit_param_t *fp)
         fp->id = PID_LAYER_N;
         if (lexer_integer(l, &fp->layer_nb)) return 1;
         if (lexer_ident(l)) return 1;
-        int mid;
-        for (mid = 0; model_name[mid]; mid++) {
-            if (strcmp(model_name[mid], CSTR(l->store)) == 0) {
-                fp->model_id = mid + 1;
+        void *iter;
+        for (iter = disp_class_next(NULL); iter; iter = disp_class_next(iter)) {
+            struct disp_class *dclass = disp_class_from_iter(iter);
+            if (strcmp(dclass->short_name, CSTR(l->store)) == 0) {
+                fp->model_id = dclass->disp_class_id;
                 break;
             }
         }
-        if (model_name[mid] == NULL) return 1;
+        if (iter == NULL) return 1;
         if (lexer_integer(l, &fp->param_nb)) return 1;
     } else if (strcmp(CSTR(l->store), "firstmul") == 0) {
         fp->id = PID_FIRSTMUL;

@@ -43,10 +43,7 @@ static int fb_read(lexer_t *l, disp_t *d);
 
 struct disp_class fb_disp_class = {
     .disp_class_id       = DISP_FB,
-    .model_id            = MODEL_FB,
-
-    .short_id            = "FB",
-    .full_id             = "FBDispersion",
+    .short_name          = "fb",
 
     .free                = fb_free,
     .copy                = fb_copy,
@@ -57,7 +54,6 @@ struct disp_class fb_disp_class = {
     .apply_param         = fb_apply_param,
     .get_param_value     = fb_get_param_value,
 
-    .decode_param_string = NULL,
     .encode_param        = fb_encode_param,
     .write               = fb_write,
     .read                = fb_read,

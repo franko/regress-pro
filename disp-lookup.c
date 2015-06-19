@@ -11,7 +11,6 @@ static cmpl lookup_n_value(const disp_t *disp, double lam);
 static cmpl lookup_n_value_deriv(const disp_t *disp, double lam,
                                  cmpl_vector *der);
 static int  lookup_fp_number(const disp_t *disp);
-static int  lookup_decode_param_string(const char *p);
 static int  lookup_apply_param(struct disp_struct *d,
                                const fit_param_t *fp, double val);
 static void lookup_encode_param(str_t param, const fit_param_t *fp);
@@ -23,10 +22,7 @@ static int lookup_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_lookup_class = {
     .disp_class_id       = DISP_LOOKUP,
-    .model_id            = MODEL_LOOKUP,
-
-    .short_id            = "Lookup",
-    .full_id             = "LookupDispersion",
+    .short_name          = "lookup",
 
     .free                = lookup_free,
     .copy                = lookup_copy,
@@ -37,7 +33,6 @@ struct disp_class disp_lookup_class = {
     .apply_param         = lookup_apply_param,
     .get_param_value     = lookup_get_param_value,
 
-    .decode_param_string = lookup_decode_param_string,
     .encode_param        = lookup_encode_param,
     .write               = lookup_write,
     .read                = lookup_read,
@@ -145,15 +140,6 @@ int
 lookup_fp_number(const disp_t *disp)
 {
     return 1;
-}
-
-int
-lookup_decode_param_string(const char *p)
-{
-    if(strcmp(p, "P") == 0) {
-        return 0;
-    }
-    return -1;
 }
 
 int

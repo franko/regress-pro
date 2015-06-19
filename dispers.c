@@ -71,13 +71,6 @@ disp_get_number_of_params(const disp_t *d)
 }
 
 int
-disp_get_model_id(disp_t *d)
-{
-    assert(d->dclass != NULL);
-    return d->dclass->model_id;
-}
-
-int
 dispers_apply_param(disp_t *d, const fit_param_t *fp, double val)
 {
     if(fp->id != PID_LAYER_N) {
@@ -158,12 +151,6 @@ disp_base_free(disp_t *d)
 }
 
 int
-disp_base_decode_param_string(const char *param)
-{
-    return -1;
-}
-
-int
 disp_base_fp_number(const disp_t *src)
 {
     return 0;
@@ -196,7 +183,7 @@ disp_check_fit_param(disp_t *d, fit_param_t *fp)
     if(fp->id != PID_LAYER_N) {
         return 1;
     }
-    if(d->dclass->model_id != fp->model_id) {
+    if(d->dclass->disp_class_id != fp->model_id) {
         return 1;
     }
     if(fp->param_nb < 0 || fp->param_nb >= nb) {
@@ -210,69 +197,6 @@ disp_get_param_value(const disp_t *d, const fit_param_t *fp)
 {
     assert(d->dclass != NULL);
     return d->dclass->get_param_value(d, fp);
-}
-
-int
-decode_fit_param(fit_param_t *fp, const str_t str)
-{
-    struct disp_class_node *disp_node;
-    const char *s = CSTR(str);
-    const char *snext;
-    int layer;
-
-    if(strcmp(s, "RMult") == 0) {
-        fp->id = PID_FIRSTMUL;
-        return 0;
-    }
-
-    snext = strchr(s, (int) ':');
-    if(snext == NULL) {
-        return 1;
-    }
-    if(strncmp(s, "Th:", 3) == 0) {
-        char *tail;
-        s = snext + 1;
-        layer = strtol(s, & tail, 10);
-        if(*tail != 0 || tail == s || layer < 0) {
-            return 1;
-        }
-        set_thick_param(fp, layer);
-        return 0;
-    } else if(strncmp(s, "RI:", 3) == 0) {
-        char *tail;
-        s = snext + 1;
-        layer = strtol(s, & tail, 10);
-        if(*tail != ':' || tail == s || layer < 0) {
-            return 1;
-        }
-        s = tail + 1;
-        snext = strchr(s, (int) ':');
-        if(snext == NULL) {
-            return 1;
-        }
-
-        for(disp_node = disp_class_list; disp_node; disp_node = disp_node->next) {
-            struct disp_class *dclass = disp_node->value;
-            size_t dclass_len = strlen(dclass->short_id);
-
-            if(strncmp(s, dclass->short_id, dclass_len) == 0) {
-                int fp_number;
-                const char *currs = s + dclass_len;
-                if(currs[0] != ':') {
-                    continue;
-                }
-                currs++;
-                fp_number = dclass->decode_param_string(currs);
-                if(fp_number < 0) {
-                    return 1;
-                }
-                set_model_param(fp, layer, dclass->model_id, fp_number);
-                return 0;
-            }
-        }
-    }
-
-    return 1;
 }
 
 static int
@@ -297,17 +221,18 @@ disp_write(writer_t *w, const disp_t *d)
 static disp_t *
 disp_read_header(lexer_t *l)
 {
-    static const char *model[] = {"uniform-table", "table", "cauchy", "ho", "lookup", "bruggeman", "fb"};
     if (lexer_ident(l)) return NULL;
-    enum disp_type model_id;
-    for (model_id = DISP_TABLE; model_id < DISP_END_OF_TABLE; model_id++) {
-        if (strcmp(model[model_id - 1], CSTR(l->store)) == 0) {
+    struct disp_class *dclass;
+    void *iter;
+    for (iter = disp_class_next(NULL); iter; iter = disp_class_next(iter)) {
+        dclass = disp_class_from_iter(iter);
+        if (strcmp(dclass->short_name, CSTR(l->store)) == 0) {
             break;
         }
     }
-    if (model_id == DISP_END_OF_TABLE) return NULL;
+    if (iter == NULL) return NULL;
     if (lexer_string(l)) return NULL;
-    return disp_new_with_name(model_id, CSTR(l->store));
+    return disp_new_with_name(dclass->disp_class_id, CSTR(l->store));
 }
 
 disp_t *
