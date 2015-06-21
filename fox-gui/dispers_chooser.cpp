@@ -101,7 +101,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 {
     new FXLabel(this, "New Model");
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
-    combo->setNumVisible(4);
+    combo->setNumVisible(5);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy Model");
@@ -126,7 +126,7 @@ fx_newmodel_selector::get_dispersion()
             return disp_lookup_new_from_comp("*lookup", comp);
         }
     } else if (name == "Fourouhi Bloomer Model") {
-        struct fb_osc osc0 = {1.0, 8.0, 18.0};
+        struct fb_osc osc0 = {1.0, 4.0, 0.5};
         return disp_new_fb("*FB", 1, 1.0, 2.0, &osc0);
     }
     return NULL;
