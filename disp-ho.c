@@ -30,6 +30,7 @@ static cmpl ho_n_value(const disp_t *disp, double lam);
 static cmpl ho_n_value_deriv(const disp_t *disp, double lam,
                              cmpl_vector *der);
 static int  ho_fp_number(const disp_t *disp);
+static double * ho_map_param(disp_t *d, int index);
 static int  ho_apply_param(struct disp_struct *d,
                            const fit_param_t *fp, double val);
 static void ho_encode_param(str_t param, const fit_param_t *fp);
@@ -51,6 +52,7 @@ struct disp_class ho_disp_class = {
     .fp_number           = ho_fp_number,
     .n_value_deriv       = ho_n_value_deriv,
     .apply_param         = ho_apply_param,
+    .map_param           = ho_map_param,
     .get_param_value     = ho_get_param_value,
 
     .encode_param        = ho_encode_param,
@@ -244,36 +246,21 @@ ho_fp_number(const disp_t *disp)
     return disp->disp.ho.nb_hos * HO_NB_PARAMS;
 }
 
-static double *
-fit_param_address(struct disp_ho *d, const fit_param_t *fp)
+double *
+ho_map_param(disp_t *_d, int index)
 {
-    struct ho_params *ho;
-    int nho, npp;
-
-    assert(fp->param_nb < d->nb_hos * HO_NB_PARAMS);
-
-    nho = fp->param_nb / HO_NB_PARAMS;
-    npp = fp->param_nb % HO_NB_PARAMS;
-
-    if(nho >= d->nb_hos) {
-        return NULL;
+    const struct disp_ho *d = &_d->disp.ho;
+    if (index >= d->nb_hos * HO_NB_PARAMS) return NULL;
+    int no = index / HO_NB_PARAMS;
+    int np = index % HO_NB_PARAMS;
+    struct ho_params *ho = d->params + no;
+    switch(np) {
+    case 0: return &ho->nosc;
+    case 1: return &ho->en;
+    case 2: return &ho->eg;
+    case 3: return &ho->nu;
+    default: ;
     }
-
-    ho = d->params + nho;
-    switch(npp) {
-    case 0:
-        return &ho->nosc;
-    case 1:
-        return &ho->en;
-    case 2:
-        return &ho->eg;
-    case 3:
-        return &ho->nu;
-    default:
-        /* */
-        ;
-    }
-
     return &ho->phi;
 }
 
@@ -289,20 +276,16 @@ int
 ho_apply_param(struct disp_struct *disp, const fit_param_t *fp,
                double val)
 {
-    struct disp_ho *d = & disp->disp.ho;
-    double *pval = fit_param_address(d, fp);
-    if(! pval) {
-        return 1;
-    }
+    double *pval = ho_map_param(disp, fp->param_nb);
+    if(! pval) return 1;
     *pval = val;
     return 0;
 }
 
 double
-ho_get_param_value(const disp_t *_d, const fit_param_t *fp)
+ho_get_param_value(const disp_t *d, const fit_param_t *fp)
 {
-    const struct disp_ho *d = & _d->disp.ho;
-    const double *pval = fit_param_address((struct disp_ho *) d, fp);
+    const double *pval = ho_map_param((disp_t *) d, fp->param_nb);
     assert(pval != NULL);
     return *pval;
 }

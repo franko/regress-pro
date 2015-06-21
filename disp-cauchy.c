@@ -7,6 +7,7 @@ static cmpl cauchy_n_value(const disp_t *disp, double lam);
 static cmpl cauchy_n_value_deriv(const disp_t *disp, double lam,
                                  cmpl_vector *der);
 static int  cauchy_fp_number(const disp_t *disp);
+static double * cauchy_map_param(disp_t *d, int index);
 static int  cauchy_apply_param(struct disp_struct *d,
                                const fit_param_t *fp, double val);
 static void cauchy_encode_param(str_t param, const fit_param_t *fp);
@@ -30,6 +31,7 @@ struct disp_class cauchy_disp_class = {
     .fp_number           = cauchy_fp_number,
     .n_value_deriv       = cauchy_n_value_deriv,
     .apply_param         = cauchy_apply_param,
+    .map_param           = cauchy_map_param,
     .get_param_value     = cauchy_get_param_value,
 
     .encode_param        = cauchy_encode_param,
@@ -81,6 +83,18 @@ cauchy_encode_param(str_t param, const fit_param_t *fp)
 {
     int nb = fp->param_nb;
     str_printf(param, "%s%i", (nb < 3 ? "N" : "K"), nb % 3);
+}
+
+double *
+cauchy_map_param(disp_t *_d, int index)
+{
+    struct disp_cauchy *d = &_d->disp.cauchy;
+    if (index < 3) {
+        return d->n + index;
+    } else if (index < 6) {
+        return d->k + (index - 3);
+    }
+    return NULL;
 }
 
 int

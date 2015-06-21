@@ -30,7 +30,7 @@ static cmpl fb_n_value(const disp_t *disp, double lam);
 static cmpl fb_n_value_deriv(const disp_t *disp, double lam,
                              cmpl_vector *der);
 static int  fb_fp_number(const disp_t *disp);
-// static int  fb_decode_param_string(const char *p);
+static double * fb_map_param(disp_t *disp, int index);
 static int  fb_apply_param(struct disp_struct *d,
                            const fit_param_t *fp, double val);
 static void fb_encode_param(str_t param, const fit_param_t *fp);
@@ -52,6 +52,7 @@ struct disp_class fb_disp_class = {
     .fp_number           = fb_fp_number,
     .n_value_deriv       = fb_n_value_deriv,
     .apply_param         = fb_apply_param,
+    .map_param           = fb_map_param,
     .get_param_value     = fb_get_param_value,
 
     .encode_param        = fb_encode_param,
@@ -206,29 +207,6 @@ fb_fp_number(const disp_t *disp)
     return FB_NB_GLOBAL_PARAMS + disp->disp.fb.n * FB_NB_PARAMS;
 }
 
-static double *
-fit_param_address(struct disp_fb *d, const fit_param_t *fp)
-{
-    assert(fp->param_nb < d->n * FB_NB_PARAMS + FB_NB_GLOBAL_PARAMS);
-
-    if (fp->param_nb == FB_NINF_OFFS) return &d->n_inf;
-    if (fp->param_nb == FB_EG_OFFS) return &d->eg;
-
-    int no, np;
-    no = (fp->param_nb - FB_NB_GLOBAL_PARAMS) / FB_NB_PARAMS;
-    np = (fp->param_nb - FB_NB_GLOBAL_PARAMS) % FB_NB_PARAMS;
-
-    if(no >= d->n) return NULL;
-
-    struct fb_osc *fb = d->osc + no;
-    switch(np) {
-    case 0: return &fb->a;
-    case 1: return &fb->b;
-    default: ;
-    }
-    return &fb->c;
-}
-
 void
 fb_encode_param(str_t param, const fit_param_t *fp)
 {
@@ -243,22 +221,37 @@ fb_encode_param(str_t param, const fit_param_t *fp)
     }
 }
 
+double *fb_map_param(disp_t *_d, int index)
+{
+    struct disp_fb *d = &_d->disp.fb;
+    if (index >= d->n * FB_NB_PARAMS + FB_NB_GLOBAL_PARAMS) return NULL;
+    if (index == 0) return &d->n_inf;
+    if (index == 1) return &d->eg;
+    int no = (index - FB_NB_GLOBAL_PARAMS) / FB_NB_PARAMS;
+    int np = (index - FB_NB_GLOBAL_PARAMS) % FB_NB_PARAMS;
+    struct fb_osc *osc = d->osc + no;
+    switch (np) {
+        case 0: return &osc->a;
+        case 1: return &osc->b;
+        default: ;
+    }
+    return &osc->c;
+}
+
 int
 fb_apply_param(struct disp_struct *disp, const fit_param_t *fp,
                double val)
 {
-    struct disp_fb *d = &disp->disp.fb;
-    double *pval = fit_param_address(d, fp);
+    double *pval = fb_map_param(disp, fp->param_nb);
     if(!pval) return 1;
     *pval = val;
     return 0;
 }
 
 double
-fb_get_param_value(const disp_t *_d, const fit_param_t *fp)
+fb_get_param_value(const disp_t *d, const fit_param_t *fp)
 {
-    const struct disp_fb *d = &_d->disp.fb;
-    const double *pval = fit_param_address((struct disp_fb *) d, fp);
+    const double *pval = fb_map_param((disp_t *) d, fp->param_nb);
     assert(pval != NULL);
     return *pval;
 }

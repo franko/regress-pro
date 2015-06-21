@@ -11,6 +11,7 @@ static cmpl lookup_n_value(const disp_t *disp, double lam);
 static cmpl lookup_n_value_deriv(const disp_t *disp, double lam,
                                  cmpl_vector *der);
 static int  lookup_fp_number(const disp_t *disp);
+static double * lookup_map_param(disp_t *d, int index);
 static int  lookup_apply_param(struct disp_struct *d,
                                const fit_param_t *fp, double val);
 static void lookup_encode_param(str_t param, const fit_param_t *fp);
@@ -31,6 +32,7 @@ struct disp_class disp_lookup_class = {
     .fp_number           = lookup_fp_number,
     .n_value_deriv       = lookup_n_value_deriv,
     .apply_param         = lookup_apply_param,
+    .map_param           = lookup_map_param,
     .get_param_value     = lookup_get_param_value,
 
     .encode_param        = lookup_encode_param,
@@ -140,6 +142,13 @@ int
 lookup_fp_number(const disp_t *disp)
 {
     return 1;
+}
+
+double *
+lookup_map_param(disp_t *_d, int index)
+{
+    struct disp_lookup *d = &_d->disp.lookup;
+    return (index == 0 ? &d->p : NULL);
 }
 
 int

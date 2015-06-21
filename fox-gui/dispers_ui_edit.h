@@ -23,7 +23,7 @@ public:
     virtual void setup_dialog() {}
     virtual void add_dispersion_element() {}
     virtual void delete_dispersion_element(int index) {}
-    virtual double *map_parameter(int index) { return 0; }
+    virtual double *map_parameter(int index) { return disp_map_param(disp, index); }
 
     void setup_name();
     void setup();
@@ -60,7 +60,6 @@ public:
     virtual void setup_dialog();
     virtual void add_dispersion_element();
     virtual void delete_dispersion_element(int index);
-    virtual double *map_parameter(int index);
 private:
     FXMatrix *matrix;
     FXVerticalFrame *vframe;
@@ -75,7 +74,6 @@ public:
     virtual void setup_dialog();
     virtual void add_dispersion_element();
     virtual void delete_dispersion_element(int index);
-    virtual double *map_parameter(int index);
 private:
     FXMatrix *matrix;
     FXVerticalFrame *vframe;
@@ -88,7 +86,6 @@ public:
     { }
 
     virtual void setup_dialog();
-    virtual double *map_parameter(int index);
 };
 
 class fx_disp_lookup_window : public fx_disp_window {

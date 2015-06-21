@@ -35,6 +35,7 @@ struct disp_class {
                          cmpl_vector *der);
     int (*apply_param)(struct disp_struct *d, const fit_param_t *fp,
                        double val);
+    double *(*map_param)(struct disp_struct *d, int index);
     double(*get_param_value)(const struct disp_struct *d,
                              const fit_param_t *fp);
     int (*write)(writer_t *w, const struct disp_struct *_d);
@@ -73,6 +74,7 @@ extern void     n_value_cpp(const disp_t *mat, double lam,
                             double *nr, double *ni);
 extern void     n_value_deriv(const disp_t *disp, cmpl_vector *der,
                               double lambda);
+extern double * disp_map_param(disp_t *d, int index);
 extern int      dispers_apply_param(disp_t *d, const fit_param_t *fp,
                                     double val);
 extern void     get_model_param_deriv(const disp_t *d,

@@ -70,6 +70,13 @@ disp_get_number_of_params(const disp_t *d)
     return d->dclass->fp_number(d);
 }
 
+double *
+disp_map_param(disp_t *d, int index)
+{
+    assert(d->dclass != NULL);
+    return d->dclass->map_param(d, index);
+}
+
 int
 dispers_apply_param(disp_t *d, const fit_param_t *fp, double val)
 {

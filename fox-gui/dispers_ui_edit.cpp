@@ -106,22 +106,6 @@ void fx_disp_ho_window::setup_dialog()
     new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
-double *fx_disp_ho_window::map_parameter(int index)
-{
-    int i = index / 5, j = index % 5;
-    struct ho_params *ho = disp->disp.ho.params + i;
-    switch (j) {
-        case 0: return &ho->nosc; break;
-        case 1: return &ho->en;   break;
-        case 2: return &ho->eg;   break;
-        case 3: return &ho->nu;   break;
-        case 4: return &ho->phi;  break;
-        default:
-        /* */;
-    }
-    return NULL;
-}
-
 void fx_disp_ho_window::add_dispersion_element()
 {
     int n = disp->disp.ho.nb_hos;
@@ -169,20 +153,6 @@ void fx_disp_fb_window::setup_dialog()
     new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
-double *fx_disp_fb_window::map_parameter(int index)
-{
-    if (index == 0) return &disp->disp.fb.n_inf;
-    if (index == 1) return &disp->disp.fb.eg;
-    int i = (index - 2) / 3, j = (index - 2) % 3;
-    struct fb_osc *osc = disp->disp.fb.osc + i;
-    switch (j) {
-        case 0: return &osc->a;
-        case 1: return &osc->b;
-        default: ;
-    }
-    return &osc->c;
-}
-
 void fx_disp_fb_window::add_dispersion_element()
 {
     int n = disp->disp.fb.n;
@@ -213,17 +183,6 @@ void fx_disp_cauchy_window::setup_dialog()
         int i = p / 2, j = p % 2;
         create_textfield(matrix, this, ID_PARAM_0 + i + 3 * j);
     }
-}
-
-double *fx_disp_cauchy_window::map_parameter(int index)
-{
-    disp_cauchy *c = &disp->disp.cauchy;
-    if (index < 3) {
-        return c->n + index;
-    } else {
-        return c->k + (index - 3);
-    }
-    return NULL;
 }
 
 fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
@@ -274,6 +233,19 @@ fx_disp_lookup_window::~fx_disp_lookup_window()
     delete popupmenu;
 }
 
+double *fx_disp_lookup_window::map_parameter(int index)
+{
+    int nat = disp_get_number_of_params(disp);
+    if (index < nat) {
+        return fx_disp_window::map_parameter(index);
+    }
+    index -= nat;
+    if (index < disp->disp.lookup.nb_comps) {
+        return &disp->disp.lookup.component[index].p;
+    }
+    return NULL;
+}
+
 void fx_disp_lookup_window::create()
 {
     fx_disp_window::create();
@@ -319,14 +291,6 @@ void fx_disp_lookup_window::setup_dialog()
         add_matrix_component(i);
     }
     new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
-}
-
-double *fx_disp_lookup_window::map_parameter(int index)
-{
-    if (index == 0) {
-        return &disp->disp.lookup.p;
-    }
-    return &disp->disp.lookup.component[index - 1].p;
 }
 
 void fx_disp_lookup_window::add_dispersion_element()
