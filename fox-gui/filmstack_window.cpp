@@ -91,7 +91,7 @@ void filmstack_window::create()
 {
     FXPacker::create();
     popupmenu->create();
-    getParent()->resize(getWidth(), getDefaultHeight());
+    getParent()->resize(getDefaultWidth(), getDefaultHeight());
 }
 
 long
@@ -112,7 +112,7 @@ filmstack_window::rebuild_stack_window(bool notify)
     delete stack_window;
     stack_window = setup_stack_window(this);
     stack_window->create();
-    getParent()->resize(getWidth(), getDefaultHeight());
+    getParent()->resize(getDefaultWidth(), getDefaultHeight());
     if (notify) {
         notify_stack_change();
     }
