@@ -52,10 +52,14 @@ struct disp_fb {
 
 struct disp_struct;
 
-/* FB dispersion class */
+/* Fourouhi-Bloomer dispersion class. */
 extern struct disp_class fb_disp_class;
 
+/* Tauc-Lorentz dispersion class. */
+extern struct disp_class tauc_lorentz_disp_class;
+
 extern struct disp_struct * disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
+extern struct disp_struct * disp_new_tauc_lorentz(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
 extern void disp_add_osc(struct disp_struct *d);
 extern void disp_delete_osc(struct disp_struct *d, int index);
 

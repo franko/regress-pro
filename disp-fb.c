@@ -22,24 +22,7 @@
 #include <string.h>
 #include "dispers.h"
 #include "cmpl.h"
-
-static void     fb_free(disp_t *d);
-static disp_t * fb_copy(const disp_t *d);
-
-static cmpl fb_n_value(const disp_t *disp, double lam);
-static cmpl fb_n_value_deriv(const disp_t *disp, double lam,
-                             cmpl_vector *der);
-static int  fb_fp_number(const disp_t *disp);
-static double * fb_map_param(disp_t *disp, int index);
-static int  fb_apply_param(struct disp_struct *d,
-                           const fit_param_t *fp, double val);
-static void fb_encode_param(str_t param, const fit_param_t *fp);
-
-static double fb_get_param_value(const struct disp_struct *d,
-                                 const fit_param_t *fp);
-
-static int fb_write(writer_t *w, const disp_t *_d);
-static int fb_read(lexer_t *l, disp_t *d);
+#include "disp-fb-priv.h"
 
 struct disp_class fb_disp_class = {
     .disp_class_id       = DISP_FB,
@@ -256,16 +239,28 @@ fb_get_param_value(const disp_t *d, const fit_param_t *fp)
     return *pval;
 }
 
-disp_t *
-disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
+static disp_t *
+disp_new_fb_generic(enum disp_type dtype, const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
 {
-    disp_t *d = disp_new_with_name(DISP_FB, name);
+    disp_t *d = disp_new_with_name(dtype, name);
     d->disp.fb.n = nb_osc;
     d->disp.fb.n_inf = n_inf;
     d->disp.fb.eg = eg;
     d->disp.fb.osc = emalloc(nb_osc * sizeof(struct fb_osc));
     memcpy(d->disp.fb.osc, osc, nb_osc * sizeof(struct fb_osc));
     return d;
+}
+
+disp_t *
+disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
+{
+    return disp_new_fb_generic(DISP_FB, name, nb_osc, n_inf, eg, osc);
+}
+
+disp_t *
+disp_new_tauc_lorentz(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
+{
+    return disp_new_fb_generic(DISP_TAUC_LORENTZ, name, nb_osc, n_inf, eg, osc);
 }
 
 int

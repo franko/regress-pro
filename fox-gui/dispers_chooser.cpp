@@ -101,12 +101,13 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 {
     new FXLabel(this, "New Model");
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
-    combo->setNumVisible(5);
+    combo->setNumVisible(6);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
-    combo->appendItem("Cauchy Model");
-    combo->appendItem("Lookup Model");
-    combo->appendItem("Fourouhi Bloomer Model");
+    combo->appendItem("Cauchy");
+    combo->appendItem("Lookup");
+    combo->appendItem("Fourouhi-Bloomer");
+    combo->appendItem("Tauc-Lorentz");
 }
 
 disp_t *
@@ -116,18 +117,21 @@ fx_newmodel_selector::get_dispersion()
     if (name == "Harmonic Oscillator") {
         struct ho_params param0 = {0.0, 15.7, 0.0, 1.0 / 3.0, 0.0};
         return disp_new_ho("*HO", 1, &param0);
-    } else if (name == "Cauchy Model") {
+    } else if (name == "Cauchy") {
         double n[3] = { 1.0, 0.0, 0.0 };
         double k[3] = { 0.0, 0.0, 0.0 };
         return disp_new_cauchy("*cauchy", n, k);
-    } else if (name == "Lookup Model") {
+    } else if (name == "Lookup") {
         disp_t *comp = disp_list_search(app_lib, "sio2");
         if (comp) {
             return disp_lookup_new_from_comp("*lookup", comp);
         }
-    } else if (name == "Fourouhi Bloomer Model") {
+    } else if (name == "Fourouhi-Bloomer") {
         struct fb_osc osc0 = {1.0, 4.0, 0.5};
         return disp_new_fb("*FB", 1, 1.0, 2.0, &osc0);
+    } else if (name == "Tauc-Lorentz") {
+        struct fb_osc osc0 = {1.0, 4.0, 0.5};
+        return disp_new_tauc_lorentz("* TL", 1, 1.0, 2.0, &osc0);
     }
     return NULL;
 }
