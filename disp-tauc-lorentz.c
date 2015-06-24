@@ -99,15 +99,15 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
         const double alpha_sq = 4 * E0q - Cq;
         const double gamma_sq = E0q - Cq / 2;
         const double alpha = sqrt(alpha_sq);
-        const double zeta = pow2(Eq - gamma_sq) + alpha_sq * Cq / 4;
+        const double zeta4 = pow2(Eq - gamma_sq) + alpha_sq * Cq / 4;
 
         const double ei_term = (A * E0 * C * pow2(E - Eg)) / (E * den);
 
-        const double pi_zeta4 = M_PI * pow4(zeta);
+        const double pi_zeta4 = M_PI * zeta4;
         const double atanp = atan((alpha + 2 * Eg) / C), atanm = atan((alpha - 2 * Eg) / C);
         const double er_term1 = (A * C * a_ln) / (2 * pi_zeta4 * alpha * E0) * log((E0q + Egq + alpha * Eg) / (E0q + Egq - alpha * Eg));
         const double er_term2 = - (A * a_tan) / (pi_zeta4 * E0) * (M_PI - atanp + atanm);
-        const double er_term3 = (4 * A * E0 * Eg * (Eq - gamma_sq)) / (pi_zeta4 * alpha) * (atanp + atanm);
+        const double er_term3 = (2 * A * E0 * Eg * (Eq - gamma_sq)) / (pi_zeta4 * alpha) * (M_PI + 2 * atan(2 * (gamma_sq - Egq) / (alpha * C)));
         const double er_term4 = - (A * E0 * C * (Eq + Egq)) / (pi_zeta4 * E) * log(fabs(E - Eg)/(E + Eg));
         const double er_term5 = (2 * A * E0 * C * Eg) / pi_zeta4 * log((fabs(E - Eg) * (E + Eg)) / sqrt(pow2(E0q - Egq) + Egq * Cq));
 
