@@ -131,17 +131,22 @@ void fx_disp_fb_window::setup_dialog()
     FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
+    static const char *fb_parameter_names[] = {"N(inf)", "Eg", "A", "B", "C"};
+    static const char *tl_parameter_names[] = {"Eps(inf)", "Eg", "AL", "E0", "C"};
+
+    const char **pname = (disp->type == DISP_FB ? fb_parameter_names : tl_parameter_names);
+
     FXHorizontalFrame *ninf_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
-    new FXLabel(ninf_frame, "N(inf)");
+    new FXLabel(ninf_frame, pname[0]);
     create_textfield(ninf_frame, this, ID_PARAM_0);
-    new FXLabel(ninf_frame, "Eg");
+    new FXLabel(ninf_frame, pname[1]);
     create_textfield(ninf_frame, this, ID_PARAM_0 + 1);
 
     matrix = new FXMatrix(vframe, 4, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
-    new FXLabel(matrix, "A");
-    new FXLabel(matrix, "B");
-    new FXLabel(matrix, "C");
+    new FXLabel(matrix, pname[2]);
+    new FXLabel(matrix, pname[3]);
+    new FXLabel(matrix, pname[4]);
 
     for (int i = 0; i < disp->disp.fb.n; i++) {
         FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
@@ -198,6 +203,8 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
     } else if (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE) {
         dispwin = new fx_disp_table_window(d, comp, opts);
     } else if (d->type == DISP_FB) {
+        dispwin = new fx_disp_fb_window(d, comp, opts);
+    } else if (d->type == DISP_TAUC_LORENTZ) {
         dispwin = new fx_disp_fb_window(d, comp, opts);
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
