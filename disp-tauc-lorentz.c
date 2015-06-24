@@ -168,11 +168,11 @@ tauc_lorentz_num_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         double p0 = disp_get_param_value(p->d, fit_param);
         double h = p0 * 1e-4;
         h = (h < 1e-6 ? 1e-6 : h);
-        int status = gsl_deriv_central(&F, p0, h, &rderiv, &abserr);
+        gsl_deriv_central(&F, p0, h, &rderiv, &abserr);
         *p->param_ptr = p0;
 
         F.function = &n_eval_imag;
-        status = gsl_deriv_central(&F, p0, h, &ideriv, &abserr);
+        gsl_deriv_central(&F, p0, h, &ideriv, &abserr);
         *p->param_ptr = p0;
 
         cmpl_vector_set(pd, i, rderiv + I * ideriv);
