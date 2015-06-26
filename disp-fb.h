@@ -1,7 +1,7 @@
 
 /* disp-fb.h
  *
- * Headers for Fourouhi Bloomer dispersion model.
+ * Headers for Forouhi-Bloomer dispersion model.
  *
  * Copyright (C) 2005-2015 Francesco Abbate
  *
@@ -28,7 +28,7 @@
 
 __BEGIN_DECLS
 
-/* Use a variant of the FB model where:
+/* Use a variant of the Forouhi-Bloomer model where:
    A = A' C'^2
    B = 2 B'
    C = C'^2 + B'^2
@@ -52,7 +52,7 @@ struct disp_fb {
 
 struct disp_struct;
 
-/* Fourouhi-Bloomer dispersion class. */
+/* Forouhi-Bloomer dispersion class. */
 extern struct disp_class fb_disp_class;
 
 /* Tauc-Lorentz dispersion class. */

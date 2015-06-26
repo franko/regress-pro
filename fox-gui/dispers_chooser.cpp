@@ -106,7 +106,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy");
     combo->appendItem("Lookup");
-    combo->appendItem("Fourouhi-Bloomer");
+    combo->appendItem("Forouhi-Bloomer");
     combo->appendItem("Tauc-Lorentz");
 }
 
@@ -126,7 +126,7 @@ fx_newmodel_selector::get_dispersion()
         if (comp) {
             return disp_lookup_new_from_comp("*lookup", comp);
         }
-    } else if (name == "Fourouhi-Bloomer") {
+    } else if (name == "Forouhi-Bloomer") {
         struct fb_osc osc0 = {1.0, 4.0, 0.5};
         return disp_new_fb("*FB", 1, 1.0, 2.0, &osc0);
     } else if (name == "Tauc-Lorentz") {
