@@ -94,32 +94,44 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
         const double Eq = SQR(E), Cq = SQR(C), E0q = SQR(E0), Egq = SQR(Eg);
         const double den = pow2(Eq - E0q) + Cq * Eq;
 
+        int alpha_real = (C < (2 - 1e-10) * E0);
+
         const double a_ln = (Egq - E0q) * Eq + Egq * Cq - E0q * (E0q + 3 * Egq);
         const double a_tan = (Eq - E0q) * (E0q + Egq) + Egq * Cq;
-        const double alpha_sq = 4 * E0q - Cq;
+        const double alpha_sq = (alpha_real ? 4 * E0q - Cq : 0.0);
         const double gamma_sq = E0q - Cq / 2;
-        const double alpha = sqrt(alpha_sq);
         const double zeta4 = pow2(Eq - gamma_sq) + alpha_sq * Cq / 4;
 
         const double ei_term = (A * E0 * C * pow2(E - Eg)) / (E * den);
+        ei_sum += egap_k(E, Eg, ei_term);
 
         const double pi_zeta4 = M_PI * zeta4;
-        const double atanp = atan((alpha + 2 * Eg) / C), atanm = atan((alpha - 2 * Eg) / C);
-        const double er_term1 = (A * C * a_ln) / (2 * pi_zeta4 * alpha * E0) * log((E0q + Egq + alpha * Eg) / (E0q + Egq - alpha * Eg));
-        const double er_term2 = - (A * a_tan) / (pi_zeta4 * E0) * (M_PI - atanp + atanm);
-        const double er_term3 = (2 * A * E0 * Eg * (Eq - gamma_sq)) / (pi_zeta4 * alpha) * (M_PI + 2 * atan(2 * (gamma_sq - Egq) / (alpha * C)));
+        if (!alpha_real) {
+            /* In this case alpha is close to 0 or it is imaginary. To avoid non-sense we consider
+               alpha = 0 and use a special form of the expression. Note in this case that
+               gamma^2 is negative equal to -E0^2. */
+            const double er_term1 = (2 * Eg * A * C * a_ln) / (2 * pi_zeta4 * E0 * (E0q + Egq));
+            const double er_term2 = - (A * a_tan) / (pi_zeta4 * E0) * (2 * atan(C / (2 * Eg)));
+            const double er_term3 = (2 * A * E0 * Eg * (Eq - gamma_sq)) / pi_zeta4 * (C / (E0q + Egq));
+            er_sum += er_term1 + er_term2 + er_term3;
+        } else {
+            const double alpha = sqrt(alpha_sq);
+            const double atanp = atan((alpha + 2 * Eg) / C), atanm = atan((alpha - 2 * Eg) / C);
+            const double er_term1 = (A * C * a_ln) / (2 * pi_zeta4 * alpha * E0) * log((E0q + Egq + alpha * Eg) / (E0q + Egq - alpha * Eg));
+            const double er_term2 = - (A * a_tan) / (pi_zeta4 * E0) * (M_PI - atanp + atanm);
+            const double er_term3 = (2 * A * E0 * Eg * (Eq - gamma_sq)) / (pi_zeta4 * alpha) * (M_PI + 2 * atan(2 * (gamma_sq - Egq) / (alpha * C)));
+            er_sum += er_term1 + er_term2 + er_term3;
+        }
+
         const double log_den = sqrt(pow2(E0q - Egq) + Egq * Cq);
-        double er_term4;
         if (fabs(E - Eg) < 1e-10 * E) {
             /* If E is very close to Eg use an alternative form that avoid log(0). */
-            er_term4 = (2 * A * E * E0 * C) / pi_zeta4 * log((4 * Eq) / log_den);
+            er_sum += (2 * A * E * E0 * C) / pi_zeta4 * log((4 * Eq) / log_den);
         } else {
-            const double er_term4_1 = - (A * E0 * C * (Eq + Egq)) / (pi_zeta4 * E) * log(fabs(E - Eg)/(E + Eg));
-            const double er_term4_2 = (2 * A * E0 * C * Eg) / pi_zeta4 * log((fabs(E - Eg) * (E + Eg)) / log_den);
-            er_term4 = er_term4_1 + er_term4_2;
+            const double er_term4 = - (A * E0 * C * (Eq + Egq)) / (pi_zeta4 * E) * log(fabs(E - Eg)/(E + Eg));
+            const double er_term5 = (2 * A * E0 * C * Eg) / pi_zeta4 * log((fabs(E - Eg) * (E + Eg)) / log_den);
+            er_sum += er_term4 + er_term5;
         }
-        ei_sum += egap_k(E, Eg, ei_term);
-        er_sum += er_term1 + er_term2 + er_term3 + er_term4;
     }
 
     return csqrt(er_sum - I * ei_sum);
