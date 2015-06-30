@@ -108,11 +108,18 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
         const double er_term1 = (A * C * a_ln) / (2 * pi_zeta4 * alpha * E0) * log((E0q + Egq + alpha * Eg) / (E0q + Egq - alpha * Eg));
         const double er_term2 = - (A * a_tan) / (pi_zeta4 * E0) * (M_PI - atanp + atanm);
         const double er_term3 = (2 * A * E0 * Eg * (Eq - gamma_sq)) / (pi_zeta4 * alpha) * (M_PI + 2 * atan(2 * (gamma_sq - Egq) / (alpha * C)));
-        const double er_term4 = - (A * E0 * C * (Eq + Egq)) / (pi_zeta4 * E) * log(fabs(E - Eg)/(E + Eg));
-        const double er_term5 = (2 * A * E0 * C * Eg) / pi_zeta4 * log((fabs(E - Eg) * (E + Eg)) / sqrt(pow2(E0q - Egq) + Egq * Cq));
-
+        const double log_den = sqrt(pow2(E0q - Egq) + Egq * Cq);
+        double er_term4;
+        if (fabs(E - Eg) < 1e-10 * E) {
+            /* If E is very close to Eg use an alternative form that avoid log(0). */
+            er_term4 = (2 * A * E * E0 * C) / pi_zeta4 * log((4 * Eq) / log_den);
+        } else {
+            const double er_term4_1 = - (A * E0 * C * (Eq + Egq)) / (pi_zeta4 * E) * log(fabs(E - Eg)/(E + Eg));
+            const double er_term4_2 = (2 * A * E0 * C * Eg) / pi_zeta4 * log((fabs(E - Eg) * (E + Eg)) / log_den);
+            er_term4 = er_term4_1 + er_term4_2;
+        }
         ei_sum += egap_k(E, Eg, ei_term);
-        er_sum += er_term1 + er_term2 + er_term3 + er_term4 + er_term5;
+        er_sum += er_term1 + er_term2 + er_term3 + er_term4;
     }
 
     return csqrt(er_sum - I * ei_sum);
