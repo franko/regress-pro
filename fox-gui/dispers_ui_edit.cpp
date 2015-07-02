@@ -73,13 +73,18 @@ fx_disp_window::on_disp_element_delete(FXObject*, FXSelector sel, void *)
     return 1;
 }
 
+static void update_textfield(fx_numeric_field *tf, fx_disp_window *disp_win, int param_id)
+{
+    FXString vstr;
+    double *pvalue = disp_win->map_parameter(param_id);
+    vstr.format("%g", *pvalue);
+    tf->setText(vstr);
+}
+
 static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *target, FXSelector id)
 {
     fx_numeric_field *tf = new fx_numeric_field(frame, 8, target, id, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-    FXString vstr;
-    double *pvalue = target->map_parameter(id - fx_disp_window::ID_PARAM_0);
-    vstr.format("%g", *pvalue);
-    tf->setText(vstr);
+    update_textfield(tf, target, id - fx_disp_window::ID_PARAM_0);
     return tf;
 }
 
@@ -126,6 +131,13 @@ void fx_disp_ho_window::delete_dispersion_element(int index)
     reload();
 }
 
+// Map
+FXDEFMAP(fx_disp_fb_window) fx_disp_fb_window_map[]= {
+    FXMAPFUNC(SEL_COMMAND, fx_disp_fb_window::ID_COEFF_FORM, fx_disp_fb_window::on_cmd_coeff_form),
+};
+
+FXIMPLEMENT(fx_disp_fb_window,fx_disp_window,fx_disp_fb_window_map,ARRAYNUMBER(fx_disp_fb_window_map));
+
 void fx_disp_fb_window::setup_dialog()
 {
     FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -135,6 +147,14 @@ void fx_disp_fb_window::setup_dialog()
     static const char *tl_parameter_names[] = {"Eps(inf)", "Eg", "AL", "E0", "C"};
 
     const char **pname = (disp->type == DISP_FB ? fb_parameter_names : tl_parameter_names);
+
+    FXHorizontalFrame *coeff_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
+    new FXLabel(coeff_frame, "Parametrization");
+    FXListBox *coeff_box = new FXListBox(coeff_frame, this, ID_COEFF_FORM, LISTBOX_NORMAL|FRAME_SUNKEN);
+    coeff_box->setNumVisible(2);
+    coeff_box->appendItem("Standard Form");
+    coeff_box->appendItem("Rational Form");
+    coeff_box->setCurrentItem(this->disp->disp.fb.form);
 
     FXHorizontalFrame *ninf_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
     new FXLabel(ninf_frame, pname[0]);
@@ -176,6 +196,18 @@ void fx_disp_fb_window::delete_dispersion_element(int index)
 {
     disp_delete_osc(disp, index);
     reload();
+}
+
+long fx_disp_fb_window::on_cmd_coeff_form(FXObject *, FXSelector, void *data)
+{
+    disp_fb_change_form(this->disp, (FXival) data);
+    for (int i = 0; i < disp->disp.fb.n; i++) {
+        for (int j = 0; j < 3; j++) {
+            fx_numeric_field *tf = (fx_numeric_field *) matrix->childAtRowCol(i + 1, j + 1);
+            update_textfield(tf, this, j + 2);
+        }
+    }
+    return 1;
 }
 
 void fx_disp_cauchy_window::setup_dialog()

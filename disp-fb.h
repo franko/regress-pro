@@ -28,23 +28,34 @@
 
 __BEGIN_DECLS
 
-/* Use a variant of the Forouhi-Bloomer model where:
+/* Can use the original FB parameters or an alternative form where:
    A = A' C'^2
    B = 2 B'
    C = C'^2 + B'^2
    where A, B, C are the original FB parameter and A', B' and C' are the
    redefined parameters used in the struct below.
-   With the redefined parameter B' is the approx position of the abs peak in eV,
-   A' is the approx height of the peak and C' is the width of the abs peak in eV
-   as well. */
+   The redefined parameter are related to the Lorentzian peak term in a simpler way.
+   The redefined parameter B' is the approx position of the peak, in eV.
+   A' is the height of the peak and C' is its width. */
 struct fb_osc {
     double a;
     double b;
     double c;
 };
 
+enum {
+  FOROUHI_BLOOMER_STANDARD = 0,
+  FOROUHI_BLOOMER_RATIONAL = 1,
+};
+
+enum {
+    TAUC_LORENTZ_STANDARD = FOROUHI_BLOOMER_STANDARD,
+    TAUC_LORENTZ_RATIONAL = FOROUHI_BLOOMER_RATIONAL,
+};
+
 struct disp_fb {
-    int n;
+    short int n; /* Number of oscillator. */
+    short int form; /* Indicate the form of coefficients. */
     double n_inf;
     double eg;
     struct fb_osc *osc;
@@ -58,8 +69,9 @@ extern struct disp_class fb_disp_class;
 /* Tauc-Lorentz dispersion class. */
 extern struct disp_class tauc_lorentz_disp_class;
 
-extern struct disp_struct * disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
-extern struct disp_struct * disp_new_tauc_lorentz(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
+extern struct disp_struct * disp_new_fb(const char *name, int coeff_form, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
+extern struct disp_struct * disp_new_tauc_lorentz(const char *name, int coeff_form, int nb_osc, double n_inf, double eg, struct fb_osc *osc);
+extern void disp_fb_change_form(struct disp_struct *d, int new_coeff_form);
 extern void disp_add_osc(struct disp_struct *d);
 extern void disp_delete_osc(struct disp_struct *d, int index);
 

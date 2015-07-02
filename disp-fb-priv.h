@@ -21,4 +21,6 @@ extern double fb_get_param_value(const struct disp_struct *d,
 extern int fb_write(writer_t *w, const disp_t *_d);
 extern int fb_read(lexer_t *l, disp_t *d);
 
+extern void tauc_lorentz_change_form(struct disp_fb *fb, int new_coeff_form);
+
 #endif

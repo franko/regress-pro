@@ -90,7 +90,20 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
     const double Eg = fb->eg;
     for(k = 0; k < nb; k++) {
         const struct fb_osc *osc = fb->osc + k;
-        const double A = osc->a, E0 = osc->b, C = osc->c;
+        double A, E0, C;
+        if (fb->form == TAUC_LORENTZ_STANDARD) {
+            A = osc->a;
+            E0 = osc->b;
+            C = osc->c;
+        } else {
+            /* Use rationalized lorentzian coefficients of the abs peak:
+               - osc->a is AL' and gives the height of the peak
+               - osc->b is Ep and is the energy position
+               - osc->c is Gamma and is the peak width. */
+            E0 = pow(pow4(osc->b) + pow4(osc->c) / 4, 0.25);
+            C = sqrt(2 * SQR(E0) - 2 * SQR(osc->b));
+            A = osc->a * pow4(osc->c) / (4 * E0 * C);
+        }
         const double Eq = SQR(E), Cq = SQR(C), E0q = SQR(E0), Egq = SQR(Eg);
         const double den = pow2(Eq - E0q) + Cq * Eq;
 
@@ -107,7 +120,7 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
 
         const double pi_zeta4 = M_PI * zeta4;
         if (!alpha_real) {
-            /* In this case alpha is close to 0 or it is imaginary. To avoid non-sense we consider
+            /* In this case alpha is close to 0 or it is imaginary. To avoid NaNs we consider
                alpha = 0 and use a special form of the expression. Note in this case that
                gamma^2 is negative equal to -E0^2. */
             const double er_term1 = (2 * Eg * A * C * a_ln) / (2 * pi_zeta4 * E0 * (E0q + Egq));
@@ -135,6 +148,38 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
     }
 
     return csqrt(er_sum - I * ei_sum);
+}
+
+void tauc_lorentz_change_form(struct disp_fb *fb, int new_coeff_form)
+{
+    if (new_coeff_form == TAUC_LORENTZ_STANDARD) {
+        int i;
+        for (i = 0; i < fb->n; i++) {
+            struct fb_osc *osc = &fb->osc[i];
+            const double ALp = osc->a, Ep = osc->b, G = osc->c;
+            const double Gqq = pow4(G);
+            const double E0 = pow(pow4(Ep) + Gqq / 4, 0.25);
+            const double C = sqrt(2 * SQR(E0) - 2 * SQR(Ep));
+            const double AL = ALp * Gqq / (4 * E0 * C);
+            osc->a = AL;
+            osc->b = E0;
+            osc->c = C;
+        }
+    } else {
+        int i;
+        for (i = 0; i < fb->n; i++) {
+            struct fb_osc *osc = &fb->osc[i];
+            const double AL = osc->a, E0 = osc->b, C = osc->c;
+            const double Cq = SQR(C);
+            const double Gqq = (4 * SQR(E0) - Cq) * Cq;
+            const double G = pow(Gqq, 0.25);
+            const double Ep = sqrt(SQR(E0) - Cq / 2);
+            const double ALp = (4 * AL * E0 * C) / Gqq;
+            osc->a = ALp;
+            osc->b = Ep;
+            osc->c = G;
+        }
+    }
 }
 
 struct eval_param {

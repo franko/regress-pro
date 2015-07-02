@@ -127,11 +127,11 @@ fx_newmodel_selector::get_dispersion()
             return disp_lookup_new_from_comp("*lookup", comp);
         }
     } else if (name == "Forouhi-Bloomer") {
-        struct fb_osc osc0 = {1.0, 4.0, 0.5};
-        return disp_new_fb("*FB", 1, 1.0, 2.0, &osc0);
+        struct fb_osc osc0 = {1.0, 8.0, 18};
+        return disp_new_fb("*FB", FOROUHI_BLOOMER_STANDARD, 1, 1.0, 2.0, &osc0);
     } else if (name == "Tauc-Lorentz") {
         struct fb_osc osc0 = {1.0, 4.0, 0.5};
-        return disp_new_tauc_lorentz("* TL", 1, 1.0, 2.0, &osc0);
+        return disp_new_tauc_lorentz("* TL", TAUC_LORENTZ_STANDARD, 1, 1.0, 2.0, &osc0);
     }
     return NULL;
 }

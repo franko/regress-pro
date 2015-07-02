@@ -26,7 +26,7 @@
 
 struct disp_class fb_disp_class = {
     .disp_class_id       = DISP_FB,
-    .short_name          = "fb",
+    .short_name          = "forouhi-bloomer",
 
     .free                = fb_free,
     .copy                = fb_copy,
@@ -91,8 +91,24 @@ disp_add_osc(struct disp_struct *d)
     struct fb_osc *osc = emalloc(sizeof(struct fb_osc) * (n + 1));
     memcpy(osc, fb->osc, sizeof(struct fb_osc) * n);
     osc[n].a = 0.0;
-    osc[n].b = 4.0;
-    osc[n].c = 0.5;
+    if (d->type == DISP_FB) {
+        if (fb->form == FOROUHI_BLOOMER_STANDARD) {
+            osc[n].b = 5.8;
+            osc[n].c = 10;
+        } else {
+            osc[n].b = 2.9;
+            osc[n].c = 1.260955;
+        }
+    } else {
+        if (fb->form == TAUC_LORENTZ_STANDARD) {
+            osc[n].b = 3.5;
+            osc[n].c = 2;
+        } else {
+            osc[n].b = 3.20156;
+            osc[n].c = 3.66284;
+        }
+
+    }
 
     free(fb->osc);
     fb->osc = osc;
@@ -120,9 +136,6 @@ static double egap_k(const double E, const double Eg, const double k)
     return (E > Eg ? k : 0.0);
 }
 
-/* Use the redefined A', B', C' parameters as described in the disp-fb.h file.
-   The calculation are done based on the original parameters A, B, C. The
-   derivatives are computed from the derivative wrt A, B, C. */
 cmpl
 fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
@@ -135,7 +148,19 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     cmpl dndeg = 0.0; /* Accumulate contribution to the derivative of complex n with Eg. */
     for(k = 0; k < nb; k++) {
         const struct fb_osc *osc = fb->osc + k;
-        const double A = osc->a * SQR(osc->c), B = 2 * osc->b, C = SQR(osc->c) + SQR(osc->b);
+        double A, B, C;
+        if (fb->form == FOROUHI_BLOOMER_STANDARD) {
+            A = osc->a;
+            B = osc->b;
+            C = osc->c;
+        } else {
+            /* Use the redefined A', B', C' parameters as described in the disp-fb.h file.
+               The calculation are done based on the original parameters A, B, C. The
+               derivatives are computed from the derivative wrt A, B, C. */
+            A = osc->a * SQR(osc->c);
+            B = 2 * osc->b;
+            C = SQR(osc->c) + SQR(osc->b);
+        }
         const double den = E * (E - B) + C;
         const double Q = 0.5 * sqrt(4*C - SQR(B));
         const double B0 = (A / Q) * (-SQR(B)/2 + Eg * (B - Eg) + C);
@@ -157,7 +182,6 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             /* Derivatives */
             const double k_a = egap_k(E, Eg, kterm / A);
             const double n_a = nterm / A;
-            cmpl_vector_set(pd, koffs + FB_A_OFFS, SQR(osc->c) * (n_a - I * k_a));
 
             const double dB0dB = A * (B*SQR(B) + 8*C*Eg - 2*B*(3*C+SQR(Eg))) / (8 * Q*SQR(Q));
             const double dC0dB = A * C * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
@@ -170,8 +194,15 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             const double k_c = egap_k(E, Eg, - kterm / den);
             const double n_c = (dB0dC * E + dC0dC) / den - nterm / den;
 
-            cmpl_vector_set(pd, koffs + FB_B_OFFS, 2 * (n_b - I * k_b) + 2 * (n_c - I * k_c) * osc->b);
-            cmpl_vector_set(pd, koffs + FB_C_OFFS, 2 * (n_a - I * k_a) * osc->a * osc->c + 2 * (n_c - I * k_c) * osc->c);
+            if (fb->form == FOROUHI_BLOOMER_STANDARD) {
+                cmpl_vector_set(pd, koffs + FB_A_OFFS, n_a - I * k_a);
+                cmpl_vector_set(pd, koffs + FB_B_OFFS, n_b - I * k_b);
+                cmpl_vector_set(pd, koffs + FB_C_OFFS, n_c - I * k_c);
+            } else {
+                cmpl_vector_set(pd, koffs + FB_A_OFFS, SQR(osc->c) * (n_a - I * k_a));
+                cmpl_vector_set(pd, koffs + FB_B_OFFS, 2 * (n_b - I * k_b) + 2 * (n_c - I * k_c) * osc->b);
+                cmpl_vector_set(pd, koffs + FB_C_OFFS, 2 * (n_a - I * k_a) * osc->a * osc->c + 2 * (n_c - I * k_c) * osc->c);
+            }
         }
     }
 
@@ -240,10 +271,11 @@ fb_get_param_value(const disp_t *d, const fit_param_t *fp)
 }
 
 static disp_t *
-disp_new_fb_generic(enum disp_type dtype, const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
+disp_new_fb_generic(enum disp_type dtype, const char *name, int coeff_form, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
 {
     disp_t *d = disp_new_with_name(dtype, name);
     d->disp.fb.n = nb_osc;
+    d->disp.fb.form = coeff_form;
     d->disp.fb.n_inf = n_inf;
     d->disp.fb.eg = eg;
     d->disp.fb.osc = emalloc(nb_osc * sizeof(struct fb_osc));
@@ -252,22 +284,57 @@ disp_new_fb_generic(enum disp_type dtype, const char *name, int nb_osc, double n
 }
 
 disp_t *
-disp_new_fb(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
+disp_new_fb(const char *name, int coeff_form, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
 {
-    return disp_new_fb_generic(DISP_FB, name, nb_osc, n_inf, eg, osc);
+    return disp_new_fb_generic(DISP_FB, name, coeff_form, nb_osc, n_inf, eg, osc);
 }
 
 disp_t *
-disp_new_tauc_lorentz(const char *name, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
+disp_new_tauc_lorentz(const char *name, int coeff_form, int nb_osc, double n_inf, double eg, struct fb_osc *osc)
 {
-    return disp_new_fb_generic(DISP_TAUC_LORENTZ, name, nb_osc, n_inf, eg, osc);
+    return disp_new_fb_generic(DISP_TAUC_LORENTZ, name, coeff_form, nb_osc, n_inf, eg, osc);
+}
+
+static void fb_change_form(struct disp_fb *fb, int new_coeff_form)
+{
+    if (new_coeff_form == FOROUHI_BLOOMER_STANDARD) {
+        int i;
+        for (i = 0; i < fb->n; i++) {
+            struct fb_osc *osc = &fb->osc[i];
+            const double Ap = osc->a;
+            osc->a = Ap * SQR(osc->c);
+            const double Bp = osc->b;
+            osc->b = 2 * Bp;
+            osc->c = SQR(osc->c) + SQR(Bp);
+        }
+    } else {
+        int i;
+        for (i = 0; i < fb->n; i++) {
+            struct fb_osc *osc = &fb->osc[i];
+            const double Qq = osc->c - SQR(osc->b) / 4;
+            osc->a = osc->a / Qq;
+            osc->b = osc->b / 2;
+            osc->c = sqrt(Qq);
+        }
+    }
+}
+
+void disp_fb_change_form(disp_t *d, int new_coeff_form)
+{
+    struct disp_fb *fb = &d->disp.fb;
+    fb->form = new_coeff_form;
+    if (d->type == DISP_FB) {
+        fb_change_form(fb, new_coeff_form);
+    } else {
+        tauc_lorentz_change_form(fb, new_coeff_form);
+    }
 }
 
 int
 fb_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_fb *d = &_d->disp.fb;
-    writer_printf(w, "fb \"%s\" %d", CSTR(_d->name), d->n);
+    writer_printf(w, "%s \"%s\" %d %d", _d->dclass->short_name, CSTR(_d->name), d->n, d->form);
     writer_printf(w, " %g %g", d->n_inf, d->eg);
     writer_newline_enter(w);
     struct fb_osc *fb = d->osc;
@@ -286,12 +353,14 @@ int
 fb_read(lexer_t *l, disp_t *d_gen)
 {
     struct disp_fb *d = &d_gen->disp.fb;
-    int n_osc;
+    int n_osc, form;
     if (lexer_integer(l, &n_osc)) return 1;
+    if (lexer_integer(l, &form)) return 1;
     if (lexer_number(l, &d->n_inf)) return 1;
     if (lexer_number(l, &d->eg)) return 1;
     d->osc = NULL;
     d->n = n_osc;
+    d->form = form;
     d->osc = emalloc(n_osc * sizeof(struct fb_osc));
     struct fb_osc *fb = d->osc;
     int i;
