@@ -204,7 +204,7 @@ long fx_disp_fb_window::on_cmd_coeff_form(FXObject *, FXSelector, void *data)
     for (int i = 0; i < disp->disp.fb.n; i++) {
         for (int j = 0; j < 3; j++) {
             fx_numeric_field *tf = (fx_numeric_field *) matrix->childAtRowCol(i + 1, j + 1);
-            update_textfield(tf, this, j + 2);
+            update_textfield(tf, this, 3 * i + j + 2);
         }
     }
     return 1;
