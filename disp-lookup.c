@@ -11,20 +11,19 @@ static cmpl lookup_n_value(const disp_t *disp, double lam);
 static cmpl lookup_n_value_deriv(const disp_t *disp, double lam,
                                  cmpl_vector *der);
 static int  lookup_fp_number(const disp_t *disp);
-static int  lookup_decode_param_string(const char *p);
+static double * lookup_map_param(disp_t *d, int index);
 static int  lookup_apply_param(struct disp_struct *d,
                                const fit_param_t *fp, double val);
 static void lookup_encode_param(str_t param, const fit_param_t *fp);
 
 static double lookup_get_param_value(const struct disp_struct *d,
                                      const fit_param_t *fp);
+static int lookup_write(writer_t *w, const disp_t *_d);
+static int lookup_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_lookup_class = {
     .disp_class_id       = DISP_LOOKUP,
-    .model_id            = MODEL_LOOKUP,
-
-    .short_id            = "Lookup",
-    .full_id             = "LookupDispersion",
+    .short_name          = "lookup",
 
     .free                = lookup_free,
     .copy                = lookup_copy,
@@ -33,10 +32,12 @@ struct disp_class disp_lookup_class = {
     .fp_number           = lookup_fp_number,
     .n_value_deriv       = lookup_n_value_deriv,
     .apply_param         = lookup_apply_param,
+    .map_param           = lookup_map_param,
     .get_param_value     = lookup_get_param_value,
 
-    .decode_param_string = lookup_decode_param_string,
     .encode_param        = lookup_encode_param,
+    .write               = lookup_write,
+    .read                = lookup_read,
 };
 
 struct disp_struct *
@@ -48,6 +49,17 @@ disp_new_lookup(const char *name, int nb_comps, struct lookup_comp *comp,
     d->disp.lookup.nb_comps = nb_comps;
     d->disp.lookup.component = comp;
 
+    return d;
+}
+
+disp_t *
+disp_lookup_new_from_comp(const char *name, disp_t *comp) {
+    disp_t *d = disp_new_with_name(DISP_LOOKUP, name);
+    d->disp.lookup.p = 0.0;
+    d->disp.lookup.nb_comps = 1;
+    d->disp.lookup.component = emalloc(sizeof(struct lookup_comp));
+    d->disp.lookup.component->p = 0.0;
+    d->disp.lookup.component->disp = comp;
     return d;
 }
 
@@ -132,13 +144,11 @@ lookup_fp_number(const disp_t *disp)
     return 1;
 }
 
-int
-lookup_decode_param_string(const char *p)
+double *
+lookup_map_param(disp_t *_d, int index)
 {
-    if(strcmp(p, "P") == 0) {
-        return 0;
-    }
-    return -1;
+    struct disp_lookup *d = &_d->disp.lookup;
+    return (index == 0 ? &d->p : NULL);
 }
 
 int
@@ -163,4 +173,60 @@ void
 lookup_encode_param(str_t param, const fit_param_t *fp)
 {
     str_copy_c(param, "P");
+}
+
+int
+lookup_write(writer_t *w, const disp_t *_d) {
+    const struct disp_lookup *d = & _d->disp.lookup;
+    writer_printf(w, "lookup \"%s\" %d %g", CSTR(_d->name), d->nb_comps, d->p);
+    writer_newline_enter(w);
+    struct lookup_comp *comp = d->component;
+    int i;
+    for (i = 0; i < d->nb_comps; i++, comp++) {
+        writer_printf(w, "%g", comp->p);
+        writer_newline(w);
+        disp_write(w, comp->disp);
+    }
+    writer_indent(w, -1);
+    return 0;
+}
+
+int
+lookup_read(lexer_t *l, disp_t *d_gen)
+{
+    struct disp_lookup *d = &d_gen->disp.lookup;
+    d->nb_comps = 0;
+    d->component = NULL;
+    int i, nb;
+    if (lexer_integer(l, &nb)) return 1;
+    if (lexer_number(l, &d->p)) return 1;
+    d->component = emalloc(sizeof(struct lookup_comp) * nb);
+    struct lookup_comp *comp = d->component;
+    for (i = 0; i < nb; i++, comp++, d->nb_comps++) {
+        if (lexer_number(l, &comp->p)) return 1;
+        comp->disp = disp_read(l);
+        if (!comp->disp) return 1;
+    }
+    return 0;
+}
+
+void disp_lookup_add_comp(struct disp_struct *d_gen, int index, struct disp_struct *comp, double p)
+{
+    struct disp_lookup *d = &d_gen->disp.lookup;
+    int n = d->nb_comps;
+    struct lookup_comp *new_comp = malloc(sizeof(struct lookup_comp) * (n + 1));
+    memcpy(new_comp, d->component, sizeof(struct lookup_comp) * index);
+    memcpy(new_comp + index + 1, d->component + index, sizeof(struct lookup_comp) * (n - index));
+    d->component = new_comp;
+    d->component[index].p = p;
+    d->component[index].disp = comp;
+    d->nb_comps ++;
+}
+
+void disp_lookup_delete_comp(struct disp_struct *d_gen, int index)
+{
+    struct disp_lookup *d = &d_gen->disp.lookup;
+    int n = d->nb_comps;
+    memmove(d->component + index, d->component + index + 1, (n - index - 1) * sizeof(struct lookup_comp));
+    d->nb_comps --;
 }

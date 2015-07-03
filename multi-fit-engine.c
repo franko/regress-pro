@@ -1,8 +1,3 @@
-
-/*
-  $Id$
- */
-
 #include <assert.h>
 #include <string.h>
 
@@ -13,8 +8,6 @@
 #include "elliss-multifit.h"
 #include "refl-multifit.h"
 #include "multi-fit-engine.h"
-#include "symtab.h"
-
 
 static int  mengine_apply_param_common(struct multi_fit_engine *fit,
                                        const fit_param_t *fp,
@@ -115,11 +108,11 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
         return 1;
     }
 
-    if(! cfg->thresold_given) {
-        cfg->chisq_thresold = (fit->system_kind == SYSTEM_REFLECTOMETER ? 5.0E3 : 2.0E5);
+    if(! cfg->threshold_given) {
+        cfg->chisq_threshold = (fit->system_kind == SYSTEM_REFLECTOMETER ? 5.0E3 : 2.0E5);
     }
 
-    cfg->chisq_thresold *= fit->samples_number;
+    cfg->chisq_threshold *= fit->samples_number;
 
     fit->results = gsl_vector_alloc(nb_total_params);
     fit->chisq   = gsl_vector_alloc(fit->samples_number);
@@ -304,70 +297,28 @@ multi_fit_engine_free(struct multi_fit_engine *f)
     free(f);
 }
 
-extern struct multi_fit_engine *
-build_multi_fit_engine(struct symtab *symtab, struct seeds **comm,
-                       struct seeds **indiv) {
-    stack_t *stack;
-    struct strategy *strategy;
-    struct multi_fit_info *inf;
-    struct multi_fit_engine *fit;
-    int fit_parameters_error;
-    int k, kincr;
-
-    stack    = retrieve_parsed_object(symtab, TL_TYPE_STACK,
-                                      symtab->directives->stack);
-    strategy = retrieve_parsed_object(symtab, TL_TYPE_STRATEGY,
-                                      symtab->directives->strategy);
-    inf      = retrieve_parsed_object(symtab, TL_TYPE_MULTI_FIT,
-                                      symtab->directives->multi_fit);
-
-    if(stack == NULL || strategy == NULL || inf == NULL) {
-        return NULL;
-    }
-
-    fit_parameters_error =					       \
-            check_fit_parameters(stack, strategy->parameters) ||	       \
-            check_fit_parameters(stack, inf->constraints.parameters) ||       \
-            check_fit_parameters(stack, inf->individual.parameters);
-
-    if(fit_parameters_error) {
-        notify_error_msg(SCRIPT_ERROR,
-                         "some of the fit parameters are not valid");
-        return NULL;
-    }
-
-    *comm  = strategy->seeds;
-    *indiv = inf->individual.seeds;
-
-    fit = multi_fit_engine_new(symtab->config_table, inf->samples_number);
-
+void
+multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const struct fit_parameters *cparameters, const struct fit_parameters *pparameters)
+{
+    int k;
     /* fit is not the owner of the "parameters", we just keep a reference */
-    fit->common_parameters = strategy->parameters;
+    fit->common_parameters = cparameters;
 
-    for(kincr = 0, k = 0; k < fit->samples_number; k++) {
-        int kp;
-
+    for(k = 0; k < fit->samples_number; k++) {
         fit->stack_list[k] = stack_copy(stack);
-
-        for(kp = 0; kp < inf->constraints.parameters->number; kp++, kincr++) {
-            stack_apply_param(fit->stack_list[k],
-                              inf->constraints.parameters->values + kp,
-                              inf->constraints.seeds->values[kincr].seed);
-        }
-
-        /* we just keep a reference, we don't own the data */
-        fit->spectra_list[k] = inf->spectra_list[k];
     }
 
     /* fit is not the owner of the "parameters", we just keep a reference */
-    fit->private_parameters = inf->individual.parameters;
+    fit->private_parameters = pparameters;
+}
 
-    if(multi_fit_engine_prepare(fit) != 0) {
-        multi_fit_engine_free(fit);
-        return NULL;
+void
+multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, int sample_nb, const struct fit_parameters *fps, const double value[])
+{
+    int k;
+    for(k = 0; k < fps->number; k++) {
+        stack_apply_param(fit->stack_list[sample_nb], &fps->values[k], value[k]);
     }
-
-    return fit;
 }
 
 void
@@ -405,4 +356,26 @@ multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
     }
 
     str_free(pname);
+}
+
+double
+multi_fit_engine_get_parameter_value(const struct multi_fit_engine *fit, const fit_param_t *fp)
+{
+    if(fp->id == PID_FIRSTMUL) {
+        return fit->extra.rmult;
+    } else {
+        if (fit->stack_list[0]) {
+            return stack_get_parameter_value(fit->stack_list[0], fp);
+        }
+    }
+    return 0.0;
+}
+
+double
+multi_fit_engine_get_seed_value(const struct multi_fit_engine *fit, const fit_param_t *fp, const seed_t *s)
+{
+    if (s->type == SEED_UNDEF) {
+        return multi_fit_engine_get_parameter_value(fit, fp);
+    }
+    return s->seed;
 }

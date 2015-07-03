@@ -7,23 +7,22 @@ static cmpl cauchy_n_value(const disp_t *disp, double lam);
 static cmpl cauchy_n_value_deriv(const disp_t *disp, double lam,
                                  cmpl_vector *der);
 static int  cauchy_fp_number(const disp_t *disp);
-static int  cauchy_decode_param_string(const char *p);
+static double * cauchy_map_param(disp_t *d, int index);
 static int  cauchy_apply_param(struct disp_struct *d,
                                const fit_param_t *fp, double val);
 static void cauchy_encode_param(str_t param, const fit_param_t *fp);
 
 static double cauchy_get_param_value(const struct disp_struct *d,
                                      const fit_param_t *fp);
+static int cauchy_write(writer_t *w, const disp_t *_d);
+static int cauchy_read(lexer_t *l, disp_t *d_gen);
 
 #define CAUCHY_NB_N_PARAMS 3
 #define CAUCHY_NB_PARAMS 6
 
 struct disp_class cauchy_disp_class = {
     .disp_class_id       = DISP_CAUCHY,
-    .model_id            = MODEL_CAUCHY,
-
-    .short_id            = "Cauchy",
-    .full_id             = "Cauchy",
+    .short_name          = "cauchy",
 
     .free                = disp_base_free,
     .copy                = disp_base_copy,
@@ -32,10 +31,12 @@ struct disp_class cauchy_disp_class = {
     .fp_number           = cauchy_fp_number,
     .n_value_deriv       = cauchy_n_value_deriv,
     .apply_param         = cauchy_apply_param,
+    .map_param           = cauchy_map_param,
     .get_param_value     = cauchy_get_param_value,
 
-    .decode_param_string = cauchy_decode_param_string,
     .encode_param        = cauchy_encode_param,
+    .write               = cauchy_write,
+    .read                = cauchy_read,
 };
 
 cmpl
@@ -77,38 +78,23 @@ cauchy_fp_number(const disp_t *disp)
     return CAUCHY_NB_PARAMS;
 }
 
-int
-cauchy_decode_param_string(const char *param)
-{
-    char *tail;
-    int kcoeff = 0, n;
-
-    switch(param[0]) {
-    case 'K':
-        kcoeff = 1;
-    case 'N':
-        param ++;
-        n = strtol(param, & tail, 10);
-        if(*tail != 0 || tail == param) {
-            break;
-        }
-        if(n > 2 || n < 0) {
-            break;
-        }
-        return (kcoeff ? 3 : 0) + n;
-    default:
-        /* */
-        ;
-    }
-
-    return -1;
-}
-
 void
 cauchy_encode_param(str_t param, const fit_param_t *fp)
 {
     int nb = fp->param_nb;
     str_printf(param, "%s%i", (nb < 3 ? "N" : "K"), nb % 3);
+}
+
+double *
+cauchy_map_param(disp_t *_d, int index)
+{
+    struct disp_cauchy *d = &_d->disp.cauchy;
+    if (index < 3) {
+        return d->n + index;
+    } else if (index < 6) {
+        return d->k + (index - 3);
+    }
+    return NULL;
 }
 
 int
@@ -152,4 +138,30 @@ disp_new_cauchy(const char *name, const double n[], const double k[])
     }
 
     return d;
+}
+
+int
+cauchy_write(writer_t *w, const disp_t *_d)
+{
+    const struct disp_cauchy *d = & _d->disp.cauchy;
+    writer_printf(w, "cauchy \"%s\"", CSTR(_d->name));
+    writer_newline_enter(w);
+    writer_printf(w, "%g %g %g", d->n[0], d->n[1], d->n[2]);
+    writer_newline(w);
+    writer_printf(w, "%g %g %g", d->k[0], d->k[1], d->k[2]);
+    writer_newline_exit(w);
+    return 0;
+}
+
+int
+cauchy_read(lexer_t *l, disp_t *d_gen)
+{
+    struct disp_cauchy *d = &d_gen->disp.cauchy;
+    if (lexer_number(l, &d->n[0])) return 1;
+    if (lexer_number(l, &d->n[1])) return 1;
+    if (lexer_number(l, &d->n[2])) return 1;
+    if (lexer_number(l, &d->k[0])) return 1;
+    if (lexer_number(l, &d->k[1])) return 1;
+    if (lexer_number(l, &d->k[2])) return 1;
+    return 0;
 }

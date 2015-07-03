@@ -22,44 +22,11 @@
 #define FIT_WINDOW_H
 
 #include <fx.h>
-#include <agg2/agg_array.h>
 
-#include "fit_manager.h"
-#include "plot_canvas.h"
+#include "fit_panel.h"
 
-class fit_window : public FXMainWindow {
+class fit_window : public FXDialogBox {
     FXDECLARE(fit_window)
-
-    struct param_info {
-        FXTextField *text_field;
-        fit_param_t fp;
-        bool selected;
-        bool is_dirty;
-    };
-
-    agg::pod_array<param_info> m_parameters;
-
-    FXMenuBar         *menubar;
-    FXStatusBar       *statusbar;
-    FXMenuPane        *fitmenu;
-    FXMenuPane        *plotmenu;
-
-    FXFont* m_bold_font;
-
-    FXTextField* m_wl_entry;
-    plot_canvas* m_canvas;
-
-    fit_manager* m_fit;
-
-    bool verify_spectral_range(const char *txt, double ps[]);
-    bool update_spectral_range(const char *txt);
-
-    param_info* get_parameter_pointer(unsigned k)  {
-        return m_parameters.data() + k;
-    }
-    unsigned    get_parameter_index(param_info* p) {
-        return p - m_parameters.data();
-    }
 
 protected:
     fit_window() {};
@@ -68,25 +35,20 @@ private:
     fit_window &operator=(const fit_window&);
 
 public:
-    fit_window(fit_manager* fit,FXApp* a,const FXString& name,FXIcon *ic=NULL,FXIcon *mi=NULL,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    fit_window(fit_manager* fit, FXWindow* a, const FXString& name, FXuint opts=DECOR_TITLE|DECOR_BORDER, FXint x=0, FXint y=0, FXint w=0, FXint h=0, FXint pl=0, FXint pr=0, FXint pt=0, FXint pb=0, FXint hs=0, FXint vs=0);
     virtual ~fit_window();
 
-    long on_cmd_param_select(FXObject*, FXSelector,void*);
-    long on_cmd_param_change(FXObject*, FXSelector,void*);
-    long on_update_param(FXObject*, FXSelector,void*);
-    long on_cmd_plot_autoscale(FXObject*, FXSelector,void*);
-    long on_cmd_spectral_range(FXObject*, FXSelector,void*);
-    long on_change_spectral_range(FXObject*, FXSelector,void*);
-    long on_cmd_run_fit(FXObject*, FXSelector,void*);
+    void bind_result_target(fit_result_target *tgt) { m_fit_panel->bind_result_target(tgt); }
+    void reload() { m_fit_panel->reload(); }
+    void refresh() { m_fit_panel->refresh(); }
+    void reset_undo() { m_fit_panel->reset_undo(); }
+    void kill_focus() { m_fit_panel->kill_focus(); }
 
-    enum {
-        ID_PARAM_SELECT = FXMainWindow::ID_LAST,
-        ID_PARAM_VALUE,
-        ID_SPECTR_RANGE,
-        ID_RUN_FIT,
-        ID_PLOT_SCALE,
-        ID_LAST
-    };
+protected:
+    FXMenuBar *menubar;
+    FXStatusBar *statusbar;
+    FXMenuPane *fitmenu, *plotmenu;
+    fit_panel *m_fit_panel;
 };
 
 #endif

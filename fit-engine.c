@@ -25,7 +25,6 @@
 #include "refl-kernel.h"
 #include "elliss-fit.h"
 #include "elliss.h"
-#include "symtab.h"
 #include "error-messages.h"
 #include "minsampling.h"
 
@@ -230,8 +229,8 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
         return 1;
     }
 
-    if(! cfg->thresold_given) {
-        cfg->chisq_thresold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
+    if(! cfg->threshold_given) {
+        cfg->chisq_threshold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
     }
 
     fit->run->results = gsl_vector_alloc(fit->parameters->number);
@@ -254,7 +253,7 @@ fit_engine_disable(struct fit_engine *fit)
 }
 
 int
-check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
+check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *error_msg)
 {
     size_t j, nb_med = (size_t) stack->nb;
 
@@ -262,7 +261,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
 
     for(j = 0; j < nb_med; j++) {
         if(disp_integrity_check(stack->disp[j])) {
-            notify_error_msg(INVALID_STRATEGY, "corrupted material card");
+            *error_msg = new_error_message(RECIPE_CHECK, "corrupted material card");
             return 1;
         }
     }
@@ -274,17 +273,13 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
             break;
         case PID_THICKNESS:
             if(fp->layer_nb == 0 || fp->layer_nb >= nb_med - 1) {
-                notify_error_msg(INVALID_STRATEGY,
-                                 "reference to thickness of layer %i",
-                                 fp->layer_nb);
+                *error_msg = new_error_message(RECIPE_CHECK, "reference to thickness of layer %i", fp->layer_nb);
                 return 1;
             }
             break;
         case PID_LAYER_N:
             if(fp->layer_nb >= nb_med) {
-                notify_error_msg(INVALID_STRATEGY,
-                                 "Reference to parameter of material number %i",
-                                 fp->layer_nb);
+                *error_msg = new_error_message(RECIPE_CHECK, "Reference to parameter of material number %i", fp->layer_nb);
                 return 1;
             }
 
@@ -292,7 +287,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
                 str_t pname;
                 str_init(pname, 16);
                 get_param_name(fp, pname);
-                notify_error_msg(INVALID_STRATEGY,
+                *error_msg = new_error_message(RECIPE_CHECK,
                                  "Parameter %s makes no sense for layer %i",
                                  CSTR(pname), fp->layer_nb);
                 str_free(pname);
@@ -300,7 +295,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
             }
             break;
         default:
-            notify_error_msg(INVALID_STRATEGY, "ill-formed fit parameter");
+            *error_msg = new_error_message(RECIPE_CHECK, "ill-formed fit parameter");
             return 1;
         }
     }
@@ -310,41 +305,14 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps)
 
 struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
-    struct stack *stack = fit->stack;
-    int n_layers = stack->nb - 2;
-    int n_params = 1 + n_layers;
-    struct fit_parameters *fps;
     fit_param_t fp[1];
-    int j;
 
-    for(j = 1; j < n_layers + 2; j++) {
-        disp_t *d = stack->disp[j];
-        int np = disp_get_number_of_params(d);
-        n_params += np;
-    }
-
-    fps = fit_parameters_new();
+    struct fit_parameters *fps = fit_parameters_new();
 
     fp->id = PID_FIRSTMUL;
     fit_parameters_add(fps, fp);
 
-    fp->id = PID_THICKNESS;
-    for(j = 1; j < n_layers + 1; j++) {
-        fp->layer_nb = j;
-        fit_parameters_add(fps, fp);
-    }
-
-    fp->id = PID_LAYER_N;
-    for(j = 1; j < n_layers + 2; j++) {
-        disp_t *d = stack->disp[j];
-        int k, np = disp_get_number_of_params(d);
-        fp->layer_nb = j;
-        fp->model_id = disp_get_model_id(d);
-        for(k = 0; k < np; k++) {
-            fp->param_nb = k;
-            fit_parameters_add(fps, fp);
-        }
-    }
+    stack_get_all_parameters(fit->stack, fps);
 
     return fps;
 }
@@ -355,21 +323,72 @@ fit_engine_get_parameter_value(const struct fit_engine *fit,
 {
     if(fp->id == PID_FIRSTMUL) {
         return fit->extra->rmult;
-    } else if(fp->id == PID_THICKNESS) {
-        const struct stack *st = fit->stack;
-        int layer_nb = fp->layer_nb;
-        assert(layer_nb > 0 && layer_nb < st->nb - 1);
-        return st->thickness[layer_nb-1];
-    } else if(fp->id == PID_LAYER_N) {
-        const struct stack *st = fit->stack;
-        int layer_nb = fp->layer_nb;
-        const disp_t *d = st->disp[layer_nb];
-        assert(layer_nb > 0 && layer_nb <= st->nb - 1);
-        return disp_get_param_value(d, fp);
+    } else {
+        return stack_get_parameter_value(fit->stack, fp);
+    }
+    return 0.0;
+}
+
+double
+fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, const seed_t *s)
+{
+    if (s->type == SEED_UNDEF) {
+        return fit_engine_get_parameter_value(fit, fp);
+    }
+    return s->seed;
+}
+
+static double
+compute_rsquare(const gsl_vector *ref, const gsl_vector *b)
+{
+    double ssq = 0;
+    unsigned int i;
+    for (i = 0; i < ref->size; i++) {
+        ssq += gsl_vector_get(ref, i) * gsl_vector_get(ref, i);
     }
 
-    assert(0);
-    return 0.0;
+    double rsq = 0;
+    for (i = 0; i < ref->size; i++) {
+        double diff = gsl_vector_get(b, i) - gsl_vector_get(ref, i);
+        rsq += diff * diff;
+    }
+    return rsq / ssq;
+}
+
+double
+fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x, const fit_param_t *fp, double delta)
+{
+    int fp_index = fit_parameters_find(fit->parameters, fp);
+
+    gsl_vector *y0 = gsl_vector_alloc(fit->run->mffun.n);
+    gsl_vector *y1 = gsl_vector_alloc(fit->run->mffun.n);
+    gsl_vector *xtest = gsl_vector_alloc(fit->run->mffun.p);
+    gsl_matrix *jacob = gsl_matrix_alloc(fit->run->mffun.n, fit->run->mffun.p);
+
+    gsl_vector_view jview = gsl_matrix_column(jacob, fp_index);
+    fit->run->mffun.df(x, fit, jacob);
+
+    gsl_vector_memcpy(xtest, x);
+    fit->run->mffun.f(xtest, fit, y0);
+
+    while (1) {
+        gsl_vector_set(xtest, fp_index, gsl_vector_get(x, fp_index) + delta);
+        fit->run->mffun.f(xtest, fit, y1);
+
+        gsl_vector_sub(y1, y0);
+        gsl_vector_scale(y1, 1.0 / delta);
+
+        double r2 = compute_rsquare(&jview.vector, y1);
+        if (r2 < 0.2) break;
+
+        delta /= 2;
+    }
+
+    gsl_vector_free(y0);
+    gsl_vector_free(y1);
+    gsl_vector_free(xtest);
+    gsl_matrix_free(jacob);
+    return delta;
 }
 
 void
@@ -427,45 +446,47 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 }
 
 struct fit_engine *
-build_fit_engine(struct symtab *symtab, struct seeds **seeds) {
-    stack_t *stack;
-    struct strategy *strategy;
-    struct fit_engine *fit;
-
-    stack    = retrieve_parsed_object(symtab, TL_TYPE_STACK,
-                                      symtab->directives->stack);
-
-    strategy = retrieve_parsed_object(symtab, TL_TYPE_STRATEGY,
-                                      symtab->directives->strategy);
-
-    if(stack == NULL || strategy == NULL) {
-        return NULL;
-    }
-
-    if(check_fit_parameters(stack, strategy->parameters) != 0) {
-        return NULL;
-    }
-
-    *seeds = strategy->seeds;
-
-    fit = emalloc(sizeof(struct fit_engine));
-
+fit_engine_new()
+{
+    struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
     set_default_extra_param(fit->extra);
-
-    fit->config[0] = symtab->config_table[0];
-
-    /* fit is not the owner of the "parameters", we just keep a reference */
-    fit->parameters = strategy->parameters;
-
-    fit->stack = stack_copy(stack);
-
+    fit->parameters = NULL;
+    fit->stack = NULL;
     return fit;
+}
+
+void
+fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters)
+{
+    fit->config[0] = *config;
+    /* fit is not the owner of the "parameters", we just keep a reference */
+    fit->parameters = parameters;
+    fit->stack = stack_copy(stack);
+}
+
+void
+fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack)
+{
+    if (fit->stack) {
+        stack_free(fit->stack);
+    }
+    fit->stack = stack;
+}
+
+stack_t *
+fit_engine_yield_stack(struct fit_engine *fit)
+{
+    stack_t *s = fit->stack;
+    fit->stack = NULL;
+    return s;
 }
 
 void
 fit_engine_free(struct fit_engine *fit)
 {
-    stack_free(fit->stack);
+    if (fit->stack) {
+        stack_free(fit->stack);
+    }
     free(fit);
 }
 
@@ -499,4 +520,76 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 
     str_free(value);
     str_free(pname);
+}
+
+void
+fit_config_set_default(struct fit_config *cfg)
+{
+    cfg->threshold_given = 0;
+    cfg->nb_max_iters = 30;
+    cfg->subsampling = 1;
+    cfg->spectr_range.active = 0;
+    cfg->epsabs = 1.0E-7;
+    cfg->epsrel = 1.0E-7;
+}
+
+int
+fit_config_write(writer_t *w, const struct fit_config *config)
+{
+    writer_printf(w, "fit-config");
+    writer_newline_enter(w);
+    if (config->threshold_given) {
+        writer_printf(w, "threshold %g", config->chisq_threshold);
+        writer_newline(w);
+    }
+    writer_printf(w, "max-iterations %d", config->nb_max_iters);
+    writer_newline(w);
+
+    writer_printf(w, "subsampling %d", config->subsampling);
+    writer_newline(w);
+
+    if (config->spectr_range.active) {
+        writer_printf(w, "wavelength-range %g %g", config->spectr_range.min, config->spectr_range.max);
+        writer_newline(w);
+    }
+
+    writer_printf(w, "epsilon %g %g", config->epsabs, config->epsrel);
+    writer_newline_exit(w);
+    return 1;
+}
+
+int
+fit_config_read(lexer_t *l, struct fit_config *config)
+{
+    if (lexer_check_ident(l, "fit-config")) goto config_exit;
+    if (lexer_ident(l)) goto config_exit;
+    if (strcmp(CSTR(l->store), "threshold") == 0) {
+        config->threshold_given = 1;
+        if (lexer_number(l, &config->chisq_threshold)) goto config_exit;
+        if (lexer_ident(l)) goto config_exit;
+    } else {
+        config->threshold_given = 0;
+    }
+    if (strcmp(CSTR(l->store), "max-iterations")) goto config_exit;
+    if (lexer_integer(l, &config->nb_max_iters)) goto config_exit;
+    if (lexer_check_ident(l, "subsampling")) goto config_exit;
+    if (lexer_integer(l, &config->subsampling)) goto config_exit;
+    if (lexer_ident(l)) goto config_exit;
+    if (strcmp(CSTR(l->store), "wavelength-range") == 0) {
+        double lmin, lmax;
+        if (lexer_number(l, &lmin)) goto config_exit;
+        if (lexer_number(l, &lmax)) goto config_exit;
+        config->spectr_range.active = 1;
+        config->spectr_range.min = lmin;
+        config->spectr_range.max = lmax;
+        if (lexer_ident(l)) goto config_exit;
+    } else {
+        config->spectr_range.active = 0;
+    }
+    if (strcmp(CSTR(l->store), "epsilon")) goto config_exit;
+    if (lexer_number(l, &config->epsabs)) goto config_exit;
+    if (lexer_number(l, &config->epsrel)) goto config_exit;
+    return 0;
+config_exit:
+    return 1;
 }

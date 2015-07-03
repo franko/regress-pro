@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include "stack.h"
 #include "str.h"
 
@@ -18,22 +19,26 @@ stack_init(stack_t *s)
     stack_init_raw(s, 8);
 }
 
+static void
+ensure_size(stack_t *s, int req_size)
+{
+    if((size_t)req_size > s->nb_alloc)
+    {
+        size_t nsz;
+        s->nb_alloc *= 2;
+        nsz = s->nb_alloc;
+        s->disp = erealloc(s->disp, nsz * sizeof(void *));
+        /* For thicknesses we allocate more space of what is actually needed. */
+        s->thickness = erealloc(s->thickness,  nsz * sizeof(double));
+    }
+}
+
 void
 stack_add_layer(stack_t *s, disp_t *lyr, double th)
 {
     size_t idx;
 
-    if((size_t)s->nb >= s->nb_alloc) {
-        size_t nsz;
-
-        s->nb_alloc *= 2;
-        nsz = s->nb_alloc;
-
-        s->disp = erealloc(s->disp, nsz * sizeof(void *));
-
-        /* For thicknesses we allocate more space of what is actually needed. */
-        s->thickness = erealloc(s->thickness,  nsz * sizeof(double));
-    }
+    ensure_size(s, s->nb + 1);
 
     idx = s->nb;
 
@@ -45,8 +50,44 @@ stack_add_layer(stack_t *s, disp_t *lyr, double th)
     s->nb ++;
 }
 
+void
+stack_insert_layer(stack_t *s, int pos, disp_t *lyr, double th)
+{
+    int i;
+    ensure_size(s, s->nb + 1);
+    for (i = s->nb - 1; i >= pos; i--) {
+        s->disp[i + 1] = s->disp[i];
+    }
+    s->disp[pos] = lyr;
+    int lpos = pos > 0 ? pos - 1 : 0;
+    for (i = s->nb - 3; i >= lpos; i--) {
+        s->thickness[i+1] = s->thickness[i];
+    }
+    if (pos > 0) {
+        s->thickness[pos-1] = th;
+    } else {
+        s->thickness[0] = 0.0;
+    }
+    s->nb++;
+}
+
+void
+stack_delete_layer(stack_t *s, int pos)
+{
+    int i;
+    disp_free(s->disp[pos]);
+    for (i = pos; i + 1 < s->nb; i++) {
+        s->disp[i] = s->disp[i+1];
+    }
+    int lpos = pos > 0 ? pos - 1 : 0;
+    for (i = lpos; i + 1 < s->nb - 2; i++) {
+        s->thickness[i] = s->thickness[i+1];
+    }
+    s->nb--;
+}
+
 stack_t *
-stack_copy(stack_t *s)
+stack_copy(const stack_t *s)
 {
     int j;
     stack_t *r = emalloc(sizeof(stack_t));
@@ -112,4 +153,87 @@ stack_free(stack_t *s)
     }
     free(s->disp);
     free(s);
+}
+
+void
+stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
+{
+    int n_layers = stack->nb - 2;
+    fit_param_t fp[1];
+    int j;
+
+    fp->id = PID_THICKNESS;
+    for(j = 1; j < n_layers + 1; j++) {
+        fp->layer_nb = j;
+        fit_parameters_add(fps, fp);
+    }
+
+    fp->id = PID_LAYER_N;
+    for(j = 1; j < n_layers + 2; j++) {
+        disp_t *d = stack->disp[j];
+        int k, np = disp_get_number_of_params(d);
+        fp->layer_nb = j;
+        fp->model_id = d->type;
+        for(k = 0; k < np; k++) {
+            fp->param_nb = k;
+            fit_parameters_add(fps, fp);
+        }
+    }
+}
+
+double
+stack_get_parameter_value(const stack_t *st, const fit_param_t *fp)
+{
+    if(fp->id == PID_THICKNESS) {
+        int layer_nb = fp->layer_nb;
+        assert(layer_nb > 0 && layer_nb < st->nb - 1);
+        return st->thickness[layer_nb-1];
+    } else if(fp->id == PID_LAYER_N) {
+        int layer_nb = fp->layer_nb;
+        const disp_t *d = st->disp[layer_nb];
+        assert(layer_nb > 0 && layer_nb <= st->nb - 1);
+        return disp_get_param_value(d, fp);
+    }
+    return 0.0;
+}
+
+int
+stack_write(writer_t *w, const stack_t *s)
+{
+    writer_printf(w, "stack %d", s->nb);
+    writer_newline_enter(w);
+    int i;
+    for (i = 1; i < s->nb - 1; i++) {
+        if (i > 1) {
+            writer_printf(w, " ");
+        }
+        writer_printf(w, "%g", s->thickness[i-1]);
+    }
+    writer_newline(w);
+    for (i = 0; i < s->nb; i++) {
+        disp_write(w, s->disp[i]);
+    }
+    writer_indent(w, -1);
+    return 0;
+}
+
+stack_t *
+stack_read(lexer_t *l)
+{
+    int i, nb;
+    if (lexer_check_ident(l, "stack")) return NULL;
+    if (lexer_integer(l, &nb)) return NULL;
+    stack_t *s = emalloc(sizeof(stack_t));
+    stack_init_raw(s, nb);
+    for (i = 1; i < nb - 1; i++) {
+        if (lexer_number(l, s->thickness + (i - 1))) goto stack_exit;
+    }
+    for (i = 0; i < nb; i++, s->nb++) {
+        s->disp[i] = disp_read(l);
+        if (!s->disp[i]) goto stack_exit;
+    }
+    return s;
+stack_exit:
+    stack_free(s);
+    return 0;
 }

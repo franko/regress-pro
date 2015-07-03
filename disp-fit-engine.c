@@ -6,6 +6,7 @@
 
 #include "disp-fit-engine.h"
 #include "lmfit.h"
+#include "vector_print.h"
 #include "str.h"
 
 static int disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
@@ -184,7 +185,6 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
 
     if(analysis) {
         str_printf_add(analysis, "Nb of iterations to converge: %i\n", iter);
-        print_analysis(analysis, &f, s);
     }
 
     commit_fit_parameters(fit, x);

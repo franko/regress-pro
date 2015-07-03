@@ -25,41 +25,59 @@
 
 #include "str.h"
 
-#include "elliss_app.h"
+#include "regress_pro.h"
 #include "plot_canvas.h"
 #include "spectra.h"
-#include "symtab.h"
+#include "fit_recipe.h"
+#include "fit_window.h"
+#include "filmstack_window.h"
+
+class recipe_window;
+class dataset_window;
+class batch_window;
+class interactive_fit;
+
+struct window_result_target : fit_result_target {
+    window_result_target() { }
+    void bind(filmstack_window *w) { window = w; }
+    virtual void notify_change() { window->update_values(); }
+    filmstack_window *window;
+};
 
 class regress_pro_window : public FXMainWindow {
     FXDECLARE(regress_pro_window)
 
 protected:
     struct spectrum *spectrum;
-    struct stack *stack_result;
-    struct symtab symtab[1];
+    fit_recipe *recipe;
 
-    FXString scriptFile;
+    FXString recipeFilename;
     FXString spectrFile;
-    FXString batchFileId;
 
 protected:
+    filmstack_window *main_filmstack_window;
+    recipe_window *main_recipe_window;
+    filmstack_window *result_filmstack_window;
+
+    dataset_window *my_dataset_window;
+    batch_window *my_batch_window;
+    bool m_enlarged_window;
+
     FXMenuBar         *menubar;
     FXStatusBar       *statusbar;
 
     FXMenuPane        *filemenu;
+    FXMenuPane        *editmenu;
     FXMenuPane        *spectrmenu;
     FXMenuPane        *dispmenu;
     FXMenuPane        *fitmenu;
     FXMenuPane        *helpmenu;
 
-    FXTabBook         *tabbook;
-    FXTabItem         *tabscript, *tabplot;
-    FXText            *scripttext;
     FXText            *resulttext;
 
     FXFont            *scriptfont;
 
-    static const FXchar patterns_fit[];
+    static const FXchar patterns_recipe[];
     static const FXchar patterns_spectr[];
 
     static const FXHiliteStyle tstyles[];
@@ -70,15 +88,15 @@ private:
     regress_pro_window(const regress_pro_window&);
     regress_pro_window &operator=(const regress_pro_window&);
 public:
-    elliss_app* get_elliss_app() const {
-        return (elliss_app*) getApp();
-    }
+    regress_pro* regressProApp() const { return (regress_pro*) getApp(); }
 
-    long onCmdLoadScript(FXObject*,FXSelector,void*);
-    long onCmdSaveScript(FXObject*,FXSelector,void*);
-    long onCmdSaveAsScript(FXObject*,FXSelector,void *);
+    fit_recipe *get_current_recipe() const { return recipe; }
+
+    long onCmdDatasetEdit(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
-    long onCmdPlotDispers(FXObject*,FXSelector,void*);
+    long onCmdRecipeSave(FXObject*,FXSelector,void*);
+    long onCmdRecipeSaveAs(FXObject*,FXSelector,void*);
+    long onCmdRecipeLoad(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
     long onCmdRunFit(FXObject*,FXSelector,void*);
     long onCmdInteractiveFit(FXObject*,FXSelector,void*);
@@ -87,22 +105,17 @@ public:
     long onCmdRunBatch(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
+    long onCmdStackChange(FXObject*,FXSelector,void*);
+    long onCmdStackShift(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
-
-    bool save_script_as(const FXString& save_as);
-    bool set_fit_strategy(const char *script_text);
-    bool update_fit_strategy();
-    void setErrorRegion(int sl, int el);
-    void cleanScriptErrors();
-    void reportErrors();
+    long onCmdResultStack(FXObject*,FXSelector,void*);
 
 public:
     enum {
-        ID_LOAD_SCRIPT = FXMainWindow::ID_LAST,
-        ID_SAVE_SCRIPT,
-        ID_SAVEAS_SCRIPT,
+        ID_RECIPE_SAVE = FXMainWindow::ID_LAST,
+        ID_RECIPE_SAVE_AS,
+        ID_RECIPE_LOAD,
         ID_LOAD_SPECTRA,
-        ID_DISP_PLOT,
         ID_DISP_OPTIM,
         ID_RUN_FIT,
         ID_INTERACTIVE_FIT,
@@ -112,23 +125,34 @@ public:
         ID_ABOUT,
         ID_SCRIPT_TEXT,
         ID_REGISTER,
+        ID_DATASET_EDIT,
+        ID_STACK_CHANGE,
+        ID_STACK_SHIFT,
+        ID_RESULT_STACK,
         ID_LAST
     };
 
 public:
-    regress_pro_window(elliss_app *a);
+    regress_pro_window(regress_pro *a);
     virtual void create();
     virtual ~regress_pro_window();
 
 private:
     bool check_spectrum(const char *context);
+    void set_stack_result(stack_t *s);
+    void update_interactive_fit(fit_engine *fit);
+    void set_spectrum(struct spectrum *s);
+    void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
+    void save_recipe_as(const FXString& filename);
 
-    struct spectrum* m_model_spectr;
+    interactive_fit *m_interactive_fit;
+    fit_window *m_fit_window;
+    FXDialogBox *m_filmstack_dialog;
 
-    plot_canvas* m_canvas;
-
+    bool m_result_stack_match;
     bool m_title_dirty;
-    bool m_title_modified;
+
+    window_result_target m_interactive_fit_target;
 };
 
 extern "C" {

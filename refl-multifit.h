@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 #ifndef REFL_MULTIFIT_H
 #define REFL_MULTIFIT_H
 

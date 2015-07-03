@@ -18,7 +18,7 @@ else
   FOX_INCLUDES = $(shell fox-config --cflags)
 endif
 
-GSL_LIBS = -lgsl -lgslcblas -lm
+GSL_LIBS = -lgsl -lblas -lm
 GSL_INCLUDES = 
 
 REG_LIBS = -lmhash -lgmp
@@ -33,7 +33,15 @@ INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
-SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp regress_pro_window.cpp BatchDialog.cpp dispers_dialog.cpp dispers_win.cpp sampling_win.cpp fx_numeric_field.cpp disp_chooser.cpp fit_window.cpp colors.cpp plot_units.cpp plot_canvas.cpp utils.cpp main.cpp
+SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp disp_fit_window.cpp regress_pro_window.cpp \
+	dispers_win.cpp sampling_win.cpp \
+	fx_numeric_field.cpp fit_panel.cpp fit_window.cpp colors.cpp \
+	plot_units.cpp plot_canvas.cpp utils.cpp dispers_save_dialog.cpp filmstack_window.cpp \
+	dispers_ui_edit.cpp icons_all.cpp dispers_chooser.cpp \
+	fit_params_utils.cpp multi_sample_recipe.cpp recipe_window.cpp \
+	fit_recipe.cpp dispers_edit_window.cpp dispers_ui_utils.cpp \
+	filelist_table.cpp dataset_table.cpp \
+	dataset_window.cpp batch_window.cpp regress_pro.cpp main.cpp
 PRG = regress.exe
 
 REG_SRC_FILES := registration.c registered_app.cpp
@@ -50,6 +58,11 @@ ifeq ($(PRODUCT_REGISTRATION),yes)
   LIBS += $(REG_LIBS)
 endif
 
+ifneq ($(ENABLE_RELEASE),yes)
+  OBJ_FILES += gitversion.o
+  DEFS += -DGIT_BUILD
+endif
+
 .PHONY: clean all
 
 all: $(PRG)
@@ -59,7 +72,10 @@ include $(BASEDIR)/makerules
 $(PRG): $(OBJ_FILES) ../libefit.a
 	$(CXX) -o $@ $(OBJ_FILES) ../libefit.a $(LIBS)
 
+gitversion.cpp: $(BASEDIR)/.git/HEAD $(BASEDIR)/.git/index
+	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
+
 clean:
-	rm -f $(OBJ_FILES) $(PRG)
+	rm -f gitversion.cpp $(OBJ_FILES) $(PRG)
 
 -include $(DEP_FILES)

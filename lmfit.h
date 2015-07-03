@@ -22,13 +22,6 @@ extern int  lmfit_iter(gsl_vector *x, gsl_multifit_function_fdf *f,
                        double epsabs, double epsrel, int *nb_iter,
                        gui_hook_func_t hfun, void *hdata, int *user_stop);
 
-extern void print_vector(str_t s, const char *fmt, const gsl_vector *v);
-
-extern void print_matrix(str_t s, const char *fmt, const gsl_matrix *m);
-
-extern void print_analysis(str_t msg, gsl_multifit_function_fdf *f,
-                           gsl_multifit_fdfsolver *s);
-
 __END_DECLS
 
 #endif /* __LMFIT_H */

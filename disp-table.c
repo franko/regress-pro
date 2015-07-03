@@ -1,7 +1,3 @@
-/*
-  $Id$
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,12 +12,12 @@ static disp_t * disp_table_copy(const disp_t *d);
 
 static cmpl     disp_table_n_value(const disp_t *disp, double lam);
 
+static int disp_table_write(writer_t *w, const disp_t *_d);
+static int disp_table_read(lexer_t *l, disp_t *d_gen);
+
 struct disp_class disp_table_class = {
     .disp_class_id       = DISP_TABLE,
-    .model_id            = MODEL_NONE,
-
-    .short_id            = "Table",
-    .full_id             = "TableDispersion",
+    .short_name          = "uniform-table",
 
     .free                = disp_table_free,
     .copy                = disp_table_copy,
@@ -32,8 +28,9 @@ struct disp_class disp_table_class = {
     .apply_param         = NULL,
     .get_param_value     = NULL,
 
-    .decode_param_string = disp_base_decode_param_string,
     .encode_param        = NULL,
+    .write               = disp_table_write,
+    .read                = disp_table_read,
 };
 
 static void disp_table_init(struct disp_table dt[], int points);
@@ -51,7 +48,9 @@ disp_table_init(struct disp_table dt[], int points)
 void
 disp_table_free(struct disp_struct *d)
 {
-    data_table_unref(d->disp.table.table_ref);
+    if (d->disp.table.table_ref) {
+        data_table_unref(d->disp.table.table_ref);
+    }
     disp_base_free(d);
 }
 
@@ -126,7 +125,7 @@ disp_table_n_value(const disp_t *disp, double lam)
 }
 
 struct disp_struct *
-disp_table_new_from_nk_file(const char * filename) {
+disp_table_new_from_nk_file(const char * filename, str_ptr *error_msg) {
     struct disp_struct *disp;
     struct disp_table *table;
     FILE * f;
@@ -139,14 +138,13 @@ disp_table_new_from_nk_file(const char * filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "Cannot open %s", filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
     nread = fscanf(f, "%*i %f %f %i\n", & wlmin, & wlmax, &npt);
     if(nread < 3) {
-        notify_error_msg(LOADING_FILE_ERROR, "File %s not in NK format",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" not in NK format", filename);
         return NULL;
     }
 
@@ -157,7 +155,7 @@ disp_table_new_from_nk_file(const char * filename) {
 
         nread = fscanf(f, "%f %f\n", & nr, & ni);
         if(nread < 2) {
-            notify_error_msg(LOADING_FILE_ERROR, "invalid format for nk table");
+            *error_msg = new_error_message(LOADING_FILE_ERROR, "invalid format for nk table");
             goto disp_nk_free;
         }
 
@@ -173,4 +171,37 @@ disp_nk_free:
     disp_table_free(disp);
     fclose(f);
     return NULL;
+}
+
+int
+disp_table_write(writer_t *w, const disp_t *_d)
+{
+    const struct disp_table *d = &_d->disp.table;
+    writer_printf(w, "uniform-table \"%s\" %d", CSTR(_d->name), d->points_number);
+    writer_newline_enter(w);
+    writer_printf(w, "%g %g %g", d->lambda_min, d->lambda_max, d->lambda_stride);
+    writer_newline(w);
+    data_table_write(w, d->table_ref);
+    writer_newline_exit(w);
+    return 0;
+}
+
+int
+disp_table_read(lexer_t *l, disp_t *d_gen)
+{
+    struct disp_table *d = &d_gen->disp.table;
+    d->table_ref = NULL;
+    int nb;
+    double lmin, lmax, lstep;
+    if (lexer_integer(l, &nb)) return 1;
+    if (lexer_number(l, &lmin)) return 1;
+    if (lexer_number(l, &lmax)) return 1;
+    if (lexer_number(l, &lstep)) return 1;
+    d->table_ref = data_table_read(l);
+    if (!d->table_ref) return 1;
+    d->lambda_min = lmin;
+    d->lambda_max = lmax;
+    d->lambda_stride = lstep;
+    d->points_number = nb;
+    return 0;
 }

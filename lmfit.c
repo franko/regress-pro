@@ -5,12 +5,9 @@
 
 #include "common.h"
 #include "lmfit.h"
-#include "str.h"
 
 #include <gsl/gsl_blas.h>
-#include <gsl/gsl_eigen.h>
-
-static void covar_analysis(str_t msg, gsl_matrix *covar);
+#include <gsl/gsl_multifit_nlin.h>
 
 #ifdef DEBUG_REGRESS
 #define FIT_DEBUG
@@ -41,118 +38,6 @@ print_vector_stdout(const char *fmt, const gsl_vector *v)
     }
 }
 #endif
-
-void
-print_vector(str_t s, const char *fmt, const gsl_vector *v)
-{
-    size_t j;
-    for(j = 0; j < v->size; j++) {
-        if(j > 0) {
-            str_append_c(s, " ", 0);
-        }
-        str_printf_add(s, fmt, gsl_vector_get(v, j));
-    }
-    str_append_c(s, "\n", 0);
-}
-
-void
-print_matrix(str_t s, const char *fmt, const gsl_matrix *m)
-{
-    int field_size = 0;
-    size_t i, j;
-    size_t n1 = m->size1, n2 = m->size2;
-    str_t number;
-
-    str_init(number, 64);
-
-    for(i = 0; i < n1; i++) {
-        for(j = 0; j < n2; j++) {
-            str_printf(number, fmt, gsl_matrix_get(m, i, j));
-            if(STR_LENGTH(number) > field_size) {
-                field_size = STR_LENGTH(number);
-            }
-        }
-    }
-
-    for(i = 0; i < n1; i++) {
-        str_append_c(s, "|", 0);
-        for(j = 0; j < n2; j++) {
-            if(j > 0) {
-                str_append_c(s, " ", 0);
-            }
-
-            str_printf(number, fmt, gsl_matrix_get(m, i, j));
-            str_pad(number, field_size, ' ');
-
-            str_append(s, number, 0);
-        }
-        str_append_c(s, "|\n", 0);
-    }
-
-    str_free(number);
-}
-
-void
-covar_analysis(str_t msg, gsl_matrix *covar)
-{
-    size_t n = covar->size1;
-    gsl_vector *eval;
-    gsl_matrix *evec, *corr;
-    gsl_eigen_symmv_workspace *w;
-    size_t i, j;
-
-    eval = gsl_vector_alloc(n);
-    evec = gsl_matrix_alloc(n, n);
-    corr = gsl_matrix_alloc(n, n);
-
-    for(i = 0; i < n; i++)
-        for(j = 0; j < n; j++) {
-            double v  = gsl_matrix_get(covar, i, j);
-            double si = gsl_matrix_get(covar, i, i);
-            double sj = gsl_matrix_get(covar, j, j);
-
-            gsl_matrix_set(corr, i, j, v/sqrt(si*sj));
-        }
-
-    str_append_c(msg, "Covar. matrix:\n", '\n');
-    print_matrix(msg, "%.5g", covar);
-
-    str_append_c(msg, "Correlation matrix:\n", 0);
-    print_matrix(msg, "%.5g", corr);
-
-    w = gsl_eigen_symmv_alloc(n);
-    gsl_eigen_symmv(covar, eval, evec, w);
-
-    str_append_c(msg, "\nEigenvalues:\n", 0);
-    print_vector(msg, "%.5g", eval);
-
-    str_append_c(msg, "Eigenvectors (columns):\n", 0);
-    print_matrix(msg, "%.4f", evec);
-
-    gsl_matrix_free(evec);
-    gsl_matrix_free(corr);
-    gsl_vector_free(eval);
-    gsl_eigen_symmv_free(w);
-}
-
-void
-print_analysis(str_t msg, gsl_multifit_function_fdf *f,
-               gsl_multifit_fdfsolver *s)
-{
-    gsl_matrix *covar;
-#if 0
-    size_t j;
-
-    for(j = 0; j < f->p; j++) {
-        str_append_c(msg, "\n", 0);
-        str_printf_add(msg, "PARAM(%i) = %.5f", j, gsl_vector_get(s->x, j));
-    }
-#endif
-    covar = gsl_matrix_alloc(f->p, f->p);
-    gsl_multifit_covar(s->J, 1e-6, covar);
-    covar_analysis(msg, covar);
-    gsl_matrix_free(covar);
-}
 
 int
 lmfit_iter(gsl_vector *x, gsl_multifit_function_fdf *f,

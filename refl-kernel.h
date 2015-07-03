@@ -4,6 +4,7 @@
 #include "common.h"
 #include "cmpl.h"
 #include "spectra.h"
+#include "ellipsometry-decls.h"
 
 #include <gsl/gsl_vector.h>
 

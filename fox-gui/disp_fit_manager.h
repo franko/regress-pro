@@ -127,11 +127,29 @@ public:
         add_new_plot(canvas, ref_k, mod_k, "absorption coeff");
     }
 
+    void set_reference(disp_t *d) {
+        disp_free(m_fit_engine->ref_disp);
+        m_fit_engine->ref_disp = d;
+    }
+
+    void set_model(disp_t *d) {
+        disp_free(m_fit_engine->model_disp);
+        m_fit_engine->model_disp = d;
+    }
+
+    disp_t * model_ref() {
+        return m_fit_engine->model_disp;
+    }
+
+    void set_model_ref(disp_t *d) {
+        m_fit_engine->model_disp = d;
+    }
+
 private:
     void set_fit_param(fit_param_t* fp, int param_nb) {
         fp->id       = PID_LAYER_N;
         fp->layer_nb = 0;
-        fp->model_id = m_fit_engine->model_disp->dclass->model_id;
+        fp->model_id = m_fit_engine->model_disp->dclass->disp_class_id;
         fp->param_nb = param_nb;
     }
 

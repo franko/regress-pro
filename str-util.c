@@ -97,3 +97,29 @@ str_is_abs_pathname(str_t path)
     return (path->heap[0] == '/');
 #endif
 }
+
+#ifdef WIN32
+static int is_dir_separator(char c) {
+    return (c == '/' || c == '\\');
+}
+#else
+static int is_dir_separator(char c) {
+    return (c == '/');
+}
+#endif
+
+int
+str_path_basename(str_ptr basename, const char *filename)
+{
+    const char *p = filename + strlen(filename);
+    while (!is_dir_separator(*p)) {
+        if (p == filename) {
+            str_copy_c(basename, filename);
+            return 0;
+        }
+        p--;
+    }
+    if (p[1] == 0) return 1;
+    str_copy_c(basename, p+1);
+    return 0;
+}

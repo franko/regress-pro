@@ -2,11 +2,11 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 4
-#define VERSION_PATCH 1
+#define VERSION_MAJOR 2
+#define VERSION_MINOR 0
+#define VERSION_PATCH 0
 
-#define REGISTRATION_VERSION 1
+#define REGISTRATION_VERSION 2
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -21,7 +21,5 @@
 #ifndef WIN32
 #define HAVE_VASPRINTF 1
 #endif
-
-/* #define ENABLE_SCRIPT_REL_PATH 1 */
 
 #endif

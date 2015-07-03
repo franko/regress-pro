@@ -105,7 +105,7 @@ mult_layer_refl(int nb, const cmpl ns[], cmpl nsin0,
         cost = snell_cos(nsin0, nptr[0]);
 
         beta = - 2.0 * I * omega * nptr[1] * cosc;
-        rho = cexp(beta * th);
+        rho = cexp(beta * THICKNESS_TO_NM(th));
 
         for(p = 0; p <= 1; p++) {
             r[p] = refl_coeff(nptr[0], cost, nptr[1], cosc, p);
@@ -149,8 +149,8 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
         cost = snell_cos(nsin0, nptr[0]);
 
         beta = - 2.0 * I * omega * nptr[1] * cosc;
-        rho = cexp(beta * th);
-        drhodth = rho * beta;
+        rho = cexp(beta * THICKNESS_TO_NM(th));
+        drhodth = rho * beta * THICKNESS_TO_NM(1.0);
 
         for(p = 0; p <= 1; p++) {
             cmpl dfdR, dfdrho;
@@ -219,9 +219,9 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
         cost = snell_cos(nsin0, nptr[0]);
 
         beta = - 2.0 * I * omega * nptr[1] * cosc;
-        rho = cexp(beta * th);
-        drhodth = rho * beta;
-        drhodn = - 2.0 * I * rho * omega * th / cosc;
+        rho = cexp(beta * THICKNESS_TO_NM(th));
+        drhodth = rho * beta * THICKNESS_TO_NM(1.0);
+        drhodn = - 2.0 * I * rho * omega * THICKNESS_TO_NM(th) / cosc;
 
         for(p = 0; p <= 1; p++) {
             cmpl dfdR, dfdr, dfdrho;
@@ -382,8 +382,6 @@ mult_layer_se_jacob(enum se_type type,
     }
 
     nsin0 = ns[0] * csin((cmpl) phi0);
-
-    //  multlayer_refl_na (nb, ns, nsin0, ds, lambda, R, 0.29);
 
     if(jacob_th && jacob_n) {
         mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, jac.th, jac.n);

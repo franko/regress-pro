@@ -1,170 +1,164 @@
-
-/*
-  $Id$
- */
-
 #include <string.h>
 
 #include "common.h"
-#include "data-table.h"
 #include "dispers.h"
 #include "dispers-library.h"
+#include "dispers_library_preload.h"
 
-struct disp_list_node {
-    disp_t *content;
-    const char *id;
-    struct disp_list_node *next;
-};
+struct disp_list app_lib[1] = {{NULL, NULL}};
+struct disp_list user_lib[1] = {{NULL, NULL}};
 
-/* this structure mirror the struct data_table in data-table.h
-   with the difference that a bigger array of floats is statically
-   allocated. */
-struct data_table_silicon {
-    int rows;
-    int columns;
-    int ref_count;
-    float heap[341 * 2];
-};
-
-static void add_dispersion_node(struct disp_list_node *curr,
-                                struct disp_list_node *prev,
-                                const char *id, disp_t *disp);
-
-#include "si-paper-table.h"
-#include "poly-table.h"
-
-static struct disp_list_node *dispers_library_list;
-
-void
-add_dispersion_node(struct disp_list_node *curr, struct disp_list_node *prev,
-                    const char *id, disp_t *disp)
+static struct disp_node *new_disp_node(disp_t *d, const char *id)
 {
-    curr->content = disp;
-    curr->id = id;
-    curr->next = prev;
+    struct disp_node *n = malloc(sizeof(struct disp_node));
+    if (id) {
+        n->id = str_new();
+        str_copy_c(n->id, id);
+    } else {
+        n->id = NULL;
+    }
+    n->content = d;
+    n->next = NULL;
+    return n;
 }
 
-static disp_t *
-make_poly_dispers()
+static void free_disp_node(struct disp_node *n)
 {
-    disp_t *lookup_disp;
-    const int nb_comp = 5;
-    struct lookup_comp *comp_data = malloc(nb_comp * sizeof(struct lookup_comp));
-    int j = 0;
-
-    for(j = 0; j < nb_comp; j++) {
-        struct lookup_comp *comp = comp_data + j;
-        struct disp_table *dt;
-
-        comp->p = poly_p_value[j];
-
-        comp->disp = disp_new_with_name(DISP_TABLE, poly_comp_name[j]);
-        dt = &comp->disp->disp.table;
-
-        dt->points_number = 271;
-        dt->lambda_min    = 240.0;
-        dt->lambda_max    = 780.0;
-        dt->lambda_stride = 2.0;
-        dt->table_ref     = (struct data_table *) &poly_comp[j];
+    if (n->id) {
+        str_free(n->id);
+        free(n->id);
     }
+    disp_free(n->content);
+    free(n);
+}
 
-    lookup_disp = disp_new_lookup("Poly", 5, comp_data, 0.5);
-
-    return lookup_disp;
+struct disp_node *
+disp_list_add(struct disp_list *lst, disp_t *d, const char *id)
+{
+    struct disp_node *n = new_disp_node(d, id);
+    if (lst->last) {
+        lst->last->next = n;
+        lst->last = n;
+    } else {
+        lst->first = n;
+        lst->last = n;
+    }
+    return n;
 }
 
 void
-dispers_library_init()
+disp_list_remove(struct disp_list *lst, struct disp_node *prev)
 {
-#define NB_LIBRARY_DISPERS 5
-    static struct disp_list_node node_prealloc[NB_LIBRARY_DISPERS];
-    static struct ho_params sio2_ho_params[] = {
-        {145.0, 15.78839, 0.0, 0.3333, 0.0}
-    };
-    struct disp_table *dt;
-    double vac_cauchy_n[3] = {1, 0, 0};
-    double vac_cauchy_k[3] = {0, 0, 0};
-    double water_cauchy_n[3] = {1.31970012187958, 4677.3115234375, -108020320};
-    double *water_cauchy_k = vac_cauchy_k;
-    struct disp_list_node *node, *prev;
-    disp_t *current;
-    int idx = 0;
-
-    prev = NULL;
-
-    /* Silicon PAPER */
-    current = disp_new_with_name(DISP_TABLE, "Si from paper");
-    dt = & current->disp.table;
-
-    dt->points_number = si_data_table.rows;
-    dt->lambda_min    = SI_PAPER_WVLEN_MIN;
-    dt->lambda_max    = SI_PAPER_WVLEN_MAX;
-    dt->lambda_stride = SI_PAPER_WVLEN_STRIDE;
-    dt->table_ref     = (struct data_table *) & si_data_table;
-
-    node = node_prealloc + idx;
-    add_dispersion_node(node, prev, "si", current);
-    prev = node;
-    idx ++;
-
-    /* Vacuum dispersion */
-    current = disp_new_cauchy("vacuum", vac_cauchy_n, vac_cauchy_k);
-
-    node = node_prealloc + idx;
-    add_dispersion_node(node, prev, "vacuum", current);
-    prev = node;
-    idx ++;
-
-    /* water dispersion */
-    current = disp_new_cauchy("water", water_cauchy_n, water_cauchy_k);
-
-    node = node_prealloc + idx;
-    add_dispersion_node(node, prev, "water", current);
-    prev = node;
-    idx ++;
-
-    current = disp_new_ho("Thermal SiO2", 1, sio2_ho_params);
-
-    node = node_prealloc + idx;
-    add_dispersion_node(node, prev, "sio2", current);
-    prev = node;
-    idx ++;
-
-    current = make_poly_dispers();
-
-    node = node_prealloc + idx;
-    add_dispersion_node(node, prev, "poly", current);
-    prev = node;
-    idx ++;
-
-    dispers_library_list = node;
-}
-
-disp_t *
-dispers_library_search(const char *id)
-{
-    struct disp_list_node *node;
-    disp_t *result = NULL;
-
-    for(node = dispers_library_list; node; node = node->next) {
-        if(strcasecmp(node->id, id) == 0) {
-            result = disp_copy(node->content);
-            break;
-        }
+    struct disp_node *n = (prev ? prev->next : lst->first);
+    struct disp_node *next = n->next;
+    free_disp_node(n);
+    if (prev) {
+        prev->next = next;
+    } else {
+        lst->first = next;
     }
+    if (next == NULL) {
+        lst->last = prev;
+    }
+}
 
-    return result;
+void
+disp_list_free(struct disp_list *lst)
+{
+    struct disp_node *n, *next;
+    for (n = lst->first; n; n = next) {
+        next = n->next;
+        free_disp_node(n);
+    }
+    lst->first = NULL;
+    lst->last = NULL;
 }
 
 disp_t *
-dispers_library_get(int index, char const ** lname)
+disp_list_search(struct disp_list *lst, const char *id)
 {
-    struct disp_list_node *n;
-    for(n = dispers_library_list; n; n = n->next, index--) {
-        if(index == 0) {
-            *lname = n->id;
-            return n->content;
+    struct disp_node *n;
+    for (n = app_lib->first; n; n = n->next) {
+        if (n->id && strcmp(CSTR(n->id), id) == 0) {
+            return disp_copy(n->content);
         }
     }
     return NULL;
 }
+
+disp_t *
+disp_list_get_by_index(struct disp_list *lst, int index)
+{
+    struct disp_node *n;
+    for (n = lst->first; n; n = n->next, index--) {
+        if (index == 0) {
+            return disp_copy(n->content);
+        }
+    }
+    return NULL;
+}
+
+int
+disp_list_length(struct disp_list *lst)
+{
+    int count = 0;
+    struct disp_node *n;
+    for (n = lst->first; n; n = n->next) {
+        count++;
+    }
+    return count;
+}
+
+const char *
+lib_disp_table_lookup(const disp_t *d)
+{
+    struct disp_node *n;
+    for (n = app_lib->first; n; n = n->next) {
+        if (n->id && n->content->type == d->type) {
+            if (d->type == DISP_TABLE && n->content->disp.table.table_ref == d->disp.table.table_ref) {
+                return CSTR(n->id);
+            }
+            if (d->type == DISP_SAMPLE_TABLE && n->content->disp.sample_table.table == d->disp.sample_table.table) {
+                return CSTR(n->id);
+            }
+        }
+    }
+    return NULL;
+}
+
+disp_t *
+lib_disp_table_get(const char *id)
+{
+    struct disp_node *n;
+    for (n = app_lib->first; n; n = n->next) {
+        if (n->id && strcmp(CSTR(n->id), id) == 0) {
+            return disp_copy(n->content);
+        }
+    }
+    return NULL;
+}
+
+int dispers_library_init()
+{
+    str_t disp_id;
+    str_init(disp_id, 15);
+    int status = 1;
+    int i, n;
+    lexer_t *l = lexer_new(dispersions_data);
+    if (lexer_check_ident(l, "dispers-library")) goto init_exit;
+    if (lexer_integer(l, &n)) goto init_exit;
+    for (i = 0; i < n; i++) {
+        if (lexer_check_ident(l, "library-id")) goto init_exit;
+        if (lexer_string(l)) goto init_exit;
+        str_copy(disp_id, l->store);
+        disp_t *d = disp_read(l);
+        if (!d) goto init_exit;
+        disp_list_add(app_lib, d, CSTR(disp_id));
+    }
+    if (l->current.tk != TK_EOF) goto init_exit;
+    status = 0;
+init_exit:
+    str_free(disp_id);
+    lexer_free(l);
+    return status;
+};

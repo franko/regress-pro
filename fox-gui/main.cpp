@@ -22,22 +22,15 @@
 
 int main(int argc,char *argv[])
 {
-
-    // Make application
-    elliss_app app;
+    regress_pro app;
 
     // Open display
     app.init(argc, argv);
-
+    new FXToolTip(&app);
     // Main window
     regress_pro_window* window = new regress_pro_window(&app);
 
-    // Create app
     app.create();
-
-    // Show it
     window->show(PLACEMENT_SCREEN);
-
-    // Run
     return app.run();
 }

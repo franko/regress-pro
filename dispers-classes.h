@@ -6,6 +6,19 @@
 
 __BEGIN_DECLS
 
+enum disp_type {
+    DISP_UNSET = 0,
+    DISP_TABLE,
+    DISP_SAMPLE_TABLE,
+    DISP_CAUCHY,
+    DISP_HO,
+    DISP_LOOKUP,
+    DISP_BRUGGEMAN,
+    DISP_FB,
+    DISP_TAUC_LORENTZ,
+    DISP_END_OF_TABLE, /* Not a dispersion type */
+};
+
 struct disp_class;
 
 /* used to keep a linked list of dispersion classes */

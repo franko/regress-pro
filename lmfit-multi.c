@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>
@@ -13,13 +8,13 @@
 #include "lmfit-multi.h"
 #include "fit-params.h"
 #include "multi-fit-engine.h"
+#include "vector_print.h"
 
 
 int
 lmfit_multi(struct multi_fit_engine *fit,
             struct seeds *seeds_common, struct seeds *seeds_priv,
-            str_ptr analysis,
-            str_ptr error_msg, int preserve_init_stack,
+            str_ptr analysis, str_ptr error_msg,
             gui_hook_func_t hfun, void *hdata)
 {
     const gsl_multifit_fdfsolver_type *T;
@@ -27,12 +22,8 @@ lmfit_multi(struct multi_fit_engine *fit,
     gsl_multifit_function_fdf *f = & fit->mffun;
     struct fit_config *cfg = &fit->config;
     int status, stop_request = 0;
-    stack_t *initial_stack;
     gsl_vector *x;
-    double chi;
     int iter, nb_common, nb_priv, nb_samples, k, ks, j_sample;
-
-    assert(! preserve_init_stack);
 
     nb_samples = fit->samples_number;
     nb_common  = fit->common_parameters->number;
@@ -44,7 +35,7 @@ lmfit_multi(struct multi_fit_engine *fit,
     s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
     for(k = 0; k < seeds_common->number; k++) {
-        gsl_vector_set(x, k, seeds_common->values[k].seed);
+        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->values[k], &seeds_common->values[k]));
     }
 
     for(ks = 0; ks < seeds_priv->number; ks++, k++) {
@@ -88,9 +79,7 @@ lmfit_multi(struct multi_fit_engine *fit,
     }
 
     if(analysis && !stop_request) {
-        str_printf_add(analysis, "Nb of iterations to converge: %i\n",
-                       iter);
-        print_analysis(analysis, f, s);
+        str_printf_add(analysis, "Nb of iterations to converge: %i\n", iter);
     }
 
     gsl_multifit_fdfsolver_free(s);
@@ -105,18 +94,8 @@ lmfit_multi(struct multi_fit_engine *fit,
         }
     }
 
-    if(preserve_init_stack) {
-        /* we restore the initial stack */
-        /*
-        stack_t *tmp_stack = fit->stack;
-        fit->stack = initial_stack;
-        stack_free (tmp_stack);
-        */
-        assert(0);
-    } else {
-        /* we take care to commit the last results obtained from the fit */
-        multi_fit_engine_commit_parameters(fit, x);
-    }
+    /* we take care to commit the last results obtained from the fit */
+    multi_fit_engine_commit_parameters(fit, x);
 
     assert(fit->results != NULL);
     gsl_vector_memcpy(fit->results, x);

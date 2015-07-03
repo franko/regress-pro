@@ -2,4 +2,5 @@
 *.exe
 *~
 .deps
+fox-gui/gitversion.cpp
 

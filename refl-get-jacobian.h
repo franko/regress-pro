@@ -1,8 +1,3 @@
-
-/*
-  $Id$
-*/
-
 extern double
 get_parameter_jacob_r(fit_param_t const *fp,
                       stack_t const *stack,

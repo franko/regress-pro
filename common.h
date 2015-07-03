@@ -31,11 +31,11 @@ struct generic_array {
 
 extern void   generic_array_check_alloc(struct generic_array *s, int index,
                                         size_t data_size);
-extern void * generic_array_new(size_t data_size);
+extern void * generic_array_new(size_t data_size, size_t nb);
 extern void   generic_array_free(struct generic_array *r);
 
 #define ARRAY_CHECK_ALLOC(s,dtype,idx) generic_array_check_alloc((struct generic_array *) (s),idx,sizeof(dtype))
-#define ARRAY_NEW(dtype) generic_array_new(sizeof(dtype))
+#define ARRAY_NEW(dtype) generic_array_new(sizeof(dtype), 8)
 #define ARRAY_FREE(s) generic_array_free(s)
 
 __END_DECLS

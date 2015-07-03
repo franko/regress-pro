@@ -45,7 +45,7 @@ extern float             get_lambda_by_index(struct spectrum *s, int idx);
 
 extern float const *     spectra_get_values(struct spectrum const *s, int j);
 
-extern struct spectrum * load_gener_spectrum(const char *filename);
+extern struct spectrum * load_gener_spectrum(const char *filename, str_ptr *error_msg);
 
 extern void              spectr_cut_range(struct spectrum *s,
         float inf, float sup);

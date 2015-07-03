@@ -1,8 +1,3 @@
-
-/*
-  $Id$
- */
-
 #ifndef GRID_SEARCH_H
 #define GRID_SEARCH_H
 

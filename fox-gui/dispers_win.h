@@ -20,11 +20,9 @@ public:
     void config_plot();
 
     long on_cmd_set_range(FXObject*,FXSelector,void*);
-    long on_cmd_save_disp(FXObject*,FXSelector,void*);
 
     enum {
-        ID_SAVE_DISPERS = FXDialogBox::ID_LAST,
-        ID_SPECTR_RANGE,
+        ID_SPECTR_RANGE = FXDialogBox::ID_LAST,
         ID_LAST
     };
 

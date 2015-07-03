@@ -1,8 +1,4 @@
 
-/*
-  $Id$
- */
-
 /* HEADER file to be included directly in .c files */
 
 extern void

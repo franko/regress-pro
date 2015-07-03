@@ -83,7 +83,7 @@ read_nova_spectrum(FILE *f, str_ptr ln) {
 }
 
 struct spectrum *
-load_refl_data(const char *filename) {
+load_refl_data(const char *filename, str_ptr *error_msg) {
     struct spectrum *s;
     struct data_table *table;
     str_t ln;
@@ -92,8 +92,7 @@ load_refl_data(const char *filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "error loading spectra file %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
@@ -123,8 +122,7 @@ load_refl_data(const char *filename) {
 
     return s;
 invalid_s:
-    notify_error_msg(LOADING_FILE_ERROR, "format of spectra %s is incorrect",
-                     filename);
+    *error_msg = new_error_message(LOADING_FILE_ERROR, "Format of spectra \"%s\" is incorrect", filename);
     free(s);
     str_free(ln);
     fclose(f);

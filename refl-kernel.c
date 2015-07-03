@@ -47,7 +47,7 @@ mult_layer_refl_ni_nojacob(int nb, const cmpl ns[], const double ds[],
         nt = ns[j];
 
         beta = - 2.0 * I * omega * nc;
-        rho = cexp(beta * th);
+        rho = cexp(beta * THICKNESS_TO_NM(th));
 
         r = refl_coeff_ni(nt, nc);
 
@@ -84,8 +84,8 @@ mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
         nt = ns[j];
 
         beta = - 2.0 * I * omega * nc;
-        rho = cexp(beta * th);
-        drhodth = rho * beta;
+        rho = cexp(beta * THICKNESS_TO_NM(th));
+        drhodth = rho * beta * THICKNESS_TO_NM(1.0);
 
         r = refl_coeff_ni(nt, nc);
 
@@ -137,9 +137,9 @@ mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
         nt = ns[j];
 
         beta = - 2.0 * I * omega * nc;
-        rho = cexp(beta * th);
-        drhodth = rho * beta;
-        drhodn = - 2.0 * I * rho * omega * th;
+        rho = cexp(beta * THICKNESS_TO_NM(th));
+        drhodth = rho * beta * THICKNESS_TO_NM(1.0);
+        drhodn = - 2.0 * I * rho * omega * THICKNESS_TO_NM(th);
 
         r = refl_coeff_ext_ni(nt, nc, &drdnt, &drdnb);
 

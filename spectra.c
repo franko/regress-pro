@@ -9,11 +9,11 @@
 #include "str.h"
 
 
-static struct spectrum * load_ellips_spectrum(const char *filename);
+static struct spectrum * load_ellips_spectrum(const char *filename, str_ptr *error_msg);
 
 
 struct spectrum *
-load_ellips_spectrum(const char *filename) {
+load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
     struct spectrum *s;
     struct system_config *cfg;
     struct data_table *data_table;
@@ -24,8 +24,7 @@ load_ellips_spectrum(const char *filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "error loading spectra %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
@@ -104,12 +103,90 @@ load_ellips_spectrum(const char *filename) {
 
     return s;
 invalid_s:
-    notify_error_msg(LOADING_FILE_ERROR, "format of spectra %s is incorrect",
-                     filename);
+    *error_msg = new_error_message(LOADING_FILE_ERROR, "Format of spectra %s is incorrect", filename);
     free(s);
     str_free(ln);
     fclose(f);
     return NULL;
+}
+
+/* If defined to 1 will convert VASE Spectra to Alpha Beta form with
+   a "fake" analyzer angle of 25 degree. */
+#define VASE_CONVERT_TO_ALPHA_BETA 1
+
+static struct spectrum *
+load_vase_spectrum(const char *filename, str_ptr *error_msg)
+{
+    struct spectrum *s;
+    struct system_config *cfg;
+    struct data_table *data_table;
+
+    FILE *f = fopen(filename, "r");
+    if(f == NULL) {
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
+        return NULL;
+    }
+
+    str_t ln;
+    str_init(ln, 64);
+    str_getline(ln, f); /* Skip the first line. */
+    str_getline(ln, f);
+    if (!strstr(CSTR(ln), "nm")) {
+        str_free(ln);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "Format of spectra %s is incorrect", filename);
+        return NULL;
+    }
+
+    s = emalloc(sizeof(struct spectrum));
+    cfg = & s->config;
+    cfg->system   = (VASE_CONVERT_TO_ALPHA_BETA ? SYSTEM_ELLISS_AB : SYSTEM_ELLISS_PSIDEL);
+    cfg->analyzer = (VASE_CONVERT_TO_ALPHA_BETA ? DEGREE(25.0) : DEGREE(0.0));
+    cfg->numap    = 0.0;
+
+    /* In order to know the AOI we lookup just the first line and
+       reset the position just after. */
+    long data_pos = ftell(f);
+    float aoi;
+    int nread = fscanf(f, "E %*f %f", &aoi);
+    if (nread == 0) goto invalid_vase;
+    cfg->aoi = DEGREE(aoi);
+    fseek(f, data_pos, SEEK_SET);
+
+    /* The following function reads the integrality of the tabular data. */
+    data_table = data_table_read_lines(f, "E %f %*f %f %f %*f %*f %*f %*f ", 0, 3);
+    if(data_table == NULL) goto invalid_vase;
+
+    int i;
+    const float tana = tanf(cfg->analyzer);
+    for (i = 0; i < data_table->rows; i++) {
+        const float psi = data_table_get(data_table, i, 1);
+        const float delta = data_table_get(data_table, i, 2);
+        const float tpsi = tanf(DEGREE(psi));
+        const float cosdelta = cosf(DEGREE(delta));
+#if VASE_CONVERT_TO_ALPHA_BETA
+        const float alpha = (tpsi*tpsi - tana*tana) / (tpsi*tpsi + tana*tana);
+        const float beta = (2*tpsi*cosdelta*tana) / (tpsi*tpsi + tana*tana);
+        data_table_set(data_table, i, 1, alpha);
+        data_table_set(data_table, i, 2, beta);
+#else
+        data_table_set(data_table, i, 1, tpsi);
+        data_table_set(data_table, i, 2, cosdelta);
+#endif
+    }
+
+    data_view_init(s->table, data_table);
+
+    str_free(ln);
+    fclose(f);
+    return s;
+
+invalid_vase:
+    *error_msg = new_error_message(LOADING_FILE_ERROR, "Format of spectra %s is incorrect", filename);
+    free(s);
+    str_free(ln);
+    fclose(f);
+    return NULL;
+
 }
 
 float
@@ -127,7 +204,8 @@ spectra_free(struct spectrum *s)
 }
 
 struct spectrum *
-load_gener_spectrum(const char *filename) {
+load_gener_spectrum(const char *filename, str_ptr *error_msg)
+{
     struct spectrum *spectr;
     str_t ln;
     FILE *f;
@@ -135,8 +213,7 @@ load_gener_spectrum(const char *filename) {
     f = fopen(filename, "r");
 
     if(f == NULL) {
-        notify_error_msg(LOADING_FILE_ERROR, "error loading spectra file %s",
-                         filename);
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
         return NULL;
     }
 
@@ -146,9 +223,11 @@ load_gener_spectrum(const char *filename) {
     fclose(f);
 
     if(strstr(CSTR(ln), "SE ALPHA BETA") || strstr(CSTR(ln), "SE PSI DELTA")) {
-        spectr = load_ellips_spectrum(filename);
+        spectr = load_ellips_spectrum(filename, error_msg);
+    } else if(strstr(CSTR(ln), "VASE") || strstr(CSTR(ln), "M2000")) {
+        spectr = load_vase_spectrum(filename, error_msg);
     } else {
-        spectr = load_refl_data(filename);
+        spectr = load_refl_data(filename, error_msg);
     }
 
     str_free(ln);
