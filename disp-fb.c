@@ -353,12 +353,13 @@ int
 fb_read(lexer_t *l, disp_t *d_gen)
 {
     struct disp_fb *d = &d_gen->disp.fb;
+    d->n = 0;
+    d->osc = NULL;
     int n_osc, form;
     if (lexer_integer(l, &n_osc)) return 1;
     if (lexer_integer(l, &form)) return 1;
     if (lexer_number(l, &d->n_inf)) return 1;
     if (lexer_number(l, &d->eg)) return 1;
-    d->osc = NULL;
     d->n = n_osc;
     d->form = form;
     d->osc = emalloc(n_osc * sizeof(struct fb_osc));
