@@ -115,6 +115,10 @@ private:
 public:
     actions_record(): m_cursor(0) { }
 
+    ~actions_record() {
+        clear_tail(0);
+    }
+
     void clear_tail(unsigned pos) {
         for (unsigned i = pos; i < m_records.size(); i++) {
             delete m_records[i];
@@ -132,7 +136,9 @@ public:
 
     void record(fit_action *action) {
         clear_tail(m_cursor);
-        if (m_cursor == 0 || !fuse_actions(m_records[m_cursor - 1], action)) {
+        if (m_cursor > 0 && fuse_actions(m_records[m_cursor - 1], action)) {
+            delete action;
+        } else {
             m_records.add(action);
             m_cursor ++;
         }
