@@ -30,6 +30,7 @@ disp_fit_window::disp_fit_window(disp_fit_manager* fit, FXWindow *win, const FXS
 disp_fit_window::~disp_fit_window()
 {
     delete dispmenu;
+    delete m_fit_manager;
 }
 
 long disp_fit_window::on_cmd_select(FXObject *, FXSelector sel, void *)
