@@ -160,6 +160,7 @@ filmstack_window::on_cmd_replace_layer(FXObject*,FXSelector,void*)
 long
 filmstack_window::on_cmd_delete_layer(FXObject*, FXSelector, void*)
 {
+    if (stack->nb <= 2) return 0;
     stack_delete_layer(stack, current_layer);
     shift_info info = {short(SHIFT_DELETE_LAYER), short(current_layer)};
     notify_stack_shift(&info);

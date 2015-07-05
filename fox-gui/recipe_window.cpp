@@ -158,8 +158,11 @@ const fit_param_t *
 recipe_window::selected_parameter()
 {
     FXint no = param_listbox->getCurrentItem();
-    int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
-    return index >= 0 ? &param_list->values[index] : NULL;
+    if (no >= 0) {
+        int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
+        return index >= 0 ? &param_list->values[index] : NULL;
+    }
+    return NULL;
 }
 
 void

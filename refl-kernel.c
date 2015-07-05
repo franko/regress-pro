@@ -186,7 +186,7 @@ mult_layer_refl_ni(size_t _nb, const cmpl ns[], const double ds[],
     size_t k;
     cmpl r;
 
-    assert(nb > 2);
+    assert(nb >= 2);
 
     if(use_static) {
         jacd.th = jacs.th;
