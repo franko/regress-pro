@@ -360,33 +360,20 @@ mult_layer_se_jacob(enum se_type type,
                     double anlz, ell_ab_t e,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n)
 {
-#define NB_JAC_STATIC 10
-    static struct {
-        cmpl th[2*NB_JAC_STATIC], n[2*NB_JAC_STATIC];
-    } jacs;
-    struct {
-        cmpl *th, *n;
-    } jac;
+    cmpl *jacob_th_z, *jacob_n_z;
     const int nb = _nb, nblyr = nb - 2;
-    int use_static = (nb <= NB_JAC_STATIC);
     double tanlz = tan(anlz);
     cmpl R[2], nsin0;
-    size_t j;
 
-    if(use_static) {
-        jac.th = jacs.th;
-        jac.n  = jacs.n;
-    } else {
-        jac.th = emalloc(2*nb*sizeof(cmpl));
-        jac.n  = emalloc(2*nb*sizeof(cmpl));
-    }
+    jacob_th_z = emalloc(2 * nb * sizeof(cmpl));
+    jacob_n_z = emalloc(2 * nb * sizeof(cmpl));
 
     nsin0 = ns[0] * csin((cmpl) phi0);
 
     if(jacob_th && jacob_n) {
-        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, jac.th, jac.n);
+        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, jacob_th_z, jacob_n_z);
     } else if(jacob_th) {
-        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, jac.th);
+        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, jacob_th_z);
     } else {
         mult_layer_refl(nb, ns, nsin0, ds, lambda, R);
     }
@@ -401,43 +388,39 @@ mult_layer_se_jacob(enum se_type type,
         /* we set the derivative respect to the RI of the ambient to 0.0 */
         cmpl_vector_set(jacob_n, 0, 0.0i);
         cmpl_vector_set(jacob_n, (size_t) nb, 0.0i);
-        for(j = 1; j < (size_t) nb; j++) {
-            struct {
-                cmpl alpha, beta;
-            } d;
-            cmpl dR[2] = {jac.n[j], jac.n[nb+j]};
+        int j;
+        for(j = 1; j < nb; j++) {
+            cmpl dR[2] = {jacob_n_z[j], jacob_n_z[nb+j]};
+            cmpl alpha, beta;
 
             if(type == SE_ALPHA_BETA) {
-                se_ab_der(R, dR, tanlz, &d.alpha, &d.beta);
+                se_ab_der(R, dR, tanlz, &alpha, &beta);
             } else {
-                se_psidel_der(R, dR, &d.alpha, &d.beta);
+                se_psidel_der(R, dR, &alpha, &beta);
             }
 
-            cmpl_vector_set(jacob_n, j,    d.alpha);
-            cmpl_vector_set(jacob_n, nb+j, d.beta);
+            cmpl_vector_set(jacob_n, j,    alpha);
+            cmpl_vector_set(jacob_n, nb+j, beta);
         }
     }
 
     if(jacob_th) {
-        for(j = 0; j < (size_t) nblyr; j++) {
-            struct {
-                cmpl alpha, beta;
-            } d;
-            cmpl dR[2] = {jac.th[j], jac.th[nblyr+j]};
+        int j;
+        for(j = 0; j < nblyr; j++) {
+            cmpl dR[2] = {jacob_th_z[j], jacob_th_z[nblyr+j]};
+            cmpl alpha, beta;
 
             if(type == SE_ALPHA_BETA) {
-                se_ab_der(R, dR, tanlz, &d.alpha, &d.beta);
+                se_ab_der(R, dR, tanlz, &alpha, &beta);
             } else {
-                se_psidel_der(R, dR, &d.alpha, &d.beta);
+                se_psidel_der(R, dR, &alpha, &beta);
             }
 
-            gsl_vector_set(jacob_th, j, creal(d.alpha));
-            gsl_vector_set(jacob_th, nblyr+j, creal(d.beta));
+            gsl_vector_set(jacob_th, j, creal(alpha));
+            gsl_vector_set(jacob_th, nblyr+j, creal(beta));
         }
     }
 
-    if(! use_static) {
-        free(jac.th);
-        free(jac.n);
-    }
+    free(jacob_th_z);
+    free(jacob_n_z);
 }
