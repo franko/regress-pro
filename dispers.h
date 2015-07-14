@@ -23,6 +23,7 @@ struct disp_struct;
 struct disp_class {
     enum disp_type disp_class_id;
 
+    const char *full_name;
     const char *short_name;
 
     /* methods to copy and free dispersions */

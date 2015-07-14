@@ -35,6 +35,7 @@ static void tauc_lorentz_encode_param(str_t param, const fit_param_t *fp);
 
 struct disp_class tauc_lorentz_disp_class = {
     .disp_class_id       = DISP_TAUC_LORENTZ,
+    .full_name           = "Tauc-Lorentz",
     .short_name          = "tauc-lorentz",
 
     .free                = fb_free,

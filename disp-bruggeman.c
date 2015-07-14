@@ -20,6 +20,7 @@ static double bruggeman_get_param_value(const struct disp_struct *d,
 
 struct disp_class bruggeman_disp_class = {
     .disp_class_id       = DISP_BRUGGEMAN,
+    .full_name           = "Bruggeman EMA",
     .short_name          = "bruggeman",
 
     .free                = bruggeman_free,

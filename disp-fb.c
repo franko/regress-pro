@@ -26,6 +26,7 @@
 
 struct disp_class fb_disp_class = {
     .disp_class_id       = DISP_FB,
+    .full_name           = "Forouhi-Bloomer",
     .short_name          = "forouhi-bloomer",
 
     .free                = fb_free,

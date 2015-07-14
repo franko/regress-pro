@@ -23,6 +23,7 @@ static int lookup_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_lookup_class = {
     .disp_class_id       = DISP_LOOKUP,
+    .full_name           = "Table Lookup",
     .short_name          = "lookup",
 
     .free                = lookup_free,

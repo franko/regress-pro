@@ -16,6 +16,7 @@ static int disp_sample_table_read(lexer_t *l, disp_t *d);
 
 struct disp_class disp_sample_table_class = {
     .disp_class_id       = DISP_SAMPLE_TABLE,
+    .full_name           = "Tabular",
     .short_name          = "table",
 
     .free                = disp_sample_table_free,

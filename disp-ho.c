@@ -43,6 +43,7 @@ static int ho_read(lexer_t *l, disp_t *d);
 
 struct disp_class ho_disp_class = {
     .disp_class_id       = DISP_HO,
+    .full_name           = "Harmonic Oscillator",
     .short_name          = "ho",
 
     .free                = ho_free,

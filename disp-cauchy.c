@@ -22,6 +22,7 @@ static int cauchy_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class cauchy_disp_class = {
     .disp_class_id       = DISP_CAUCHY,
+    .full_name           = "Cauchy",
     .short_name          = "cauchy",
 
     .free                = disp_base_free,

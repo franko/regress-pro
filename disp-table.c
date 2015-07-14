@@ -17,6 +17,7 @@ static int disp_table_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class disp_table_class = {
     .disp_class_id       = DISP_TABLE,
+    .full_name           = "Table (uniform sampling)",
     .short_name          = "uniform-table",
 
     .free                = disp_table_free,
