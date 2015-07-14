@@ -162,8 +162,8 @@ void fx_disp_fb_window::setup_dialog()
     new FXLabel(coeff_frame, "Parametrization");
     FXListBox *coeff_box = new FXListBox(coeff_frame, this, ID_COEFF_FORM, LISTBOX_NORMAL|FRAME_SUNKEN);
     coeff_box->setNumVisible(2);
-    coeff_box->appendItem("Standard Form");
-    coeff_box->appendItem("Rational Form");
+    coeff_box->appendItem("Standard");
+    coeff_box->appendItem("Peak-based");
     coeff_box->setCurrentItem(this->disp->disp.fb.form);
 
     FXHorizontalFrame *ninf_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
