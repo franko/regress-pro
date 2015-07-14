@@ -25,7 +25,8 @@ public:
     FXFont small_font;
     FXFont bold_font;
     FXFont monospace_font;
-    FXColor blue_highlight, red_warning, black;
+    FXFont big_web_font;
+    FXColor blue_web, blue_highlight, red_warning, black;
     FXIcon *delete_icon, *add_icon;
 };
 

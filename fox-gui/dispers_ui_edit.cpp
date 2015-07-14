@@ -36,6 +36,16 @@ void fx_disp_window::reload()
 
 void fx_disp_window::setup_name()
 {
+    regress_pro *app = (regress_pro *) getApp();
+
+    FXHorizontalFrame *modelfm = new FXHorizontalFrame(this, LAYOUT_FILL_X|FRAME_GROOVE, 0,0,0,0,0,0,0,0);
+    FXString model_name(disp->dclass->full_name);
+    model_name.append(" Model");
+    FXLabel *model_label = new FXLabel(modelfm, model_name, NULL, LABEL_NORMAL|LAYOUT_FILL_X, 0, 0, 0, 0, 2*DEFAULT_PAD, 2*DEFAULT_PAD, 3*DEFAULT_PAD, 3*DEFAULT_PAD);
+    model_label->setFont(&app->big_web_font);
+    model_label->setTextColor(app->blue_web);
+    model_label->setBackColor(FXRGB(255, 255, 255));
+
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
     new FXLabel(namehf, "Name ");
     FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);

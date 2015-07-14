@@ -270,7 +270,7 @@ FXDEFMAP(dispers_chooser) dispers_chooser_map[]= {
 FXIMPLEMENT(dispers_chooser,FXDialogBox,dispers_chooser_map,ARRAYNUMBER(dispers_chooser_map));
 
 dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : FXDialogBox(win, "Dispersion Select", opts, 0, 0, 480, 340, pl, pr, pt, pb, hs, vs),
+    : FXDialogBox(win, "Dispersion Select", opts, 0, 0, 480, 380, pl, pr, pt, pb, hs, vs),
     current_disp(0)
 {
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
