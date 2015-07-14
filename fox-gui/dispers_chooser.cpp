@@ -25,7 +25,7 @@ fx_library_selector::fx_library_selector(FXWindow *chooser, FXComposite *p, FXui
     new FXLabel(this, "Library Model");
     int nb_disp = iter.length();
 
-    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
+    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
     combo->setNumVisible(nb_disp + 1);
     combo->appendItem("- choose a dispersion");
     for(const char *nm = iter.start(); nm; nm = iter.next()) {
@@ -64,7 +64,7 @@ fx_userlib_selector::fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXui
     new FXLabel(this, "User Model");
     int nb_disp = iter.length();
 
-    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
+    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
     combo->setNumVisible(nb_disp + 1);
     combo->appendItem("- choose a dispersion");
     for(const char *nm = iter.start(); nm; nm = iter.next()) {
@@ -100,7 +100,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 : fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
 {
     new FXLabel(this, "New Model");
-    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN|FRAME_THICK);
+    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
     combo->setNumVisible(6);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
@@ -327,7 +327,7 @@ dispers_chooser::replace_dispwin(FXWindow *new_dispwin)
 FXWindow *
 dispers_chooser::new_dispwin_dummy(FXComposite *frame)
 {
-    FXHorizontalFrame *labfr = new FXHorizontalFrame(frame, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
+    FXHorizontalFrame *labfr = new FXHorizontalFrame(frame, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_NONE);
     new FXLabel(labfr, "Choose a dispersion", NULL, LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
     dispwin_dummy = labfr;
     return labfr;

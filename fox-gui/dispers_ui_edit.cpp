@@ -44,7 +44,7 @@ void fx_disp_window::setup_name()
     FXLabel *model_label = new FXLabel(modelfm, model_name, NULL, LABEL_NORMAL|LAYOUT_FILL_X, 0, 0, 0, 0, 2*DEFAULT_PAD, 2*DEFAULT_PAD, 3*DEFAULT_PAD, 3*DEFAULT_PAD);
     model_label->setFont(&app->big_web_font);
     model_label->setTextColor(app->blue_web);
-    model_label->setBackColor(FXRGB(255, 255, 255));
+    model_label->setBackColor(FXRGB(255, 206, 91));
 
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
     new FXLabel(namehf, "Name ");
@@ -234,7 +234,7 @@ void fx_disp_cauchy_window::setup_dialog()
 
 fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
 {
-    const FXint opts = LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE;
+    const FXint opts = LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_NONE;
     fx_disp_window *dispwin;
     if (d->type == DISP_HO) {
         dispwin = new fx_disp_ho_window(d, comp, opts);

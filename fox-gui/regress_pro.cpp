@@ -20,7 +20,7 @@ regress_pro::regress_pro() :
     bold_font(this, "helvetica", 9, FXFont::Bold, FXFont::Italic),
     monospace_font(this, SCRIPT_FONT_NAME, 9),
     big_web_font(this, "helvetica", 14, FXFont::Bold, FXFont::Straight),
-    blue_web(FXRGB(3,36,140)), blue_highlight(FXRGB(3,12,180)), red_warning(FXRGB(180,5,10)), black(FXRGB(0,0,0))
+    blue_web(FXRGB(100,114,161)), blue_highlight(FXRGB(3,12,180)), red_warning(FXRGB(180,5,10)), black(FXRGB(0,0,0))
 {
     delete_icon = new FXGIFIcon(this, delete_gif);
     add_icon = new FXGIFIcon(this, new_gif);
