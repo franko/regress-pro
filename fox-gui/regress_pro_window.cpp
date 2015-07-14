@@ -96,7 +96,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,520),
-      spectrum(NULL), recipeFilename("untitled"), spectrFile("untitled"),
+      spectrum(NULL), recipeFilename("untitled"),
       result_filmstack_window(NULL), my_batch_window(NULL),
       m_enlarged_window(false), m_result_stack_match(true)
 {
@@ -232,14 +232,15 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
     reg_check_point(this);
 
     FXFileDialog open(this,"Open Spectra");
-    open.setFilename(spectrFile);
+    open.setDirectory(spectraDir);
     open.setPatternList(patterns_spectr);
 
     if(open.execute()) {
-        spectrFile = open.getFilename();
+        FXString filename = open.getFilename();
+        spectraDir = open.getDirectory();
 
         str_ptr error_msg;
-        struct spectrum *new_spectrum = load_gener_spectrum(spectrFile.text(), &error_msg);
+        struct spectrum *new_spectrum = load_gener_spectrum(filename.text(), &error_msg);
 
         if(new_spectrum == NULL) {
             FXMessageBox::information(this, MBOX_OK, "Spectra loading", "%s.", CSTR(error_msg));
@@ -721,10 +722,12 @@ long
 regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this, "Open Fit Recipe");
+    open.setDirectory(recipeDir);
     open.setPatternList(patterns_recipe);
 
     if(open.execute()) {
         FXString filename = open.getFilename();
+        recipeDir = open.getDirectory();
         Str content;
 
         if(str_loadfile(filename.text(), content.str()) != 0) {
