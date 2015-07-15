@@ -125,7 +125,7 @@ disp_fit_f(const gsl_vector *x, void *_fit, gsl_vector *f)
 
 int
 lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
-           gsl_vector *x, double * chisq, str_ptr analysis, str_ptr error_msg)
+           gsl_vector *x, struct lmfit_result *result, str_ptr analysis, str_ptr error_msg)
 {
     const gsl_multifit_fdfsolver_type *T;
     gsl_multifit_fdfsolver *s;
@@ -168,7 +168,9 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
                         & iter, NULL, NULL, NULL);
 
     chi = gsl_blas_dnrm2(s->f);
-    *chisq = cfg->chisq_norm_factor * pow(chi, 2.0) / f.n;
+    result->chisq = cfg->chisq_norm_factor * pow(chi, 2.0) / f.n;
+    result->nb_iterations = iter;
+    result->gsl_status = status;
 
     if(error_msg) {
         switch(status) {

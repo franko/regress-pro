@@ -119,13 +119,16 @@ public:
         return true;
     }
 
-    virtual void run(struct fit_parameters* fps) {
-        if (!spectra_loaded()) return;
+    virtual lmfit_result run(struct fit_parameters* fps) {
+        lmfit_result result;
+
+        if (!spectra_loaded()) {
+            result.gsl_status = LMFIT_DATA_NOT_LOADED;
+            return result;
+        }
 
         m_fit_engine->parameters = fps;
-
         fit_engine_prepare(m_fit_engine, m_ref_spectr);
-
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
         for(unsigned k = 0; k < fps->number; k++) {
@@ -134,14 +137,13 @@ public:
             gsl_vector_set(x, k, val);
         }
 
-        double chisq;
-        lmfit_simple(m_fit_engine, x, &chisq, 0, 0, 0, 0);
-
+        lmfit_simple(m_fit_engine, x, &result, 0, 0, 0, 0);
         fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
 
         gsl_vector_free(x);
-
         fit_engine_disable(m_fit_engine);
+
+        return result;
     }
 
     virtual void config_plot(plot_canvas* canvas) {

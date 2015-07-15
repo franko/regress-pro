@@ -80,9 +80,9 @@ public:
         return false;
     }
 
-    virtual void run(struct fit_parameters* fps) {
+    virtual lmfit_result run(struct fit_parameters* fps) {
+        lmfit_result result;
         disp_t* d = m_fit_engine->model_disp;
-
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
         for(unsigned k = 0; k < fps->number; k++) {
@@ -108,10 +108,10 @@ public:
         struct disp_fit_config cfg[1];
         disp_fit_config_init(cfg);
 
-        double chisq;
-        lmfit_disp(m_fit_engine, cfg, x, &chisq, 0, 0);
+        lmfit_disp(m_fit_engine, cfg, x, &result, 0, 0);
 
         gsl_vector_free(x);
+        return result;
     }
 
     virtual void config_plot(plot_canvas* canvas) {

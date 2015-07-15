@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "dispers.h"
 #include "fit-params.h"
+#include "lmfit_result.h"
 
 __BEGIN_DECLS
 
@@ -38,8 +39,8 @@ extern void disp_fit_engine_set_parameters(struct disp_fit_engine *fit,
         const struct fit_parameters *fps);
 
 extern int lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
-                      gsl_vector *x, double * chisq, str_ptr analysis,
-                      str_ptr error_msg);
+                      gsl_vector *x, struct lmfit_result *result,
+                      str_ptr analysis, str_ptr error_msg);
 
 __END_DECLS
 

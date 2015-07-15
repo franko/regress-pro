@@ -2,6 +2,7 @@
 #define FIT_MANAGER_H
 
 #include "fit-params.h"
+#include "lmfit_result.h"
 #include "plot_canvas.h"
 
 struct fit_manager {
@@ -14,7 +15,7 @@ struct fit_manager {
     virtual void get_sampling(double& s_start, double& s_end, double& s_step) = 0;
     virtual bool set_sampling(double  s_start, double  s_end, double  s_step) = 0;
 
-    virtual void run(struct fit_parameters* fps) = 0;
+    virtual lmfit_result run(struct fit_parameters* fps) = 0;
 
     virtual void config_plot(plot_canvas* canvas) = 0;
 

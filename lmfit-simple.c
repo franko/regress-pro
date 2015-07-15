@@ -10,7 +10,7 @@
 
 int
 lmfit_simple(struct fit_engine *fit, gsl_vector *x,
-             double * chisq, str_ptr analysis, str_ptr error_msg,
+             struct lmfit_result *result, str_ptr analysis, str_ptr error_msg,
              gui_hook_func_t hfun, void *hdata)
 {
     const gsl_multifit_fdfsolver_type *T;
@@ -39,7 +39,9 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
                         & iter, hfun, hdata, & stop_request);
 
     chi = gsl_blas_dnrm2(s->f);
-    *chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+    result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+    result->nb_iterations = iter;
+    result->gsl_status = status;
 
     if(error_msg) {
         switch(status) {
