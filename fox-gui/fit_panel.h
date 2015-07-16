@@ -27,6 +27,8 @@ class fit_panel : public FXHorizontalFrame {
 
     agg::pod_array<param_info> m_parameters;
 
+    FXVerticalFrame *m_canvas_frame;
+    FXLabel *m_result_label;
     FXFont* m_bold_font;
     FXScrollWindow *scroll_window;
     FXMatrix *param_matrix;
