@@ -34,8 +34,10 @@ fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXi
 
 void fit_panel::clear()
 {
+    /* Delete the top level widgets that will delete, in turns, all theirs
+       child widgets. */
     delete param_matrix;
-    delete m_canvas;
+    delete m_canvas_frame;
 }
 
 void fit_panel::config_spectral_range()
@@ -92,16 +94,20 @@ void fit_panel::setup()
 
     m_undo_manager.clear();
 
-    m_canvas = new plot_canvas(this, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_canvas_frame = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_canvas = new plot_canvas(m_canvas_frame, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_fit->config_plot(m_canvas);
+    m_result_label = new FXLabel(m_canvas_frame, "");
 }
 
 void fit_panel::reload()
 {
     clear();
     setup();
+    /* Since the top level widgets were deleted and recreated we need to call
+       "create" on them. */
     param_matrix->create();
-    m_canvas->create();
+    m_canvas_frame->create();
 }
 
 long
@@ -305,9 +311,10 @@ double *fit_panel::new_array_fit_values(fit_manager *fm, fit_parameters *fps)
 void fit_panel::run_fit(fit_parameters *fps)
 {
     double *old_values = new_array_fit_values(m_fit, fps);
-    m_fit->run(fps);
+    lmfit_result result = m_fit->run(fps);
     double *new_values = new_array_fit_values(m_fit, fps);
     m_undo_manager.record(new oper_run_fit(fps, old_values, new_values));
+    m_result_label->setText(FXStringFormat("Chi Square %.4g        Nb. iterations: %d", result.chisq, result.nb_iterations));
 }
 
 long fit_panel::on_cmd_undo(FXObject*, FXSelector sel, void *)
