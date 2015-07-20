@@ -210,7 +210,10 @@ tauc_lorentz_num_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
     struct eval_param p[1];
 
-    p->d = disp_copy(d);
+    /* Explicitly discard the const qualifier. The dispersion object will
+       change but before the end of the function it will be restored to its
+       original state. */
+    p->d = (disp_t *) d;
     p->lambda = lambda;
 
     fit_param_t fit_param[1];
@@ -230,7 +233,7 @@ tauc_lorentz_num_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
         F.function = &n_eval_real;
         double abserr;
-        double p0 = disp_get_param_value(p->d, fit_param);
+        double p0 = *p->param_ptr;
         double h = p0 * 1e-4;
         h = (h < 1e-6 ? 1e-6 : h);
         gsl_deriv_central(&F, p0, h, &rderiv, &abserr);
@@ -242,8 +245,6 @@ tauc_lorentz_num_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
         cmpl_vector_set(pd, i, rderiv + I * ideriv);
     }
-
-    disp_free(p->d);
 }
 
 cmpl
