@@ -9,7 +9,8 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SELECT_REF, disp_fit_window::on_cmd_select),
     FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SELECT_MODEL, disp_fit_window::on_cmd_select),
     FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_EDIT_MODEL, disp_fit_window::on_cmd_edit_model),
-    FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SAVE_USERLIB, disp_fit_window::on_cmd_save_userlib)
+    FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_SAVE_USERLIB, disp_fit_window::on_cmd_save_userlib),
+    FXMAPFUNC(SEL_COMMAND, disp_fit_window::ID_DELETE, disp_fit_window::onCmdHide),
 };
 
 // Object implementation

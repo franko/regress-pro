@@ -36,6 +36,7 @@ class recipe_window;
 class dataset_window;
 class batch_window;
 class interactive_fit;
+class disp_fit_window;
 
 struct window_result_target : fit_result_target {
     window_result_target() { }
@@ -58,6 +59,7 @@ protected:
     filmstack_window *main_filmstack_window;
     recipe_window *main_recipe_window;
     filmstack_window *result_filmstack_window;
+    disp_fit_window *m_disp_fit_window;
 
     dataset_window *my_dataset_window;
     batch_window *my_batch_window;

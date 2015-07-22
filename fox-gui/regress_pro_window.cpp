@@ -97,7 +97,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,520),
       spectrum(NULL), recipeFilename("untitled"),
-      result_filmstack_window(NULL), my_batch_window(NULL),
+      result_filmstack_window(NULL), my_batch_window(NULL), m_disp_fit_window(NULL),
       m_enlarged_window(false), m_result_stack_match(true)
 {
     // Menubar
@@ -264,10 +264,13 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
     fit->ref_disp = disp_list_search(app_lib, "sio2");
     fit->model_disp = disp_list_search(app_lib, "sio2-ho");
 
-    disp_fit_manager *mgr = new disp_fit_manager(fit);
-    disp_fit_window *fitwin = new disp_fit_window(mgr, this, "Dispersion Fit", DECOR_ALL, 0, 0, 640, 480);
-    fitwin->create();
-    fitwin->show(FX::PLACEMENT_SCREEN);
+    if (!m_disp_fit_window) {
+        disp_fit_manager *mgr = new disp_fit_manager(fit);
+        m_disp_fit_window = new disp_fit_window(mgr, this, "Dispersion Fit", DECOR_ALL, 0, 0, 640, 480);
+        m_disp_fit_window->create();
+    }
+
+    m_disp_fit_window->show(FX::PLACEMENT_SCREEN);
 
     return 1;
 }
