@@ -108,7 +108,43 @@ html_theme = 'default'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    "footerbgcolor": "#407f48",
+    "footertextcolor": "#ffffff",
+    "sidebarbgcolor": "#bfffcf",
+    "sidebartextcolor": "#606060",
+    "sidebarlinkcolor": "#0A8725",
+    "bgcolor": "#e6ffec",
+    "textcolor": "#000000",
+    "headtextcolor": "#606060",
+    "linkcolor": "#0a8725",
+    "visitedlinkcolor": "#0a8725",
+    "headbgcolor": "#e6ffec",
+    "relbarbgcolor": "#60bf78",
+    "relbartextcolor": "#ffffff",
+    "bodyfont": "Verdana, Arial, Helvetica, sans-serif",
+    "headfont": "Verdana, Arial, Helvetica, sans-serif"
+# footerbgcolor (CSS color): Background color for the footer line.
+# footertextcolor (CSS color): Text color for the footer line.
+# sidebarbgcolor (CSS color): Background color for the sidebar.
+# sidebarbtncolor (CSS color): Background color for the sidebar collapse button (used when collapsiblesidebar is True).
+# sidebartextcolor (CSS color): Text color for the sidebar.
+# sidebarlinkcolor (CSS color): Link color for the sidebar.
+# relbarbgcolor (CSS color): Background color for the relation bar.
+# relbartextcolor (CSS color): Text color for the relation bar.
+# relbarlinkcolor (CSS color): Link color for the relation bar.
+# bgcolor (CSS color): Body background color.
+# textcolor (CSS color): Body text color.
+# linkcolor (CSS color): Body link color.
+# visitedlinkcolor (CSS color): Body color for visited links.
+# headbgcolor (CSS color): Background color for headings.
+# headtextcolor (CSS color): Text color for headings.
+# headlinkcolor (CSS color): Link color for headings.
+# codebgcolor (CSS color): Background color for code blocks.
+# codetextcolor (CSS color): Default text color for code blocks, if not set differently by the highlighting style.
+# bodyfont (CSS font-family): Font for normal text.
+# headfont (CSS font-family): Font for headings.
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
