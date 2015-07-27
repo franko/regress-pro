@@ -5,6 +5,8 @@
 
 #include "dispers.h"
 
+class regress_pro;
+
 class fx_dispers_selector : public FXHorizontalFrame {
     FXDECLARE(fx_dispers_selector)
 protected:
@@ -16,6 +18,8 @@ public:
     fx_dispers_selector(FXWindow *chooser, FXComposite *p,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
     : FXHorizontalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
     { }
+
+    regress_pro *regress_pro_app() {return (regress_pro *) getApp(); }
 
     virtual disp_t *get_dispersion() { return NULL; }
     virtual void reset() { }

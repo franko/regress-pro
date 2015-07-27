@@ -53,7 +53,6 @@ protected:
     fit_recipe *recipe;
 
     FXString recipeFilename;
-    FXString spectraDir, recipeDir;
 
 protected:
     filmstack_window *main_filmstack_window;

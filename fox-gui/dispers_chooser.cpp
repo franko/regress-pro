@@ -1,5 +1,5 @@
 #include "dispers_chooser.h"
-
+#include "regress_pro.h"
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
 #include "error-messages.h"
@@ -197,10 +197,12 @@ fx_file_disp_selector::fx_file_disp_selector(FXWindow *chooser, FXComposite *p, 
 long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this,"Open a Dispersion File");
+    open.setDirectory(regress_pro_app()->disp_dir);
     open.setPatternList(disp_file_patterns);
 
     if(open.execute()) {
         FXString filename = open.getFilename();
+        regress_pro_app()->disp_dir = open.getDirectory();
         str_ptr error_message;
         disp_t *disp = NULL;
         if (filename.right(4) == ".mat") {

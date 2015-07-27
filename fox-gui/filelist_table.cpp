@@ -1,4 +1,5 @@
 #include "filelist_table.h"
+#include "regress_pro.h"
 
 // Map
 FXDEFMAP(filelist_table) filelist_table_map[]= {
@@ -44,9 +45,11 @@ long filelist_table::on_cmd_add_files(FXObject *, FXSelector, void *)
 {
     FXFileDialog open(this,"Open Spectra");
     open.setSelectMode(SELECTFILE_MULTIPLE_ALL);
+    open.setDirectory(regress_pro_app()->spectra_dir);
     open.setPatternList("Spectra File (*.dat)\nAny Files (*)");
     if (open.execute()) {
         FXString *filenames = open.getFilenames();
+        regress_pro_app()->spectra_dir = open.getDirectory();
         int count = 0;
         for (int i = 0; filenames && filenames[i] != ""; i++) {
             count++;

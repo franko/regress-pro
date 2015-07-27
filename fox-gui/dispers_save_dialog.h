@@ -5,6 +5,8 @@
 
 #include "dispers.h"
 
+class regress_pro;
+
 class dispers_save_dialog : public FXDialogBox {
     FXDECLARE(dispers_save_dialog)
 protected:
@@ -15,6 +17,8 @@ private:
 public:
     dispers_save_dialog(const disp_t *d, FXWindow* owner, const FXString& name, FXuint opts=0, FXint x=0, FXint y=0, FXint w=540, FXint h=360);
     ~dispers_save_dialog();
+
+    regress_pro *regress_pro_app() { return (regress_pro *) getApp(); }
 
     int save_dispersion();
 

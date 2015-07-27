@@ -1,4 +1,5 @@
 #include "dispers_save_dialog.h"
+#include "regress_pro.h"
 #include "writer.h"
 #include "mat_table_write.h"
 #include "textfield_utils.h"
@@ -33,6 +34,7 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     m_filebox->cancelButton()->setSelector(FXDialogBox::ID_CANCEL);
 
     m_filebox->setPatternList(disp_patterns);
+    m_filebox->setDirectory(regress_pro_app()->disp_dir);
 
     m_format_pane = new FXPopup(this);
     new FXOption(m_format_pane, "Native", NULL, this, ID_FORMAT_NATIVE, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
@@ -119,6 +121,7 @@ int
 dispers_save_dialog::save_dispersion()
 {
     FXString filename = m_filebox->getFilename();
+    regress_pro_app()->disp_dir = m_filebox->getDirectory();
     bool use_native = format_is_native();
     if (filename.find('.') < 0) {
         if (use_native) {

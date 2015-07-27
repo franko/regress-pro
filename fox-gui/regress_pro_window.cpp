@@ -231,13 +231,15 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
     reg_check_point(this);
 
+    regress_pro *app = regressProApp();
+
     FXFileDialog open(this,"Open Spectra");
-    open.setDirectory(spectraDir);
+    open.setDirectory(app->spectra_dir);
     open.setPatternList(patterns_spectr);
 
     if(open.execute()) {
         FXString filename = open.getFilename();
-        spectraDir = open.getDirectory();
+        app->spectra_dir = open.getDirectory();
 
         str_ptr error_msg;
         struct spectrum *new_spectrum = load_gener_spectrum(filename.text(), &error_msg);
@@ -693,7 +695,10 @@ regress_pro_window::save_recipe_as(const FXString& filename)
 long
 regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
 {
+    regress_pro *app = regressProApp();
+
     FXFileDialog open(this, "Save Recipe As");
+    open.setDirectory(app->recipe_dir);
     open.setPatternList(patterns_recipe);
 
     while (open.execute()) {
@@ -701,6 +706,7 @@ regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
         if (new_filename.find('.') < 0) {
             new_filename.append(".rcp");
         }
+        app->recipe_dir = open.getDirectory();
         if (FXStat::exists(new_filename)) {
             if (MBOX_CLICKED_OK == FXMessageBox::question(this, MBOX_OK_CANCEL, "Save Recipe Warning", "The file \"%s\" already exists\nAre you sure you want to overwrite it ?", new_filename.text())) {
                 save_recipe_as(new_filename);
@@ -724,13 +730,15 @@ regress_pro_window::onCmdRecipeSave(FXObject *, FXSelector, void *)
 long
 regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
 {
+    regress_pro *app = regressProApp();
+
     FXFileDialog open(this, "Open Fit Recipe");
-    open.setDirectory(recipeDir);
+    open.setDirectory(app->recipe_dir);
     open.setPatternList(patterns_recipe);
 
     if(open.execute()) {
         FXString filename = open.getFilename();
-        recipeDir = open.getDirectory();
+        app->recipe_dir = open.getDirectory();
         Str content;
 
         if(str_loadfile(filename.text(), content.str()) != 0) {
