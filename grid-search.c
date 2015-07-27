@@ -64,7 +64,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     for(j = nb-1; j >= 0; j--) {
         if(vseed[j].type == SEED_RANGE) {
             seed_t *cs = &vseed[j];
-            nb_grid_pts *= cs->delta / gsl_vector_get(pstep, j) + 1;
+            nb_grid_pts *= 2 * cs->delta / gsl_vector_get(pstep, j) + 1;
         }
     }
 
