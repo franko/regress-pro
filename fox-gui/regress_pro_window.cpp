@@ -61,8 +61,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE, regress_pro_window::onCmdRecipeSave),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE_AS, regress_pro_window::onCmdRecipeSaveAs),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE, regress_pro_window::onCmdRecipeSaveAs),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_LOAD, regress_pro_window::onCmdRecipeLoad),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_LOAD_SPECTRA, regress_pro_window::onCmdLoadSpectra),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DISP_OPTIM, regress_pro_window::onCmdDispersOptim),
@@ -107,8 +106,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     // Script menu
     filemenu=new FXMenuPane(this);
     new FXMenuCommand(filemenu,"&Save",NULL,this,ID_RECIPE_SAVE);
-    new FXMenuCommand(filemenu,"Save As...",NULL,this,ID_RECIPE_SAVE_AS);
-    new FXMenuCommand(filemenu,"Load",NULL,this,ID_RECIPE_LOAD);
+    new FXMenuCommand(filemenu,"&Load",NULL,this,ID_RECIPE_LOAD);
     new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
     new FXMenuTitle(menubar,"&Recipe",NULL,filemenu);
 
@@ -717,13 +715,6 @@ regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
             break;
         }
     }
-    return 1;
-}
-
-long
-regress_pro_window::onCmdRecipeSave(FXObject *, FXSelector, void *)
-{
-    save_recipe_as(recipeFilename);
     return 1;
 }
 

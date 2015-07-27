@@ -95,7 +95,6 @@ public:
 
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);
-    long onCmdRecipeSave(FXObject*,FXSelector,void*);
     long onCmdRecipeSaveAs(FXObject*,FXSelector,void*);
     long onCmdRecipeLoad(FXObject*,FXSelector,void*);
     long onCmdDispersOptim(FXObject*,FXSelector,void*);
@@ -114,7 +113,6 @@ public:
 public:
     enum {
         ID_RECIPE_SAVE = FXMainWindow::ID_LAST,
-        ID_RECIPE_SAVE_AS,
         ID_RECIPE_LOAD,
         ID_LOAD_SPECTRA,
         ID_DISP_OPTIM,
