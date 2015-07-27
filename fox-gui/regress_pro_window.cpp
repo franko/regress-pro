@@ -96,7 +96,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 regress_pro_window::regress_pro_window(regress_pro* a)
     : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,520),
       spectrum(NULL), recipeFilename("untitled"),
-      result_filmstack_window(NULL), my_batch_window(NULL), m_disp_fit_window(NULL),
+      result_filmstack_window(NULL), m_disp_fit_window(NULL), my_batch_window(NULL),
       m_enlarged_window(false), m_result_stack_match(true)
 {
     // Menubar
