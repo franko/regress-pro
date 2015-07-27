@@ -103,7 +103,7 @@ public:
     long onCmdInteractiveFit(FXObject*,FXSelector,void*);
     long onCmdRunMultiFit(FXObject*,FXSelector,void*);
     long onCmdRunSimul(FXObject*,FXSelector,void*);
-    long onCmdRunBatch(FXObject*,FXSelector,void*);
+    long onCmdBatchWindow(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
     long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);

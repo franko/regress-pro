@@ -69,7 +69,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_FIT, regress_pro_window::onCmdRunFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_INTERACTIVE_FIT, regress_pro_window::onCmdInteractiveFit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_MULTI_FIT, regress_pro_window::onCmdRunMultiFit),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdRunBatch),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RUN_BATCH, regress_pro_window::onCmdBatchWindow),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RESULT_STACK, regress_pro_window::onCmdResultStack),
@@ -132,7 +132,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
     new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
-    new FXMenuCommand(fitmenu, "Run &Batch",NULL,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "&Batch Window",NULL,this,ID_RUN_BATCH);
     new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_RESULT_STACK);
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
@@ -325,7 +325,7 @@ regress_pro_window::~regress_pro_window()
 }
 
 long
-regress_pro_window::onCmdRunBatch(FXObject *, FXSelector, void *)
+regress_pro_window::onCmdBatchWindow(FXObject *, FXSelector, void *)
 {
     reg_check_point(this);
     if (!my_batch_window) {
