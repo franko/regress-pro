@@ -242,6 +242,7 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     catlist->appendItem("Choose File", NULL, NULL, TRUE);
     catlist->appendItem("New Model", NULL, NULL, TRUE);
     catlist->appendItem("User List", NULL, NULL, TRUE);
+    catlist->appendItem("Preset List", NULL, NULL, TRUE);
     catlist->selectItem(0, FALSE);
 
     FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 80, 0);
@@ -251,6 +252,7 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     new fx_file_disp_selector(this, choose_switcher);
     new fx_newmodel_selector(this, choose_switcher);
     new fx_library_selector(this, "User Model", user_lib, choose_switcher);
+    new fx_library_selector(this, "Preset Model", preset_lib, choose_switcher);
 
     dispwin = new_dispwin_dummy(vframe);
     dispwin_dummy = dispwin;

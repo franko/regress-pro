@@ -45,4 +45,7 @@ clean:
 dispers_library_preload.h: dispers_library_preload.txt
 	( echo "static const char *dispersions_data = \\"; cat $< | sed 's/"/\\"/g; s/\(.*\)/"\1\\n"/g'; echo ";" ) > $@
 
+preset_library_data.h: preset_library_data.txt
+	( echo "static const char *preset_library_data = \\"; cat $< | sed 's/"/\\"/g; s/\(.*\)/"\1\\n"/g'; echo ";" ) > $@
+
 -include $(DEP_FILES)

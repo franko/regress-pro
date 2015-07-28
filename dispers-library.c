@@ -4,9 +4,11 @@
 #include "dispers.h"
 #include "dispers-library.h"
 #include "dispers_library_preload.h"
+#include "preset_library_data.h"
 
 struct disp_list app_lib[1] = {{NULL, NULL}};
 struct disp_list user_lib[1] = {{NULL, NULL}};
+struct disp_list preset_lib[1] = {{NULL, NULL}};
 
 static struct disp_node *new_disp_node(disp_t *d, const char *id)
 {
@@ -138,13 +140,14 @@ lib_disp_table_get(const char *id)
     return NULL;
 }
 
-int dispers_library_init()
+int
+load_library_from_data(struct disp_list *lib, const char *data)
 {
     str_t disp_id;
     str_init(disp_id, 15);
     int status = 1;
     int i, n;
-    lexer_t *l = lexer_new(dispersions_data);
+    lexer_t *l = lexer_new(data);
     if (lexer_check_ident(l, "dispers-library")) goto init_exit;
     if (lexer_integer(l, &n)) goto init_exit;
     for (i = 0; i < n; i++) {
@@ -153,12 +156,21 @@ int dispers_library_init()
         str_copy(disp_id, l->store);
         disp_t *d = disp_read(l);
         if (!d) goto init_exit;
-        disp_list_add(app_lib, d, CSTR(disp_id));
+        disp_list_add(lib, d, CSTR(disp_id));
     }
     if (l->current.tk != TK_EOF) goto init_exit;
     status = 0;
 init_exit:
     str_free(disp_id);
     lexer_free(l);
+    return status;
+}
+
+int dispers_library_init()
+{
+    int status;
+    status = load_library_from_data(app_lib, dispersions_data);
+    if (status != 0) return status;
+    status = load_library_from_data(preset_lib, preset_library_data);
     return status;
 };
