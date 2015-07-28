@@ -10,7 +10,7 @@ FXIMPLEMENT(fx_dispers_selector,FXHorizontalFrame,NULL,0);
 
 class fx_library_selector : public fx_dispers_selector {
 public:
-    fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    fx_library_selector(FXWindow *chooser, const char *name, disp_list *list, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
     virtual disp_t *get_dispersion();
     virtual void reset();
 private:
@@ -18,11 +18,11 @@ private:
     FXComboBox *combo;
 };
 
-fx_library_selector::fx_library_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
+fx_library_selector::fx_library_selector(FXWindow *chooser, const char *name, disp_list *list, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
     fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-    iter(app_lib)
+    iter(list)
 {
-    new FXLabel(this, "Library Model");
+    new FXLabel(this, name);
     int nb_disp = iter.length();
 
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
@@ -45,46 +45,6 @@ fx_library_selector::reset()
 {
     combo->setCurrentItem(0);
 }
-
-
-class fx_userlib_selector : public fx_dispers_selector {
-public:
-    fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
-    virtual disp_t *get_dispersion();
-    virtual void reset();
-private:
-    disp_library_iter iter;
-    FXComboBox *combo;
-};
-
-fx_userlib_selector::fx_userlib_selector(FXWindow *chooser, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
-    fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-    iter(user_lib)
-{
-    new FXLabel(this, "User Model");
-    int nb_disp = iter.length();
-
-    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
-    combo->setNumVisible(nb_disp + 1);
-    combo->appendItem("- choose a dispersion");
-    for(const char *nm = iter.start(); nm; nm = iter.next()) {
-        combo->appendItem(nm);
-    }
-}
-
-disp_t *
-fx_userlib_selector::get_dispersion()
-{
-    FXint index = combo->getCurrentItem() - 1;
-    return iter.get(index);
-}
-
-void
-fx_userlib_selector::reset()
-{
-    combo->setCurrentItem(0);
-}
-
 
 class fx_newmodel_selector : public fx_dispers_selector {
 public:
@@ -287,10 +247,10 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 80, 0);
     vframe = new FXVerticalFrame(vframespring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
     choose_switcher = new FXSwitcher(vframe, LAYOUT_FILL_X|FRAME_GROOVE);
-    new fx_library_selector(this, choose_switcher);
+    new fx_library_selector(this, "Library Model",  app_lib, choose_switcher);
     new fx_file_disp_selector(this, choose_switcher);
     new fx_newmodel_selector(this, choose_switcher);
-    new fx_userlib_selector(this, choose_switcher);
+    new fx_library_selector(this, "User Model", user_lib, choose_switcher);
 
     dispwin = new_dispwin_dummy(vframe);
     dispwin_dummy = dispwin;
