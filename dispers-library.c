@@ -80,7 +80,7 @@ disp_t *
 disp_list_search(struct disp_list *lst, const char *id)
 {
     struct disp_node *n;
-    for (n = app_lib->first; n; n = n->next) {
+    for (n = lst->first; n; n = n->next) {
         if (n->id && strcmp(CSTR(n->id), id) == 0) {
             return disp_copy(n->content);
         }
