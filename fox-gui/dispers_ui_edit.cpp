@@ -38,7 +38,7 @@ void fx_disp_window::setup_name()
 {
     regress_pro *app = (regress_pro *) getApp();
 
-    FXHorizontalFrame *modelfm = new FXHorizontalFrame(this, LAYOUT_FILL_X|FRAME_GROOVE, 0,0,0,0,0,0,0,0);
+    FXHorizontalFrame *modelfm = new FXHorizontalFrame(this, LAYOUT_FILL_X|FRAME_GROOVE, 0,0,0,0, 0,0,0,0, 0,0);
     FXString model_name(disp->dclass->full_name);
     model_name.append(" Model");
     FXLabel *model_label = new FXLabel(modelfm, model_name, NULL, LABEL_NORMAL|LAYOUT_FILL_X, 0, 0, 0, 0, 2*DEFAULT_PAD, 2*DEFAULT_PAD, 3*DEFAULT_PAD, 3*DEFAULT_PAD);
@@ -91,9 +91,9 @@ static void update_textfield(fx_numeric_field *tf, fx_disp_window *disp_win, int
     tf->setText(vstr);
 }
 
-static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *target, FXSelector id)
+static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *target, FXSelector id, int textfield_size = 8)
 {
-    fx_numeric_field *tf = new fx_numeric_field(frame, 8, target, id, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    fx_numeric_field *tf = new fx_numeric_field(frame, textfield_size, target, id, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     update_textfield(tf, target, id - fx_disp_window::ID_PARAM_0);
     return tf;
 }
@@ -222,13 +222,13 @@ long fx_disp_fb_window::on_cmd_coeff_form(FXObject *, FXSelector, void *data)
 
 void fx_disp_cauchy_window::setup_dialog()
 {
-    FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
-    new FXLabel(matrix, "N");
-    new FXLabel(matrix, "K");
+    FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS, 0,0,0,0, 8*DEFAULT_SPACING,8*DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, 6*DEFAULT_SPACING,DEFAULT_SPACING);
+    new FXLabel(matrix, "N", NULL, LAYOUT_CENTER_X);
+    new FXLabel(matrix, "K", NULL, LAYOUT_CENTER_X);
 
     for (int p = 0; p < 6; p++) {
         int i = p / 2, j = p % 2;
-        create_textfield(matrix, this, ID_PARAM_0 + i + 3 * j);
+        create_textfield(matrix, this, ID_PARAM_0 + i + 3 * j, 14);
     }
 }
 
