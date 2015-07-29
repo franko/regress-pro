@@ -1,0 +1,41 @@
+stack 5
+  4500 900 75
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  ho "Thermal SiO2" 1
+    145 15.7884 0 0.3333 0
+  ho "! SiN" 1
+    74.3444 8.35617 0.474468 0.333333 -0.0120003
+  ho "Thermal SiO2" 1
+    145 15.7884 0 0.3333 0
+  library "silicon-1"
+fit-config
+  max-iterations 80
+  subsampling 1
+  epsilon 1e-007 1e-007
+fit-parameters 4
+  n 2 ho 0
+  n 2 ho 1
+  n 2 ho 2
+  n 2 ho 4
+seed-list 4
+  value 74
+  value 8
+  value 0.4
+  value 0
+multi-sample
+  fit-parameters 2
+    thickness 1
+    thickness 2
+  fit-parameters 0
+dataset 5 2
+  fit-parameters 2
+    thickness 2
+    thickness 1
+  samples
+    "examples\multi-fit\samples\test2771.dat" 890 4220
+    "examples\multi-fit\samples\test2783.dat" 890 2910
+    "examples\multi-fit\samples\test2784.dat" 890 3530
+    "examples\multi-fit\samples\test2787.dat" 890 3280
+    "examples\multi-fit\samples\test2790.dat" 890 2500

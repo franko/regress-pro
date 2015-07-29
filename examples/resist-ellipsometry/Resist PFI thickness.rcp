@@ -1,0 +1,18 @@
+stack 3
+  5000
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  tauc-lorentz "Resist PFI TL" 3 1 1.9751 3.1397
+    6.29521 6.14972 2.13134
+    0.889952 4.39566 1.92754
+    0.975901 5.20661 1.31456
+  library "silicon-1"
+fit-config
+  max-iterations 30
+  subsampling 1
+  epsilon 1e-007 1e-007
+fit-parameters 1
+  thickness 1
+seed-list 1
+  range 5000 5000

@@ -1,0 +1,20 @@
+stack 3
+  5000
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  ho "Thermal SiO2 HO" 1
+    143.747 15.6982 0 0.3333 0
+  library "silicon-1"
+fit-config
+  max-iterations 30
+  subsampling 1
+  epsilon 1e-007 1e-007
+fit-parameters 3
+  thickness 1
+  n 1 ho 0
+  n 1 ho 1
+seed-list 3
+  range 5000 5000
+  undef
+  undef
