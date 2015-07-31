@@ -1,0 +1,15 @@
+Package: LGT_PACKAGE_NAME
+Maintainer: Francesco Abbate <francesco.bbt@gmail.com>
+Version: LGT_VERSION
+Architecture: LGT_ARCH
+Installed-Size: LGT_INSTALLED_SIZE
+Depends: libc6 (>= 2.7-1), libfox-1.6-0 (>= 1.6.49), libgsl0ldbl (>= 1.16), libblas.so.3
+Section: x11
+Priority: optional
+Description: Regress Pro Application
+ Regress Pro is scientific / industrial software that can be used to study
+ experimental data coming from spectroscopic ellipsometers or reflectometers.
+ .
+ The application lets you load spectroscopic data coming from an ellipsometer or
+ reflectometer and analyze them using well-proven algorithms to determine
+ various physical parameters like film's thickness or refractive index.

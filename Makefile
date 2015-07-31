@@ -2,8 +2,14 @@
 include makeconfig
 include makesystem
 
+PACKAGE_NAME = regress-pro
+VERSION = 2.0.0
+DEBIAN_BUILD_DIR = debian_build
+DEB_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEBIAN_PACKAGE := $(PACKAGE_NAME)_$VERSION-1_$(DEB_ARCH).deb
+
 GSL_LIBS = -lgsl -lgslcblas -lm
-GSL_INCLUDES = 
+GSL_INCLUDES =
 
 INCLUDES = $(GSL_INCLUDES)
 
@@ -40,7 +46,17 @@ $(EFIT_LIB): $(ELL_OBJ_FILES)
 
 clean:
 	$(MAKE) -C fox-gui clean
-	$(HOST_RM) -f $(ELL_OBJ_FILES) $(EFIT_LIB)
+	$(HOST_RM) $(ELL_OBJ_FILES) $(EFIT_LIB)
+	$(HOST_RM) -r $(DEBIAN_BUILD_DIR)
+	$(HOST_RM) $(DEBIAN_PACKAGE)
+
+debian: $(DEBIAN_PACKAGE)
+
+$(DEBIAN_PACKAGE): fox-gui debian/control
+	$(HOST_RM) -r $(DEBIAN_BUILD_DIR)
+	mkdir -p $(DEBIAN_BUILD_DIR)/usr/bin
+	cp fox-gui/regress$(EXE) $(DEBIAN_BUILD_DIR)/usr/bin
+	fakeroot bash debian/build.sh $(PACKAGE_NAME) $(VERSION)
 
 dispers_library_preload.h: dispers_library_preload.txt
 	( echo "static const char *dispersions_data = \\"; cat $< | sed 's/"/\\"/g; s/\(.*\)/"\1\\n"/g'; echo ";" ) > $@

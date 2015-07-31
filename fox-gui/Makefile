@@ -19,7 +19,7 @@ else
 endif
 
 GSL_LIBS = -lgsl -lblas -lm
-GSL_INCLUDES = 
+GSL_INCLUDES =
 
 REG_LIBS = -lmhash -lgmp
 
@@ -42,7 +42,7 @@ SRC_FILES = ProgressInfo.cpp spectrum_plot.cpp disp_fit_window.cpp regress_pro_w
 	fit_recipe.cpp dispers_edit_window.cpp dispers_ui_utils.cpp \
 	filelist_table.cpp dataset_table.cpp \
 	dataset_window.cpp batch_window.cpp regress_pro.cpp main.cpp
-PRG = regress.exe
+PRG = regress$(EXE)
 
 REG_SRC_FILES := registration.c registered_app.cpp
 REG_OBJ_FILEX := $(REG_SRC_FILES:%.cpp=%.o)
@@ -54,7 +54,7 @@ DEP_FILES := $(SRC_FILES:%.cpp=.deps/%.P)
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 ifeq ($(PRODUCT_REGISTRATION),yes)
-  OBJ_FILES += $(REG_OBJ_FILES)  
+  OBJ_FILES += $(REG_OBJ_FILES)
   LIBS += $(REG_LIBS)
 endif
 

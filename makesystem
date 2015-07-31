@@ -23,4 +23,5 @@ HOST_RM = rm -f
 
 ifeq ($(HOST_SYS),Windows)
   DEFS += -DWIN32
+  EXE = .exe
 endif

@@ -1,6 +1,9 @@
 *.[oa]
 *.exe
+*.deb
 *~
-.deps
+debian_build
 fox-gui/gitversion.cpp
+fox-gui/regress
+.deps
 
