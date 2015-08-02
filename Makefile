@@ -52,10 +52,13 @@ clean:
 
 debian: $(DEBIAN_PACKAGE)
 
-$(DEBIAN_PACKAGE): fox-gui debian/control
+$(DEBIAN_PACKAGE): $(EFIT_LIB) fox-gui debian/control
 	$(HOST_RM) -r $(DEBIAN_BUILD_DIR)
-	mkdir -p $(DEBIAN_BUILD_DIR)/usr/bin
+	mkdir -p $(DEBIAN_BUILD_DIR)/usr/bin $(DEBIAN_BUILD_DIR)/usr/share/applications $(DEBIAN_BUILD_DIR)/usr/share/icons/hicolor/128x128/apps $(DEBIAN_BUILD_DIR)/usr/share/regress-pro
+	strip fox-gui/regress$(EXE)
 	cp fox-gui/regress$(EXE) $(DEBIAN_BUILD_DIR)/usr/bin
+	cp -R examples $(DEBIAN_BUILD_DIR)/usr/share/regress-pro
+	cp regress-pro-128x128.png $(DEBIAN_BUILD_DIR)/usr/share/icons/hicolor/128x128/apps/regress-pro.png
 	fakeroot bash debian/build.sh $(PACKAGE_NAME) $(VERSION)
 
 dispers_library_preload.h: dispers_library_preload.txt
