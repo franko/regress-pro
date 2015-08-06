@@ -226,6 +226,8 @@ load_gener_spectrum(const char *filename, str_ptr *error_msg)
         spectr = load_ellips_spectrum(filename, error_msg);
     } else if(strstr(CSTR(ln), "VASE") || strstr(CSTR(ln), "M2000")) {
         spectr = load_vase_spectrum(filename, error_msg);
+    } else if(strstr(CSTR(ln), "\"Wavelength (nm)\"") && strstr(CSTR(ln), "\"Reflectance\"")) {
+        spectr = load_filmetrics_spectrum(filename, error_msg);
     } else {
         spectr = load_refl_data(filename, error_msg);
     }
