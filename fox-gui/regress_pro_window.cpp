@@ -47,6 +47,7 @@
 #include "dataset_window.h"
 #include "batch_window.h"
 #include "lexer.h"
+#include "file_dialog.h"
 
 #ifdef GIT_BUILD
 extern const char *gitversion;
@@ -720,11 +721,15 @@ regress_pro_window::onCmdRecipeSave(FXObject *, FXSelector, void *)
 long
 regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
 {
-    FXFileDialog open(this, "Open Fit Recipe");
-    open.setPatternList(patterns_recipe);
+    OpenFileDialog file_dialog;
+    char rcp_pattern[] = "Fit Recipe\0*.rcp\0All Files\0*.*\0\0";
+    char window_title[] = "Open Fit Recipe";
+    file_dialog.Filter = rcp_pattern;
+    file_dialog.Owner = (HWND) this->id();
+    file_dialog.Title = window_title;
 
-    if(open.execute()) {
-        FXString filename = open.getFilename();
+    if (file_dialog.ShowDialog()) {
+        FXString filename = file_dialog.FileName;
         Str content;
 
         if(str_loadfile(filename.text(), content.str()) != 0) {
