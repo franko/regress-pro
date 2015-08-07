@@ -6,7 +6,7 @@ static const char *preset_library_data = \
 "  199.662 14.0451 0 0.333333 0\n"
 "  1.37061 6.35081 1.17056 0.333333 -0.240491\n"
 "library-id \"sio2-tl-1\"\n"
-"  tauc-lorentz \"Oxide TL\" 1 1 1 7.4 104.5 12.4 4.9\n"
+"  tauc-lorentz \"Oxide TL\" 1 1 1.23 7.25 14.85 12.1 3\n"
 "library-id \"sio2-ho\"\n"
 "  ho \"Thermal SiO2 HO\" 1 143.747 15.6982 0 0.3333 0\n"
 "library-id \"asi-tl-1\"\n"
