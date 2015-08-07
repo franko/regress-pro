@@ -80,7 +80,7 @@ FXIMPLEMENT(regress_pro_window,FXMainWindow,regress_pro_window_map,ARRAYNUMBER(r
 
 
 const FXchar regress_pro_window::patterns_spectr[] =
-    "Fit Strategy (*.dat)"
+    "Fit Strategy (*.dat,*.txt,*.csv)"
     "\nAll Files (*)";
 const FXchar regress_pro_window::patterns_recipe[] =
     "Fit Recipe (*.rcp)"
