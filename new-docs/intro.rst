@@ -62,5 +62,21 @@ The list of the available fit parameters depends on the film stack.
 For any given stack the thicknesses of each film will be available in the parameters list.
 The thicknesses are are named T1, T2, T3, ... where T1 is the top layer, T2 is the layer below and so on and their values are always expressed in Angstrom.
 
-In addition to the film's thicknesses if a model is used for one of the layer the corresponding model's parameters will appears in the list.
-The model parameters are shown grouped by layer number and named accordingly to the model.
+When a film stack use a dispersion model for some of the layers the corresponding parameters will be available in the parameters list.
+The model parameters are grouped by layer number and named accordingly to the model.
+Adding a model parameters means that the fit will adjust its value to optimize the fit.
+As for thicknesses you can specify a seed value to be used as a starting point and you can optionally give a range.
+
+Running the Fit Recipe
+~~~~~~~~~~~~~~~~~~~~~~
+
+Once the film stack is configured and the list of fit parameters is defined with the corresponding seed values the fit can be done using th menu function "Fitting -> Run Fitting".
+When the fit terminated you will have the fit's output in the bottom part of the main windows.
+
+The output will include the optimized value of each parameter and the residual Chi Square.
+The fit is done internally using the Levenberg–Marquardt non-linear fit algorithm.
+Its work is to find a solution that minimise the sum of squares of the residual between the experimental data and the model.
+If for one or more parameters a range is specified a grid search is done beform the Levenberg–Marquardt minimization.
+The search works looking to the residuals and choose the point in the grid with the smaller residuals.
+The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
+
