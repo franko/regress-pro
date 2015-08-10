@@ -33,8 +33,14 @@ In the figure below you can see that main window of Regress Pro and the area whe
 
 .. figure:: regress-pro-illustrated-window.png
 
-In general, once a spectroscopic spectrum is loaded and a film stack model is defined you can begin to treat your data.
-To this purpose Regress Pro offer two mode of working, running a fit recipe or perform the fit interactively.
+To begin to work the first step is to load some data to start working with.
+The applications accept a variery of spectroscopic spectra from ellipsometers or reflectometers.
+To load a spectrum use the menu function "Spectra -> Load Spectra" and choose the file.
+Once the file is loaded you can visualize it by using the interactive fit window.
+It can be opened using the menu function "Fitting -> Interactive Fit".
+
+The interactive fit let you experiment interactively with your data but before you need to setup a suitable film stack.
+In the next section we explain how to setup a film stack and define a fit recipe.
 
 Fit Recipe
 ----------
@@ -71,12 +77,56 @@ Running the Fit Recipe
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Once the film stack is configured and the list of fit parameters is defined with the corresponding seed values the fit can be done using th menu function "Fitting -> Run Fitting".
-When the fit terminated you will have the fit's output in the bottom part of the main windows.
+When the fit terminated the results will be shown in the bottom part of the main windows.
 
 The output will include the optimized value of each parameter and the residual Chi Square.
-The fit is done internally using the Levenberg–Marquardt non-linear fit algorithm.
-Its work is to find a solution that minimise the sum of squares of the residual between the experimental data and the model.
-If for one or more parameters a range is specified a grid search is done beform the Levenberg–Marquardt minimization.
-The search works looking to the residuals and choose the point in the grid with the smaller residuals.
-The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
 
+.. note::
+
+    The fit is done using the Levenberg–Marquardt non-linear fit algorithm.
+	It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
+	If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
+	The search works looking to the residuals and choose the point in the grid with the smaller residuals.
+	The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
+
+Once the fit is terminated you can visualize the experimental data together with the theoretical curve.
+This can be done by opening the interactive fit window using the menu function "Fitting -> Interactive Fit".
+
+It is important to know that when you perform a fit:
+
+    - the "Result Stack" is updated with fit's result values
+    - the interactive fit is updated also accordingly to the fit's results.
+
+The "Result Stack" is a film stack where the results of the fit are stored.
+On the other side, the film stack shown in the main window *is not modified* when you run a fit.
+So, in general, if you want to inspect the results of the fit you can look to the "Result Stack".
+This latter is accessible using the menu function "Fitting -> Edit Result Stack".
+
+Interactive Fit Window
+~~~~~~~~~~~~~~~~~~~~~~
+
+In the previous section we said that the interactive fit window is modified according to the fit's results.
+While this is true, in reality the general rule is that the interactive fit window is directly linked to the "Result Stack".
+This means that any change made on the "Result Stack" will be reflected in the interactive fit and viceversa.
+You can also *edit* the result stack and see the changes reported to the interactive fit window.
+
+.. note::
+
+    The fact that the interactive fit window is linked to the result stack means that if you want to change the model used for the interactive fit you need to make the changes in the "Result Stack".
+    For example you could go in the result stack and change a dispersion model, add a layer or anything you want and then come back to the interactive fit window.
+    Just be awar that when you run the fit recipe from the main window the result stack will be overwritten so be careful to save any important elements before running a fit recipe.
+
+Running an Interactive Fit
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The interactive fit window let you perform a fit by choosing on the fly the fit parameters.
+It is limited because it is not possible to use a grid search by specifying a range so only a simple non-linear fit will be done.
+The interactive fit is useful because let you experiment to see how the ellipsometry or reflectometry response changes with each of the parameters.
+You can change the value of each parameter to see how the response change and check when you get close to the experimental spectrum.
+
+You can also perform a fit just by checking the parameters and using the menu function "Fit -> Run".
+
+
+.. _interactive-fit-window-figure:
+
+.. figure:: interactive-fit-window.png
