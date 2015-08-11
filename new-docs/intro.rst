@@ -23,7 +23,6 @@ Each film or medium that you define in the film stack corresponds to a material 
 For each film the nominal film thickness in Angstrom is given on the text field on the right.
 
 .. note::
-
    The nominal thickness is a just reference value and does not need to be exact as the fit algorithm will usually search a best fit value.
    You need to provide an accurate value only if the thickness in kept fixed in the fit recipe.
 
@@ -57,7 +56,6 @@ The step size for the grid search is automatically determined by the software.
 The grid search is an useful option to ensure that the non-linear fit algorithm can found a global, optimal, solution.
 
 .. note::
-
     If the grid search is made on multiple parameters the search space can be very big and the grid search can take a very long time.
     When you need to give a range try to use it only for a very small number of parameters, ideally not more than three.
 
@@ -82,7 +80,6 @@ When the fit terminated the results will be shown in the bottom part of the main
 The output will include the optimized value of each parameter and the residual Chi Square.
 
 .. note::
-
     The fit is done using the Levenberg–Marquardt non-linear fit algorithm.
 	It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
 	If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
@@ -111,7 +108,6 @@ This means that any change made on the "Result Stack" will be reflected in the i
 You can also *edit* the result stack and see the changes reported to the interactive fit window.
 
 .. note::
-
     The fact that the interactive fit window is linked to the result stack means that if you want to change the model used for the interactive fit you need to make the changes in the "Result Stack".
     For example you could go in the result stack and change a dispersion model, add a layer or anything you want and then come back to the interactive fit window.
     Just be awar that when you run the fit recipe from the main window the result stack will be overwritten so be careful to save any important elements before running a fit recipe.
@@ -119,14 +115,31 @@ You can also *edit* the result stack and see the changes reported to the interac
 Running an Interactive Fit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The interactive fit window let you perform a fit by choosing on the fly the fit parameters.
-It is limited because it is not possible to use a grid search by specifying a range so only a simple non-linear fit will be done.
-The interactive fit is useful because let you experiment to see how the ellipsometry or reflectometry response changes with each of the parameters.
-You can change the value of each parameter to see how the response change and check when you get close to the experimental spectrum.
-
-You can also perform a fit just by checking the parameters and using the menu function "Fit -> Run".
-
+The interactive fit is a window that shows the experimental spectrum, in red, along with the theoretical spectrum, in blue.
+The theoretical spectrum will be calculated on the basis of the result stack.
+On the left side of the window it is shown the list of all the possible fit parameters along with their corresponding values.
 
 .. _interactive-fit-window-figure:
 
 .. figure:: interactive-fit-window.png
+
+The interactive fit window let you change the value of any parameters directly by typing the value on the text entry.
+When a value is changed the result will be immediately reflected by the theoretical spectrum.
+It is also possible to perform a fit by checking the desired parameters and using the menu function "Fit -> Run".
+
+It is also possible to change the spectral range of the data by using the "Range" entry.
+The interval should be given in the form "200-800" with the two wavelength limits in nanometers separated by a "-" (minus).
+Changing the spectra range will affect the visualization but also the data actually used of the fit.
+
+The interactive fit is very useful because it let you experiment to see how the ellipsometry or reflectometry response changes with each of the parameters.
+The value of each parameter can be changed to see how the response changes and verify when the model response get close to the experimental spectrum.
+
+.. tip::
+    You can undo and redo any operations in the fit window by using the corresponding menu functions or the shortcuts "Control-Z" and "Control-R".
+    The undo operation can be very useful if you mess up a complicated setup and you want to come back to a previous set of values.
+
+.. tip::
+    It is possible to change the value of a parameter by positioning the cursor and pressing the key combinations "Shift-Up" or "Shift-Down".
+    Using this shortcut will increase or decrease the value for the digit on the left of the cursor.
+    This is very handy to rapidly check how a parameter affect the spectrum without having to type the whole number each time.
+    By positioning the cursor you can also choose to modify the parameter by a small amount of by a big amount, depending on the digit you chose.

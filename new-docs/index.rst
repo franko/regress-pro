@@ -7,6 +7,7 @@ Contents:
    :maxdepth: 2
 
    intro.rst
+   models.rst
    tauc-lorentz.rst
 
 Indices and tables
