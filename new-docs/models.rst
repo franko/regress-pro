@@ -83,7 +83,24 @@ An explicit expression for :math:`\epsilon_1` is given by Jellison-Modine:
 
 .. math::
 
-    \epsilon_1(E) = \epsilon_1(\infty) + \frac{A C}{\pi \xi^4} \frac{a_{\textrm{ln}}}{2 \alpha E_0} \ln \left( \frac{E_0^2 + E_g^2+\alpha E_g}{E_0^2 + E_g^2-\alpha E_g} \right) - \frac{A}{\pi \xi^4} \frac{a_{\textrm{tan}}}{E_0} \left[ \pi - \tan^{-1}\left( \frac{2 E_g + \alpha}{C}\right) + \tan^{-1} \left( \frac{-2 E_g + \alpha}{C}\right) \right] + 2 \frac{A \, E_0}{\pi \xi^4 \alpha} E_g (\textrm{En}^2 - \gamma^2) \left[ \pi + 2 \tan^{-1}\left(2 \frac{\gamma^2 - E_g^2}{\alpha C}\right)\right]
+    \epsilon_1(E) = \epsilon_1(\infty) +
+    \frac{A \, C}{\pi \xi^4} \frac{a_{\textrm{ln}}}{2 \alpha E_0} \ln \left( \frac{E_0^2 + E_g^2+\alpha E_g}{E_0^2 + E_g^2-\alpha E_g} \right) + \\
+    - \frac{A}{\pi \xi^4} \frac{a_{\textrm{tan}}}{E_0} \left[ \pi - \tan^{-1}\left( \frac{2 E_g + \alpha}{C}\right) + \tan^{-1} \left( \frac{-2 E_g + \alpha}{C}\right) \right] + \\
+    + 2 \frac{A \, E_0}{\pi \xi^4 \alpha} E_g (E^2 - \gamma^2) \left[ \pi + 2 \tan^{-1}\left(2 \frac{\gamma^2 - E_g^2}{\alpha C}\right)\right] + \\
+    - \frac{A \, E_0 \, C}{\pi \xi^4} \frac{E^2 + E_g^2}{E} \ln \left( \frac{|E - E_g|}{E + E_g} \right) +
+    \frac{2 A \, E_0 \, C}{\pi \xi^4} E_g \ln\left[\frac{|E - E_g| (E + E_g)}{\sqrt{(E_0^2 - E_g^2)^2 + E_g^2 C^2}}\right]
+
+where
+
+.. math::
+
+    \begin{align*}
+    a_{\textrm{ln}} & = (E_g^2 - E_0^2) E^2 + E_g^2 C^2 - E_0^2 (E_0^2 + 3 E_g^2) \\
+    a_{\textrm{tan}} & = (E^2 - E_0^2) (E_0^2 + E_g^2) + E_g^2 C^2 \\
+    \xi^4 & = (E^2 - \gamma^2)^2 + \alpha^2 C^2/4 \\
+    \alpha & = \sqrt{4 E_0^2 - C^2} \\
+    \gamma & = \sqrt{E_0^2 - C^2/2}
+    \end{align*}
 
 
 http://www.ita.uni-heidelberg.de/~gail/astromin/chap6.pdf
