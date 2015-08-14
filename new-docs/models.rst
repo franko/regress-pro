@@ -79,16 +79,16 @@ and the real part or :math:`\epsilon` is given by the Kramers-Kronig relations:
 
     \epsilon_1(E) = \epsilon_1(\infty) + \frac{2}{\pi} P \int_{Eg}^\infty \frac{\xi \, \epsilon_2(\xi)}{\xi^2 - E^2} \textrm{d} \xi
 
-An explicit expression for :math:`\epsilon_1` is given by Jellison-Modine:
+An explicit expression for :math:`\epsilon_1` is given by Jellison-Modine [Jellison_Modine]_:
 
 .. math::
 
     \epsilon_1(E) = \epsilon_1(\infty) +
-    \frac{A \, C}{\pi \xi^4} \frac{a_{\textrm{ln}}}{2 \alpha E_0} \ln \left( \frac{E_0^2 + E_g^2+\alpha E_g}{E_0^2 + E_g^2-\alpha E_g} \right) + \\
-    - \frac{A}{\pi \xi^4} \frac{a_{\textrm{tan}}}{E_0} \left[ \pi - \tan^{-1}\left( \frac{2 E_g + \alpha}{C}\right) + \tan^{-1} \left( \frac{-2 E_g + \alpha}{C}\right) \right] + \\
-    + 2 \frac{A \, E_0}{\pi \xi^4 \alpha} E_g (E^2 - \gamma^2) \left[ \pi + 2 \tan^{-1}\left(2 \frac{\gamma^2 - E_g^2}{\alpha C}\right)\right] + \\
-    - \frac{A \, E_0 \, C}{\pi \xi^4} \frac{E^2 + E_g^2}{E} \ln \left( \frac{|E - E_g|}{E + E_g} \right) +
-    \frac{2 A \, E_0 \, C}{\pi \xi^4} E_g \ln\left[\frac{|E - E_g| (E + E_g)}{\sqrt{(E_0^2 - E_g^2)^2 + E_g^2 C^2}}\right]
+    \frac{A_L \, C}{\pi \xi^4} \frac{a_{\textrm{ln}}}{2 \alpha E_0} \ln \left( \frac{E_0^2 + E_g^2+\alpha E_g}{E_0^2 + E_g^2-\alpha E_g} \right) + \\
+    - \frac{A_L}{\pi \xi^4} \frac{a_{\textrm{tan}}}{E_0} \left[ \pi - \tan^{-1}\left( \frac{2 E_g + \alpha}{C}\right) + \tan^{-1} \left( \frac{-2 E_g + \alpha}{C}\right) \right] + \\
+    + 2 \frac{A_L \, E_0}{\pi \xi^4 \alpha} E_g (E^2 - \gamma^2) \left[ \pi + 2 \tan^{-1}\left(2 \frac{\gamma^2 - E_g^2}{\alpha C}\right)\right] + \\
+    - \frac{A_L \, E_0 \, C}{\pi \xi^4} \frac{E^2 + E_g^2}{E} \ln \left( \frac{|E - E_g|}{E + E_g} \right) +
+    \frac{2 A_L \, E_0 \, C}{\pi \xi^4} E_g \ln\left[\frac{|E - E_g| (E + E_g)}{\sqrt{(E_0^2 - E_g^2)^2 + E_g^2 C^2}}\right]
 
 where
 
@@ -102,5 +102,21 @@ where
     \gamma & = \sqrt{E_0^2 - C^2/2}
     \end{align*}
 
+One practical limitation of the Tauc-Lorentz model is that, while the parameters :ref:`A_L`, :ref:`E_0` et :ref:`C` are related to a lorentzian peak 
+they they are not easily related to the geometric peak's parameters, the height, position and width.
+To fix this problem Regress Pro offer a "Peak-based" alternate representation of the Tauc-Lorentz model where the parameters :ref:`A_L'`, :ref:`E_0'` et :ref:`C'` are directly related to the lorentzian peak.
+The "Peak-based" parameters are defined by the following relations:
 
-http://www.ita.uni-heidelberg.de/~gail/astromin/chap6.pdf
+.. math::
+    \begin{align*}
+    A_L' & = \frac{4 A_L \, E_0 \, C}{(4 E_0^2-C^2) C^2} \\
+    E_0' & = \sqrt{E_0^2 - C^2/2} \\
+    C' & = \sqrt[4]{(4 E_0^2-C^2) C^2}
+    \end{align*}
+
+
+.. [Jellison_Modine] G. E. Jellison, Jr and F. A. Modine, Parameterization of the optical functions of amorphous materials in the interband region, *Appl. Phys. Lett.*, **69** (1996) 371–373; Erratum, *Appl. Phys. Lett.*, **69** (1996) 2137.
+
+..
+    Useful reference for Harmonic oscillators model
+    http://www.ita.uni-heidelberg.de/~gail/astromin/chap6.pdf
