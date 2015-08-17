@@ -1,5 +1,5 @@
 static const char *preset_library_data = \
-"dispers-library 12\n"
+"dispers-library 13\n"
 "library-id \"nit-tl-1\"\n"
 "  tauc-lorentz \"Nitride TL\" 1 1 1 4.25 3.5 9.2 8\n"
 "library-id \"nit-ho-1\" ho \"Nitride HO\" 2\n"
@@ -63,4 +63,9 @@ static const char *preset_library_data = \
 "    9.0738 3.52246 1.98116 0.333333 0.611428\n"
 "    7.10768 3.94476 1.83003 0.333333 -0.810911\n"
 "    9.97883 3.57771 3.16959 0.333333 3.17296\n"
+"library-id \"aluminium-ho-1\"\n"
+"ho \"Aluminium HO\" 3\n"
+"  106.818 0 0.168007 0 0.0415207\n"
+"  19.3275 1.52659 1.12463 0 -0.257925\n"
+"  6.41002 1.5015 0.30881 0 -0.62587\n"
 ;

@@ -1,4 +1,4 @@
-dispers-library 12
+dispers-library 13
 library-id "nit-tl-1"
   tauc-lorentz "Nitride TL" 1 1 1 4.25 3.5 9.2 8
 library-id "nit-ho-1" ho "Nitride HO" 2
@@ -62,3 +62,8 @@ library-id "copper-ho-2"
     9.0738 3.52246 1.98116 0.333333 0.611428
     7.10768 3.94476 1.83003 0.333333 -0.810911
     9.97883 3.57771 3.16959 0.333333 3.17296
+library-id "aluminium-ho-1"
+ho "Aluminium HO" 3
+  106.818 0 0.168007 0 0.0415207
+  19.3275 1.52659 1.12463 0 -0.257925
+  6.41002 1.5015 0.30881 0 -0.62587
