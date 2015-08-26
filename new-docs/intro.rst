@@ -6,39 +6,47 @@ Overview
 
 Regress Pro is an application for the analysis of spectroscopic ellipsometry and reflectometry data.
 
-The application can load spectroscopic data coming from ellipsometers and reflectometers and use non-linear fit procedures to determine physical parameters like a film's thickness or it refractive index.
+The application can load spectroscopic data coming from ellipsometers and reflectometers and use well-known fit algorithms to determine physical parameters like film's thicknesses or their refractive index.
 The application assume that the data are acquired in reflection mode with an opaque substrate and the spectra are expected to be resolved in the wavelength domain in a given range.
-In the chapter about :ref:`loading spectra <spectra>` there are more details about what kind of files are accepted by the application.
+In the chapter about :ref:`loading spectra <spectra>` more details are given about what kind of files are accepted by the application.
 
 Using the Application
 ---------------------
 
-The first things to do when working with data is to setup a model of the "film stack" where you define:
+The first things to do when working with data is to setup a model of the film stack.
+In the film stack one defines:
 
   - the substrate
   - a number of thin films, possibly a single film or none
   - the environment where measurement is done (usually "vacuum").
 
-Each film or medium that you define in the film stack corresponds to a material whose optical properties should be given, either as a table of values, either as a model.
-For each film the nominal film thickness in Angstrom is given on the text field on the right.
+Each film defined in the film stack corresponds to a material whose optical properties should be given, either as a table of values, either as a model.
+In addition the thickness expressed in Angstrom for each film is given on the text field on the right.
 
 .. note::
    The nominal thickness is a just reference value and does not need to be exact as the fit algorithm will usually search a best fit value.
    You need to provide an accurate value only if the thickness in kept fixed in the fit recipe.
 
-In the figure below you can see that main window of Regress Pro and the area where the film stack is configured with the corresponding thicknesses on the right.
+In the figure below you can see the main window of Regress Pro and the area where the film stack is configured with the corresponding thicknesses on the right.
 
 .. _main-window-figure:
 
 .. figure:: regress-pro-illustrated-window.png
 
-To begin to work the first step is to load some data to start working with.
+Loading a Spectrum
+~~~~~~~~~~~~~~~~~~
+
+To begin to work the first step is to load an experimental spectrum.
 The applications accept a variery of spectroscopic spectra from ellipsometers or reflectometers.
 To load a spectrum use the menu function "Spectra -> Load Spectra" and choose the file.
-Once the file is loaded you can visualize it by using the interactive fit window.
-It can be opened using the menu function "Fitting -> Interactive Fit".
+Once the file is loaded it can visualized it by using the interactive fit window.
 
-The interactive fit let you experiment interactively with your data but before you need to setup a suitable film stack.
+The interactive fit window can be opened using the menu function "Fitting -> Interactive Fit". In this window you can experiment interactively with your data on the base of the defined *Result Stack*.
+Please note that the *Result Stack* is not the same of the film stack found into the main window.
+The result stack can be accessed using the menu function "Fitting -> Edit Result Stack".
+More details about the result stack are given later.
+
+For the moment we focus on the recipe's film stack shown on the main window.
 In the next section we explain how to setup a film stack and define a fit recipe.
 
 Fit Recipe
@@ -52,12 +60,12 @@ When the seed value is undefined its nominal value will be retrieved from the fi
 
 When entering a seed value a range can be also optionally given.
 If a range is given the system will perform a grid search for the given parameter around the seed value plus and minus the range.
-The step size for the grid search is automatically determined by the software.
+The step size for the grid search is automatically determined by the application.
 The grid search is an useful option to ensure that the non-linear fit algorithm can found a global, optimal, solution.
 
 .. note::
-    If the grid search is made on multiple parameters the search space can be very big and the grid search can take a very long time.
-    When you need to give a range try to use it only for a very small number of parameters, ideally not more than three.
+    If the grid search is made on multiple parameters the search space can be very large and the grid search can take a very long time.
+    When you need to specify a range try to use it only for a very small number of parameters, ideally not more than three.
 
 Fit Parameters
 ~~~~~~~~~~~~~~
@@ -68,26 +76,31 @@ The thicknesses are are named T1, T2, T3, ... where T1 is the top layer, T2 is t
 
 When a film stack use a dispersion model for some of the layers the corresponding parameters will be available in the parameters list.
 The model parameters are grouped by layer number and named accordingly to the model.
-Adding a model parameters means that the fit will adjust its value to optimize the fit.
+
+Adding a model parameters means that the fit will adjust its value to find an optimal solution.
 As for thicknesses you can specify a seed value to be used as a starting point and you can optionally give a range.
+
+.. note::
+    A range for model parameters is only needed if the corresponding range to explore is such that the model's behavior is strongly not linear.
+    Try to avoid specifying a range if it is not strictly needed as this can lead to a very time-consuming search in the parameters's space.
 
 Running the Fit Recipe
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Once the film stack is configured and the list of fit parameters is defined with the corresponding seed values the fit can be done using th menu function "Fitting -> Run Fitting".
-When the fit terminated the results will be shown in the bottom part of the main windows.
+When the fit terminate the results will be shown in the bottom part of the main windows.
 
 The output will include the optimized value of each parameter and the residual Chi Square.
 
 .. note::
-    The fit is done using the Levenberg–Marquardt non-linear fit algorithm.
-	It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
-	If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
-	The search works looking to the residuals and choose the point in the grid with the smaller residuals.
-	The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
+   The fit is done using the Levenberg–Marquardt non-linear fit algorithm.
+	 It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
+	 If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
+	 The search works looking to the residuals and choose the point in the grid with the smaller residuals.
+	 The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
 
-Once the fit is terminated you can visualize the experimental data together with the theoretical curve.
-This can be done by opening the interactive fit window using the menu function "Fitting -> Interactive Fit".
+Once the fit is terminated you can visualize the experimental data together with the theoretical curve by opening the interactive fit window.
+This latter can be opened using the menu function "Fitting -> Interactive Fit".
 
 It is important to know that when you perform a fit:
 
