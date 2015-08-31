@@ -6,8 +6,8 @@ Overview
 
 Regress Pro is an application for the analysis of spectroscopic ellipsometry and reflectometry data.
 
-The application can load spectroscopic data coming from ellipsometers and reflectometers and use well-known fit algorithms to determine physical parameters like film's thicknesses or their refractive index.
-The application assume that the data are acquired in reflection mode with an opaque substrate and the spectra are expected to be resolved in the wavelength domain in a given range.
+The application can load spectroscopic data coming from ellipsometers and reflectometers and trat them using well-known fit algorithms to determine physical parameters like film's thicknesses or their refractive index.
+The application assume that the data are acquired in reflection mode with an opaque substrate and the spectra are expected to be resolved in the wavelength domain.
 In the chapter about :ref:`loading spectra <spectra>` more details are given about what kind of files are accepted by the application.
 
 Using the Application
@@ -20,8 +20,9 @@ In the film stack one defines:
   - a number of thin films, possibly a single film or none
   - the environment where measurement is done (usually "vacuum").
 
-Each film defined in the film stack corresponds to a material whose optical properties should be given, either as a table of values, either as a model.
-In addition the thickness expressed in Angstrom for each film is given on the text field on the right.
+Each material used in the film stack will be associated to a refractive index resolved in wavelength.
+In the film stack the thickness of each layer is entered in the corresponding text field on the right.
+In Regress Pro all the thicknesses are expressed in Angstrom and the wavelengths in nanometers.
 
 .. note::
    The nominal thickness is a just reference value and does not need to be exact as the fit algorithm will usually search a best fit value.
@@ -33,10 +34,23 @@ In the figure below you can see the main window of Regress Pro and the area wher
 
 .. figure:: regress-pro-illustrated-window.png
 
+Editing the Film Stack
+~~~~~~~~~~~~~~~~~~~~~~
+
+The recipe's film stack can be edited directly from the main window.
+On the right side of each layer the thickness can be directly modified.
+In addition you can perform layer-based operations by clicking on the corresponding button on the left.
+By using the left buttons it is possible to add or delete a layer, select a new film or modify the current layer by using the edit function.
+In the bottom part of the menu it is possible also to save the film into the user's library, save it into a file or plot the dispersion curve.
+
+The user's library is a list where dispersion model modified by the user can be added.
+Once a material is addeded in the user's library it will be available to be used for the whole working session.
+Be careful to save the dispersions you need for later use into a file.
+
 Loading a Spectrum
 ~~~~~~~~~~~~~~~~~~
 
-To begin to work the first step is to load an experimental spectrum.
+To work with Regress Pro one usually load an experimental spectrum to be analyzed.
 The applications accept a variery of spectroscopic spectra from ellipsometers or reflectometers.
 To load a spectrum use the menu function "Spectra -> Load Spectra" and choose the file.
 Once the file is loaded it can visualized it by using the interactive fit window.
@@ -94,10 +108,10 @@ The output will include the optimized value of each parameter and the residual C
 
 .. note::
    The fit is done using the Levenberg–Marquardt non-linear fit algorithm.
-	 It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
-	 If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
-	 The search works looking to the residuals and choose the point in the grid with the smaller residuals.
-	 The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
+   It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
+   If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
+   The search works looking to the residuals and choose the point in the grid with the smaller residuals.
+   The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.
 
 Once the fit is terminated you can visualize the experimental data together with the theoretical curve by opening the interactive fit window.
 This latter can be opened using the menu function "Fitting -> Interactive Fit".
@@ -122,8 +136,8 @@ You can also *edit* the result stack and see the changes reported to the interac
 
 .. note::
     The fact that the interactive fit window is linked to the result stack means that if you want to change the model used for the interactive fit you need to make the changes in the "Result Stack".
-    For example you could go in the result stack and change a dispersion model, add a layer or anything you want and then come back to the interactive fit window.
-    Just be awar that when you run the fit recipe from the main window the result stack will be overwritten so be careful to save any important elements before running a fit recipe.
+    For example you could go in the result stack and change a dispersion model, add a layer or something else and then come back to the interactive fit window.
+    Just be aware that when you run the fit recipe from the main window the result stack will be overwritten so be careful to save any important elements before running a fit recipe.
 
 Running an Interactive Fit
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

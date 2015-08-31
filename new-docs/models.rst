@@ -79,7 +79,7 @@ and the real part or :math:`\epsilon` is given by the Kramers-Kronig relations:
 
     \epsilon_1(E) = \epsilon_1(\infty) + \frac{2}{\pi} P \int_{Eg}^\infty \frac{\xi \, \epsilon_2(\xi)}{\xi^2 - E^2} \textrm{d} \xi
 
-An explicit expression for :math:`\epsilon_1` is given by Jellison-Modine [Jellison_Modine]_:
+An explicit expression for :math:`\epsilon_1` is given by Jellison-Modine [Jel]_:
 
 .. math::
 
@@ -102,9 +102,9 @@ where
     \gamma & = \sqrt{E_0^2 - C^2/2}
     \end{align*}
 
-One practical limitation of the Tauc-Lorentz model is that, while the parameters :ref:`A_L`, :ref:`E_0` et :ref:`C` are related to a lorentzian peak 
+One practical limitation of the Tauc-Lorentz model is that, while the parameters :math:`A_L`, :math:`E_0` et :math:`C` are related to a lorentzian peak 
 they they are not easily related to the geometric peak's parameters, the height, position and width.
-To fix this problem Regress Pro offer a "Peak-based" alternate representation of the Tauc-Lorentz model where the parameters :ref:`A_L'`, :ref:`E_0'` et :ref:`C'` are directly related to the lorentzian peak.
+To fix this problem Regress Pro offer a "Peak-based" alternate representation of the Tauc-Lorentz model where the parameters :math:`A_L'`, :math:`E_0'` et :math:`C'` are directly related to the lorentzian peak.
 The "Peak-based" parameters are defined by the following relations:
 
 .. math::
@@ -115,7 +115,7 @@ The "Peak-based" parameters are defined by the following relations:
     \end{align*}
 
 
-.. [Jellison_Modine] G. E. Jellison, Jr and F. A. Modine, Parameterization of the optical functions of amorphous materials in the interband region, *Appl. Phys. Lett.*, **69** (1996) 371–373; Erratum, *Appl. Phys. Lett.*, **69** (1996) 2137.
+.. [Jel] G. E. Jellison, Jr and F. A. Modine, Parameterization of the optical functions of amorphous materials in the interband region, *Appl. Phys. Lett.*, **69** (1996) 371–373; Erratum, *Appl. Phys. Lett.*, **69** (1996) 2137.
 
 ..
     Useful reference for Harmonic oscillators model
