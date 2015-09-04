@@ -6,9 +6,9 @@ Overview
 
 Regress Pro is an application for the analysis of spectroscopic ellipsometry and reflectometry data.
 
-The application can load spectroscopic data coming from ellipsometers and reflectometers and trat them using well-known fit algorithms to determine physical parameters like film's thicknesses or their refractive index.
+The application can load spectroscopic data coming from ellipsometers and reflectometers and treat them using well-known fit algorithms to determine physical parameters like film's thicknesses or their refractive index.
 The application assume that the data are acquired in reflection mode with an opaque substrate and the spectra are expected to be resolved in the wavelength domain.
-In the chapter about :ref:`loading spectra <spectra>` more details are given about what kind of files are accepted by the application.
+In the chapter about :ref:`loading spectra <loading-spectra>` more details are given about what kind of files are accepted by the application.
 
 Using the Application
 ---------------------
@@ -18,7 +18,7 @@ In the film stack one defines:
 
   - the substrate
   - a number of thin films, possibly a single film or none
-  - the environment where measurement is done (usually "vacuum").
+  - the environment where measurement is done.
 
 Each material used in the film stack will be associated to a refractive index resolved in wavelength.
 In the film stack the thickness of each layer is entered in the corresponding text field on the right.
@@ -27,6 +27,11 @@ In Regress Pro all the thicknesses are expressed in Angstrom and the wavelengths
 .. note::
    The nominal thickness is a just reference value and does not need to be exact as the fit algorithm will usually search a best fit value.
    You need to provide an accurate value only if the thickness in kept fixed in the fit recipe.
+
+.. note::
+   Usually the environment of the measurement is the air or the vacuum.
+   In both cases the "vacuum" model can be used for the environment.
+   A different model should be used only if the environment is water or any other exotic environment.
 
 In the figure below you can see the main window of Regress Pro and the area where the film stack is configured with the corresponding thicknesses on the right.
 
@@ -38,14 +43,19 @@ Editing the Film Stack
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The recipe's film stack can be edited directly from the main window.
-On the right side of each layer the thickness can be directly modified.
-In addition you can perform layer-based operations by clicking on the corresponding button on the left.
-By using the left buttons it is possible to add or delete a layer, select a new film or modify the current layer by using the edit function.
+The thickness of a layer can be entered or modified by editing the text field on the right of the film.
+A button is also present of the left of each layer to perform layer-related operations.
+By left-clicking on the button close to the layer is possible to add or delete a layer, change the film's model or modify the model using the edit function.
 In the bottom part of the menu it is possible also to save the film into the user's library, save it into a file or plot the dispersion curve.
 
 The user's library is a list where dispersion model modified by the user can be added.
 Once a material is addeded in the user's library it will be available to be used for the whole working session.
-Be careful to save the dispersions you need for later use into a file.
+
+.. tip::
+    Be careful to save into a file the dispersions you need for later use.
+    When the application is closed all the models in the user's library are lost.
+
+.. _loading-spectra:
 
 Loading a Spectrum
 ~~~~~~~~~~~~~~~~~~
@@ -88,11 +98,12 @@ The list of the available fit parameters depends on the film stack.
 For any given stack the thicknesses of each film will be available in the parameters list.
 The thicknesses are are named T1, T2, T3, ... where T1 is the top layer, T2 is the layer below and so on and their values are always expressed in Angstrom.
 
-When a film stack use a dispersion model for some of the layers the corresponding parameters will be available in the parameters list.
+When a film stack use a dispersion model for any of the layers the corresponding parameters will be available in the parameters list.
 The model parameters are grouped by layer number and named accordingly to the model.
 
 Adding a model parameters means that the fit will adjust its value to find an optimal solution.
-As for thicknesses you can specify a seed value to be used as a starting point and you can optionally give a range.
+
+For any fitting parameter, thickness or model parameter, you can specify a seed value to be used as a starting point and you can optionally give a range.
 
 .. note::
     A range for model parameters is only needed if the corresponding range to explore is such that the model's behavior is strongly not linear.
@@ -123,7 +134,7 @@ It is important to know that when you perform a fit:
 
 The "Result Stack" is a film stack where the results of the fit are stored.
 On the other side, the film stack shown in the main window *is not modified* when you run a fit.
-So, in general, if you want to inspect the results of the fit you can look to the "Result Stack".
+So, in general, if you want to inspect the results of the fit you should look to the "Result Stack".
 This latter is accessible using the menu function "Fitting -> Edit Result Stack".
 
 Interactive Fit Window
