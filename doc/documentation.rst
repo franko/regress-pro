@@ -7,7 +7,6 @@ Contents:
    :maxdepth: 2
 
    intro.rst
-   recipe.rst
    models.rst
 
 Indices and tables
