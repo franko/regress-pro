@@ -18,8 +18,8 @@
  * main: boxback  boxborder  #f0fff4 #bfffcf
  */
 body {
-  font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 10pt;
+  font-family: "Droid Sans","Helvetica Neue",Arial,sans-serif;
+  font-size: 100%;
   margin: 0;
   padding: 0;
   border: none;
@@ -278,12 +278,13 @@ img.right {
 }
 #main {
   line-height: 1.5;
-  text-align: left;
+  text-align: justify;
   margin: 0;
-  padding: 1em 2em;
   border-left: solid 13em #bfffcf;
   border-right: solid 3em #e6ffec;
   background: #e6ffec;
+  max-width: 600px;
+  padding: 20px 80px 10px 40px;
 }
 #foot {
   clear: both;
