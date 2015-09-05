@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction to Regress Pro &mdash; Regress Pro 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Regress Pro 2.0.0 documentation" href="index.html" />
+    <link rel="next" title="Dispersions Models" href="models.html" />
+    <link rel="prev" title="Welcome to Regress Pro’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="models.html" title="Dispersions Models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Regress Pro’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Regress Pro 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction-to-regress-pro">
+<h1>Introduction to Regress Pro<a class="headerlink" href="#introduction-to-regress-pro" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Regress Pro is an application for the analysis of spectroscopic ellipsometry and reflectometry data.</p>
+<p>The application can load spectroscopic data coming from ellipsometers and reflectometers and treat them using well-known fit algorithms to determine physical parameters like film&#8217;s thicknesses or their refractive index.
+The application assume that the data are acquired in reflection mode with an opaque substrate and the spectra are expected to be resolved in the wavelength domain.
+In the chapter about <a class="reference internal" href="#loading-spectra"><em>loading spectra</em></a> more details are given about what kind of files are accepted by the application.</p>
+</div>
+<div class="section" id="using-the-application">
+<h2>Using the Application<a class="headerlink" href="#using-the-application" title="Permalink to this headline">¶</a></h2>
+<p>The first things to do when working with data is to setup a model of the film stack.
+In the film stack one defines:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the substrate</li>
+<li>a number of thin films, possibly a single film or none</li>
+<li>the environment where measurement is done.</li>
+</ul>
+</div></blockquote>
+<p>Each material used in the film stack will be associated to a refractive index resolved in wavelength.
+In the film stack the thickness of each layer is entered in the corresponding text field on the right.
+In Regress Pro all the thicknesses are expressed in Angstrom and the wavelengths in nanometers.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The nominal thickness is a just reference value and does not need to be exact as the fit algorithm will usually search a best fit value.
+You need to provide an accurate value only if the thickness in kept fixed in the fit recipe.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Usually the environment of the measurement is the air or the vacuum.
+In both cases the &#8220;vacuum&#8221; model can be used for the environment.
+A different model should be used only if the environment is water or any other exotic environment.</p>
+</div>
+<p>In the figure below you can see the main window of Regress Pro and the area where the film stack is configured with the corresponding thicknesses on the right.</p>
+<div class="figure" id="main-window-figure">
+<img alt="_images/regress-pro-illustrated-window.png" src="_images/regress-pro-illustrated-window.png" />
+</div>
+<div class="section" id="editing-the-film-stack">
+<h3>Editing the Film Stack<a class="headerlink" href="#editing-the-film-stack" title="Permalink to this headline">¶</a></h3>
+<p>The recipe&#8217;s film stack can be edited directly from the main window.
+The thickness of a layer can be entered or modified by editing the text field on the right of the film.
+A button is also present of the left of each layer to perform layer-related operations.
+By left-clicking on the button close to the layer is possible to add or delete a layer, change the film&#8217;s model or modify the model using the edit function.
+In the bottom part of the menu it is possible also to save the film into the user&#8217;s library, save it into a file or plot the dispersion curve.</p>
+<p>The user&#8217;s library is a list where dispersion model modified by the user can be added.
+Once a material is addeded in the user&#8217;s library it will be available to be used for the whole working session.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">Be careful to save into a file the dispersions you need for later use.
+When the application is closed all the models in the user&#8217;s library are lost.</p>
+</div>
+</div>
+<div class="section" id="loading-a-spectrum">
+<span id="loading-spectra"></span><h3>Loading a Spectrum<a class="headerlink" href="#loading-a-spectrum" title="Permalink to this headline">¶</a></h3>
+<p>To work with Regress Pro one usually load an experimental spectrum to be analyzed.
+The applications accept a variery of spectroscopic spectra from ellipsometers or reflectometers.
+To load a spectrum use the menu function &#8220;Spectra -&gt; Load Spectra&#8221; and choose the file.
+Once the file is loaded it can visualized it by using the interactive fit window.</p>
+<p>The interactive fit window can be opened using the menu function &#8220;Fitting -&gt; Interactive Fit&#8221;. In this window you can experiment interactively with your data on the base of the defined <em>Result Stack</em>.
+Please note that the <em>Result Stack</em> is not the same of the film stack found into the main window.
+The result stack can be accessed using the menu function &#8220;Fitting -&gt; Edit Result Stack&#8221;.
+More details about the result stack are given later.</p>
+<p>For the moment we focus on the recipe&#8217;s film stack shown on the main window.
+In the next section we explain how to setup a film stack and define a fit recipe.</p>
+</div>
+</div>
+<div class="section" id="fit-recipe">
+<h2>Fit Recipe<a class="headerlink" href="#fit-recipe" title="Permalink to this headline">¶</a></h2>
+<p>A fit recipe is defined by a list of fitting parameters each with a corresponding seed value and an optional range.
+The fit parameters are configured in the main window in the area shown in the <a class="reference internal" href="#main-window-figure"><em>figure</em></a> above.
+The entries are chosen from the list and added with the &#8220;return&#8221; key.
+When adding a parameter a seed value can be explicitly given or otherwise the seed will be marked an undefined.
+When the seed value is undefined its nominal value will be retrieved from the film stack.</p>
+<p>When entering a seed value a range can be also optionally given.
+If a range is given the system will perform a grid search for the given parameter around the seed value plus and minus the range.
+The step size for the grid search is automatically determined by the application.
+The grid search is an useful option to ensure that the non-linear fit algorithm can found a global, optimal, solution.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the grid search is made on multiple parameters the search space can be very large and the grid search can take a very long time.
+When you need to specify a range try to use it only for a very small number of parameters, ideally not more than three.</p>
+</div>
+<div class="section" id="fit-parameters">
+<h3>Fit Parameters<a class="headerlink" href="#fit-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The list of the available fit parameters depends on the film stack.
+For any given stack the thicknesses of each film will be available in the parameters list.
+The thicknesses are are named T1, T2, T3, ... where T1 is the top layer, T2 is the layer below and so on and their values are always expressed in Angstrom.</p>
+<p>When a film stack use a dispersion model for any of the layers the corresponding parameters will be available in the parameters list.
+The model parameters are grouped by layer number and named accordingly to the model.</p>
+<p>Adding a model parameters means that the fit will adjust its value to find an optimal solution.</p>
+<p>For any fitting parameter, thickness or model parameter, you can specify a seed value to be used as a starting point and you can optionally give a range.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A range for model parameters is only needed if the corresponding range to explore is such that the model&#8217;s behavior is strongly not linear.
+Try to avoid specifying a range if it is not strictly needed as this can lead to a very time-consuming search in the parameters&#8217;s space.</p>
+</div>
+</div>
+<div class="section" id="running-the-fit-recipe">
+<h3>Running the Fit Recipe<a class="headerlink" href="#running-the-fit-recipe" title="Permalink to this headline">¶</a></h3>
+<p>Once the film stack is configured and the list of fit parameters is defined with the corresponding seed values the fit can be done using th menu function &#8220;Fitting -&gt; Run Fitting&#8221;.
+When the fit terminate the results will be shown in the bottom part of the main windows.</p>
+<p>The output will include the optimized value of each parameter and the residual Chi Square.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The fit is done using the Levenberg–Marquardt non-linear fit algorithm.
+It is a method that finds a solution that minimise the sum of squares of the residual between the experimental data and the model.
+If a range is specified for one or more parameters a grid search is done before the Levenberg–Marquardt minimization.
+The search works looking to the residuals and choose the point in the grid with the smaller residuals.
+The point selected by the grid search is used as the initial seed for the Levenberg–Marquardt non-linear fit.</p>
+</div>
+<p>Once the fit is terminated you can visualize the experimental data together with the theoretical curve by opening the interactive fit window.
+This latter can be opened using the menu function &#8220;Fitting -&gt; Interactive Fit&#8221;.</p>
+<p>It is important to know that when you perform a fit:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the &#8220;Result Stack&#8221; is updated with fit&#8217;s result values</li>
+<li>the interactive fit is updated also accordingly to the fit&#8217;s results.</li>
+</ul>
+</div></blockquote>
+<p>The &#8220;Result Stack&#8221; is a film stack where the results of the fit are stored.
+On the other side, the film stack shown in the main window <em>is not modified</em> when you run a fit.
+So, in general, if you want to inspect the results of the fit you should look to the &#8220;Result Stack&#8221;.
+This latter is accessible using the menu function &#8220;Fitting -&gt; Edit Result Stack&#8221;.</p>
+</div>
+<div class="section" id="interactive-fit-window">
+<h3>Interactive Fit Window<a class="headerlink" href="#interactive-fit-window" title="Permalink to this headline">¶</a></h3>
+<p>In the previous section we said that the interactive fit window is modified according to the fit&#8217;s results.
+While this is true, in reality the general rule is that the interactive fit window is directly linked to the &#8220;Result Stack&#8221;.
+This means that any change made on the &#8220;Result Stack&#8221; will be reflected in the interactive fit and viceversa.
+You can also <em>edit</em> the result stack and see the changes reported to the interactive fit window.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The fact that the interactive fit window is linked to the result stack means that if you want to change the model used for the interactive fit you need to make the changes in the &#8220;Result Stack&#8221;.
+For example you could go in the result stack and change a dispersion model, add a layer or something else and then come back to the interactive fit window.
+Just be aware that when you run the fit recipe from the main window the result stack will be overwritten so be careful to save any important elements before running a fit recipe.</p>
+</div>
+</div>
+<div class="section" id="running-an-interactive-fit">
+<h3>Running an Interactive Fit<a class="headerlink" href="#running-an-interactive-fit" title="Permalink to this headline">¶</a></h3>
+<p>The interactive fit is a window that shows the experimental spectrum, in red, along with the theoretical spectrum, in blue.
+The theoretical spectrum will be calculated on the basis of the result stack.
+On the left side of the window it is shown the list of all the possible fit parameters along with their corresponding values.</p>
+<div class="figure" id="interactive-fit-window-figure">
+<img alt="_images/interactive-fit-window.png" src="_images/interactive-fit-window.png" />
+</div>
+<p>The interactive fit window let you change the value of any parameters directly by typing the value on the text entry.
+When a value is changed the result will be immediately reflected by the theoretical spectrum.
+It is also possible to perform a fit by checking the desired parameters and using the menu function &#8220;Fit -&gt; Run&#8221;.</p>
+<p>It is also possible to change the spectral range of the data by using the &#8220;Range&#8221; entry.
+The interval should be given in the form &#8220;200-800&#8221; with the two wavelength limits in nanometers separated by a &#8220;-&#8221; (minus).
+Changing the spectra range will affect the visualization but also the data actually used of the fit.</p>
+<p>The interactive fit is very useful because it let you experiment to see how the ellipsometry or reflectometry response changes with each of the parameters.
+The value of each parameter can be changed to see how the response changes and verify when the model response get close to the experimental spectrum.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">You can undo and redo any operations in the fit window by using the corresponding menu functions or the shortcuts &#8220;Control-Z&#8221; and &#8220;Control-R&#8221;.
+The undo operation can be very useful if you mess up a complicated setup and you want to come back to a previous set of values.</p>
+</div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">It is possible to change the value of a parameter by positioning the cursor and pressing the key combinations &#8220;Shift-Up&#8221; or &#8220;Shift-Down&#8221;.
+Using this shortcut will increase or decrease the value for the digit on the left of the cursor.
+This is very handy to rapidly check how a parameter affect the spectrum without having to type the whole number each time.
+By positioning the cursor you can also choose to modify the parameter by a small amount of by a big amount, depending on the digit you chose.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction to Regress Pro</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#using-the-application">Using the Application</a><ul>
+<li><a class="reference internal" href="#editing-the-film-stack">Editing the Film Stack</a></li>
+<li><a class="reference internal" href="#loading-a-spectrum">Loading a Spectrum</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fit-recipe">Fit Recipe</a><ul>
+<li><a class="reference internal" href="#fit-parameters">Fit Parameters</a></li>
+<li><a class="reference internal" href="#running-the-fit-recipe">Running the Fit Recipe</a></li>
+<li><a class="reference internal" href="#interactive-fit-window">Interactive Fit Window</a></li>
+<li><a class="reference internal" href="#running-an-interactive-fit">Running an Interactive Fit</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Regress Pro&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">Dispersions Models</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="models.html" title="Dispersions Models"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Regress Pro’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Regress Pro 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Francesco Abbate.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

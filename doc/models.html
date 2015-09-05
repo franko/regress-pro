@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dispersions Models &mdash; Regress Pro 2.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Regress Pro 2.0.0 documentation" href="index.html" />
+    <link rel="prev" title="Introduction to Regress Pro" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction to Regress Pro"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Regress Pro 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dispersions-models">
+<h1>Dispersions Models<a class="headerlink" href="#dispersions-models" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Regress Pro offer a variety of different dispersions models that can be used to describe different kind of materials.
+The models available in Regress Pro are: Cauchy, Lookup, Tauc-Lorentz, Forouhi-Bloomer and Harmonic Oscillators.
+The latter three models based on oscillators and they can have one or more oscillators.</p>
+<p>When a dispersion model is chosen for a film the parameters of the model will become available to be changed either directly or by performing a fit.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">If you need to chose a suitable starting point for the model is is adviced to use the dispersion optimizer.
+This latter will let you &#8220;optimize&#8221; the parameters of a model by comparing with a reference curve.
+By using the dispersion optimizer it is possible to prepare a model with &#8220;reasonable&#8221; starting values to be later optimized based on the experimental spectra.</p>
+</div>
+</div>
+<div class="section" id="cauchy-model">
+<h2>Cauchy Model<a class="headerlink" href="#cauchy-model" title="Permalink to this headline">¶</a></h2>
+<p>The Cauchy model is one of the older and simpler models and it can describe the dispersion of a trasparent dielectric film.
+The formula of the Cauchy model for the refractive index is:</p>
+<div class="math">
+\[n(\lambda) = N_0 + \frac{N_1}{\lambda^2} + \frac{N_2}{\lambda^4}\]</div>
+<p>In theory more higher order terms could be included but the applications is limited to the formula above.</p>
+<p>The absorption coefficient for the Cauchy model is equal to zero for all the wavelength.
+From the practical point of view the application allow to have a non-zero absorption coefficient with a similar formula:</p>
+<div class="math">
+\[k(\lambda) = K_0 + \frac{K_1}{\lambda^2} + \frac{K_2}{\lambda^4}\]</div>
+</div>
+<div class="section" id="harmonic-oscillators-model">
+<h2>Harmonic Oscillators model<a class="headerlink" href="#harmonic-oscillators-model" title="Permalink to this headline">¶</a></h2>
+<p>The Harmonic Oscillators model is based on the classical theory of a damped harmonic oscillator.
+Each oscillators is specified by</p>
+<blockquote>
+<div><ul class="simple">
+<li>the energy, in eV named En in the model. Determine the position of the absoption peak.</li>
+<li>the damping energy, in eV as well and named Eg. Determine the width of the peak.</li>
+<li>the intensity of the oscillator, named Nosc. Determine the intensity of the peak.</li>
+<li>the local field effect coefficient, named Nu. Should be 1/3 for dielectrics. Can be zero for non-localized electronic terms.</li>
+<li>un empirical phase term, named Phi, to adjust the relative phase of the oscillators. These parameter is absent from the true physical model.</li>
+</ul>
+</div></blockquote>
+<p>The formula for the harmonic oscillator for the dielectric constant <span class="math">\(\epsilon\)</span> is the following:</p>
+<div class="math">
+\[\epsilon(\textrm{E}) = 1 + \frac{\sum_i H_i}{1 - \sum_i \nu_i H_i}\]</div>
+<p>where each term <span class="math">\(H_i\)</span> comes from a single oscillator.
+This formula for this latter is:</p>
+<div class="math">
+\[H_i = 16 \pi \textrm{Ry}^2 r_0^3 \, \frac{\textrm{Nosc}_i \, e^{- i \phi_i}}{\textrm{En}_i^2 - \textrm{E}^2 + i \, \textrm{Eg}_i \, \textrm{E}}\]</div>
+<p>where <span class="math">\(\textrm{Ry}\)</span> is the Rydberg constant in eV and <span class="math">\(r_0\)</span> is the Bohr radius in nm.</p>
+</div>
+<div class="section" id="tauc-lorentz-model">
+<h2>Tauc-Lorentz model<a class="headerlink" href="#tauc-lorentz-model" title="Permalink to this headline">¶</a></h2>
+<p>In the Tauc-Lorentz model the imaginary part of <span class="math">\(\epsilon\)</span> is given by the following expression:</p>
+<div class="math">
+\[\begin{split}\epsilon_2(E) =  \left\{ \begin{array}{ll}
+     \frac{A E_0 C (E - E_g)^2}{(E^2 - E_0^2)^2 + C^2 E^2} \frac{1}{E} &amp; E &gt; Eg \\
+     0 &amp; E \le Eg \end{array} \right.\end{split}\]</div>
+<p>and the real part or <span class="math">\(\epsilon\)</span> is given by the Kramers-Kronig relations:</p>
+<div class="math">
+\[\epsilon_1(E) = \epsilon_1(\infty) + \frac{2}{\pi} P \int_{Eg}^\infty \frac{\xi \, \epsilon_2(\xi)}{\xi^2 - E^2} \textrm{d} \xi\]</div>
+<p>An explicit expression for <span class="math">\(\epsilon_1\)</span> is given by Jellison-Modine <a class="reference internal" href="#jel" id="id1">[Jel]</a>:</p>
+<div class="math">
+\[\begin{split}\epsilon_1(E) = \epsilon_1(\infty) +
+\frac{A_L \, C}{\pi \xi^4} \frac{a_{\textrm{ln}}}{2 \alpha E_0} \ln \left( \frac{E_0^2 + E_g^2+\alpha E_g}{E_0^2 + E_g^2-\alpha E_g} \right) + \\
+- \frac{A_L}{\pi \xi^4} \frac{a_{\textrm{tan}}}{E_0} \left[ \pi - \tan^{-1}\left( \frac{2 E_g + \alpha}{C}\right) + \tan^{-1} \left( \frac{-2 E_g + \alpha}{C}\right) \right] + \\
++ 2 \frac{A_L \, E_0}{\pi \xi^4 \alpha} E_g (E^2 - \gamma^2) \left[ \pi + 2 \tan^{-1}\left(2 \frac{\gamma^2 - E_g^2}{\alpha C}\right)\right] + \\
+- \frac{A_L \, E_0 \, C}{\pi \xi^4} \frac{E^2 + E_g^2}{E} \ln \left( \frac{|E - E_g|}{E + E_g} \right) +
+\frac{2 A_L \, E_0 \, C}{\pi \xi^4} E_g \ln\left[\frac{|E - E_g| (E + E_g)}{\sqrt{(E_0^2 - E_g^2)^2 + E_g^2 C^2}}\right]\end{split}\]</div>
+<p>where</p>
+<div class="math">
+\[\begin{split}\begin{align*}
+a_{\textrm{ln}} &amp; = (E_g^2 - E_0^2) E^2 + E_g^2 C^2 - E_0^2 (E_0^2 + 3 E_g^2) \\
+a_{\textrm{tan}} &amp; = (E^2 - E_0^2) (E_0^2 + E_g^2) + E_g^2 C^2 \\
+\xi^4 &amp; = (E^2 - \gamma^2)^2 + \alpha^2 C^2/4 \\
+\alpha &amp; = \sqrt{4 E_0^2 - C^2} \\
+\gamma &amp; = \sqrt{E_0^2 - C^2/2}
+\end{align*}\end{split}\]</div>
+<p>One practical limitation of the Tauc-Lorentz model is that, while the parameters <span class="math">\(A_L\)</span>, <span class="math">\(E_0\)</span> et <span class="math">\(C\)</span> are related to a lorentzian peak
+they they are not easily related to the geometric peak&#8217;s parameters, the height, position and width.
+To fix this problem Regress Pro offer a &#8220;Peak-based&#8221; alternate representation of the Tauc-Lorentz model where the parameters <span class="math">\(A_L'\)</span>, <span class="math">\(E_0'\)</span> et <span class="math">\(C'\)</span> are directly related to the lorentzian peak.
+The &#8220;Peak-based&#8221; parameters are defined by the following relations:</p>
+<div class="math">
+\[\begin{split}\begin{align*}
+A_L' &amp; = \frac{4 A_L \, E_0 \, C}{(4 E_0^2-C^2) C^2} \\
+E_0' &amp; = \sqrt{E_0^2 - C^2/2} \\
+C' &amp; = \sqrt[4]{(4 E_0^2-C^2) C^2}
+\end{align*}\end{split}\]</div>
+<table class="docutils citation" frame="void" id="jel" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[Jel]</a></td><td><ol class="first last upperalpha simple" start="7">
+<li><ol class="first upperalpha" start="5">
+<li>Jellison, Jr and F. A. Modine, Parameterization of the optical functions of amorphous materials in the interband region, <em>Appl. Phys. Lett.</em>, <strong>69</strong> (1996) 371–373; Erratum, <em>Appl. Phys. Lett.</em>, <strong>69</strong> (1996) 2137.</li>
+</ol>
+</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dispersions Models</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#cauchy-model">Cauchy Model</a></li>
+<li><a class="reference internal" href="#harmonic-oscillators-model">Harmonic Oscillators model</a></li>
+<li><a class="reference internal" href="#tauc-lorentz-model">Tauc-Lorentz model</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction to Regress Pro</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/models.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction to Regress Pro"
+             >previous</a> |</li>
+        <li><a href="index.html">Regress Pro 2.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Francesco Abbate.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
