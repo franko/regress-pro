@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tauc-Lorentz dispersion model &mdash; Regress Pro 2.0.0-beta1 documentation</title>
+    <title>Welcome to Regress Pro’s documentation! &mdash; Regress Pro 2.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.0.0-beta1',
+        VERSION:     '2.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,8 +24,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="Regress Pro 2.0.0-beta1 documentation" href="index.html" />
-    <link rel="prev" title="Introduction to Regress Pro" href="intro.html" /> 
+    <link rel="top" title="Regress Pro 2.0.0 documentation" href="index.html" />
+    <link rel="next" title="Introduction to Regress Pro" href="intro.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,8 +36,8 @@
              accesskey="I">index</a></li>
         <li class="right" >
           <a href="intro.html" title="Introduction to Regress Pro"
-             accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Regress Pro 2.0.0-beta1 documentation</a> &raquo;</li> 
+             accesskey="N">next</a> |</li>
+        <li><a href="#">Regress Pro 2.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -46,25 +46,34 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="tauc-lorentz-dispersion-model">
-<h1>Tauc-Lorentz dispersion model<a class="headerlink" href="#tauc-lorentz-dispersion-model" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="welcome-to-regress-pro-s-documentation">
+<h1>Welcome to Regress Pro&#8217;s documentation!<a class="headerlink" href="#welcome-to-regress-pro-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to Regress Pro</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#using-the-application">Using the Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#fit-recipe">Fit Recipe</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Dispersions Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="models.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#cauchy-model">Cauchy Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#harmonic-oscillators-model">Harmonic Oscillators model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#tauc-lorentz-model">Tauc-Lorentz model</a></li>
+</ul>
+</li>
+</ul>
 </div>
-<div class="section" id="formula">
-<h2>Formula<a class="headerlink" href="#formula" title="Permalink to this headline">¶</a></h2>
-<p>In the Tauc-Lorentz model the imaginary part of <span class="math">\(\epsilon\)</span> is given by the following expression:</p>
-<div class="math">
-\[\begin{split}\epsilon_2(E) =  \left\{ \begin{array}{ll}
-     \frac{A E_0 C (E - E_g)^2}{(E^2 - E_0^2)^2 + C^2 E^2} \frac{1}{E} &amp; E &gt; Eg \\
-     0 &amp; E \le Eg \end{array} \right.\end{split}\]</div>
-<p>and the real part or <span class="math">\(\epsilon\)</span> is given by the Kramers-Kronig relations:</p>
-<div class="math">
-\[\epsilon_1(E) = \epsilon_1(\infty) + \frac{2}{\pi} P \int_{Eg}^\infty \frac{\xi \, \epsilon_2(\xi)}{\xi^2 - E^2} \textrm{d} \xi\]</div>
-<p>An explicit expression for <span class="math">\(\epsilon_1\)</span> is given by Jellison-Modine:</p>
-<div class="math">
-\[\epsilon_1(E) = \epsilon_1(\infty) + \frac{A C}{\pi \xi^4} \frac{a_{\textrm{ln}}}{2 \alpha E_0} \ln \left( \frac{E_0^2 + E_g^2+\alpha E_g}{E_0^2 + E_g^2-\alpha E_g} \right)\]</div>
 </div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
 </div>
 
 
@@ -73,23 +82,15 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Tauc-Lorentz dispersion model</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#formula">Formula</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Welcome to Regress Pro&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
-  <h4>Previous topic</h4>
+  <h4>Next topic</h4>
   <p class="topless"><a href="intro.html"
-                        title="previous chapter">Introduction to Regress Pro</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/tauc-lorentz.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
+                        title="next chapter">Introduction to Regress Pro</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -115,8 +116,8 @@
              >index</a></li>
         <li class="right" >
           <a href="intro.html" title="Introduction to Regress Pro"
-             >previous</a> |</li>
-        <li><a href="index.html">Regress Pro 2.0.0-beta1 documentation</a> &raquo;</li> 
+             >next</a> |</li>
+        <li><a href="#">Regress Pro 2.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

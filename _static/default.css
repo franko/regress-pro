@@ -38,8 +38,7 @@ div.bodywrapper {
 div.body {
     background-color: #e6ffec;
     color: #333;
-    max-width: 600px;
-    padding: 0 80px 40px 40px;
+    padding: 0 20px 30px 20px;
 }
 
 div.footer {
