@@ -43,6 +43,12 @@
 
 namespace newplot {
 
+struct cpair {
+    float x, y;
+};
+
+typedef agg::pod_bvector<cpair> cpair_table;
+
 template <class VertexSource>
 struct plot_item {
     VertexSource* vs;
@@ -58,6 +64,16 @@ struct plot_item {
     VertexSource& vertex_source() {
         return *vs;
     };
+
+    void xy_coordinates(cpair_table *vec)
+    {
+        double x, y;
+        vs->rewind(0);
+        for (unsigned cmd = vs->vertex(&x, &y); !agg::is_stop(cmd); cmd = vs->vertex(&x, &y)) {
+            cpair cp = {float(x), float(y)};
+            vec->add(cp);
+        }
+    }
 };
 
 template <class VertexSource, class ResourceManager>
@@ -150,6 +166,16 @@ public:
     bool pad_mode() {
         return m_pad_units;
     };
+
+    void xy_tables(agg::pod_bvector<cpair_table *> *table_list)
+    {
+        unsigned n = m_current_layer->size();
+        for (unsigned i = 0; i < n; i++) {
+            cpair_table *t = new cpair_table();
+            m_current_layer->at(i).xy_coordinates(t);
+            table_list->add(t);
+        }
+    }
 
 protected:
     void draw_elements(canvas &canvas, agg::trans_affine& m);
