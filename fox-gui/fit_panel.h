@@ -76,6 +76,8 @@ public:
     void reload();
     void kill_focus();
 
+    void copy_plot_to_clipboard();
+
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_param_change(FXObject*, FXSelector, void*);
     long on_update_param(FXObject*, FXSelector, void*);
@@ -86,6 +88,7 @@ public:
     long on_cmd_run_fit(FXObject*, FXSelector, void*);
     long on_cmd_undo(FXObject*, FXSelector, void*);
     long on_update_undo_menu(FXObject*, FXSelector, void*);
+    long on_cmd_plot_copy(FXObject *, FXSelector, void *);
 
     enum {
         ID_PARAM_SELECT = FXHorizontalFrame::ID_LAST,
@@ -95,6 +98,7 @@ public:
         ID_PLOT_SCALE,
         ID_ACTION_UNDO,
         ID_ACTION_REDO,
+        ID_PLOT_COPY,
         ID_LAST
     };
 };

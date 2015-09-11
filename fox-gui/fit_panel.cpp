@@ -19,6 +19,7 @@ FXDEFMAP(fit_panel) fit_panel_map[]= {
     FXMAPFUNC(SEL_COMMAND, fit_panel::ID_ACTION_REDO,  fit_panel::on_cmd_undo),
     FXMAPFUNC(SEL_UPDATE,  fit_panel::ID_ACTION_UNDO,  fit_panel::on_update_undo_menu),
     FXMAPFUNC(SEL_UPDATE,  fit_panel::ID_ACTION_REDO,  fit_panel::on_update_undo_menu),
+    FXMAPFUNC(SEL_COMMAND, fit_panel::ID_PLOT_COPY,    fit_panel::on_cmd_plot_copy),
 };
 
 // Object implementation
@@ -343,4 +344,10 @@ long fit_panel::on_update_undo_menu(FXObject* sender, FXSelector sel, void *)
         return 1;
     }
     return 0;
+}
+
+long fit_panel::on_cmd_plot_copy(FXObject *, FXSelector, void *)
+{
+    m_canvas->acquire_clipboard();
+    return 1;
 }

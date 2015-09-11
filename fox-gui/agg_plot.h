@@ -40,14 +40,9 @@
 #include "agg2/agg_conv_stroke.h"
 #include "agg2/agg_conv_dash.h"
 #include "agg2/agg_gsv_text.h"
+#include "plot_clipboard.h"
 
 namespace newplot {
-
-struct cpair {
-    float x, y;
-};
-
-typedef agg::pod_bvector<cpair> cpair_table;
 
 template <class VertexSource>
 struct plot_item {
@@ -167,7 +162,7 @@ public:
         return m_pad_units;
     };
 
-    void xy_tables(agg::pod_bvector<cpair_table *> *table_list)
+    void xy_tables(vector_objects<cpair_table> *table_list)
     {
         unsigned n = m_current_layer->size();
         for (unsigned i = 0; i < n; i++) {

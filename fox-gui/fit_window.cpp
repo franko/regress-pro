@@ -44,6 +44,7 @@ fit_window::fit_window(fit_manager* fit, FXWindow *win, const FXString& name, FX
 
     plotmenu = new FXMenuPane(this);
     new FXMenuCommand(plotmenu, "&Auto Scale", NULL, m_fit_panel, fit_panel::ID_PLOT_SCALE);
+    new FXMenuCommand(plotmenu, "&Copy to clipboard", NULL, m_fit_panel, fit_panel::ID_PLOT_COPY);
     new FXMenuTitle(menubar, "&Plot", NULL, plotmenu);
 }
 

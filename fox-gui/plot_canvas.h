@@ -9,6 +9,7 @@
 #include "agg_plot_array.h"
 #include "vs_object.h"
 #include "canvas.h"
+#include "plot_clipboard.h"
 
 class plot_canvas : public FXCanvas {
     FXDECLARE(plot_canvas)
@@ -21,17 +22,20 @@ public:
                 FXuint opts=FRAME_NORMAL,
                 FXint x=0, FXint y=0, FXint w=0, FXint h=0) :
         FXCanvas(p, tgt, sel, opts, x, y, w, h),
-        m_canvas(0), m_img(0), m_dirty_flag(true)
+        m_clipboard_content(0), m_canvas(0), m_img(0), m_dirty_flag(true)
     {}
 
     virtual ~plot_canvas() {
         delete m_img;
         delete m_canvas;
+        delete m_clipboard_content;
     }
 
     plot_type* plot(unsigned i) {
         return m_plots.plot(i);
     }
+
+    unsigned plot_number() const { return m_plots.size(); }
 
     void add(plot_type* plot) {
         m_plots.add(plot);
@@ -59,6 +63,22 @@ public:
 
     long on_cmd_paint(FXObject *, FXSelector, void *);
     long on_update(FXObject *, FXSelector, void *);
+    long on_clipboard_gained(FXObject *, FXSelector, void *);
+    long on_clipboard_lost(FXObject *, FXSelector, void *);
+    long on_clipboard_request(FXObject *, FXSelector, void *);
+
+    void get_data(int plot_index, line_data *ld)
+    {
+        plot(plot_index)->xy_tables(&ld->tables);
+        ld->names.add(new str("Measured"));
+        if (ld->tables.size() > 1) {
+            ld->names.add(new str("Theory"));
+        }
+    }
+
+    void acquire_clipboard();
+
+    FXDragType plainTextDataType;
 
 protected:
     plot_canvas() {};
@@ -74,6 +94,7 @@ private:
     newplot::plot_array<plot_type, newplot::vertical_layout> m_plots;
 
     agg::rendering_buffer m_rbuf;
+    vector_objects<plot_content> *m_clipboard_content;
 
     canvas* m_canvas;
     FXImage* m_img;
