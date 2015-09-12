@@ -22,6 +22,8 @@ public:
         return *this;
     }
 
+    unsigned len() const { return this->length; }
+
 #if 0
     // Preparing C++11 transition
     str& operator=(str&& s) {
