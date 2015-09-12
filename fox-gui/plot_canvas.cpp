@@ -11,6 +11,12 @@ FXDEFMAP(plot_canvas) plot_canvas_map[]= {
     FXMAPFUNC(SEL_CLIPBOARD_REQUEST, 0, plot_canvas::on_clipboard_request),
 };
 
+FXDragType plot_canvas::urilist_type = 0;
+FXDragType plot_canvas::html_type = 0;
+FXDragType plot_canvas::csv_type = 0;
+FXDragType plot_canvas::utf8_type = 0;
+FXDragType plot_canvas::utf16_type = 0;
+
 // Object implementation
 FXIMPLEMENT(plot_canvas,FXCanvas,plot_canvas_map,ARRAYNUMBER(plot_canvas_map));
 
@@ -26,8 +32,17 @@ void plot_canvas::prepare_image_buffer(int ww, int hh)
 
     m_rbuf.attach(buf, width, height, stride);
     m_canvas = new canvas(m_rbuf, width, height, colors::white);
+}
 
-    plainTextDataType = getApp()->registerDragType("plain/text");
+void plot_canvas::create()
+{
+    FXCanvas::create();
+    FXApp *app = getApp();
+    if (!urilist_type) urilist_type = app->registerDragType("text/uri-list");
+    if (!html_type) html_type = app->registerDragType("text/html");
+    if (!csv_type) csv_type = app->registerDragType("text/csv");
+    if (!utf8_type) utf8_type = app->registerDragType("UTF8_STRING");
+    if (!utf16_type) utf16_type = app->registerDragType("text/utf16");
 }
 
 void plot_canvas::ensure_canvas_size(int ww, int hh)
@@ -82,7 +97,14 @@ plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 
 void plot_canvas::acquire_clipboard()
 {
-    acquireClipboard(&plainTextDataType, 1);
+    FXDragType types[6];
+    types[0]=stringType;
+    types[1]=textType;
+    types[2]=csv_type;
+    types[3]=utf8Type;
+    types[4]=utf16Type;
+    types[5]=html_type;
+    acquireClipboard(types, 6);
 }
 
 long
@@ -115,8 +137,20 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
     if(FXCanvas::onClipboardRequest(sender, sel, ptr)) return 1;
 
     FXEvent *event = (FXEvent*) ptr;
-    if(event->target == plainTextDataType) {
-        str text;
+    str text;
+    if (event->target == csv_type) {
+        for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
+            plot_content *pc = m_clipboard_content->at(k);
+            for (unsigned p = 0; p < pc->lines.size(); p++) {
+                cpair_table *table = pc->lines.tables[p];
+                text += "x,y\n";
+                for (unsigned i = 0; i < table->size(); i++) {
+                    text += str::format("%f,%f\n", table->at(i).x, table->at(i).y);
+                }
+                text += "\n\n";
+            }
+        }
+    } else if (event->target == stringType || event->target == textType) {
         for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
             plot_content *pc = m_clipboard_content->at(k);
             for (unsigned p = 0; p < pc->lines.size(); p++) {
@@ -128,7 +162,22 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
                 text += "\n\n";
             }
         }
+    } else if (event->target == html_type) {
+        for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
+            plot_content *pc = m_clipboard_content->at(k);
+            text += "<table><thead><tr><td>x</td><td>x</td></tr></thead>";
+            text += "<tbody>";
+            for (unsigned p = 0; p < pc->lines.size(); p++) {
+                cpair_table *table = pc->lines.tables[p];
+                for (unsigned i = 0; i < table->size(); i++) {
+                    text += str::format("<tr><td>%f</td><td>%f</td></tr>\n", table->at(i).x, table->at(i).y);
+                }
+            }
+            text += "</tbody>";
+        }
+    }
 
+    if (text.len() > 0) {
         FXuchar *data;
         FXuint len = text.length + 1;
         FXMALLOC(&data, FXuchar, len);
@@ -140,10 +189,9 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
         // Return 1 because it was handled here
         return 1;
     }
-
-  // Return 0 to signify we haven't dealt with it yet; a derived
-  // class from MyWidget may yet give it another try ...
-  return 0;
+    // Return 0 to signify we haven't dealt with it yet; a derived
+    // class from MyWidget may yet give it another try ...
+    return 0;
 }
 
 static void

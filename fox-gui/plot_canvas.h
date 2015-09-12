@@ -31,6 +31,8 @@ public:
         delete m_clipboard_content;
     }
 
+    virtual void create();
+
     plot_type* plot(unsigned i) {
         return m_plots.plot(i);
     }
@@ -78,13 +80,18 @@ public:
 
     void acquire_clipboard();
 
-    FXDragType plainTextDataType;
-
 protected:
     plot_canvas() {};
 private:
     plot_canvas(const plot_canvas&);
     plot_canvas &operator=(const plot_canvas&);
+
+protected:
+    static FXDragType urilist_type;
+    static FXDragType html_type;
+    static FXDragType csv_type;
+    static FXDragType utf8_type;
+    static FXDragType utf16_type;
 
 private:
     void draw_plot(FXEvent*);
