@@ -63,6 +63,8 @@ struct plot_item {
     void xy_coordinates(cpair_table *vec)
     {
         double x, y;
+        agg::trans_affine m;
+        vs->apply_transform(m, 1.0);
         vs->rewind(0);
         for (unsigned cmd = vs->vertex(&x, &y); !agg::is_stop(cmd); cmd = vs->vertex(&x, &y)) {
             cpair cp = {float(x), float(y)};
