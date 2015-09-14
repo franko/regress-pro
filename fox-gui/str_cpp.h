@@ -9,6 +9,10 @@ public:
         str_init(this, 64);
     }
 
+    str(const str& s) {
+        str_init_from_str(this, &s);
+    }
+
     str(const char *t) {
         str_init_from_c(this, t);
     }
@@ -23,6 +27,7 @@ public:
     }
 
     unsigned len() const { return this->length; }
+    const char *text() const { return CSTR(this); }
 
 #if 0
     // Preparing C++11 transition
