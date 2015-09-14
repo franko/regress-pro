@@ -131,50 +131,118 @@ plot_canvas::on_clipboard_lost(FXObject *sender, FXSelector sel, void *ptr)
     return 1;
 }
 
+struct column_info {
+    enum column_e { X, Y };
+    cpair_table *table;
+    column_e column;
+    str header;
+    column_info(): table(0) {}
+    column_info(cpair_table *t, column_e c, const str& h): table(t), column(c), header(h) {}
+};
+
+template <class Writer>
+str write_table(agg::pod_bvector<column_info>& layout_info)
+{
+    str text;
+    text += Writer::begin_fragment();
+
+    text += Writer::begin_header_fragment();
+    for (unsigned j = 0; j < layout_info.size(); j++) {
+        text += Writer::write_cell(layout_info[j].header.text());
+        if (j + 1 < layout_info.size()) {
+            text += Writer::cell_separator();
+        }
+    }
+    text += Writer::end_header_fragment();
+
+    text += Writer::begin_body_fragment();
+    for (unsigned i = 0; true; i++) {
+        bool miss = true;
+        text += Writer::begin_row_fragment();
+        for (unsigned j = 0; j < layout_info.size(); j++) {
+            str value;
+            if (layout_info[j].table && i < layout_info[j].table->size()) {
+                cpair& pair = layout_info[j].table->at(i);
+                float value = (layout_info[j].column == column_info::X ? pair.x : pair.y);
+                text += Writer::write_cell(value);
+                miss = false;
+            } else {
+                text += Writer::write_cell("");
+            }
+            if (j + 1 < layout_info.size()) {
+                text += Writer::cell_separator();
+            }
+        }
+        text += Writer::end_row_fragment();
+        if (miss) break;
+    }
+    text += Writer::end_body_fragment();
+    text += Writer::end_fragment();
+    return text;
+}
+
+struct HtmlWriter {
+    static const char *begin_fragment() { return "<table>"; }
+    static const char *end_fragment() { return "</table>"; }
+    static const char *begin_header_fragment() { return "<thead>"; }
+    static const char *end_header_fragment() { return "</thead>"; }
+    static const char *begin_body_fragment() { return "<tbody>"; }
+    static const char *end_body_fragment() { return "</tbody>"; }
+    static const char *begin_row_fragment() { return "<tr>"; }
+    static const char *end_row_fragment() { return "<tr>"; }
+    static const char *cell_separator() { return ""; }
+    static str write_cell(float v) { return str::format("<td>%f</td>", v); }
+    static str write_cell(const char *s) { return str::format("<td>%s</td>", s); }
+};
+
+struct TextWriterBase {
+    static const char *begin_fragment() { return ""; }
+    static const char *end_fragment() { return ""; }
+    static const char *begin_header_fragment() { return ""; }
+    static const char *end_header_fragment() { return "\n"; }
+    static const char *begin_body_fragment() { return ""; }
+    static const char *end_body_fragment() { return ""; }
+    static const char *begin_row_fragment() { return ""; }
+    static const char *end_row_fragment() { return "\n"; }
+    static str write_cell(float v) { return str::format("%f", v); }
+    static str write_cell(const char *s) { return str(s); }
+};
+
+struct TextWriter : TextWriterBase {
+    static const char *cell_separator() { return "\t"; }
+};
+
+struct CsvWriter : TextWriterBase {
+    static const char *cell_separator() { return ","; }
+};
+
 long
 plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
 {
     if(FXCanvas::onClipboardRequest(sender, sel, ptr)) return 1;
 
     FXEvent *event = (FXEvent*) ptr;
+    agg::pod_bvector<column_info> layout_info;
+    for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
+        plot_content *pc = m_clipboard_content->at(k);
+        for (unsigned p = 0; p < pc->lines.size(); p++) {
+            cpair_table *table = pc->lines.tables[p];
+            str header = str::format("%s/%s", pc->title.text(), pc->lines.names[p]->text());
+            layout_info.add(column_info(table, column_info::X, "Wavelength"));
+            layout_info.add(column_info(table, column_info::Y, header));
+        }
+        if (k + 1 < m_clipboard_content->size()) {
+            layout_info.add(column_info());
+        }
+    }
+
     str text;
     if (event->target == csv_type) {
-        for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
-            plot_content *pc = m_clipboard_content->at(k);
-            for (unsigned p = 0; p < pc->lines.size(); p++) {
-                cpair_table *table = pc->lines.tables[p];
-                text += "x,y\n";
-                for (unsigned i = 0; i < table->size(); i++) {
-                    text += str::format("%f,%f\n", table->at(i).x, table->at(i).y);
-                }
-                text += "\n\n";
-            }
-        }
+        text = write_table<CsvWriter>(layout_info);
     } else if (event->target == stringType || event->target == textType) {
-        for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
-            plot_content *pc = m_clipboard_content->at(k);
-            for (unsigned p = 0; p < pc->lines.size(); p++) {
-                cpair_table *table = pc->lines.tables[p];
-                text += "x\ty\n";
-                for (unsigned i = 0; i < table->size(); i++) {
-                    text += str::format("%f\t%f\n", table->at(i).x, table->at(i).y);
-                }
-                text += "\n\n";
-            }
-        }
+        text = write_table<TextWriter>(layout_info);
     } else if (event->target == html_type) {
-        for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
-            plot_content *pc = m_clipboard_content->at(k);
-            text += "<table><thead><tr><td>x</td><td>x</td></tr></thead>";
-            text += "<tbody>";
-            for (unsigned p = 0; p < pc->lines.size(); p++) {
-                cpair_table *table = pc->lines.tables[p];
-                for (unsigned i = 0; i < table->size(); i++) {
-                    text += str::format("<tr><td>%f</td><td>%f</td></tr>\n", table->at(i).x, table->at(i).y);
-                }
-            }
-            text += "</tbody>";
-        }
+        text = write_table<HtmlWriter>(layout_info);
     }
 
     if (text.len() > 0) {
