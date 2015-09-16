@@ -68,4 +68,11 @@ public:
     }
 };
 
+
+inline bool operator==(const str& a, const str& b) {
+    return (a.len() == b.len() && strncmp(a.text(), b.text(), a.len() + 1) == 0);
+}
+
+inline bool operator!=(const str& a, const str& b) { return !(a == b); }
+
 #endif
