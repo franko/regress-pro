@@ -72,9 +72,10 @@ public:
     void get_data(int plot_index, line_data *ld)
     {
         plot(plot_index)->xy_tables(&ld->tables);
-        ld->names.add(new str("Measured"));
-        if (ld->tables.size() > 1) {
-            ld->names.add(new str("Theory"));
+        for (unsigned i = 0; i < ld->tables.size(); i++) {
+            str *label = new str();
+            *label = str::format("%u", i + 1);
+            ld->names.add(label);
         }
     }
 

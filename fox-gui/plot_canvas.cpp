@@ -129,7 +129,27 @@ struct column_info {
     str header;
     column_info(): table(0) {}
     column_info(cpair_table *t, column_e c, const str& h): table(t), column(c), header(h) {}
+
+    bool is_null() const { return (table == 0); }
+
+    float value(unsigned i) const {
+        cpair& pair = table->at(i);
+        return (column == X ? pair.x : pair.y);
+    }
 };
+
+bool columns_are_equal(const column_info& a, const column_info& b)
+{
+    if (!a.table || !b.table) return false;
+    if (a.table->size() != b.table->size()) return false;
+    if (a.header != b.header) return false;
+    for (unsigned i = 0; i < a.table->size(); i++) {
+        if (fabs(a.value(i) - b.value(i)) > 1e-20) {
+            return false;
+        }
+    }
+    return true;
+}
 
 template <class Writer>
 str write_table(agg::pod_bvector<column_info>& layout_info)
@@ -153,9 +173,7 @@ str write_table(agg::pod_bvector<column_info>& layout_info)
         for (unsigned j = 0; j < layout_info.size(); j++) {
             str value;
             if (layout_info[j].table && i < layout_info[j].table->size()) {
-                cpair& pair = layout_info[j].table->at(i);
-                float value = (layout_info[j].column == column_info::X ? pair.x : pair.y);
-                text += Writer::write_cell(value);
+                text += Writer::write_cell(layout_info[j].value(i));
                 miss = false;
             } else {
                 text += Writer::write_cell("");
@@ -216,11 +234,18 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
     agg::pod_bvector<column_info> layout_info;
     for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
         plot_content *pc = m_clipboard_content->at(k);
+        column_info x_ref;
         for (unsigned p = 0; p < pc->lines.size(); p++) {
             cpair_table *table = pc->lines.tables[p];
             str header = str::format("%s/%s", pc->title.text(), pc->lines.names[p]->text());
-            layout_info.add(column_info(table, column_info::X, "Wavelength"));
+            column_info x_col(table, column_info::X, "wavelength");
+            if (!columns_are_equal(x_col, x_ref)) {
+                layout_info.add(x_col);
+            }
             layout_info.add(column_info(table, column_info::Y, header));
+            if (x_ref.is_null()) {
+                x_ref = x_col;
+            }
         }
         if (k + 1 < m_clipboard_content->size()) {
             layout_info.add(column_info());
