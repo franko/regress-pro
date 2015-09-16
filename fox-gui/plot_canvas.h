@@ -89,9 +89,6 @@ private:
 protected:
     static FXDragType urilist_type;
     static FXDragType html_type;
-    static FXDragType csv_type;
-    static FXDragType utf8_type;
-    static FXDragType utf16_type;
 
 private:
     void draw_plot(FXEvent*);

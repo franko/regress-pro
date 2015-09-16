@@ -13,9 +13,6 @@ FXDEFMAP(plot_canvas) plot_canvas_map[]= {
 
 FXDragType plot_canvas::urilist_type = 0;
 FXDragType plot_canvas::html_type = 0;
-FXDragType plot_canvas::csv_type = 0;
-FXDragType plot_canvas::utf8_type = 0;
-FXDragType plot_canvas::utf16_type = 0;
 
 // Object implementation
 FXIMPLEMENT(plot_canvas,FXCanvas,plot_canvas_map,ARRAYNUMBER(plot_canvas_map));
@@ -40,9 +37,6 @@ void plot_canvas::create()
     FXApp *app = getApp();
     if (!urilist_type) urilist_type = app->registerDragType("text/uri-list");
     if (!html_type) html_type = app->registerDragType("text/html");
-    if (!csv_type) csv_type = app->registerDragType("text/csv");
-    if (!utf8_type) utf8_type = app->registerDragType("UTF8_STRING");
-    if (!utf16_type) utf16_type = app->registerDragType("text/utf16");
 }
 
 void plot_canvas::ensure_canvas_size(int ww, int hh)
@@ -97,14 +91,11 @@ plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 
 void plot_canvas::acquire_clipboard()
 {
-    FXDragType types[6];
+    FXDragType types[3];
     types[0]=stringType;
     types[1]=textType;
-    types[2]=csv_type;
-    types[3]=utf8Type;
-    types[4]=utf16Type;
-    types[5]=html_type;
-    acquireClipboard(types, 6);
+    types[2]=html_type;
+    acquireClipboard(types, 3);
 }
 
 long
@@ -237,9 +228,7 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
     }
 
     str text;
-    if (event->target == csv_type) {
-        text = write_table<CsvWriter>(layout_info);
-    } else if (event->target == stringType || event->target == textType) {
+    if (event->target == stringType || event->target == textType) {
         text = write_table<TextWriter>(layout_info);
     } else if (event->target == html_type) {
         text = write_table<HtmlWriter>(layout_info);
