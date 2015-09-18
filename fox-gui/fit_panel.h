@@ -89,6 +89,7 @@ public:
     long on_cmd_undo(FXObject*, FXSelector, void*);
     long on_update_undo_menu(FXObject*, FXSelector, void*);
     long on_cmd_plot_copy(FXObject *, FXSelector, void *);
+    long on_cmd_plot_copy_as_image(FXObject *, FXSelector, void *);
 
     enum {
         ID_PARAM_SELECT = FXHorizontalFrame::ID_LAST,
@@ -99,6 +100,7 @@ public:
         ID_ACTION_UNDO,
         ID_ACTION_REDO,
         ID_PLOT_COPY,
+        ID_PLOT_COPY_AS_IMAGE,
         ID_LAST
     };
 };

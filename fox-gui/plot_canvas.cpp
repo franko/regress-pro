@@ -89,13 +89,18 @@ plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
     return 1;
 }
 
-void plot_canvas::acquire_clipboard()
+void plot_canvas::acquire_clipboard_as_text()
 {
     FXDragType types[3];
     types[0]=stringType;
     types[1]=textType;
     types[2]=html_type;
     acquireClipboard(types, 3);
+}
+
+void plot_canvas::acquire_clipboard_as_image()
+{
+    acquireClipboard(&FXWindow::imageType, 1);
 }
 
 long
@@ -257,6 +262,40 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
         text = write_table<TextWriter>(layout_info);
     } else if (event->target == html_type) {
         text = write_table<HtmlWriter>(layout_info);
+    } else if (event->target == imageType) {
+        int width = getWidth(), height = getHeight();
+        // FXImage *img = new FXImage(getApp(), NULL, IMAGE_OWNED, width, height);
+        // img->create();
+        FXColor *img_buffer = new (std::nothrow) FXColor[width * height];
+        if (!img_buffer) return 0;
+
+        agg::int8u* buf = (agg::int8u*) img_buffer;
+        const unsigned stride = - width * sizeof(FXColor);
+
+        agg::rendering_buffer rbuf;
+        rbuf.attach(buf, width, height, stride);
+        canvas can(rbuf, width, height, colors::white);
+
+        can.clear();
+        m_plots.draw(&can, width, height);
+        // img->render();
+
+        // FXuchar *data;
+        // FXuval len = sizeof(FXColor) * width * height;
+        // FXMALLOC(&data, FXuchar, len + 128);
+        FXMemoryStream ms;
+        ms.open(FXStreamSave, NULL);
+        if (FX::fxsaveBMP(ms, img_buffer, width, height)) {
+            FXuchar *data;
+            FXuval len;
+            ms.takeBuffer(data, len);
+            setDNDData(FROM_CLIPBOARD, event->target, data + 14, len - 14);
+            delete [] img_buffer;
+            return 1;
+        }
+
+        delete [] img_buffer;
+        return 0;
     }
 
     if (text.len() > 0) {
@@ -308,4 +347,3 @@ void add_new_plot(plot_canvas* canvas, vs_object* v1, vs_object* v2,
 {
     add_new_plot_raw(canvas, v1, v2, title);
 }
-

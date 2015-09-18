@@ -79,7 +79,8 @@ public:
         }
     }
 
-    void acquire_clipboard();
+    void acquire_clipboard_as_text();
+    void acquire_clipboard_as_image();
 
 protected:
     plot_canvas() {};
