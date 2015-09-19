@@ -40,6 +40,7 @@
 #include "agg2/agg_conv_stroke.h"
 #include "agg2/agg_conv_dash.h"
 #include "agg2/agg_gsv_text.h"
+#include "plot_clipboard.h"
 
 namespace newplot {
 
@@ -58,6 +59,18 @@ struct plot_item {
     VertexSource& vertex_source() {
         return *vs;
     };
+
+    void xy_coordinates(cpair_table *vec)
+    {
+        double x, y;
+        agg::trans_affine m;
+        vs->apply_transform(m, 1.0);
+        vs->rewind(0);
+        for (unsigned cmd = vs->vertex(&x, &y); !agg::is_stop(cmd); cmd = vs->vertex(&x, &y)) {
+            cpair cp = {float(x), float(y)};
+            vec->add(cp);
+        }
+    }
 };
 
 template <class VertexSource, class ResourceManager>
@@ -150,6 +163,16 @@ public:
     bool pad_mode() {
         return m_pad_units;
     };
+
+    void xy_tables(vector_objects<cpair_table> *table_list)
+    {
+        unsigned n = m_current_layer->size();
+        for (unsigned i = 0; i < n; i++) {
+            cpair_table *t = new cpair_table();
+            m_current_layer->at(i).xy_coordinates(t);
+            table_list->add(t);
+        }
+    }
 
 protected:
     void draw_elements(canvas &canvas, agg::trans_affine& m);

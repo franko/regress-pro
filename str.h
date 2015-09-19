@@ -24,6 +24,19 @@ typedef struct _str const *const_str_ptr;
     free (s);					\
     (s) = NULL;					\
   }
+
+#define STR_MEMCPY(dst, src) { \
+  (dst)->size = (src)->size; \
+  (dst)->length = (src)->length; \
+  (dst)->heap = (src)->heap; \
+  }
+
+#define STR_NULL(s) { \
+  (s)->size = 0; \
+  (s)->length = 0; \
+  (s)->heap = 0; \
+  }
+
 #define STR_LENGTH(s) ((s)->length)
 #define CSTR(s) ((const char *) (s)->heap)
 #define str_set_null(s) str_trunc(s, 0);
@@ -37,7 +50,7 @@ extern void     str_free(str_ptr s);
 extern void     str_size_check(str_t s, size_t reqlen);
 extern void     str_init_from_c(str_ptr s, const char *sf);
 extern void     str_init_from_str(str_ptr s, const str_t sf);
-extern void     str_copy(str_t d, str_t s);
+extern void     str_copy(str_t d, const str_t s);
 extern void     str_copy_c(str_t d, const char *s);
 extern void     str_copy_c_substr(str_t d, const char *s, int len);
 extern void     str_append_c(str_t to, const char *from, int sep);

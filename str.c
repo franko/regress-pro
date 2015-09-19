@@ -110,7 +110,7 @@ str_size_check(str_t s, size_t reqlen)
 }
 
 void
-str_copy(str_t d, str_t s)
+str_copy(str_t d, const str_t s)
 {
     const size_t len = s->length;
     str_size_check(d, len);
