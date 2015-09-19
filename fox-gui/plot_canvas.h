@@ -11,8 +11,20 @@
 #include "canvas.h"
 #include "plot_clipboard.h"
 
+
 class plot_canvas : public FXCanvas {
     FXDECLARE(plot_canvas)
+
+    struct image {
+        FXColor *data;
+        int width, height;
+        image(int w, int h): width(w), height(h) {
+            data = new (std::nothrow) FXColor[w * h];
+        }
+        ~image() {
+            delete [] data;
+        }
+    };
 
 public:
     typedef newplot::plot_auto<vs_object, owner_management> plot_type;
@@ -22,13 +34,14 @@ public:
                 FXuint opts=FRAME_NORMAL,
                 FXint x=0, FXint y=0, FXint w=0, FXint h=0) :
         FXCanvas(p, tgt, sel, opts, x, y, w, h),
-        m_clipboard_content(0), m_canvas(0), m_img(0), m_dirty_flag(true)
+        m_clipboard_content(0), m_clipboard_image(0), m_canvas(0), m_img(0), m_dirty_flag(true)
     {}
 
     virtual ~plot_canvas() {
         delete m_img;
         delete m_canvas;
         delete m_clipboard_content;
+        delete m_clipboard_image;
     }
 
     virtual void create();
@@ -94,6 +107,16 @@ protected:
     static FXDragType bmp_type;
     static FXDragType png_type;
 
+    void free_clipboard_text() {
+        delete m_clipboard_content;
+        m_clipboard_content = 0;
+    }
+
+    void free_clipboard_image() {
+        delete m_clipboard_image;
+        m_clipboard_image = 0;
+    }
+
 private:
     void draw_plot(FXEvent*);
     void prepare_image_buffer(int ww, int hh);
@@ -102,7 +125,9 @@ private:
     newplot::plot_array<plot_type, newplot::vertical_layout> m_plots;
 
     agg::rendering_buffer m_rbuf;
+    bool m_clipboard_request_text;
     vector_objects<plot_content> *m_clipboard_content;
+    image *m_clipboard_image;
 
     canvas* m_canvas;
     FXImage* m_img;

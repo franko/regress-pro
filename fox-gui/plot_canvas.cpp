@@ -98,15 +98,17 @@ plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 
 void plot_canvas::acquire_clipboard_as_text()
 {
+    m_clipboard_request_text = true;
     FXDragType types[3];
-    types[0]=stringType;
-    types[1]=textType;
-    types[2]=html_type;
+    types[0] = stringType;
+    types[1] = textType;
+    types[2] = html_type;
     acquireClipboard(types, 3);
 }
 
 void plot_canvas::acquire_clipboard_as_image()
 {
+    m_clipboard_request_text = false;
     FXDragType types[3];
     types[0] = FXWindow::imageType;
     types[1] = bmp_type;
@@ -117,15 +119,34 @@ void plot_canvas::acquire_clipboard_as_image()
 long
 plot_canvas::on_clipboard_gained(FXObject *, FXSelector, void *)
 {
-    vector_objects<plot_content> *content_list = new vector_objects<plot_content>();
-    for (unsigned i = 0; i < plot_number(); i++) {
-        plot_content *content = new plot_content();
-        get_data(i, &content->lines);
-        content->title = plot(i)->title();
-        content_list->add(content);
+    this->free_clipboard_text();
+    this->free_clipboard_image();
+
+    if (m_clipboard_request_text) {
+        vector_objects<plot_content> *content_list = new vector_objects<plot_content>();
+        for (unsigned i = 0; i < plot_number(); i++) {
+            plot_content *content = new plot_content();
+            get_data(i, &content->lines);
+            content->title = plot(i)->title();
+            content_list->add(content);
+        }
+        m_clipboard_content = content_list;
+    } else {
+        int width = getWidth(), height = getHeight();
+        image *img = new image(width, height);
+        if (!img->data) {
+            delete img;
+            return 0;
+        }
+        const unsigned stride = - width * sizeof(FXColor);
+        agg::rendering_buffer rbuf;
+        rbuf.attach((agg::int8u*) img->data, width, height, stride);
+        canvas can(rbuf, width, height, colors::white);
+
+        can.clear();
+        m_plots.draw(&can, width, height);
+        m_clipboard_image = img;
     }
-    delete m_clipboard_content;
-    m_clipboard_content = content_list;
     return 1;
 }
 
@@ -133,8 +154,8 @@ long
 plot_canvas::on_clipboard_lost(FXObject *sender, FXSelector sel, void *ptr)
 {
     FXCanvas::onClipboardLost(sender, sel, ptr);
-    delete m_clipboard_content;
-    m_clipboard_content = 0;
+    this->free_clipboard_text();
+    this->free_clipboard_image();
     return 1;
 }
 
@@ -241,15 +262,10 @@ struct CsvWriter : TextWriterBase {
     static const char *cell_separator() { return ","; }
 };
 
-long
-plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
+void compute_table_layout(agg::pod_bvector<column_info>& layout_info, vector_objects<plot_content> *content)
 {
-    if(FXCanvas::onClipboardRequest(sender, sel, ptr)) return 1;
-
-    FXEvent *event = (FXEvent*) ptr;
-    agg::pod_bvector<column_info> layout_info;
-    for (unsigned k = 0; k < m_clipboard_content->size(); k++) {
-        plot_content *pc = m_clipboard_content->at(k);
+    for (unsigned k = 0; k < content->size(); k++) {
+        plot_content *pc = content->at(k);
         column_info x_ref;
         for (unsigned p = 0; p < pc->lines.size(); p++) {
             cpair_table *table = pc->lines.tables[p];
@@ -263,78 +279,71 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
                 x_ref = x_col;
             }
         }
-        if (k + 1 < m_clipboard_content->size()) {
+        if (k + 1 < content->size()) {
             layout_info.add(column_info());
         }
     }
+}
 
-    str text;
-    if (event->target == stringType || event->target == textType) {
-        text = write_table<TextWriter>(layout_info);
-    } else if (event->target == html_type) {
-        text = write_table<HtmlWriter>(layout_info);
-    } else if (event->target == imageType || event->target == bmp_type || event->target == png_type) {
-        int width = getWidth(), height = getHeight();
-        FXColor *img_buffer = new (std::nothrow) FXColor[width * height];
-        if (!img_buffer) return 0;
+long
+plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
+{
+    if(FXCanvas::onClipboardRequest(sender, sel, ptr)) return 1;
 
-        const unsigned stride = - width * sizeof(FXColor);
-        agg::rendering_buffer rbuf;
-        rbuf.attach((agg::int8u*) img_buffer, width, height, stride);
-        canvas can(rbuf, width, height, colors::white);
+    FXDragType target = ((FXEvent*) ptr)->target;
+    if (m_clipboard_content && (target == stringType || target == textType || target == html_type)) {
+        str text;
+        agg::pod_bvector<column_info> layout_info;
+        compute_table_layout(layout_info, m_clipboard_content);
 
-        can.clear();
-        m_plots.draw(&can, width, height);
+        if (target == html_type) {
+            text = write_table<HtmlWriter>(layout_info);
+        } else {
+            text = write_table<TextWriter>(layout_info);
+        }
 
+        FXuchar *data;
+        FXuval len = text.length + 1;
+        FXMALLOC(&data, FXuchar, len);
+        memcpy(data, text.heap, len);
+
+        setDNDData(FROM_CLIPBOARD, target, data, len);
+        return 1;
+    } else if (m_clipboard_image && (target == imageType || target == bmp_type || target == png_type)) {
         FXMemoryStream ms;
         ms.open(FXStreamSave, NULL);
         bool success;
-        if (event->target == imageType || event->target == bmp_type) {
-            success = FX::fxsaveBMP(ms, img_buffer, width, height);
+        image *img = m_clipboard_image;
+        if (target == imageType || target == bmp_type) {
+            success = FX::fxsaveBMP(ms, img->data, img->width, img->height);
         } else {
-            success = FX::fxsavePNG(ms, img_buffer, width, height);
+            success = FX::fxsavePNG(ms, img->data, img->width, img->height);
         }
-
-        delete [] img_buffer;
 
         if (success) {
             FXuchar *data;
             FXuval len;
             ms.takeBuffer(data, len);
-            if (event->target == imageType) {
-            /* We subtract for the BMP buffer the size of:
+            if (target == imageType) {
+                /* We subtract for the BMP buffer the size of:
+
                 typedef struct tagBITMAPFILEHEADER {
-                  WORD    bfType;
-                  DWORD   bfSize;
-                  WORD    bfReserved1;
-                  WORD    bfReserved2;
-                  DWORD   bfOffBits;
+                    WORD    bfType;
+                    DWORD   bfSize;
+                    WORD    bfReserved1;
+                    WORD    bfReserved2;
+                    DWORD   bfOffBits;
                 } BITMAPFILEHEADER;
-            *  which is equal to 14. */
+
+                which is equal to 14. */
                 const unsigned BMPHS = 14;
-                setDNDData(FROM_CLIPBOARD, event->target, data + BMPHS, len - BMPHS);
+                setDNDData(FROM_CLIPBOARD, target, data + BMPHS, len - BMPHS);
             } else {
-                setDNDData(FROM_CLIPBOARD, event->target, data, len);
+                setDNDData(FROM_CLIPBOARD, target, data, len);
             }
         }
-
         return 1;
     }
-
-    if (text.len() > 0) {
-        FXuchar *data;
-        FXuint len = text.length + 1;
-        FXMALLOC(&data, FXuchar, len);
-        memcpy(data, text.heap, len);
-
-        // Give the array to the system!
-        setDNDData(FROM_CLIPBOARD, event->target, data, len);
-
-        // Return 1 because it was handled here
-        return 1;
-    }
-    // Return 0 to signify we haven't dealt with it yet; a derived
-    // class from MyWidget may yet give it another try ...
     return 0;
 }
 
