@@ -1,4 +1,7 @@
 
+#include <fx.h>
+#include <FXPNGImage.h>
+
 #include "plot_canvas.h"
 #include "colors.h"
 
@@ -13,6 +16,8 @@ FXDEFMAP(plot_canvas) plot_canvas_map[]= {
 
 FXDragType plot_canvas::urilist_type = 0;
 FXDragType plot_canvas::html_type = 0;
+FXDragType plot_canvas::bmp_type = 0;
+FXDragType plot_canvas::png_type = 0;
 
 // Object implementation
 FXIMPLEMENT(plot_canvas,FXCanvas,plot_canvas_map,ARRAYNUMBER(plot_canvas_map));
@@ -37,6 +42,8 @@ void plot_canvas::create()
     FXApp *app = getApp();
     if (!urilist_type) urilist_type = app->registerDragType("text/uri-list");
     if (!html_type) html_type = app->registerDragType("text/html");
+    if (!bmp_type) bmp_type = app->registerDragType(FXBMPImage::mimeType);
+    if (!png_type) png_type = app->registerDragType(FXPNGImage::mimeType);
 }
 
 void plot_canvas::ensure_canvas_size(int ww, int hh)
@@ -100,7 +107,11 @@ void plot_canvas::acquire_clipboard_as_text()
 
 void plot_canvas::acquire_clipboard_as_image()
 {
-    acquireClipboard(&FXWindow::imageType, 1);
+    FXDragType types[3];
+    types[0] = FXWindow::imageType;
+    types[1] = bmp_type;
+    types[2] = png_type;
+    acquireClipboard(types, 3);
 }
 
 long
@@ -262,40 +273,52 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
         text = write_table<TextWriter>(layout_info);
     } else if (event->target == html_type) {
         text = write_table<HtmlWriter>(layout_info);
-    } else if (event->target == imageType) {
+    } else if (event->target == imageType || event->target == bmp_type || event->target == png_type) {
         int width = getWidth(), height = getHeight();
-        // FXImage *img = new FXImage(getApp(), NULL, IMAGE_OWNED, width, height);
-        // img->create();
         FXColor *img_buffer = new (std::nothrow) FXColor[width * height];
         if (!img_buffer) return 0;
 
-        agg::int8u* buf = (agg::int8u*) img_buffer;
         const unsigned stride = - width * sizeof(FXColor);
-
         agg::rendering_buffer rbuf;
-        rbuf.attach(buf, width, height, stride);
+        rbuf.attach((agg::int8u*) img_buffer, width, height, stride);
         canvas can(rbuf, width, height, colors::white);
 
         can.clear();
         m_plots.draw(&can, width, height);
-        // img->render();
 
-        // FXuchar *data;
-        // FXuval len = sizeof(FXColor) * width * height;
-        // FXMALLOC(&data, FXuchar, len + 128);
         FXMemoryStream ms;
         ms.open(FXStreamSave, NULL);
-        if (FX::fxsaveBMP(ms, img_buffer, width, height)) {
-            FXuchar *data;
-            FXuval len;
-            ms.takeBuffer(data, len);
-            setDNDData(FROM_CLIPBOARD, event->target, data + 14, len - 14);
-            delete [] img_buffer;
-            return 1;
+        bool success;
+        if (event->target == imageType || event->target == bmp_type) {
+            success = FX::fxsaveBMP(ms, img_buffer, width, height);
+        } else {
+            success = FX::fxsavePNG(ms, img_buffer, width, height);
         }
 
         delete [] img_buffer;
-        return 0;
+
+        if (success) {
+            FXuchar *data;
+            FXuval len;
+            ms.takeBuffer(data, len);
+            if (event->target == imageType) {
+            /* We subtract for the BMP buffer the size of:
+                typedef struct tagBITMAPFILEHEADER {
+                  WORD    bfType;
+                  DWORD   bfSize;
+                  WORD    bfReserved1;
+                  WORD    bfReserved2;
+                  DWORD   bfOffBits;
+                } BITMAPFILEHEADER;
+            *  which is equal to 14. */
+                const unsigned BMPHS = 14;
+                setDNDData(FROM_CLIPBOARD, event->target, data + BMPHS, len - BMPHS);
+            } else {
+                setDNDData(FROM_CLIPBOARD, event->target, data, len);
+            }
+        }
+
+        return 1;
     }
 
     if (text.len() > 0) {

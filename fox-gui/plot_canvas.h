@@ -91,6 +91,8 @@ private:
 protected:
     static FXDragType urilist_type;
     static FXDragType html_type;
+    static FXDragType bmp_type;
+    static FXDragType png_type;
 
 private:
     void draw_plot(FXEvent*);
