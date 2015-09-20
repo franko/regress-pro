@@ -3,7 +3,7 @@ include makeconfig
 include makesystem
 
 PACKAGE_NAME = regress-pro
-VERSION = 2.0.0
+VERSION = 2.0.1
 DEBIAN_BUILD_DIR = debian_build
 DEB_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEBIAN_PACKAGE := $(PACKAGE_NAME)_$VERSION-1_$(DEB_ARCH).deb
