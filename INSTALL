@@ -3,7 +3,8 @@ Installation Instruction
 
 These are the installation intructions for Regress Pro.
 
-Regress Pro can be compiled both on Windows and on Linux using the GNU Makefile and GCC. On Windows the build process was tested using MinGW.
+Regress Pro can be compiled both on Windows and on Linux using GNU Make and GCC.
+On Windows the build process was tested using MinGW.
 
 The following libraries are needed to compile Regress Pro:
 - GSL library, should work with any recent version. Tested with version
@@ -11,35 +12,5 @@ The following libraries are needed to compile Regress Pro:
 - FOX toolkit library, version 1.6
 - AGG library, verison 2.5
 
-The following libraries are needed only when the product registration is enabled:
-- libmhash
-- GMP library
-
-In order to compile you should check the file 'makeconfig'. The variable you may want to change are
-- PRODUCT_REGISTRATION, if 'yes' the product registration will be enabled
-- the compiler flags, you can change them if you know what you do
-  otherwise leave them untouched
-
-About the Product Registration
-==============================
-
-Regress Pro is published under the GNU GPL license, version 2. The license give you the right to use the software, modify it and publish the modifications as far as you comply with the GPL license.
-
-The author of Regress Pro believe that it is very important for scientific
-software to be published under a free license that allow to study and modify
-the source code. The existence of Regress Pro itself was possible thanks to
-many free software projects like GCC, the GSL library, GNU Makefile, the FOX
-toolkit, the GNU/Linux operating system as a whole and many other tools.
-
-The registration is not meant as a restriction over the software itself, this
-latter is available without restriction accordingly to the GNU GPL license.
-The registration is meant for the optimized binary package produced by the
-author itself and proposed to the users. It should be seen as a facility to
-avoid the difficulties of the software compilation and the user should consider
-to register the software to contribute to the development of the project and
-to reward the author for his work.
-
-If you compile the software by yourself feel free to disable the product
-registrations in the file 'makeconfig' but please consider also that the
-registration is a contribution for the work of the author and an encouragement
-for the further development of the software.
+In order to compile you should check the file 'makeconfig'. You may change the
+compiler flags if you know what you do otherwise leave them untouched.
