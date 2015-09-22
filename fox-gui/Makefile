@@ -1,8 +1,9 @@
 
-BASEDIR = ..
+TOP_DIR = ..
+SOURCE_DIR = ../src
 
-include $(BASEDIR)/makeconfig
-include $(BASEDIR)/makesystem
+include $(SOURCE_DIR)/makeconfig
+include $(SOURCE_DIR)/makesystem
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
@@ -29,7 +30,7 @@ ifeq ($(HOST_SYS),Windows)
   LIBS += -lgdi32 -lwsock32 -mwindows
 endif
 
-INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I..
+INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) -I$(SOURCE_DIR)
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
@@ -51,6 +52,8 @@ REG_OBJ_FILES := $(REG_OBJ_FILEX:%.c=%.o)
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)
 DEP_FILES := $(SRC_FILES:%.cpp=.deps/%.P)
 
+LIBEFIT = $(SOURCE_DIR)/libefit.a
+
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
 ifeq ($(PRODUCT_REGISTRATION),yes)
@@ -67,12 +70,12 @@ endif
 
 all: $(PRG)
 
-include $(BASEDIR)/makerules
+include $(SOURCE_DIR)/makerules
 
-$(PRG): $(OBJ_FILES) ../libefit.a
-	$(CXX) -o $@ $(OBJ_FILES) ../libefit.a $(LIBS)
+$(PRG): $(OBJ_FILES) $(LIBEFIT)
+	$(CXX) -o $@ $(OBJ_FILES) $(LIBEFIT) $(LIBS)
 
-gitversion.cpp: $(BASEDIR)/.git/HEAD $(BASEDIR)/.git/index
+gitversion.cpp: $(TOP_DIR)/.git/HEAD $(TOP_DIR)/.git/index
 	echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
 
 clean:
