@@ -167,7 +167,7 @@ fit_panel::verify_spectral_range(const char *txt, double ps[])
     if(nass == 2) {
         ps[2] = 0.0;
     } else {
-        if(ps[2] < 0.1) {
+        if(ps[2] <= 0.0) {
             return false;
         }
 
@@ -176,7 +176,7 @@ fit_panel::verify_spectral_range(const char *txt, double ps[])
         }
     }
 
-    return (ps[0] >= 50.0 && ps[1] <= 5000.0 && ps[1] > ps[0]);
+    return (ps[1] > ps[0]);
 }
 
 bool
