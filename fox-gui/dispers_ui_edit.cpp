@@ -2,6 +2,7 @@
 #include "disp-ho.h"
 #include "disp-fb.h"
 #include "dispers_ui_utils.h"
+#include "dispers-library.h"
 #include "regress_pro.h"
 
 // Map
@@ -263,6 +264,7 @@ FXDEFMAP(fx_disp_lookup_window) fx_disp_lookup_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_INSERT_COMP, fx_disp_lookup_window::on_cmd_insert_comp),
     FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_EDIT_COMP, fx_disp_lookup_window::on_cmd_edit_comp),
     FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_REPLACE_COMP, fx_disp_lookup_window::on_cmd_replace_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_SAVE_USERLIB, fx_disp_lookup_window::on_cmd_save_userlib),
 };
 
 FXIMPLEMENT(fx_disp_lookup_window,fx_disp_window,fx_disp_lookup_window_map,ARRAYNUMBER(fx_disp_lookup_window_map));
@@ -275,6 +277,8 @@ fx_disp_lookup_window::fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint o
     new FXMenuCommand(popupmenu,"Replace Component", NULL, this, ID_REPLACE_COMP);
     new FXMenuCommand(popupmenu,"Insert Component", NULL, this, ID_INSERT_COMP);
     new FXMenuCommand(popupmenu,"Edit Component", NULL, this, ID_EDIT_COMP);
+    new FXMenuSeparator(popupmenu);
+    new FXMenuCommand(popupmenu,"Save to User Library", NULL, this, ID_SAVE_USERLIB);
 }
 
 fx_disp_lookup_window::~fx_disp_lookup_window()
@@ -407,6 +411,16 @@ long fx_disp_lookup_window::on_cmd_replace_comp(FXObject *, FXSelector, void *)
     tf->setText(CSTR(new_disp->name));
     return 1;
 }
+
+long fx_disp_lookup_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
+{
+    const int i = selected_component;
+    disp_lookup *lookup = &disp->disp.lookup;
+    disp_t *d = disp_copy(lookup->component[i].disp);
+    disp_list_add(user_lib, d, NULL);
+    return 1;
+}
+
 
 long fx_disp_lookup_window::on_changed_component_name(FXObject *, FXSelector sel, void *text)
 {

@@ -132,6 +132,7 @@ public:
     long on_cmd_insert_comp(FXObject *, FXSelector, void *);
     long on_cmd_edit_comp(FXObject *, FXSelector, void *);
     long on_cmd_replace_comp(FXObject *, FXSelector, void *);
+    long on_cmd_save_userlib(FXObject *, FXSelector, void *);
 
     enum {
         ID_COMPONENT_NAME = fx_disp_window::ID_LAST,
@@ -142,6 +143,7 @@ public:
         ID_REPLACE_COMP,
         ID_INSERT_COMP,
         ID_EDIT_COMP,
+        ID_SAVE_USERLIB,
         ID_LAST
     };
 
