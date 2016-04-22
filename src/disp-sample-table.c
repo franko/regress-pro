@@ -154,6 +154,12 @@ disp_sample_table_n_value(const disp_t *disp, double lam)
     return nx - kx * I;
 }
 
+enum {
+    WL_UNIT_DEFAULT = 0, /* Nanometers. */
+    WL_UNIT_CONVERT_EV = 1,
+    WL_UNIT_CONVERT_ANGSTROMS = 1 << 1,
+};
+
 disp_t *
 disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 {
@@ -161,7 +167,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
     str_t row;
     disp_t *disp = NULL;
     enum disp_type dtype;
-    int convert_ev = 0;
+    unsigned int wl_unit_conv = 0;
     int provide_diel_k = 0;
 
     f = fopen(filename, "r");
@@ -180,7 +186,9 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
     if(strncasecmp(CSTR(row), "CAUCHY", 6) == 0) {
         dtype = DISP_CAUCHY;
     } else if(strncasecmp(CSTR(row), "ev", 2) == 0) {
-        convert_ev = 1;
+        wl_unit_conv |= WL_UNIT_CONVERT_EV;
+    } else if(strncasecmp(CSTR(row), "ANGSTROMS", 9) == 0) {
+        wl_unit_conv |= WL_UNIT_CONVERT_ANGSTROMS;
     } else if(strncasecmp(CSTR(row), "nm", 2) != 0) {
         *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalide MAT file: \"%s\"", filename);
         goto close_exit;
@@ -240,8 +248,10 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
                 read_status = fscanf(f, "%lf %lf %lf\n", wptr, nptr, kptr);
             } while(read_status < 3 && read_status != EOF);
 
-            if(convert_ev) {
+            if(wl_unit_conv & WL_UNIT_CONVERT_EV) {
                 *wptr = 1239.8 / *wptr;
+            } else if(wl_unit_conv & WL_UNIT_CONVERT_ANGSTROMS) {
+                *wptr /= 10.0;
             }
 
             if(provide_diel_k) {
