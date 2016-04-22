@@ -165,11 +165,12 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
         regress_pro_app()->disp_dir = open.getDirectory();
         str_ptr error_message;
         disp_t *disp = NULL;
-        if (filename.right(4) == ".mat") {
+        FXString extension = filename.after('.');
+        if (comparecase(extension, "mat") == 0) {
             disp = load_mat_dispers(filename.text(), &error_message);
-        } else if (filename.right(3) == ".nk") {
+        } else if (comparecase(extension, "nk") == 0) {
             disp = load_nk_table(filename.text(), &error_message);
-        } else if (filename.right(4) == ".dsp") {
+        } else if (comparecase(extension, "dsp") == 0) {
             str_t disp_text;
             str_init(disp_text, 128);
             if(str_loadfile(filename.text(), disp_text) != 0) {
