@@ -4,8 +4,6 @@
 #include "defs.h"
 #include "str.h"
 
-__BEGIN_DECLS
-
 enum token_e {
     TK_UNDEF    = 0,
     TK_IDENT    = 1,
@@ -15,33 +13,33 @@ enum token_e {
     TK_INTEGER  = 0x101,
 };
 
-typedef struct {
+struct Token {
     enum token_e tk;
     union {
         double num;
         long integer;
         const char *str;
     } value;
-} token_t;
+};
 
-typedef struct {
-    const char *text;
-    token_t current;
-    str_t buffer;
+class Lexer {
+public:
+    Lexer(const char *text);
+    ~Lexer();
+
+    void next();
+    int ident_to_store();
+    int string_to_store();
+    int integer(int *value);
+    int number(double *value);
+
+    int check_ident(const char *name);
+
+    Token current;
     str_t store;
-} lexer_t;
-
-extern lexer_t * lexer_new(const char *s);
-extern void      lexer_free(lexer_t *l);
-extern void      lexer_next(lexer_t *l);
-extern int       lexer_string_store(lexer_t *l, int tk_ident);
-extern int       lexer_integer(lexer_t *l, int *value);
-extern int       lexer_number(lexer_t *l, double *value);
-extern int       lexer_check_ident(lexer_t *l, const char *id);
-
-#define lexer_string(a) lexer_string_store(a, 0)
-#define lexer_ident(a) lexer_string_store(a, 1)
-
-__END_DECLS
+private:
+    const char *m_text;
+    str_t m_buffer;
+};
 
 #endif

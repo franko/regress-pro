@@ -1,38 +1,10 @@
 #ifndef CMPL_VECTOR_H
 #define CMPL_VECTOR_H
 
-#include <math.h>
+#include <complex>
+#include <cmath>
 
-#ifdef __cplusplus
-
-
-struct cmpl {
-    enum part_e {
-        real_part = 0,
-        imag_part = 1,
-    };
-
-    double data[2];
-};
-
-inline double creal(cmpl z)
-{
-    return z.data[0];
-}
-inline double cimag(cmpl z)
-{
-    return z.data[1];
-}
-
-#else
-#include <complex.h>
-
-typedef double complex cmpl;
-#endif /* C++ */
-
-#include "common.h"
-
-__BEGIN_DECLS
+typedef std::complex<double> complex;
 
 #define CMPL_VECTOR_TERM(v,i) (v)->data[i]
 #define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
