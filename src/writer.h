@@ -4,26 +4,25 @@
 #include "defs.h"
 #include "str.h"
 
-__BEGIN_DECLS
+class Writer {
+public:
+    Writer();
+    ~Writer();
 
-struct _writer {
-    str_t text;
-    int indent;
-    int single_line;
-    int new_line;
+    void printf(const char *fmt, ...);
+    void newline();
+    void newline_enter();
+    void newline_exit();
+    int save_tofile(const char *filename);
+
+    void indent(int n) { m_indent += n; }
+
+private:
+    void begin_write();
+
+    str_t m_text;
+    int m_indent;
+    bool m_new_line;
 };
-
-typedef struct _writer writer_t;
-
-extern writer_t *writer_new();
-extern void      writer_free(writer_t *w);
-extern void      writer_printf(writer_t *w, const char *fmt, ...);
-extern void      writer_newline(writer_t *w);
-extern void      writer_indent(writer_t *w, int n);
-extern void      writer_newline_enter(writer_t *w);
-extern void      writer_newline_exit(writer_t *w);
-extern int       writer_save_tofile(writer_t *w, const char *filename);
-
-__END_DECLS
 
 #endif
