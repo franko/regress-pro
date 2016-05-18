@@ -3,24 +3,15 @@
 #include "lexer.h"
 
 Lexer::Lexer(const char *s) : m_text(s) {
-    str_init(m_buffer, 64);
-    str_init(store, 64);
     next();
 }
 
-Lexer::~Lexer() {
-    str_free(m_buffer);
-    str_free(store);
-}
-
 static void
-read_string(const char *text, str_ptr buffer, const char **tail)
+read_string(const char *text, str& buffer, const char **tail)
 {
-    char c[2] = {0, 0};
     const char *p;
     for (p = text; *p && *p != '"'; p++) {
-        c[0] = *p;
-        str_append_c(buffer, c, 0);
+        buffer += *p;
     }
     if (*p == '"') {
         *tail = p + 1;
@@ -30,13 +21,11 @@ read_string(const char *text, str_ptr buffer, const char **tail)
 }
 
 static void
-read_ident(const char *text, str_ptr buffer, const char **tail)
+read_ident(const char *text, str& buffer, const char **tail)
 {
-    char c[2] = {0, 0};
     const char *p;
     for (p = text; *p && ((*p >= 'a' && *p <= 'z') || *p == '-'); p++) {
-        c[0] = *p;
-        str_append_c(buffer, c, 0);
+        buffer += *p;
     }
     *tail = p;
 }
@@ -63,20 +52,20 @@ void Lexer::next() {
         }
     } else if (c == '"') {
         const char *tail;
-        str_trunc(m_buffer, 0);
+        m_buffer.clear();
         read_string(m_text + 1, m_buffer, &tail);
         current.tk = TK_STRING;
-        current.value.str = CSTR(m_buffer);
+        current.value.str = m_buffer.text();
         m_text = tail;
     } else {
         const char *tail;
-        str_trunc(m_buffer, 0);
+        m_buffer.clear();
         read_ident(m_text, m_buffer, &tail);
         if (tail == m_text) {
             current.tk = TK_UNDEF;
         } else {
             current.tk = TK_IDENT;
-            current.value.str = CSTR(m_buffer);
+            current.value.str = m_buffer.text();
             m_text = tail;
         }
     }
@@ -84,7 +73,7 @@ void Lexer::next() {
 
 int Lexer::ident_to_store() {
     if (current.tk == TK_IDENT) {
-        str_copy_c(store, current.value.str);
+        store = current.value.str;
         next();
         return 0;
     }
@@ -93,7 +82,7 @@ int Lexer::ident_to_store() {
 
 int Lexer::string_to_store() {
     if (current.tk == TK_STRING) {
-        str_copy_c(store, current.value.str);
+        store = current.value.str;
         next();
         return 0;
     }

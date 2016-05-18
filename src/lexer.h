@@ -2,7 +2,7 @@
 #define LEXER_H
 
 #include "defs.h"
-#include "str.h"
+#include "str_cpp.h"
 
 enum token_e {
     TK_UNDEF    = 0,
@@ -25,7 +25,6 @@ struct Token {
 class Lexer {
 public:
     Lexer(const char *text);
-    ~Lexer();
 
     void next();
     int ident_to_store();
@@ -36,10 +35,10 @@ public:
     int check_ident(const char *name);
 
     Token current;
-    str_t store;
+    str store;
 private:
     const char *m_text;
-    str_t m_buffer;
+    str m_buffer;
 };
 
 #endif

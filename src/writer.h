@@ -2,12 +2,11 @@
 #define WRITER_H
 
 #include "defs.h"
-#include "str.h"
+#include "str_cpp.h"
 
 class Writer {
 public:
     Writer();
-    ~Writer();
 
     void printf(const char *fmt, ...);
     void newline();
@@ -20,7 +19,7 @@ public:
 private:
     void begin_write();
 
-    str_t m_text;
+    str m_text;
     int m_indent;
     bool m_new_line;
 };

@@ -1,6 +1,8 @@
 #ifndef STR_CPP_H
 #define STR_CPP_H
 
+#include <string.h>
+
 #include "str.h"
 
 class str : public _str {
@@ -29,14 +31,15 @@ public:
     unsigned len() const { return this->length; }
     const char *text() const { return CSTR(this); }
 
-#if 0
-    // Preparing C++11 transition
+    void clear() {
+        str_trunc(this, 0);
+    }
+
     str& operator=(str&& s) {
         STR_MEMCPY(this, &s);
         STR_NULL(&s);
         return *this;
     }
-#endif
 
     str& operator=(const char *s) {
         str_copy_c(this, s);
@@ -58,6 +61,12 @@ public:
     }
 
     str& operator+=(const char *s) {
+        str_append_c(this, s, 0);
+        return *this;
+    }
+
+    str& operator+=(const char ch) {
+        char s[2] = {ch, 0};
         str_append_c(this, s, 0);
         return *this;
     }
