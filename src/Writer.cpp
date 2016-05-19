@@ -1,7 +1,7 @@
 #include "common.h"
 #include "Writer.h"
 
-Writer::Writer() : m_indent(0), m_new_line(true) { };
+Writer::Writer() : m_indent(0), m_new_line(true), m_pending_space(false) { };
 
 void Writer::begin_write() {
     if (m_new_line) {
@@ -24,6 +24,7 @@ void Writer::printf(const char *fmt, ...) {
 void Writer::newline() {
     m_text += "\n";
     m_new_line = true;
+    m_pending_space = false;
 }
 
 void Writer::newline_enter() {

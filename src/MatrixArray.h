@@ -19,7 +19,7 @@ public:
     m_rows(rows), m_cols(cols), m_data(new double[rows * cols])
     { }
 
-    int write(Writer& w, enum matrix_array_mode mode);
+    int write(Writer& w, enum matrix_array_mode mode = MATRIX_LAYOUT_NORMAL);
     static MatrixArray *read(Lexer& l, enum matrix_array_mode mode);
 
     const T& operator()(int i, int j) const { return m_data[i * m_cols + j]; }
@@ -39,18 +39,12 @@ int MatrixArray<T>::write(Writer& w, enum matrix_array_mode mode) {
     int rows = (mode == MATRIX_LAYOUT_NORMAL ? m_rows : m_cols);
     int cols = (mode == MATRIX_LAYOUT_NORMAL ? m_cols : m_rows);
 
-    w.printf("%d %d", rows, cols);
-    w.newline();
+    w << rows << cols;
     for (int i = 0; i < rows; i++) {
-        if (i > 0) {
-            w.newline();
-        }
+        w.newline();
         for (int j = 0; j < cols; j++) {
-            if (j > 0) {
-                w.printf(" ");
-            }
             double x = mode == MATRIX_LAYOUT_NORMAL ? get(i, j) : get(j, i);
-            w.printf("%g", x);
+            w << x;
         }
     }
     return 0;
@@ -78,6 +72,12 @@ MatrixArray<T> *MatrixArray<T>::read(Lexer& lexer, enum matrix_array_mode mode) 
         }
     }
     return mref.release();
+}
+
+template <typename T>
+Writer& operator<<(Writer& w, MatrixArray<T>& m) {
+    m.write(w);
+    return w;
 }
 
 #endif
