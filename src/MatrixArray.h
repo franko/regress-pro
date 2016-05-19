@@ -19,7 +19,7 @@ public:
     m_rows(rows), m_cols(cols), m_data(new double[rows * cols])
     { }
 
-    int write(writer_t *w, enum matrix_array_mode mode);
+    int write(Writer& w, enum matrix_array_mode mode);
     static MatrixArray *read(Lexer& l, enum matrix_array_mode mode);
 
     const T& operator()(int i, int j) const { return m_data[i * m_cols + j]; }
@@ -35,21 +35,22 @@ private:
 };
 
 template <typename T>
-int MatrixArray<T>::write(writer_t *w, enum matrix_array_mode mode) {
+int MatrixArray<T>::write(Writer& w, enum matrix_array_mode mode) {
     int rows = (mode == MATRIX_LAYOUT_NORMAL ? m_rows : m_cols);
     int cols = (mode == MATRIX_LAYOUT_NORMAL ? m_cols : m_rows);
-    writer_printf(w, "%d %d", rows, cols);
-    writer_newline(w);
+
+    w.printf("%d %d", rows, cols);
+    w.newline();
     for (int i = 0; i < rows; i++) {
         if (i > 0) {
-            writer_newline(w);
+            w.newline();
         }
         for (int j = 0; j < cols; j++) {
             if (j > 0) {
-                writer_printf(w, " ");
+                w.printf(" ");
             }
             double x = mode == MATRIX_LAYOUT_NORMAL ? get(i, j) : get(j, i);
-            writer_printf(w, "%g", x);
+            w.printf("%g", x);
         }
     }
     return 0;
