@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "lexer.h"
+#include "Lexer.h"
 
 Lexer::Lexer(const char *s) : m_text(s) {
     next();

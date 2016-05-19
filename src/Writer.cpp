@@ -1,5 +1,5 @@
 #include "common.h"
-#include "writer.h"
+#include "Writer.h"
 
 Writer::Writer() : m_indent(0), m_new_line(true) { };
 
@@ -46,3 +46,4 @@ int Writer::save_tofile(const char *filename)
     }
     return 1;
 }
+

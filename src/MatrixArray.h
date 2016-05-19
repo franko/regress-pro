@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "defs.h"
-#include "writer.h"
-#include "lexer.h"
+#include "Writer.h"
+#include "Lexer.h"
 
 enum matrix_array_mode {
     MATRIX_LAYOUT_NORMAL,
