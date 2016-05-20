@@ -20,7 +20,7 @@ public:
     { }
 
     int write(Writer& w, enum matrix_array_mode mode = MATRIX_LAYOUT_NORMAL);
-    static MatrixArray *read(Lexer& l, enum matrix_array_mode mode);
+    static std::unique_ptr<MatrixArray> read(Lexer& l, enum matrix_array_mode mode);
 
     const T& operator()(int i, int j) const { return m_data[i * m_cols + j]; }
           T& operator()(int i, int j)       { return m_data[i * m_cols + j]; }
@@ -51,7 +51,7 @@ int MatrixArray<T>::write(Writer& w, enum matrix_array_mode mode) {
 }
 
 template <typename T>
-MatrixArray<T> *MatrixArray<T>::read(Lexer& lexer, enum matrix_array_mode mode) {
+std::unique_ptr<MatrixArray<T> > MatrixArray<T>::read(Lexer& lexer, enum matrix_array_mode mode) {
     typedef MatrixArray<T> Matrix;
     int rows, cols;
     if (lexer.integer(&rows)) return nullptr;
@@ -71,7 +71,7 @@ MatrixArray<T> *MatrixArray<T>::read(Lexer& lexer, enum matrix_array_mode mode) 
             }
         }
     }
-    return mref.release();
+    return mref;
 }
 
 template <typename T>
