@@ -1,11 +1,52 @@
 #ifndef STR_CPP_H
 #define STR_CPP_H
 
-#include <string.h>
+#include <cstring>
 
 #include "str.h"
 
 class str : public _str {
+
+public:
+    /* This class provides a save pointer to the end of the string to
+       efficiently and safely append text.
+       It provides a sprintf method to append formatted text. */
+    class pointer {
+
+        int capacity() const { return m_containing_string->size - m_containing_string->length; }
+
+        char *ptr() { return m_containing_string->heap + m_containing_string->length; }
+
+    public:
+        pointer(str *s, int capacity): m_containing_string(s) {
+            str_size_check(s, s->length + capacity - 1);
+        }
+
+        void copy(const char *s) {
+            int len = strlen(s);
+            str_size_check(m_containing_string, m_containing_string->length + len);
+            std::memcpy(ptr(), s, len + 1);
+            m_containing_string->length += len;
+        }
+
+        void sprintf(const char *fmt, ...) {
+            va_list ap;
+            va_start(ap, fmt);
+            int len = vsnprintf(ptr(), capacity(), fmt, ap);
+            va_end(ap);
+            if (len >= capacity()) {
+                str_size_check(m_containing_string, m_containing_string->length + len);
+                va_start(ap, fmt);
+                vsnprintf(ptr(), len + 1, fmt, ap);
+                va_end(ap);
+            }
+            m_containing_string->length += len;
+        }
+
+    private:
+        str *m_containing_string;
+    };
+
 public:
     str() {
         str_init(this, 64);
@@ -30,6 +71,10 @@ public:
 
     unsigned len() const { return this->length; }
     const char *text() const { return CSTR(this); }
+
+    pointer append_pointer(int extra_size = 0) {
+        return pointer(this, extra_size);
+    }
 
     void clear() {
         str_trunc(this, 0);

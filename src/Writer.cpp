@@ -21,12 +21,6 @@ void Writer::printf(const char *fmt, ...) {
     va_end(ap);
 }
 
-void Writer::newline() {
-    m_text += "\n";
-    m_new_line = true;
-    m_pending_space = false;
-}
-
 void Writer::newline_enter() {
     m_indent ++;
     newline();
