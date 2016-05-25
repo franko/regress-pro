@@ -3,6 +3,8 @@
 
 #include <cstring>
 
+#include <EASTL/vector.h>
+
 #include "defs.h"
 #include "str_cpp.h"
 
@@ -58,6 +60,19 @@ Writer& operator<<(Writer& w, const T& value) {
     }
     w.append(value);
     w.pending_space(true);
+    return w;
+}
+
+template <typename T>
+Writer& operator<<(Writer& w, const eastl::vector<T>& vec) {
+    w.append(int(vec.size()));
+    w.indent(+1);
+    for (auto element : vec) {
+        w.newline();
+        w << element;
+    }
+    w.indent(-1);
+    w.newline();
     return w;
 }
 
