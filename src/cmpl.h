@@ -4,24 +4,9 @@
 #include <complex>
 #include <cmath>
 
+const double PI = 3.14159265358979323846;
+const auto I = std::complex<double>(0.0, 1.0);
+
 typedef std::complex<double> complex;
-
-#define CMPL_VECTOR_TERM(v,i) (v)->data[i]
-#define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
-
-struct cmpl_vector_struct {
-    int size; /* number of cmpl elements */
-    cmpl * data;
-    int owner;
-};
-
-typedef struct cmpl_vector_struct cmpl_vector;
-
-cmpl_vector *   cmpl_vector_alloc(int nb);
-void            cmpl_vector_free(cmpl_vector *v);
-void            cmpl_vector_set(cmpl_vector *v, int i, cmpl val);
-cmpl            cmpl_vector_get(cmpl_vector *v, int i);
-
-__END_DECLS
 
 #endif

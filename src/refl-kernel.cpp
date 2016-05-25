@@ -1,9 +1,5 @@
 #include "refl-kernel.h"
-
-const double PI = 3.14159265358979323846;
-const auto I = std::complex<double>(0.0, 1.0);
-
-typedef std::complex<double> complex;
+#include "cmpl.h"
 
 static complex csqr(const complex x) { return x*x; }
 
