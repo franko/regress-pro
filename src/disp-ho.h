@@ -21,34 +21,41 @@
 #ifndef DISP_HO_H
 #define DISP_HO_H
 
+#include <EASTL/vector.h>
+
 #include "defs.h"
-#include "dispers-classes.h"
+#include "dispers.h"
 
-__BEGIN_DECLS
+class HODispersion : public Dispersion {
+public:
+	struct Oscillator {
+		double nosc, en, eg, nu, phi;
+	};
 
-struct ho_params {
-    double nosc;
-    double en;
-    double eg;
-    double nu;
-    double phi;
+	HODispersion(const char *name, eastl::vector<Oscillator> osc);
+
+	add_oscillator(Oscillator osc) {
+		m_oscillators.push_back(osc);
+	}
+
+	complex n_value(double lambda) const override;
+    complex n_value_deriv(double lam, complex der[]) const override;
+    int fp_number() const override;
+    int write(Writer& w) const override;
+
+private:
+	enum { NOSC = 0, EN = 1, EG = 2, NU = 3, PHI = 4 };
+	enum { OSC_PARAMETERS_NUM = 5 };
+
+	int parameter_index(int index_osc, int index_param) const {
+		return index_osc * OSC_PARAMETERS_NUM + index_param;
+	}
+
+	static const char *parameter_names[];
+
+	eastl::vector<Oscillator> m_oscillators;
 };
 
-struct disp_ho {
-    int nb_hos;
-    struct ho_params *params;
-};
-
-struct disp_struct;
-
-/* HO dispersion class */
-extern struct disp_class ho_disp_class;
-
-extern struct disp_struct * disp_new_ho(const char *name, int nb_hos,
-                                        struct ho_params *params);
-extern void disp_add_ho(struct disp_struct *d);
-extern void disp_delete_ho(struct disp_struct *d, int index);
-
-__END_DECLS
+Writer& operator<<(Writer& w, const HODispersion::Oscillator& osc);
 
 #endif

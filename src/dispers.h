@@ -2,71 +2,61 @@
 #define DISPERS_H
 
 #include "cmpl.h"
-#include "fit-params.h"
-#include "str.h"
-#include "dispers-classes.h"
-#include "disp-table.h"
-#include "disp-sample-table.h"
-#include "disp-bruggeman.h"
-#include "disp-ho.h"
-#include "disp-fb.h"
-#include "disp-lookup.h"
-#include "disp-cauchy.h"
-#include "dispers-classes.h"
-#include "writer.h"
-#include "lexer.h"
+// #include "fit-params.h"
+#include "str_cpp.h"
+#include "Writer.h"
+#include "Lexer.h"
 
-__BEGIN_DECLS
+enum {
+    DISP_UNSET = 0,
+    DISP_TABLE,
+    DISP_SAMPLE_TABLE,
+    DISP_CAUCHY,
+    DISP_HO,
+    DISP_LOOKUP,
+    DISP_BRUGGEMAN,
+    DISP_FB,
+    DISP_TAUC_LORENTZ,
+    DISP_END_OF_TABLE, /* Not a dispersion type */
+};
 
-struct disp_struct;
+struct DispersionClass {
+    int id;
+    str full_name;
+    str short_name;
+};
 
-struct disp_class {
-    enum disp_type disp_class_id;
+struct Dispersion {
+    Dispersion(const char *name, const DispersionClass& klass)
+    : m_class(klass), m_name(name)
+    { }
 
-    const char *full_name;
-    const char *short_name;
+    virtual ~Dispersion() { }
 
-    /* methods to copy and free dispersions */
-    void (*free)(struct disp_struct *d);
-    struct disp_struct *(*copy)(const struct disp_struct *d);
+    virtual complex n_value(double lambda) const = 0;
+    virtual int fp_number() const = 0;
+    virtual complex n_value_deriv(double lam, complex der[]) const = 0;
+    // virtual int apply_param(const FitParameter& fp, double val) = 0;
+    // virtual double *map_param(int index) = 0;
+    // virtual double get_param_value(const FitParameter& fp) const = 0;
+    virtual int write(Writer& w) const = 0;
 
-    cmpl(*n_value)(const struct disp_struct *d, double lam);
-    int (*fp_number)(const struct disp_struct *d);
-    cmpl(*n_value_deriv)(const struct disp_struct *d, double lam,
-                         cmpl_vector *der);
-    int (*apply_param)(struct disp_struct *d, const fit_param_t *fp,
-                       double val);
-    double *(*map_param)(struct disp_struct *d, int index);
-    double(*get_param_value)(const struct disp_struct *d,
-                             const fit_param_t *fp);
-    int (*write)(writer_t *w, const struct disp_struct *_d);
+    const str& name() const { return m_name; }
 
     /* class methods */
-    void (*encode_param)(str_t param, const fit_param_t *fp);
-    int (*read)(lexer_t *l, struct disp_struct *d);
+    // virtual str encode_param(const FitParameter& fp) const = 0;
+    // virtual std::unique_ptr<Dispersion> read(Lexer& l, int& success) const = 0;
+
+protected:
+    const DispersionClass& m_class;
+	str m_name;
 };
 
+#if 0
 struct deriv_info {
     int is_valid;
-    cmpl_vector *val;
+    complex *val;
 };
-
-struct disp_struct {
-    struct disp_class *dclass;
-    enum disp_type type;
-    str_t name;
-    union {
-        struct disp_table table;
-        struct disp_sample_table sample_table;
-        struct disp_cauchy cauchy;
-        struct disp_ho ho;
-        struct disp_lookup lookup;
-        struct disp_bruggeman bruggeman;
-        struct disp_fb fb;
-    } disp;
-};
-
-typedef struct disp_struct disp_t;
 
 extern disp_t * load_nk_table(const char * filename, str_ptr *error_msg);
 extern disp_t * load_mat_dispers(const char * filename, str_ptr *error_msg);
@@ -97,7 +87,6 @@ extern int      disp_base_fp_number(const disp_t *src);
 extern int      disp_is_tabular(const disp_t *d);
 extern int      disp_write(writer_t *w, const disp_t *_d);
 extern disp_t * disp_read(lexer_t *l);
-
-__END_DECLS
+#endif
 
 #endif
