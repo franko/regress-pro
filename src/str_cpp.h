@@ -8,7 +8,7 @@
 class str : public _str {
 
 public:
-    /* This class provides a save pointer to the end of the string to
+    /* This class provides a safe pointer to the end of the string to
        efficiently and safely append text.
        It provides a sprintf method to append formatted text. */
     class pointer {
@@ -19,12 +19,12 @@ public:
 
     public:
         pointer(str *s, int capacity): m_containing_string(s) {
-            str_size_check(s, s->length + capacity - 1);
+            STR_SIZE_CHECK(s, s->length + capacity - 1);
         }
 
         void copy(const char *s) {
             int len = strlen(s);
-            str_size_check(m_containing_string, m_containing_string->length + len);
+            STR_SIZE_CHECK(m_containing_string, m_containing_string->length + len);
             std::memcpy(ptr(), s, len + 1);
             m_containing_string->length += len;
         }
@@ -35,7 +35,7 @@ public:
             int len = vsnprintf(ptr(), capacity(), fmt, ap);
             va_end(ap);
             if (len >= capacity()) {
-                str_size_check(m_containing_string, m_containing_string->length + len);
+                STR_SIZE_CHECK(m_containing_string, m_containing_string->length + len);
                 va_start(ap, fmt);
                 vsnprintf(ptr(), len + 1, fmt, ap);
                 va_end(ap);
@@ -49,7 +49,8 @@ public:
 
 public:
     str() {
-        str_init(this, 64);
+        str_init_raw(this, 15);
+        clear();
     }
 
     str(const str& s) {
@@ -60,13 +61,16 @@ public:
         str_init_from_c(this, t);
     }
 
-    ~str() {
-        str_free(this);
+    str(str&& that) {
+        this->heap = that.heap;
+        this->size = that.size;
+        this->length = that.length;
+        that.size = 0;
+        that.heap = 0;
     }
 
-    str& operator=(const str& s) {
-        str_copy(this, &s);
-        return *this;
+    ~str() {
+        str_free(this);
     }
 
     unsigned len() const { return this->length; }
@@ -77,12 +81,21 @@ public:
     }
 
     void clear() {
-        str_trunc(this, 0);
+        heap[0] = 0;
+        length = 0;
     }
 
-    str& operator=(str&& s) {
-        STR_MEMCPY(this, &s);
-        STR_NULL(&s);
+    str& operator=(const str& s) {
+        str_copy(this, &s);
+        return *this;
+    }
+
+    str& operator=(str&& that) {
+        this->heap = that.heap;
+        this->size = that.size;
+        this->length = that.length;
+        that.size = 0;
+        that.heap = 0;
         return *this;
     }
 

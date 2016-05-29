@@ -37,6 +37,12 @@ typedef struct _str const *const_str_ptr;
   (s)->heap = 0; \
   }
 
+#define STR_SIZE_CHECK(s, len) { \
+    if((len)+1 > (s)->size) { \
+        str_resize(s, len); \
+    } \
+  }
+
 #define STR_LENGTH(s) ((s)->length)
 #define CSTR(s) ((const char *) (s)->heap)
 #define str_set_null(s) str_trunc(s, 0);
@@ -46,8 +52,9 @@ typedef struct _str const *const_str_ptr;
 extern str_ptr  str_new(void);
 extern void     str_init(str_ptr s, int len);
 extern void     str_init_view(str_ptr s, const char *data);
+extern void     str_init_raw(str_ptr s, size_t len);
 extern void     str_free(str_ptr s);
-extern void     str_size_check(str_t s, size_t reqlen);
+extern void     str_resize(str_t s, size_t reqlen);
 extern void     str_init_from_c(str_ptr s, const char *sf);
 extern void     str_init_from_str(str_ptr s, const str_t sf);
 extern void     str_copy(str_t d, const str_t s);
