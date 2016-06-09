@@ -91,6 +91,9 @@ public:
     }
 
     str& operator=(str&& that) {
+        if (size > 0) {
+            free(this->heap);
+        }
         this->heap = that.heap;
         this->size = that.size;
         this->length = that.length;
