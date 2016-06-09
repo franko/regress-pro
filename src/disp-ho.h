@@ -32,9 +32,15 @@ public:
 		double nosc, en, eg, nu, phi;
 	};
 
-	HODispersion(const char *name, eastl::vector<Oscillator> osc);
+	typedef eastl::vector<Oscillator>::size_type size_type;
 
-	add_oscillator(Oscillator osc) {
+	HODispersion(const char *name): Dispersion(name, m_klass)
+	{ }
+
+	HODispersion(const char *name, int size): Dispersion(name, m_klass), m_oscillators(size_type(size))
+	{ }
+
+	void add_oscillator(const Oscillator& osc) {
 		m_oscillators.push_back(osc);
 	}
 
@@ -42,6 +48,8 @@ public:
     complex n_value_deriv(double lam, complex der[]) const override;
     int fp_number() const override;
     int write(Writer& w) const override;
+    static std::unique_ptr<Dispersion> read(const char *name, Lexer& lexer);
+
 
 private:
 	enum { NOSC = 0, EN = 1, EG = 2, NU = 3, PHI = 4 };
@@ -51,6 +59,7 @@ private:
 		return index_osc * OSC_PARAMETERS_NUM + index_param;
 	}
 
+	static const DispersionClass m_klass;
 	static const char *parameter_names[];
 
 	eastl::vector<Oscillator> m_oscillators;

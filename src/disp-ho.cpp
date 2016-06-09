@@ -44,13 +44,7 @@ const char *HODispersion::parameter_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
 #define HO_MULT_FACT 1.3788623090164978586499199863586
 
-const DispersionClass ho_dispersion_class{DISP_HO, "Harmonic Oscillator", "ho"};
-
-HODispersion::HODispersion(const char *name, eastl::vector<Oscillator> osc)
-: Dispersion(name, ho_dispersion_class)
-{
-    std::swap(m_oscillators, osc);
-}
+const DispersionClass HODispersion::m_klass{DISP_HO, "Harmonic Oscillator", "ho"};
 
 complex HODispersion::n_value_deriv(double lambda, complex der[]) const {
     const double e = HO_EV_NM / lambda;
@@ -149,4 +143,20 @@ int HODispersion::write(Writer& w) const {
 
 Writer& operator<<(Writer& w, const HODispersion::Oscillator& osc) {
     w.printf("%g %g %g %g %g", osc.nosc, osc.en, osc.eg, osc.nu, osc.phi);
+    return w;
+}
+
+std::unique_ptr<Dispersion> HODispersion::read(const char *name, Lexer& lexer) {
+    int n;
+    if (lexer.integer(&n)) return nullptr;
+    std::unique_ptr<HODispersion> new_disp(new HODispersion(name, n));
+    for (int i = 0; i < n; i++) {
+        auto& osc = new_disp->m_oscillators[i];
+        if (lexer.number(&osc.nosc)) return nullptr;
+        if (lexer.number(&osc.en  )) return nullptr;
+        if (lexer.number(&osc.eg  )) return nullptr;
+        if (lexer.number(&osc.nu  )) return nullptr;
+        if (lexer.number(&osc.phi )) return nullptr;
+    }
+    return new_disp;
 }
