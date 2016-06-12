@@ -1,5 +1,5 @@
 
-/* disp-ho.c
+/* HODispersion.c
  *
  * Copyright (C) 2005-2011 Francesco Abbate
  *
@@ -21,7 +21,7 @@
 #include <assert.h>
 #include <string.h>
 #include "dispers.h"
-#include "disp-ho.h"
+#include "HODispersion.h"
 
 template <typename T>
 static inline T sqr(const T x) { return x*x; }
@@ -44,7 +44,25 @@ const char *HODispersion::parameter_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
 #define HO_MULT_FACT 1.3788623090164978586499199863586
 
-const DispersionClass HODispersion::m_klass{DISP_HO, "Harmonic Oscillator", "ho"};
+const HODispersionClass HODispersion::m_klass{DISP_HO, "Harmonic Oscillator", "ho"};
+
+std::unique_ptr<Dispersion> HODispersionClass::read(Lexer& lexer) const {
+    lexer.check_ident("ho");
+    if (lexer.string_to_store()) return nullptr;
+    str name = lexer.store;
+    int n;
+    if (lexer.integer(&n)) return nullptr;
+    std::unique_ptr<HODispersion> disp(new HODispersion(name.text(), n));
+    for (int i = 0; i < n; i++) {
+        auto& osc = disp->oscillator(i);
+        if (lexer.number(&osc.nosc)) return nullptr;
+        if (lexer.number(&osc.en  )) return nullptr;
+        if (lexer.number(&osc.eg  )) return nullptr;
+        if (lexer.number(&osc.nu  )) return nullptr;
+        if (lexer.number(&osc.phi )) return nullptr;
+    }
+    return disp;
+}
 
 complex HODispersion::n_value_deriv(double lambda, complex der[]) const {
     const double e = HO_EV_NM / lambda;
@@ -146,7 +164,8 @@ Writer& operator<<(Writer& w, const HODispersion::Oscillator& osc) {
     return w;
 }
 
-std::unique_ptr<Dispersion> HODispersion::read(const char *name, Lexer& lexer) {
+#if 0
+std::unique_ptr<HODispersion> HODispersion::read(const char *name, Lexer& lexer) {
     int n;
     if (lexer.integer(&n)) return nullptr;
     std::unique_ptr<HODispersion> new_disp(new HODispersion(name, n));
@@ -160,3 +179,4 @@ std::unique_ptr<Dispersion> HODispersion::read(const char *name, Lexer& lexer) {
     }
     return new_disp;
 }
+#endif

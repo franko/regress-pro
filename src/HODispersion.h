@@ -1,5 +1,5 @@
 
-/* disp-ho.h
+/* HODispersion.h
  *
  * Copyright (C) 2005-2011 Francesco Abbate
  *
@@ -21,10 +21,16 @@
 #ifndef DISP_HO_H
 #define DISP_HO_H
 
+#include <memory>
 #include <EASTL/vector.h>
 
 #include "defs.h"
 #include "dispers.h"
+
+struct HODispersionClass : DispersionClass {
+	using DispersionClass::DispersionClass;
+	std::unique_ptr<Dispersion> read(Lexer& lexer) override;
+};
 
 class HODispersion : public Dispersion {
 public:
@@ -32,13 +38,16 @@ public:
 		double nosc, en, eg, nu, phi;
 	};
 
-	typedef eastl::vector<Oscillator>::size_type size_type;
+	using size_type = eastl::vector<Oscillator>::size_type;
 
 	HODispersion(const char *name): Dispersion(name, m_klass)
 	{ }
 
 	HODispersion(const char *name, int size): Dispersion(name, m_klass), m_oscillators(size_type(size))
 	{ }
+
+	const Oscillator& oscillator(int i) const { return m_oscillators[i]; }
+	      Oscillator& oscillator(int i)       { return m_oscillators[i]; }
 
 	void add_oscillator(const Oscillator& osc) {
 		m_oscillators.push_back(osc);
@@ -48,7 +57,7 @@ public:
     complex n_value_deriv(double lam, complex der[]) const override;
     int fp_number() const override;
     int write(Writer& w) const override;
-    static std::unique_ptr<Dispersion> read(const char *name, Lexer& lexer);
+    // static std::unique_ptr<HODispersion> read(const char *name, Lexer& lexer);
 
 
 private:
@@ -59,7 +68,7 @@ private:
 		return index_osc * OSC_PARAMETERS_NUM + index_param;
 	}
 
-	static const DispersionClass m_klass;
+	static const HODispersionClass m_klass;
 	static const char *parameter_names[];
 
 	eastl::vector<Oscillator> m_oscillators;

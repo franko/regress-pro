@@ -1,12 +1,46 @@
 #ifndef STACK_H
 #define STACK_H
 
+#include <memory>
+#include <EASTL/vector.h>
+
 #include "cmpl.h"
 #include "dispers.h"
 #include "fit-params.h"
-#include "writer.h"
-#include "lexer.h"
+#include "Writer.h"
+#include "Lexer.h"
 
+class Stack {
+public:
+    struct Layer {
+        std::unique_ptr<Dispersion> dispersion;
+        double thickness;
+    };
+
+    using size_type = eastl::vector<Layer>::size_type;
+
+    Stack(int n): m_layers(size_type(n)) { }
+#if 0
+    Stack(unique_ptr<Dispersion> substrate, unique_ptr<Dispersion> environ)
+    : m_substrate(std::move(substrate)), m_environ(std::move(environ)) {
+    }
+#endif
+
+    void substrate(std::unique_ptr<Dispersion>&& disp) { m_substrate = std::move(disp); }
+    void environ  (std::unique_ptr<Dispersion>&& disp) { m_environ   = std::move(disp); }
+
+    int write(Writer& w);
+    static std::unique_ptr<Stack> read(Lexer& lexer);
+
+private:
+    enum { MAX_LAYERS_NUMBER = (1 << 16) - 2 };
+
+    std::unique_ptr<Dispersion> m_substrate;
+    std::unique_ptr<Dispersion> m_environ;
+    eastl::vector<Layer> m_layers;
+};
+
+#if 0
 __BEGIN_DECLS
 
 struct stack {
@@ -36,5 +70,6 @@ extern int      stack_write(writer_t *w, const stack_t *s);
 extern stack_t *stack_read(lexer_t *l);
 
 __END_DECLS
+#endif
 
 #endif

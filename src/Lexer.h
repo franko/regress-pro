@@ -1,6 +1,8 @@
 #ifndef LEXER_H
 #define LEXER_H
 
+#include <memory>
+
 #include "defs.h"
 #include "str_cpp.h"
 
@@ -33,6 +35,10 @@ public:
     int number(double *value);
 
     int check_ident(const char *name);
+
+    const char *lookup_ident() const {
+        return (current.tk == TK_IDENT ? current.value.str : nullptr);
+    }
 
     Token current;
     str store;

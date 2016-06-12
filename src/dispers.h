@@ -20,13 +20,22 @@ enum {
     DISP_END_OF_TABLE, /* Not a dispersion type */
 };
 
+class Dispersion;
+
 struct DispersionClass {
     int id;
     str full_name;
     str short_name;
+
+    DispersionClass(int _id, const char *_full_name, const char *_short_name)
+    : id(_id), full_name(_full_name), short_name(_short_name)
+    { }
+
+    virtual std::unique_ptr<Dispersion> read(Lexer& lexer) const = 0;
 };
 
-struct Dispersion {
+class Dispersion {
+public:
     Dispersion(const char *name, const DispersionClass& klass)
     : m_class(klass), m_name(name)
     { }
@@ -45,7 +54,9 @@ struct Dispersion {
 
     /* class methods */
     // virtual str encode_param(const FitParameter& fp) const = 0;
-    // virtual std::unique_ptr<Dispersion> read(Lexer& l, int& success) const = 0;
+
+    static eastl::vector<DispersionClass> registered_classes;
+    static std::unique_ptr<Dispersion> read(Lexer& l);
 
 protected:
     const DispersionClass& m_class;

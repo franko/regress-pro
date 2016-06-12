@@ -1,5 +1,5 @@
 #include "dispers_ui_edit.h"
-#include "disp-ho.h"
+#include "HODispersion.h"
 #include "disp-fb.h"
 #include "dispers_ui_utils.h"
 #include "dispers-library.h"
