@@ -6,7 +6,7 @@
 #include "data-table.h"
 #include "number-parse.h"
 
-#define NORMALIZE(c) ((float) c / 32020.0)
+#define NORMALIZE(c) ((float) (c) / 32020.0)
 
 static double
 get_lambda(double w[], int k)
@@ -15,31 +15,32 @@ get_lambda(double w[], int k)
 }
 
 struct data_table *
-read_nova_spectrum(FILE *f, str_ptr ln) {
+read_nova_spectrum(FILE *f, str_ptr ln, int polarization_number, int sample_number) {
     struct data_table *table;
-    unsigned int c, c_save;
-    int na, j, lc0 = 0, lcount;
-    long dpos;
-    int starting_zeroes = 1;
-    int ezcount = 0; /* Number of zeroes at the end of file. */
-    double w[5];
+    int pol, na, j;
+    int lcount[2], lc0[2];
+    unsigned int c, c_save[2];
+    long dpos[2];
+    double w[4];
 
-    for(;;) {
-        char tc;
-        if(str_getline(ln, f) < 0) {
-            break;
-        }
-        na = sscanf(CSTR(ln), "%u %c", &c, &tc);
+    for (pol = 0; pol < polarization_number; pol++) {
+        int starting_zeroes = 1;
+        int ezcount = 0; /* Number of zeroes at the end of file. */
+        int i;
+        for(lc0[pol] = 0, i = 0; i < sample_number; i++) {
+            char tc;
+            if(str_getline(ln, f) < 0) return NULL;
+            na = sscanf(CSTR(ln), "%u %c", &c, &tc);
+            if(na > 1) return NULL;
 
-        if(na == 1) {
             if(c > 0 && starting_zeroes) {
-                c_save = c;
-                dpos = ftell(f);
+                c_save[pol] = c;
+                dpos[pol] = ftell(f);
                 starting_zeroes = 0;
-                lcount = 1;
+                lcount[pol] = 1;
                 continue;
             } else if (c > 0 && ezcount > 0) {
-                lcount += ezcount;
+                lcount[pol] += ezcount;
                 ezcount = 0;
             }
 
@@ -47,37 +48,40 @@ read_nova_spectrum(FILE *f, str_ptr ln) {
                 if(!starting_zeroes) {
                     ezcount ++;
                 } else {
-                    lc0++;
+                    lc0[pol]++;
                 }
             }
 
             if(!starting_zeroes && ezcount == 0) {
-                lcount++;
-            }
-            continue;
-        } else if(na == 2 && lcount > 0) {
-            const char *p = CSTR(ln);
-            if(sscanf(p, "%lf %lf %lf %lf %lf \n", w, w+1, w+2, w+3, w+4) == 5) {
-                break;
+                lcount[pol]++;
             }
         }
+    }
 
+    if(str_getline(ln, f) < 0) return NULL;
+    if(sscanf(CSTR(ln), "%lf %lf %lf %lf %*s \n", w, w+1, w+2, w+3) < 4) {
         return NULL;
     }
 
-    if(fseek(f, dpos, SEEK_SET) < 0) {
-        return NULL;
+    const int lcount_uni = lcount[0];
+    const int lc0_uni = lc0[0];
+    for (pol = 1; pol < polarization_number; pol++) {
+        if (lcount[pol] != lcount_uni || lc0[pol] != lc0_uni) return NULL;
     }
 
-    table = data_table_new(lcount, 2);
-    data_table_set(table, 0, 0, get_lambda(w, lc0+1));
-    data_table_set(table, 0, 1, NORMALIZE(c_save));
+    table = data_table_new(lcount_uni, 2);
+    for(j = 0; j < lcount_uni; j++) {
+        data_table_set(table, j, 0, get_lambda(w, lc0_uni+j+1));
+        data_table_set(table, j, 1, 0.0);
+    }
 
-    for(j = 1; j < lcount; j++) {
-        fscanf(f, " %u", &c);
-
-        data_table_set(table, j, 0, get_lambda(w, lc0+j+1));
-        data_table_set(table, j, 1, NORMALIZE(c));
+    for (pol = 0; pol < polarization_number; pol++) {
+        if(fseek(f, dpos[pol], SEEK_SET) < 0) return NULL;
+        data_table_set(table, 0, 1, data_table_get(table, 0, 1) + NORMALIZE(c_save[pol]) / (double)polarization_number);
+        for(j = 1; j < lcount_uni; j++) {
+            fscanf(f, " %u", &c);
+            data_table_set(table, j, 1, data_table_get(table, j, 1) + NORMALIZE(c) / (double)polarization_number);
+        }
     }
 
     return table;
@@ -106,7 +110,22 @@ load_refl_data(const char *filename, str_ptr *error_msg) {
 
     if(strstr(CSTR(ln), ";Experimental Spectrum") || \
             strstr(CSTR(ln), ";Theoretical Spectrum")) {
-        table = read_nova_spectrum(f, ln);
+        int polarization_number = 1;
+        const char *polarization_ptr = strstr(CSTR(ln), "Polarization");
+        if (polarization_ptr) {
+            const char *equal_ptr = strstr(polarization_ptr, "=");
+            if (equal_ptr) {
+                float pol_values[2];
+                polarization_number = sscanf(equal_ptr + 1, " %f , %f", pol_values, pol_values + 1);
+            }
+        }
+        if (polarization_number == 0) {
+            polarization_number = 1;
+        } else if (polarization_number > 2) {
+            goto invalid_s;
+        }
+        const int sample_number = (polarization_number == 1 ? 256 : 1024);
+        table = read_nova_spectrum(f, ln, polarization_number, sample_number);
     } else {
         str_getline(ln, f);
         table = data_table_read_lines(f, "%*s %f %*f %f %*f\n", 0, 2);
