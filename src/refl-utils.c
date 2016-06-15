@@ -11,17 +11,18 @@
 static double
 get_lambda(double w[], int k)
 {
-    return w[0] + k * w[1] + k*k * w[2];
+    return w[0] + k * w[1] + k*k * w[2] + k*k*k * w[3];
 }
 
 struct data_table *
-read_nova_spectrum(FILE *f, str_ptr ln, int polarization_number, int sample_number) {
+read_nova_spectrum(FILE *f, str_ptr ln, const int polarization_number, const int sample_number) {
     struct data_table *table;
     int pol, na, j;
     int lcount[2], lc0[2];
     unsigned int c, c_save[2];
     long dpos[2];
     double w[4];
+    int offset[2];
 
     for (pol = 0; pol < polarization_number; pol++) {
         int starting_zeroes = 1;
@@ -59,9 +60,12 @@ read_nova_spectrum(FILE *f, str_ptr ln, int polarization_number, int sample_numb
     }
 
     if(str_getline(ln, f) < 0) return NULL;
-    if(sscanf(CSTR(ln), "%lf %lf %lf %lf %*s \n", w, w+1, w+2, w+3) < 4) {
+    int wavelen_scanf_match = sscanf(CSTR(ln), "%lf %lf %lf %lf %d;%d \n", w, w+1, w+2, w+3, offset, offset+1);
+    if(wavelen_scanf_match < 5) {
         return NULL;
     }
+
+    int wavelen_index_offset = (wavelen_scanf_match == 5 ? offset[0] : offset[1]);
 
     const int lcount_uni = lcount[0];
     const int lc0_uni = lc0[0];
@@ -71,7 +75,7 @@ read_nova_spectrum(FILE *f, str_ptr ln, int polarization_number, int sample_numb
 
     table = data_table_new(lcount_uni, 2);
     for(j = 0; j < lcount_uni; j++) {
-        data_table_set(table, j, 0, get_lambda(w, lc0_uni+j+1));
+        data_table_set(table, j, 0, get_lambda(w, lc0_uni + wavelen_index_offset + j + 1));
         data_table_set(table, j, 1, 0.0);
     }
 
