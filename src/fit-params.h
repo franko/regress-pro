@@ -1,15 +1,15 @@
 #ifndef FIT_PARAMS_H
 #define FIT_PARAMS_H
 
-#include "common.h"
-#include "spectra.h"
-#include "str.h"
-#include "writer.h"
-#include "dispers-classes.h"
+#include <EASTL/vector.h>
 
-__BEGIN_DECLS
+// #include "common.h"
+// #include "spectra.h"
+#include "str_cpp.h"
+#include "Writer.h"
+#include "dispers.h"
 
-enum params_id {
+enum fit_parameter_type {
     PID_THICKNESS = 1,
     PID_LAYER_N,
     PID_LAYER_INDIPENDENT, /* Beginning of layer-indipendent parameters */
@@ -17,6 +17,7 @@ enum params_id {
     PID_INVALID,
 };
 
+#if 0
 /* Used to inform about the insert or delete of a layer in a
    film stack. */
 enum {
@@ -28,18 +29,53 @@ struct shift_info {
     short int event; /* Should be on the SHIFT_* enumerated values. */
     short int index; /* The index of the layer removed on inserted. */
 };
+#endif
 
-enum seed_type_id {
-    SEED_SIMPLE,
-    SEED_RANGE,
-    SEED_UNDEF,
+/* Use float to store the values but provides a double-based interface.
+   The extra precision to store doubles is not needed. */
+class Seed {
+public:
+    enum { SIMPLE, RANGE, UNDEF };
+
+    Seed() : m_type(UNDEF) { }
+    Seed(double seed) : m_seed(seed), m_type(SIMPLE) { }
+    Seed(double seed, double delta) : m_seed(seed), m_delta(delta), m_type(RANGE) { }
+
+    double value() const { return m_seed; }
+    double min()   const { return m_seed - m_delta; }
+    double max()   const { return m_seed + m_delta; }
+
+private:
+    float m_seed;
+    float m_delta;
+    int m_type;
 };
 
-typedef struct {
-    enum seed_type_id type;
-    double seed;
-    double delta;
-} seed_t;
+class FitParameter {
+public:
+    FitParameter() = delete;
+
+    FitParameter(int layer): m_type(PID_THICKNESS), m_layer(layer) { }
+
+    FitParameter(int layer, int model_id, int index)
+    : m_type(PID_LAYER_N), m_layer(layer), m_model_id(model_id), m_index(index)
+    { }
+
+private:
+    short int m_type; // The type of parameter.
+    short int m_layer; // The layer number.
+    short int m_model_id; // The ID of the dispersion model.
+    short int m_index; // The index of the parameter with the dispersion model.
+};
+
+struct Strategy {
+    eastl::vector<FitParameter> parameters;
+    eastl::vector<Seed> seeds;
+};
+
+#if 0
+
+__BEGIN_DECLS
 
 typedef struct {
     enum params_id id;
@@ -100,5 +136,6 @@ extern void     get_param_name(const fit_param_t *fp, str_t name);
 extern void     get_full_param_name(const fit_param_t *fp, str_t name);
 
 __END_DECLS
+#endif
 
 #endif
