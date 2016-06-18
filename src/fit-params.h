@@ -31,6 +31,8 @@ struct shift_info {
 };
 #endif
 
+using std::unique_ptr;
+
 /* Use float to store the values but provides a double-based interface.
    The extra precision to store doubles is not needed. */
 class Seed {
@@ -44,6 +46,19 @@ public:
     double value() const { return m_seed; }
     double min()   const { return m_seed - m_delta; }
     double max()   const { return m_seed + m_delta; }
+
+    int write(Writer& w) const {
+        if (m_type == SIMPLE) {
+            w << "value" << m_seed;
+        } else if (m_type == RANGE) {
+            w << "range" << m_seed << m_delta;
+        } else {
+            w << "undef";
+        }
+        return 0;
+    }
+
+    static unique_ptr<Seed> read(Lexer& lexer);
 
 private:
     float m_seed;
