@@ -5,9 +5,10 @@ include makesystem
 GSL_LIBS = -lgsl -lgslcblas -lm
 GSL_INCLUDES =
 
-INCLUDES = $(GSL_INCLUDES)
+INCLUDES = $(GSL_INCLUDES) -I../EASTL/include
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
+CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
 
 ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	disp-sample-table.c disp-lookup.c str.c dispers-library.c str-util.c \
