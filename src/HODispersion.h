@@ -29,8 +29,10 @@
 
 struct HODispersionClass : DispersionClass {
 	using DispersionClass::DispersionClass;
-	std::unique_ptr<Dispersion> read(Lexer& lexer) override;
+	std::unique_ptr<Dispersion> read(Lexer& lexer) const override;
 };
+
+extern const HODispersionClass ho_dispersion_class;
 
 class HODispersion : public Dispersion {
 public:
@@ -40,14 +42,13 @@ public:
 
 	using size_type = eastl::vector<Oscillator>::size_type;
 
-	HODispersion(const char *name): Dispersion(name, m_klass)
+	HODispersion(const char *name): Dispersion(name, ho_dispersion_class)
 	{ }
 
-	HODispersion(const char *name, int size): Dispersion(name, m_klass), m_oscillators(size_type(size))
+	HODispersion(const char *name, int size): Dispersion(name, ho_dispersion_class), m_oscillators(size_type(size))
 	{ }
 
-	const Oscillator& oscillator(int i) const { return m_oscillators[i]; }
-	      Oscillator& oscillator(int i)       { return m_oscillators[i]; }
+	eastl::vector<Oscillator>& oscillators() { return m_oscillators; }
 
 	void add_oscillator(const Oscillator& osc) {
 		m_oscillators.push_back(osc);
@@ -57,8 +58,6 @@ public:
     complex n_value_deriv(double lam, complex der[]) const override;
     int fp_number() const override;
     int write(Writer& w) const override;
-    // static std::unique_ptr<HODispersion> read(const char *name, Lexer& lexer);
-
 
 private:
 	enum { NOSC = 0, EN = 1, EG = 2, NU = 3, PHI = 4 };
@@ -68,7 +67,6 @@ private:
 		return index_osc * OSC_PARAMETERS_NUM + index_param;
 	}
 
-	static const HODispersionClass m_klass;
 	static const char *parameter_names[];
 
 	eastl::vector<Oscillator> m_oscillators;

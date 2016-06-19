@@ -14,22 +14,23 @@ int Stack::write(Writer& w) {
     }
     m_environ->write(w);
     w.indent(-1);
+    return 0;
 }
 
 std::unique_ptr<Stack> Stack::read(Lexer& lexer) {
-    lexer.check_ident("stack");
     int n;
-    if (lexer.integer(&n)) return nullptr;
+    lexer >> "stack" >> n;
     const int layers_number = n - 2;
-    if (layers_number < 0 || layers_number > Stack::MAX_LAYERS_NUMBER) return nullptr;
+    if (layers_number < 0 || layers_number > Stack::MAX_LAYERS_NUMBER) {
+        throw std::invalid_argument("invalid number of layers");
+    }
     std::unique_ptr<Stack> stack(new Stack(layers_number));
     for (Layer& layer : stack->m_layers) {
-        if (lexer.number(&layer.thickness)) return nullptr;
+        lexer >> layer.thickness;
     }
     stack->m_substrate = Dispersion::read(lexer);
     for (Layer& layer : stack->m_layers) {
         layer.dispersion = Dispersion::read(lexer);
-        if (!layer.dispersion) return nullptr;
     }
     stack->m_environ = Dispersion::read(lexer);
     return stack;

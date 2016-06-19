@@ -14,7 +14,7 @@ int main() {
     str file_text;
     str_loadfile("fit-output.txt", &file_text);
     Lexer lexer(file_text.text());
-    unique_ptr<Seed> s_new = Seed::read(lexer);
-	strategy.seeds.push_back(*s_new);
+    Seed s_new = Seed::read(lexer);
+	strategy.seeds.push_back(s_new);
 	return 0;
 }

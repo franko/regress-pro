@@ -55,7 +55,10 @@ public:
     /* class methods */
     // virtual str encode_param(const FitParameter& fp) const = 0;
 
-    static eastl::vector<DispersionClass> registered_classes;
+    static void register_class(const DispersionClass& d);
+    static const DispersionClass *lookup_class(const char *short_name);
+
+    static eastl::vector<const DispersionClass *> m_registered_classes;
     static std::unique_ptr<Dispersion> read(Lexer& l);
 
 protected:

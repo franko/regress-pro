@@ -1,18 +1,18 @@
 #include "fit-params.h"
 
-unique_ptr<Seed> Seed::read(Lexer& lexer) {
-    if (lexer.ident_to_store()) return nullptr;
-    if (lexer.store == "value") {
-        double value;
-        lexer.number(&value);
-        return unique_ptr<Seed>(new Seed(value));
-    } else if (lexer.store == "range") {
-        double value, delta;
-        lexer.number(&value);
-        lexer.number(&delta);
-        return unique_ptr<Seed>(new Seed(value, delta));
-    } else if (lexer.store == "undef") {
-        return unique_ptr<Seed>(new Seed());
+Seed Seed::read(Lexer& lexer) {
+    str tag;
+    lexer >> tag;
+    if (tag == "value") {
+        double seed;
+        lexer >> seed;
+        return Seed(seed);
+    } else if (tag == "range") {
+        double seed, delta;
+        lexer >> seed >> delta;
+        return Seed(seed, delta);
+    } else if (tag == "undef") {
+        return Seed();
     }
-    return nullptr;
+    throw std::invalid_argument("expect seed specification");
 }

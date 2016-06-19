@@ -58,7 +58,7 @@ public:
         return 0;
     }
 
-    static unique_ptr<Seed> read(Lexer& lexer);
+    static Seed read(Lexer& lexer);
 
 private:
     float m_seed;

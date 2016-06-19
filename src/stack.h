@@ -10,10 +10,12 @@
 #include "Writer.h"
 #include "Lexer.h"
 
+using std::unique_ptr;
+
 class Stack {
 public:
     struct Layer {
-        std::unique_ptr<Dispersion> dispersion;
+        unique_ptr<Dispersion> dispersion;
         double thickness;
     };
 
@@ -24,19 +26,19 @@ public:
     Stack(unique_ptr<Dispersion> substrate, unique_ptr<Dispersion> environ)
     : m_substrate(std::move(substrate)), m_environ(std::move(environ)) {
     }
+
+    void substrate(unique_ptr<Dispersion>&& disp) { m_substrate = std::move(disp); }
+    void environ  (unique_ptr<Dispersion>&& disp) { m_environ   = std::move(disp); }
 #endif
 
-    void substrate(std::unique_ptr<Dispersion>&& disp) { m_substrate = std::move(disp); }
-    void environ  (std::unique_ptr<Dispersion>&& disp) { m_environ   = std::move(disp); }
-
     int write(Writer& w);
-    static std::unique_ptr<Stack> read(Lexer& lexer);
+    static unique_ptr<Stack> read(Lexer& lexer);
 
 private:
     enum { MAX_LAYERS_NUMBER = (1 << 16) - 2 };
 
-    std::unique_ptr<Dispersion> m_substrate;
-    std::unique_ptr<Dispersion> m_environ;
+    unique_ptr<Dispersion> m_substrate;
+    unique_ptr<Dispersion> m_environ;
     eastl::vector<Layer> m_layers;
 };
 

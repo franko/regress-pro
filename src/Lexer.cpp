@@ -71,51 +71,46 @@ void Lexer::next() {
     }
 }
 
-int Lexer::ident_to_store() {
-    if (current.tk == TK_IDENT) {
-        store = current.value.str;
-        next();
-        return 0;
-    }
-    return 1;
-}
-
-int Lexer::string_to_store() {
-    if (current.tk == TK_STRING) {
-        store = current.value.str;
-        next();
-        return 0;
-    }
-    return 1;
-}
-
-int Lexer::check_ident(const char *id) {
+void Lexer::check_ident(const char *id) {
     if (current.tk == TK_IDENT && strcmp(current.value.str, id) == 0) {
         next();
-        return 0;
+    } else {
+        throw std::invalid_argument("expect identifier");
     }
-    return 1;
 }
 
-int Lexer::integer(int *value) {
-    if (current.tk == TK_INTEGER) {
-        *value = current.value.integer;
-        next();
-        return 0;
+void Lexer::read(int& value) {
+    if (current.tk != TK_INTEGER) {
+        throw std::invalid_argument("expect integer");
     }
-    return 1;
+    value = current.value.integer;
 }
 
-int Lexer::number(double *value)
-{
-    if (current.tk == TK_INTEGER) {
-        *value = (double) (current.value.integer);
-        next();
-        return 0;
-    } else if (current.tk == TK_NUMBER) {
-        *value = current.value.num;
-        next();
-        return 0;
+void Lexer::read(double& value) {
+    if (current.tk == TK_NUMBER) {
+        value = current.value.num;
+    } else if (current.tk == TK_INTEGER) {
+        value = current.value.integer;
+    } else {
+        throw std::invalid_argument("expect decimal number");
     }
-    return 1;
+}
+
+void Lexer::read(str& value) {
+    if (current.tk != TK_IDENT) {
+        throw std::invalid_argument("expect identifier");
+    }
+    value = current.value.str;
+}
+
+void Lexer::read(Lexer::quoted_string& value) {
+    if (current.tk != TK_STRING) {
+        throw std::invalid_argument("expect quoted string");
+    }
+    value.set(current.value.str);
+}
+
+Lexer& operator>>(Lexer& lexer, const char *s) {
+    lexer.check_ident(s);
+    return lexer;
 }

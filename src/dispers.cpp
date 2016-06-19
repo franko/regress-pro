@@ -1,15 +1,20 @@
 #include "dispers.h"
 
-eastl::vector<DispersionClass> Dispersion::registered_classes;
+eastl::vector<const DispersionClass *> Dispersion::m_registered_classes;
 
-const DispersionClass *lookup_dispersion_class(const char *id) {
-    for (const DispersionClass& klass : Dispersion::registered_classes) {
-        if (klass.short_name == id) {
-            return &klass;
+void Dispersion::register_class(const DispersionClass& d) {
+    m_registered_classes.push_back(&d);
+}
+
+const DispersionClass* Dispersion::lookup_class(const char *short_name) {
+    for (const DispersionClass* klass : m_registered_classes) {
+        if (klass->short_name == short_name) {
+            return klass;
         }
     }
     return nullptr;
 }
+
 
 std::unique_ptr<Dispersion> Dispersion::read(Lexer& lexer) {
 #if 0
@@ -19,8 +24,8 @@ std::unique_ptr<Dispersion> Dispersion::read(Lexer& lexer) {
     }
 #endif
     const char *id = lexer.lookup_ident();
-    if (!id) return nullptr;
-    const DispersionClass *klass = lookup_dispersion_class(id);
-    if (!klass) return nullptr;
+    if (!id) throw std::invalid_argument("expect identifier");
+    const DispersionClass *klass = lookup_class(id);
+    if (!klass) throw std::invalid_argument("unknown dispersion type");
     return klass->read(lexer);
 }

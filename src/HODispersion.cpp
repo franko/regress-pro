@@ -44,22 +44,15 @@ const char *HODispersion::parameter_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
 #define HO_MULT_FACT 1.3788623090164978586499199863586
 
-const HODispersionClass HODispersion::m_klass{DISP_HO, "Harmonic Oscillator", "ho"};
+const HODispersionClass ho_dispersion_class{DISP_HO, "Harmonic Oscillator", "ho"};
 
 std::unique_ptr<Dispersion> HODispersionClass::read(Lexer& lexer) const {
-    lexer.check_ident("ho");
-    if (lexer.string_to_store()) return nullptr;
-    str name = lexer.store;
+    Lexer::quoted_string name;
     int n;
-    if (lexer.integer(&n)) return nullptr;
+    lexer >> "ho" >> name >> n;
     std::unique_ptr<HODispersion> disp(new HODispersion(name.text(), n));
-    for (int i = 0; i < n; i++) {
-        auto& osc = disp->oscillator(i);
-        if (lexer.number(&osc.nosc)) return nullptr;
-        if (lexer.number(&osc.en  )) return nullptr;
-        if (lexer.number(&osc.eg  )) return nullptr;
-        if (lexer.number(&osc.nu  )) return nullptr;
-        if (lexer.number(&osc.phi )) return nullptr;
+    for (auto& osc : disp->oscillators()) {
+        lexer >> osc.nosc >> osc.en >> osc.eg >> osc.nu >> osc.phi;
     }
     return disp;
 }

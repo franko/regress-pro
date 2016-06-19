@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "disp-ho.h"
+#include "HODispersion.h"
 #include "str-util.h"
 
 void print_n_and_k(const Dispersion& d) {
@@ -13,6 +13,8 @@ void print_n_and_k(const Dispersion& d) {
 }
 
 int main() {
+	Dispersion::register_class(ho_dispersion_class);
+
 	HODispersion d{"HO test"};
 
 	d.add_oscillator(HODispersion::Oscillator{150.0, 15.7, 0.0, 0.3333,  0.0});
@@ -28,10 +30,7 @@ int main() {
 	str_loadfile("ho-output.txt", &text);
 	Lexer lexer(text.text());
 
-	lexer.ident_to_store();
-	lexer.string_to_store();
-	str name = lexer.store;
-	auto d_new = HODispersion::read(name.text(), lexer);
+	auto d_new = Dispersion::read(lexer);
 	print_n_and_k(*d_new);
 
 	HODispersion d_ter(d);
