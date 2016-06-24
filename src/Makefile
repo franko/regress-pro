@@ -21,8 +21,13 @@ ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	vector_print.c fit_result.c writer.c lexer.c
 EFIT_LIB = libefit.a
 
+MIGRATION_C_SRC_FILES = common.c str.c str-util.c
+MIGRATION_CPP_SRC_FILES = Lexer.cpp Writer.cpp HODispersion.cpp dispers.cpp fit-params.cpp Stack.cpp
+
+MIGRATION_OBJ_FILES = $(MIGRATION_C_SRC_FILES:%.c=%.o) $(MIGRATION_CPP_SRC_FILES:%.cpp=%.o)
+
 ELL_OBJ_FILES := $(ELL_SRC_FILES:%.c=%.o)
-DEP_FILES := $(ELL_SRC_FILES:%.c=.deps/%.P)
+DEP_FILES := $(ELL_SRC_FILES:%.c=.deps/%.P) $(MIGRATION_C_SRC_FILES:%.c=.deps/%.P) $(MIGRATION_CPP_SRC_FILES:%.cpp=.deps/%.P)
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
@@ -34,6 +39,9 @@ include makerules
 
 $(SUBDIRS):
 	$(MAKE) -C $@
+
+libmlrcore.a: $(MIGRATION_OBJ_FILES)
+	ar r $@ $(MIGRATION_OBJ_FILES)
 
 $(EFIT_LIB): $(ELL_OBJ_FILES)
 	ar r $@ $(ELL_OBJ_FILES)
