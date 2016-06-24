@@ -156,20 +156,3 @@ Writer& operator<<(Writer& w, const HODispersion::Oscillator& osc) {
     w.printf("%g %g %g %g %g", osc.nosc, osc.en, osc.eg, osc.nu, osc.phi);
     return w;
 }
-
-#if 0
-std::unique_ptr<HODispersion> HODispersion::read(const char *name, Lexer& lexer) {
-    int n;
-    if (lexer.integer(&n)) return nullptr;
-    std::unique_ptr<HODispersion> new_disp(new HODispersion(name, n));
-    for (int i = 0; i < n; i++) {
-        auto& osc = new_disp->m_oscillators[i];
-        if (lexer.number(&osc.nosc)) return nullptr;
-        if (lexer.number(&osc.en  )) return nullptr;
-        if (lexer.number(&osc.eg  )) return nullptr;
-        if (lexer.number(&osc.nu  )) return nullptr;
-        if (lexer.number(&osc.phi )) return nullptr;
-    }
-    return new_disp;
-}
-#endif
