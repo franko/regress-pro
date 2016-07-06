@@ -7,13 +7,10 @@
 
 #include "defs.h"
 #include "str_cpp.h"
+#include "parser.h"
 
 class Writer {
 public:
-    struct quoted_string {
-        const str& text;
-    };
-
     Writer();
 
     void printf(const char *fmt, ...);
@@ -48,17 +45,13 @@ public:
         p.copy(s);
     }
 
-    void append(const quoted_string& quoted) {
-        append_quoted(quoted.text);
-    }
-
-    void append_quoted(const str& s) {
-        const int len = s.len();
+    void append(const quoted_string_ref& quoted) {
+        const int len = quoted.text.len();
         str::pointer p = m_text.append_pointer(len + 2);
         p.copy('"');
-        const char *s_text = s.text();
+        const char *text = quoted.text.text();
         for (int i = 0; i < len; i++) {
-            const char c = s_text[i];
+            const char c = text[i];
             if (c == '"') {
                 p.copy('\\');
                 p.copy('"');
@@ -74,6 +67,18 @@ public:
         p.copy(s);
     }
 
+    void add_spacing() {
+        if (m_pending_space) {
+            append(" ");
+        }
+        if (m_new_line) {
+            for (int i = 0; i < m_indent; i++) {
+                append("  ");
+            }
+            m_new_line = false;
+        }
+    }
+
 private:
     void begin_write();
 
@@ -85,9 +90,7 @@ private:
 
 template <typename T>
 Writer& operator<<(Writer& w, const T& value) {
-    if (w.pending_space()) {
-        w.append(" ");
-    }
+    w.add_spacing();
     w.append(value);
     w.pending_space(true);
     return w;
@@ -95,6 +98,7 @@ Writer& operator<<(Writer& w, const T& value) {
 
 template <typename T>
 Writer& operator<<(Writer& w, const eastl::vector<T>& vec) {
+    w.add_spacing();
     w.append(int(vec.size()));
     w.indent(+1);
     for (auto element : vec) {

@@ -22,6 +22,7 @@
 #include <string.h>
 #include "dispers.h"
 #include "HODispersion.h"
+#include "parser.h"
 
 template <typename T>
 static inline T sqr(const T x) { return x*x; }
@@ -47,10 +48,10 @@ const char *HODispersion::parameter_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 const HODispersionClass ho_dispersion_class{DISP_HO, "Harmonic Oscillator", "ho"};
 
 std::unique_ptr<Dispersion> HODispersionClass::read(Lexer& lexer) const {
-    Lexer::quoted_string name;
+    quoted_string name;
     int n;
     lexer >> "ho" >> name >> n;
-    std::unique_ptr<HODispersion> disp(new HODispersion(name.text(), n));
+    std::unique_ptr<HODispersion> disp(new HODispersion(name.text, n));
     for (auto& osc : disp->oscillators()) {
         lexer >> osc.nosc >> osc.en >> osc.eg >> osc.nu >> osc.phi;
     }
@@ -147,7 +148,7 @@ int HODispersion::fp_number() const {
 
 
 int HODispersion::write(Writer& w) const {
-    w.printf("ho \"%s\" ", m_name.text());
+    w << "ho" << quoted_string_ref{m_name};
     w << m_oscillators;
     return 0;
 }

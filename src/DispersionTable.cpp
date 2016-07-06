@@ -17,7 +17,7 @@ complex DispersionTable::n_value_deriv(double wavelength, complex der[]) const {
 int DispersionTable::fp_number() const { return 0; }
 
 int DispersionTable::write(Writer& w) const {
-    w << "table" << Writer::quoted_string{m_name} << m_interp_table.length();
+    w << "table" << quoted_string_ref{m_name} << m_interp_table.length();
     w.newline_enter();
     w << m_interp_table.table();
     w.newline_exit();

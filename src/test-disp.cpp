@@ -4,6 +4,7 @@
 #include "str-util.h"
 
 void print_n_and_k(const Dispersion& d) {
+	printf("%s\n", d.name().text());
 	complex n = d.n_value(190.0);
 	printf("190nm: %g %g\n", n.real(), -n.imag());
 	n = d.n_value(250.0);
@@ -15,7 +16,7 @@ void print_n_and_k(const Dispersion& d) {
 int main() {
 	Dispersion::register_class(ho_dispersion_class);
 
-	HODispersion d{"HO test"};
+	HODispersion d{"HO test (\"with quotes\")"};
 
 	d.add_oscillator(HODispersion::Oscillator{150.0, 15.7, 0.0, 0.3333,  0.0});
 	d.add_oscillator(HODispersion::Oscillator{10.0,  6.5,  0.3, 0.3333, -0.7});

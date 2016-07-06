@@ -42,10 +42,10 @@ public:
 
 	using size_type = eastl::vector<Oscillator>::size_type;
 
-	HODispersion(const char *name): Dispersion(name, ho_dispersion_class)
+	HODispersion(const str& name): Dispersion(name, ho_dispersion_class)
 	{ }
 
-	HODispersion(const char *name, int size): Dispersion(name, ho_dispersion_class), m_oscillators(size_type(size))
+	HODispersion(const str& name, int size): Dispersion(name, ho_dispersion_class), m_oscillators(size_type(size))
 	{ }
 
 	eastl::vector<Oscillator>& oscillators() { return m_oscillators; }

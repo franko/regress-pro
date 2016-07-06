@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "defs.h"
+#include "parser.h"
 #include "str_cpp.h"
 
 enum token_e {
@@ -26,14 +27,6 @@ struct Token {
 
 class Lexer {
 public:
-    struct quoted_string : public str {
-        explicit quoted_string() { }
-
-        void set(const char *s) {
-            str_copy_c(this, s);
-        }
-    };
-
     Lexer(const char *text);
 
     void next();

@@ -7,11 +7,21 @@ Lexer::Lexer(const char *s) : m_text(s) {
 }
 
 static void
-read_string(const char *text, str& buffer, const char **tail)
-{
+read_string(const char *text, str& buffer, const char **tail) {
     const char *p;
     for (p = text; *p && *p != '"'; p++) {
-        buffer += *p;
+        char c;
+        if (*p == '\\') {
+            p ++;
+            if (*p == '"') {
+                c = '"';
+            } else {
+                throw std::invalid_argument("invalid escape sequence");
+            }
+        } else {
+            c = *p;
+        }
+        buffer += c;
     }
     if (*p == '"') {
         *tail = p + 1;
@@ -103,11 +113,11 @@ void Lexer::read(str& value) {
     value = current.value.str;
 }
 
-void Lexer::read(Lexer::quoted_string& value) {
+void Lexer::read(quoted_string& quoted) {
     if (current.tk != TK_STRING) {
         throw std::invalid_argument("expect quoted string");
     }
-    value.set(current.value.str);
+    quoted.text = current.value.str;
 }
 
 Lexer& operator>>(Lexer& lexer, const char *s) {
