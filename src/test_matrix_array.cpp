@@ -3,7 +3,7 @@
 #include "str-util.h"
 #include "MatrixArray.h"
 
-typedef MatrixArray<double> matrix_array;
+typedef MatrixArray<double, layout_row_major> matrix_array;
 
 int main() {
     matrix_array m(10, 5);

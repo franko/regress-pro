@@ -22,7 +22,8 @@ ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 EFIT_LIB = libefit.a
 
 MIGRATION_C_SRC_FILES = common.c str.c str-util.c
-MIGRATION_CPP_SRC_FILES = Lexer.cpp Writer.cpp HODispersion.cpp dispers.cpp fit-params.cpp Stack.cpp
+MIGRATION_CPP_SRC_FILES = Lexer.cpp Writer.cpp HODispersion.cpp InterpolationTable.cpp DispersionTable.cpp \
+	dispers.cpp fit-params.cpp stack.cpp
 
 MIGRATION_OBJ_FILES = $(MIGRATION_C_SRC_FILES:%.c=%.o) $(MIGRATION_CPP_SRC_FILES:%.cpp=%.o)
 

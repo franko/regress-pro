@@ -34,7 +34,7 @@ public:
         m_data.reset(new T[rows * cols]);
     }
 
-    int write(Writer& w, enum matrix_array_mode mode = MATRIX_LAYOUT_NORMAL);
+    int write(Writer& w, enum matrix_array_mode mode = MATRIX_LAYOUT_NORMAL) const;
     static std::unique_ptr<MatrixArray> read(Lexer& l, enum matrix_array_mode mode);
 
     const T& operator()(int i, int j) const { return m_data[Layout::index(m_rows, m_cols, i, j)]; }
@@ -44,20 +44,16 @@ public:
     int rows() const { return m_rows; }
     int cols() const { return m_cols; }
 
-    const T* row_data(int i) const { return &m_data[Layout::index(m_rows, m_cols, i, 0)]; }
-          T* row_data(int i)       { return &m_data[Layout::index(m_rows, m_cols, i, 0)]; }
-    const T* col_data(int j) const { return &m_data[Layout::index(m_rows, m_cols, 0, j)]; }
-          T* col_data(int j)       { return &m_data[Layout::index(m_rows, m_cols, 0, j)]; }
+    const T* data(int i, int j) const { return &m_data[Layout::index(m_rows, m_cols, i, j)]; }
+          T* data(int i, int j)       { return &m_data[Layout::index(m_rows, m_cols, i, j)]; }
 
-    const T* data() const { return m_data.get(); }
-          T* data()       { return m_data.get(); }
 private:
     int m_rows, m_cols;
     std::unique_ptr<T[]> m_data;
 };
 
-template <typename T>
-int MatrixArray<T>::write(Writer& w, enum matrix_array_mode mode) {
+template <typename T, typename L>
+int MatrixArray<T, L>::write(Writer& w, enum matrix_array_mode mode) const {
     int rows = (mode == MATRIX_LAYOUT_NORMAL ? m_rows : m_cols);
     int cols = (mode == MATRIX_LAYOUT_NORMAL ? m_cols : m_rows);
 
@@ -72,9 +68,9 @@ int MatrixArray<T>::write(Writer& w, enum matrix_array_mode mode) {
     return 0;
 }
 
-template <typename T>
-std::unique_ptr<MatrixArray<T> > MatrixArray<T>::read(Lexer& lexer, enum matrix_array_mode mode) {
-    typedef MatrixArray<T> matrix_type;
+template <typename T, typename L>
+std::unique_ptr<MatrixArray<T, L> > MatrixArray<T, L>::read(Lexer& lexer, enum matrix_array_mode mode) {
+    typedef MatrixArray<T, L> matrix_type;
     int rows, cols;
     lexer >> rows >> cols;
     int array_rows = (mode == MATRIX_LAYOUT_NORMAL ? rows : cols);
@@ -85,17 +81,17 @@ std::unique_ptr<MatrixArray<T> > MatrixArray<T>::read(Lexer& lexer, enum matrix_
             T x;
             lexer >> x;
             if (mode == MATRIX_LAYOUT_NORMAL) {
-                *m(i, j) = x;
+                (*m)(i, j) = x;
             } else {
-                *m(j, i) = x;
+                (*m)(j, i) = x;
             }
         }
     }
     return m;
 }
 
-template <typename T>
-Writer& operator<<(Writer& w, MatrixArray<T>& m) {
+template <typename T, typename L>
+Writer& operator<<(Writer& w, const MatrixArray<T, L>& m) {
     m.write(w);
     return w;
 }

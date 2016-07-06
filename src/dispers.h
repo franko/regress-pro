@@ -40,6 +40,10 @@ public:
     : m_class(klass), m_name(name)
     { }
 
+    Dispersion(const str& name, const DispersionClass& klass)
+    : m_class(klass), m_name(name)
+    { }
+
     virtual ~Dispersion() { }
 
     virtual complex n_value(double lambda) const = 0;

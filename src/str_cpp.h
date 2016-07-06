@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "str.h"
+#include "str-util.h"
 
 class str : public _str {
 
@@ -22,11 +23,18 @@ public:
             STR_SIZE_CHECK(s, s->length + capacity - 1);
         }
 
+        void copy(const char c) {
+            STR_SIZE_CHECK(m_containing_string, m_containing_string->length + 1);
+            *ptr() = c;
+            m_containing_string->length += 1;
+        }
+
         void copy(const char *s) {
-            int len = strlen(s);
-            STR_SIZE_CHECK(m_containing_string, m_containing_string->length + len);
-            std::memcpy(ptr(), s, len + 1);
-            m_containing_string->length += len;
+            add_string(s, strlen(s));
+        }
+
+        void copy(const str& s) {
+            add_string(s.text(), s.len());
         }
 
         void sprintf(const char *fmt, ...) {
@@ -44,6 +52,12 @@ public:
         }
 
     private:
+        void add_string(const char *s, const int len) {
+            STR_SIZE_CHECK(m_containing_string, m_containing_string->length + len);
+            std::memcpy(ptr(), s, len + 1);
+            m_containing_string->length += len;
+        }
+
         str *m_containing_string;
     };
 
@@ -135,6 +149,16 @@ public:
     friend str operator+(str lhs, const str& rhs) {
         lhs += rhs;
         return lhs;
+    }
+
+    static inline str getline(FILE *f) {
+        str new_string;
+        str_getline(&new_string, f);
+        return new_string;
+    }
+
+    static inline int case_compare(const str& a, const str& b) {
+        return strcasecmp(a.text(), b.text());
     }
 };
 

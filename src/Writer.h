@@ -10,6 +10,10 @@
 
 class Writer {
 public:
+    struct quoted_string {
+        const str& text;
+    };
+
     Writer();
 
     void printf(const char *fmt, ...);
@@ -40,6 +44,32 @@ public:
     }
 
     void append(const char *s) {
+        str::pointer p = m_text.append_pointer();
+        p.copy(s);
+    }
+
+    void append(const quoted_string& quoted) {
+        append_quoted(quoted.text);
+    }
+
+    void append_quoted(const str& s) {
+        const int len = s.len();
+        str::pointer p = m_text.append_pointer(len + 2);
+        p.copy('"');
+        const char *s_text = s.text();
+        for (int i = 0; i < len; i++) {
+            const char c = s_text[i];
+            if (c == '"') {
+                p.copy('\\');
+                p.copy('"');
+            } else {
+                p.copy(c);
+            }
+        }
+        p.copy('"');
+    }
+
+    void append(const str& s) {
         str::pointer p = m_text.append_pointer();
         p.copy(s);
     }
