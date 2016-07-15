@@ -13,7 +13,7 @@ str_getcwd(str_t dir)
     size_t bsize;
 
     for(bsize = 64; /* */; bsize *= 2) {
-        str_size_check(dir, bsize);
+        STR_SIZE_CHECK(dir, bsize);
         if(getcwd(dir->heap, bsize) == dir->heap) {
             dir->length = strlen(dir->heap);
             return 0;
@@ -44,7 +44,7 @@ str_loadfile(const char *filename, str_t text)
         return 1;
     }
 
-    str_size_check(text, tsize + 1);
+    STR_SIZE_CHECK(text, tsize + 1);
 
     n = fread(text->heap, 1, tsize, fp);
 #ifndef WIN32

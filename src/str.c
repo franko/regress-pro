@@ -7,25 +7,24 @@
 #include "common.h"
 #include "str.h"
 
-static inline size_t
-str_sz_round(size_t sz)
-{
-#define MINSIZE (1 << 4)
-    size_t res = MINSIZE;
+/* Increase the required allocation size. */
+#define ALLOC_SIZE_INCREASE(x) (((x) * 3) / 2)
 
-    while(res < sz) {
-        res *= 2;
-        /* integer overflow ? */
-        assert(res > 0);
-    }
+#define SIZE_ALIGN_SHIFT 3
+#define SIZE_ALIGN (1 << SIZE_ALIGN_SHIFT)
+#define SIZE_ALIGN_MASK (SIZE_ALIGN - 1)
 
-    return res;
-}
+/* Roundup the size of allocated memory. */
+#define STR_SIZE_ROUND(s) (((s) + SIZE_ALIGN_MASK) & ~SIZE_ALIGN_MASK)
 
-static inline void
+/* Minimum size of allocation. */
+#define STR_MIN_SIZE 8
+
+void
 str_init_raw(str_ptr s, size_t len)
 {
-    s->size = str_sz_round(len+1);
+    const size_t alloc_size = STR_SIZE_ROUND(len+1);
+    s->size = (alloc_size >= STR_MIN_SIZE ? alloc_size : STR_MIN_SIZE);
     s->heap = emalloc(s->size);
 }
 
@@ -53,7 +52,7 @@ str_ptr
 str_new(void)
 {
     str_ptr s = emalloc(sizeof(str_t));
-    str_init_raw(s, 16);
+    str_init_raw(s, 15);
     s->heap[0] = 0;
     s->length = 0;
     return s;
@@ -90,18 +89,10 @@ str_init_from_str(str_ptr s, const str_t sf)
 }
 
 void
-str_size_check(str_t s, size_t reqlen)
+str_resize(str_t s, size_t len)
 {
-    char *old_heap;
-
-    assert(s->size > 0);
-
-    if(reqlen+1 < s->size) {
-        return;
-    }
-
-    old_heap = (s->size > 0 ? s->heap : NULL);
-    str_init_raw(s, reqlen);
+    char *old_heap = (s->size > 0 ? s->heap : NULL);
+    str_init_raw(s, ALLOC_SIZE_INCREASE(len));
 
     if(old_heap) {
         memcpy(s->heap, old_heap, s->length+1);
@@ -113,7 +104,7 @@ void
 str_copy(str_t d, const str_t s)
 {
     const size_t len = s->length;
-    str_size_check(d, len);
+    STR_SIZE_CHECK(d, len);
     memcpy(d->heap, s->heap, len+1);
     d->length = len;
 }
@@ -122,7 +113,7 @@ void
 str_copy_c(str_t d, const char *s)
 {
     const size_t len = strlen(s);
-    str_size_check(d, len);
+    STR_SIZE_CHECK(d, len);
     memcpy(d->heap, s, len+1);
     d->length = len;
 }
@@ -131,7 +122,7 @@ void
 str_copy_c_substr(str_t d, const char *s, int len)
 {
     len = (len >= 0 ? len : 0);
-    str_size_check(d, (size_t)len);
+    STR_SIZE_CHECK(d, (size_t)len);
     memcpy(d->heap, s, (size_t)len);
     d->heap[len] = 0;
     d->length = len;
@@ -144,7 +135,7 @@ str_append_c(str_t to, const char *from, int sep)
     size_t newlen = STR_LENGTH(to) + flen + (sep == 0 ? 0 : 1);
     int idx = STR_LENGTH(to);
 
-    str_size_check(to, newlen);
+    STR_SIZE_CHECK(to, newlen);
 
     if(sep != 0) {
         to->heap[idx++] = sep;
@@ -201,7 +192,7 @@ str_getline(str_t d, FILE *f)
     char *res, *ptr;
     int szres, pending = 0;
 
-    str_size_check(d, 0);
+    STR_SIZE_CHECK(d, 0);
     str_trunc(d, 0);
 
     for(;;) {
@@ -233,7 +224,7 @@ str_getline(str_t d, FILE *f)
 
         pending = 1;
 
-        str_size_check(d, 2 * d->length);
+        STR_SIZE_CHECK(d, 2 * d->length);
     }
 
     if(d->length > 0) {
@@ -311,7 +302,7 @@ str_pad(str_t s, int len, char sep)
         return;
     }
 
-    str_size_check(s, (size_t)len-1);
+    STR_SIZE_CHECK(s, (size_t)len-1);
 
     memmove(s->heap + diff, s->heap, (s->length + 1) * sizeof(char));
     memset(s->heap, sep, diff * sizeof(char));
