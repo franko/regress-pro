@@ -330,7 +330,7 @@ multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
 
     str_set_null(text);
 
-    str_init(pname, 16);
+    str_init(pname, 15);
 
     for(j = 0, kp = 0; j < fit->common_parameters->number; j++, kp++) {
         fit_param_t *fp = fit->common_parameters->values + j;

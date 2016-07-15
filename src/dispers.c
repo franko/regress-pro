@@ -136,7 +136,7 @@ disp_new_with_name(enum disp_type tp, const char *name)
     if(name) {
         str_init_from_c(d->name, name);
     } else {
-        str_init(d->name, 16);
+        str_init(d->name, 15);
     }
     return d;
 }

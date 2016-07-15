@@ -56,7 +56,7 @@ get_full_param_name(const fit_param_t *fp, str_t name)
     case PID_LAYER_N:
     {
         str_t dname;
-        str_init(dname, 16);
+        str_init(dname, 15);
         get_disp_param_name(fp, dname);
         str_printf(name, "Layer%d / %s", fp->layer_nb, CSTR(dname));
         str_free(dname);

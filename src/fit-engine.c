@@ -285,7 +285,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
 
             if(disp_check_fit_param(stack->disp[fp->layer_nb], fp)) {
                 str_t pname;
-                str_init(pname, 16);
+                str_init(pname, 15);
                 get_param_name(fp, pname);
                 *error_msg = new_error_message(RECIPE_CHECK,
                                  "Parameter %s makes no sense for layer %i",
@@ -503,8 +503,8 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
     size_t j;
 
     str_set_null(text);
-    str_init(pname, 16);
-    str_init(value, 16);
+    str_init(pname, 15);
+    str_init(value, 15);
 
     for(j = 0; j < fit->parameters->number; j++) {
         fit_param_t *fp = fit->parameters->values + j;
