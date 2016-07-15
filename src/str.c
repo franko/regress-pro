@@ -302,7 +302,7 @@ str_pad(str_t s, int len, char sep)
         return;
     }
 
-    STR_SIZE_CHECK(s, (size_t)len-1);
+    STR_SIZE_CHECK(s, (size_t)len);
 
     memmove(s->heap + diff, s->heap, (s->length + 1) * sizeof(char));
     memset(s->heap, sep, diff * sizeof(char));
