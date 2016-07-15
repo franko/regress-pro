@@ -17,7 +17,7 @@ ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	refl-fit.c elliss-fit.c number-parse.c refl-utils.c spectra.c elliss.c test-deriv.c \
 	elliss-multifit.c multi-fit-engine.c grid-search.c lmfit-multi.c \
 	refl-multifit.c disp-fit-engine.c \
-	vector_print.c fit_result.c writer.c lexer.c
+	vector_print.c fit_result.c writer.c lexer.c lmfit_result.c
 EFIT_LIB = libefit.a
 
 ELL_OBJ_FILES := $(ELL_SRC_FILES:%.c=%.o)

@@ -9,13 +9,17 @@ __BEGIN_DECLS
    we define some error codes compatible with GSL status codes. */
 enum {
     LMFIT_DATA_NOT_LOADED = 1024,
+    LMFIT_USER_INTERRUPTED,
 };
 
 struct lmfit_result {
     float chisq;
+    int nb_points;
     int nb_iterations;
     int gsl_status;
 };
+
+const char *lmfit_result_error_string(const struct lmfit_result *r);
 
 __END_DECLS
 

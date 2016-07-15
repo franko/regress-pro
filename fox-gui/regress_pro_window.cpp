@@ -463,7 +463,7 @@ regress_pro_window::set_stack_result(stack_t *new_stack)
 }
 
 void
-regress_pro_window::update_interactive_fit(fit_engine *fit)
+regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& result)
 {
     if (m_result_stack_match) {
         m_interactive_fit->update_from_fit_results(fit);
@@ -474,6 +474,7 @@ regress_pro_window::update_interactive_fit(fit_engine *fit)
         set_stack_result(fit_engine_yield_stack(fit));
         m_result_stack_match = true;
     }
+    m_fit_window->set_fit_result(result);
 }
 
 void
@@ -484,17 +485,17 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     fit_engine_prepare(fit, fspectrum);
 
-    Str fit_error_msgs;
     ProgressInfo progress(this->getApp(), this);
 
-    lmfit_grid(fit, fseeds, &chisq, analysis.str(), fit_error_msgs.str(),
+    lmfit_result result;
+    lmfit_grid(fit, fseeds, &result, analysis.str(),
                LMFIT_GET_RESULTING_STACK,
                process_foxgui_events, & progress);
 
     progress.hide();
 
-    if(fit_error_msgs.length() > 0) {
-        statusbar->getStatusLine()->setNormalText(fit_error_msgs.cstr());
+    if (result.gsl_status != GSL_SUCCESS) {
+        statusbar->getStatusLine()->setNormalText(lmfit_result_error_string(&result));
     } else {
         statusbar->getStatusLine()->setNormalText("Fit Successfull.");
     }
@@ -521,7 +522,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     resulttext->setText(fitresult);
     resulttext->setModified(TRUE);
 
-    update_interactive_fit(fit);
+    update_interactive_fit(fit, result);
     fit_engine_disable(fit);
 }
 

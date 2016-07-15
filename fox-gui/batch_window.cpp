@@ -65,9 +65,9 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         if (!s) {
             return 1;
         }
-        double chisq;
         fit_engine_prepare(fit, s);
-        lmfit_grid(fit, recipe->seeds_list, &chisq, NULL, NULL, LMFIT_PRESERVE_STACK,
+        lmfit_result fresult;
+        lmfit_grid(fit, recipe->seeds_list, &fresult, NULL, LMFIT_PRESERVE_STACK,
                    window_process_events, this);
 
         unsigned j;
@@ -75,7 +75,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
             result.format("%g", gsl_vector_get(fit->run->results, j));
             table->setItemText(i, j + 1, result);
         }
-        result.format("%g", chisq);
+        result.format("%g", fresult.chisq);
         table->setItemText(i, j + 1, result);
 
         fit_engine_disable(fit);

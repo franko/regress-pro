@@ -55,6 +55,11 @@ void fit_panel::config_spectral_range()
     range_dirty = false;
 }
 
+void fit_panel::set_fit_result(const lmfit_result& result)
+{
+    m_result_label->setText(FXStringFormat("Chi Square: %10.4g   points: %4d   iterations: %4d   fit status: %s", result.chisq, result.nb_points, result.nb_iterations, lmfit_result_error_string(&result)));
+}
+
 void fit_panel::setup()
 {
     param_matrix = new FXMatrix(scroll_window, 2, LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
@@ -97,9 +102,16 @@ void fit_panel::setup()
     m_undo_manager.clear();
 
     m_canvas_frame = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_canvas_frame->setBackColor(FXRGB(255,255,255));
     m_canvas = new plot_canvas(m_canvas_frame, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_fit->config_plot(m_canvas);
-    m_result_label = new FXLabel(m_canvas_frame, "");
+
+    FXFont& bold_font = regressProApp()->bold_font;
+    const FXint label_height = bold_font.getFontHeight() + DEFAULT_PAD;
+    m_result_label = new FXLabel(m_canvas_frame, "", NULL, LABEL_NORMAL|LAYOUT_FIX_HEIGHT, 0, 0, 0, label_height, DEFAULT_PAD, DEFAULT_PAD, 0, DEFAULT_PAD);
+    m_result_label->setFont(&bold_font);
+    m_result_label->setBackColor(FXRGB(255,255,255));
+    m_result_label->setHeight(bold_font.getFontHeight() + 2 * DEFAULT_PAD);
 }
 
 void fit_panel::reload()
@@ -316,7 +328,7 @@ void fit_panel::run_fit(fit_parameters *fps)
     lmfit_result result = m_fit->run(fps);
     double *new_values = new_array_fit_values(m_fit, fps);
     m_undo_manager.record(new oper_run_fit(fps, old_values, new_values));
-    m_result_label->setText(FXStringFormat("Chi Square %.4g        Nb. iterations: %d", result.chisq, result.nb_iterations));
+    set_fit_result(result);
 }
 
 long fit_panel::on_cmd_undo(FXObject*, FXSelector sel, void *)

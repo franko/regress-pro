@@ -76,6 +76,7 @@ public:
     void refresh();
     void reset_undo() { m_undo_manager.clear(); }
     void reload();
+    void set_fit_result(const lmfit_result& result);
     void kill_focus();
 
     void copy_plot_to_clipboard();

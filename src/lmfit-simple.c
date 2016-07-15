@@ -40,6 +40,7 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
 
     chi = gsl_blas_dnrm2(s->f);
     result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+    result->nb_points = spectra_points(fit->run->spectr);
     result->nb_iterations = iter;
     result->gsl_status = status;
 

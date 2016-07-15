@@ -139,7 +139,7 @@ public:
 private:
     bool check_spectrum(const char *context);
     void set_stack_result(stack_t *s);
-    void update_interactive_fit(fit_engine *fit);
+    void update_interactive_fit(fit_engine *fit, const lmfit_result& result);
     void set_spectrum(struct spectrum *s);
     void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
     void save_recipe_as(const FXString& filename);

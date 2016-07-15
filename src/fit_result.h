@@ -18,6 +18,6 @@ struct fit_result {
 
 extern void fit_result_init(struct fit_result *r, struct fit_engine *fit);
 extern void fit_result_free(struct fit_result *r);
-extern void fit_result_report(struct fit_result *r, str_ptr analysis, str_ptr error);
+extern void fit_result_report(struct fit_result *r, str_ptr analysis);
 
 #endif

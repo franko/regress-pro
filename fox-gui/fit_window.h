@@ -43,6 +43,7 @@ public:
     void refresh() { m_fit_panel->refresh(); }
     void reset_undo() { m_fit_panel->reset_undo(); }
     void kill_focus() { m_fit_panel->kill_focus(); }
+    void set_fit_result(const lmfit_result& result) { m_fit_panel->set_fit_result(result); }
 
 protected:
     FXMenuBar *menubar;

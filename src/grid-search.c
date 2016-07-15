@@ -171,19 +171,21 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
 int
 lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
-           double * chisq, str_ptr analysis,
-           str_ptr error_msg, int preserve_init_stack,
+           struct lmfit_result *result, str_ptr analysis, int preserve_init_stack,
            gui_hook_func_t hfun, void *hdata)
 {
-    struct fit_result result[1];
+    struct fit_result grid_result[1];
     int status;
 
-    fit_result_init(result, fit);
-    status = lmfit_grid_run(fit, seeds, preserve_init_stack, result, hfun, hdata);
+    fit_result_init(grid_result, fit);
+    status = lmfit_grid_run(fit, seeds, preserve_init_stack, grid_result, hfun, hdata);
     if (analysis) {
-        fit_result_report(result, analysis, error_msg);
+        fit_result_report(grid_result, analysis);
     }
-    *chisq = result->chisq;
-    fit_result_free(result);
+    result->chisq = grid_result->chisq;
+    result->nb_points = spectra_points(fit->run->spectr);
+    result->nb_iterations = grid_result->iter;
+    result->gsl_status = (grid_result->interrupted ? LMFIT_USER_INTERRUPTED : grid_result->status);
+    fit_result_free(grid_result);
     return status;
 }

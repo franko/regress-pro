@@ -169,6 +169,7 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
 
     chi = gsl_blas_dnrm2(s->f);
     result->chisq = cfg->chisq_norm_factor * pow(chi, 2.0) / f.n;
+    result->nb_points = nsp;
     result->nb_iterations = iter;
     result->gsl_status = status;
 
