@@ -480,7 +480,6 @@ regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& 
 void
 regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
 {
-    double chisq;
     Str analysis;
 
     fit_engine_prepare(fit, fspectrum);
@@ -512,7 +511,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append(fit_parameters_results.cstr());
 
     /* final chi square obtained */
-    row.format("Residual Chisq/pt: %g\n", chisq);
+    row.format("Residual Chisq/pt: %g\n", result.chisq);
     fitresult.append(row);
 
     /* covariance matrix analysis */
