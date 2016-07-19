@@ -46,7 +46,7 @@ void fit_panel::config_spectral_range()
 {
     double wls, wle;
     m_fit->get_sampling(wls, wle);
-    m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
+    m_wl_entry->setText(FXStringFormat("%g-%g", wls, wle));
     range_dirty = false;
 }
 
