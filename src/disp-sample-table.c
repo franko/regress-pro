@@ -13,6 +13,8 @@ static disp_t * disp_sample_table_copy(const disp_t *d);
 static cmpl disp_sample_table_n_value(const disp_t *disp, double lam);
 static int disp_sample_table_write(writer_t *w, const disp_t *_d);
 static int disp_sample_table_read(lexer_t *l, disp_t *d);
+static int disp_sample_table_sample_number(const disp_t *d);
+static double disp_sample_table_sample_wavelength(const disp_t *d, int index);
 
 struct disp_class disp_sample_table_class = {
     .disp_class_id       = DISP_SAMPLE_TABLE,
@@ -27,6 +29,9 @@ struct disp_class disp_sample_table_class = {
     .n_value_deriv       = NULL,
     .apply_param         = NULL,
     .get_param_value     = NULL,
+
+    .samples_number      = disp_sample_table_sample_number,
+    .sample_wavelength   = disp_sample_table_sample_wavelength,
 
     .encode_param        = NULL,
     .write               = disp_sample_table_write,
@@ -290,6 +295,18 @@ close_exit:
     str_free(name);
     str_free(row);
     return disp;
+}
+
+int disp_sample_table_sample_number(const disp_t *_d)
+{
+    const struct disp_sample_table *d = &_d->disp.sample_table;
+    return d->table->view.matrix.size2;
+}
+
+double disp_sample_table_sample_wavelength(const disp_t *_d, int index)
+{
+    const struct disp_sample_table *d = &_d->disp.sample_table;
+    return get_wavelength(d, index);
 }
 
 int

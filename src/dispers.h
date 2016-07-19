@@ -41,6 +41,10 @@ struct disp_class {
                              const fit_param_t *fp);
     int (*write)(writer_t *w, const struct disp_struct *_d);
 
+    /* Specific methods for tabular dispersions. */
+    int (*samples_number)(const struct disp_struct *d);
+    double (*sample_wavelength)(const struct disp_struct *d, int index);
+
     /* class methods */
     void (*encode_param)(str_t param, const fit_param_t *fp);
     int (*read)(lexer_t *l, struct disp_struct *d);
@@ -95,6 +99,8 @@ extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
 extern int      disp_base_fp_number(const disp_t *src);
 extern int      disp_is_tabular(const disp_t *d);
+extern int      disp_samples_number(const disp_t *d);
+extern double   disp_sample_wavelength(const disp_t *d, int index);
 extern int      disp_write(writer_t *w, const disp_t *_d);
 extern disp_t * disp_read(lexer_t *l);
 

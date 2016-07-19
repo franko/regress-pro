@@ -206,6 +206,26 @@ disp_get_param_value(const disp_t *d, const fit_param_t *fp)
     return d->dclass->get_param_value(d, fp);
 }
 
+int
+disp_samples_number(const disp_t *d)
+{
+    assert(d->dclass != NULL);
+    if (d->dclass->samples_number) {
+        return d->dclass->samples_number(d);
+    }
+    return 0;
+}
+
+double
+disp_sample_wavelength(const disp_t *d, int index)
+{
+    assert(d->dclass != NULL);
+    if (d->dclass->sample_wavelength) {
+        return d->dclass->sample_wavelength(d, index);
+    }
+    return 0.0;
+}
+
 static int
 write_library_id(writer_t *w, const char *id)
 {

@@ -14,6 +14,8 @@ static cmpl     disp_table_n_value(const disp_t *disp, double lam);
 
 static int disp_table_write(writer_t *w, const disp_t *_d);
 static int disp_table_read(lexer_t *l, disp_t *d_gen);
+static int disp_table_sample_number(const disp_t *d);
+static double disp_table_sample_wavelength(const disp_t *d, int index);
 
 struct disp_class disp_table_class = {
     .disp_class_id       = DISP_TABLE,
@@ -28,6 +30,9 @@ struct disp_class disp_table_class = {
     .n_value_deriv       = NULL,
     .apply_param         = NULL,
     .get_param_value     = NULL,
+
+    .samples_number      = disp_table_sample_number,
+    .sample_wavelength   = disp_table_sample_wavelength,
 
     .encode_param        = NULL,
     .write               = disp_table_write,
@@ -172,6 +177,18 @@ disp_nk_free:
     disp_table_free(disp);
     fclose(f);
     return NULL;
+}
+
+int disp_table_sample_number(const disp_t *_d)
+{
+    const struct disp_table *d = &_d->disp.table;
+    return d->points_number;
+}
+
+double disp_table_sample_wavelength(const disp_t *_d, int index)
+{
+    const struct disp_table *d = &_d->disp.table;
+    return d->lambda_min + (d->lambda_max - d->lambda_min) * index / (d->points_number - 1);
 }
 
 int
