@@ -28,13 +28,40 @@
 #include "disp-fit-engine.h"
 #include "disp_vs.h"
 
+static int interval_samples_number(const disp_t *d, double wavelength_start, double wavelength_end)
+{
+    int ref_samples_number = disp_samples_number(d);
+    if (ref_samples_number <= 0) return 0;
+    int samples_number = 0;
+    for(int k = 0; k < ref_samples_number; k++) {
+        double wavelength = disp_sample_wavelength(d, k);
+        if (wavelength >= wavelength_start && wavelength <= wavelength_end) {
+            samples_number ++;
+        }
+    }
+    return samples_number;
+}
+
+static void interval_set_sampling(const disp_t *d, gsl_vector *v, double wavelength_start, double wavelength_end)
+{
+    int ref_samples_number = disp_samples_number(d);
+    for(int k = 0, i = 0; k < ref_samples_number; k++) {
+        double wavelength = disp_sample_wavelength(d, k);
+        if (wavelength >= wavelength_start && wavelength <= wavelength_end) {
+            gsl_vector_set(v, i, wavelength);
+            i ++;
+        }
+    }
+}
+
 class disp_fit_manager : public fit_manager {
 public:
     // Number of sampling points used for the fit.
     enum { SAMPLING_POINTS = 512 };
 
     disp_fit_manager(struct disp_fit_engine* fit) :
-        m_fit_engine(fit), m_sampling(240.0, 780.0, 271) {
+        m_fit_engine(fit) {
+        set_default_sampling();
         set_fit_param(&m_fp_template, 0);
     }
 
@@ -88,7 +115,7 @@ public:
             gsl_vector_set(x, k, val);
         }
 
-        int ref_samples_number = disp_samples_number(m_fit_engine->ref_disp);
+        int ref_samples_number = interval_samples_number(m_fit_engine->ref_disp, m_sampling.start(), m_sampling.end());
         size_t wavelength_array_size = (ref_samples_number > 0 ? ref_samples_number : m_sampling.size());
 
         if(! m_fit_engine->wl) {
@@ -101,10 +128,7 @@ public:
         }
 
         if (ref_samples_number > 0) {
-            for(int k = 0; k < ref_samples_number; k++) {
-                double wavelength = disp_sample_wavelength(m_fit_engine->ref_disp, k);
-                gsl_vector_set(m_fit_engine->wl, k, wavelength);
-            }
+            interval_set_sampling(m_fit_engine->ref_disp, m_fit_engine->wl, m_sampling.start(), m_sampling.end());
         } else {
             for(unsigned k = 0; k < m_sampling.size(); k++) {
                 gsl_vector_set(m_fit_engine->wl, k, m_sampling[k]);
@@ -135,9 +159,21 @@ public:
         add_new_plot(canvas, ref_k, mod_k, "absorption coeff");
     }
 
+    void set_default_sampling() {
+        int ref_samples_number = disp_samples_number(m_fit_engine->ref_disp);
+        if (ref_samples_number > 0) {
+            double wavelength_start = disp_sample_wavelength(m_fit_engine->ref_disp, 0);
+            double wavelength_end   = disp_sample_wavelength(m_fit_engine->ref_disp, ref_samples_number - 1);
+            m_sampling.set(wavelength_start, wavelength_end, SAMPLING_POINTS);
+        } else {
+            m_sampling.set(240.0, 780.0, SAMPLING_POINTS);
+        }
+    }
+
     void set_reference(disp_t *d) {
         disp_free(m_fit_engine->ref_disp);
         m_fit_engine->ref_disp = d;
+        set_default_sampling();
     }
 
     void set_model(disp_t *d) {
