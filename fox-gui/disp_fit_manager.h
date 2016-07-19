@@ -30,6 +30,9 @@
 
 class disp_fit_manager : public fit_manager {
 public:
+    // Number of sampling points used for the fit.
+    enum { SAMPLING_POINTS = 512 };
+
     disp_fit_manager(struct disp_fit_engine* fit) :
         m_fit_engine(fit), m_sampling(240.0, 780.0, 271) {
         set_fit_param(&m_fp_template, 0);
@@ -62,19 +65,14 @@ public:
         return disp_get_param_value(d, &m_fp_template);
     }
 
-    virtual void get_sampling(double& s_start, double& s_end, double& s_step) {
+    virtual void get_sampling(double& s_start, double& s_end) {
         s_start = m_sampling.start();
         s_end   = m_sampling.end();
-        s_step  = m_sampling.stride();
     }
 
-    virtual bool set_sampling(double s_start, double s_end, double s_step) {
-        if(s_step == 0.0) {
-            s_step = 1.0;
-        }
-        unsigned npt = (s_end - s_start) / s_step;
-        if(npt > 1 && npt <= 65536) {
-            m_sampling.set(s_start, s_end, npt);
+    virtual bool set_sampling(double s_start, double s_end) {
+        if (s_end > s_start) {
+            m_sampling.set(s_start, s_end, SAMPLING_POINTS);
             return true;
         }
         return false;

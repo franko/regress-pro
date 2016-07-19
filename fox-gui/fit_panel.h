@@ -56,7 +56,7 @@ class fit_panel : public FXHorizontalFrame {
     void setup();
 
     void set_parameter_value(unsigned k, double val);
-    bool set_sampling(double s_start, double s_end, double s_step);
+    bool set_sampling(double s_start, double s_end);
     void run_fit(fit_parameters *fps);
     double *new_array_fit_values(fit_manager *fm, fit_parameters *fps);
 

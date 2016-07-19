@@ -44,14 +44,9 @@ void fit_panel::clear()
 
 void fit_panel::config_spectral_range()
 {
-    double wls, wle, wld;
-    m_fit->get_sampling(wls, wle, wld);
-
-    if(wld == 0.0) {
-        m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
-    } else {
-        m_wl_entry->setText(FXStringFormat("%.3g-%.3g,%g", wls, wle, wld));
-    }
+    double wls, wle;
+    m_fit->get_sampling(wls, wle);
+    m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
     range_dirty = false;
 }
 
@@ -176,33 +171,16 @@ fit_panel::on_cmd_plot_autoscale(FXObject*, FXSelector, void*)
 bool
 fit_panel::verify_spectral_range(const char *txt, double ps[])
 {
-    int nass = sscanf(txt, "%lf-%lf,%lf", ps, ps+1, ps+2);
-
-    if(nass < 2) {
-        return false;
-    }
-
-    if(nass == 2) {
-        ps[2] = 0.0;
-    } else {
-        if(ps[2] < 0.1) {
-            return false;
-        }
-
-        if(int((ps[1]-ps[0])/ps[2]) < 2) {
-            return false;
-        }
-    }
-
-    return (ps[0] >= 50.0 && ps[1] <= 5000.0 && ps[1] > ps[0]);
+    int nass = sscanf(txt, "%lf-%lf", ps, ps+1);
+    return (nass == 2 && ps[1] > ps[0]);
 }
 
 bool
 fit_panel::update_spectral_range(const char *txt)
 {
-    double ps[3];
+    double ps[2];
     if(verify_spectral_range(txt, ps)) {
-        bool status = set_sampling(ps[0], ps[1], ps[2]);
+        bool status = set_sampling(ps[0], ps[1]);
         if(status && m_canvas) {
             m_canvas->update_limits();
         }
@@ -303,12 +281,12 @@ void fit_panel::set_parameter_value(unsigned k, double val)
     m_undo_manager.record(new oper_set_parameter(k, old_value, val));
 }
 
-bool fit_panel::set_sampling(double s_start, double s_end, double s_step)
+bool fit_panel::set_sampling(double s_start, double s_end)
 {
-    double os, oe, op;
-    m_fit->get_sampling(os, oe, op);
-    bool status = m_fit->set_sampling(s_start, s_end, s_step);
-    m_undo_manager.record(new oper_set_sampling(os, oe, op, s_start, s_end, s_step));
+    double os, oe;
+    m_fit->get_sampling(os, oe);
+    bool status = m_fit->set_sampling(s_start, s_end);
+    m_undo_manager.record(new oper_set_sampling(os, oe, s_start, s_end));
     return status;
 }
 

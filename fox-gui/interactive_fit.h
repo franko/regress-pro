@@ -98,7 +98,7 @@ public:
         return fit_engine_get_parameter_value(m_fit_engine, fp);
     }
 
-    virtual void get_sampling(double& s_start, double& s_end, double& s_step) {
+    virtual void get_sampling(double& s_start, double& s_end) {
         if (spectra_loaded()) {
             int n = spectra_points(m_ref_spectr);
             s_start = floor(data_view_get(m_ref_spectr->table, 0, 0));
@@ -107,10 +107,9 @@ public:
             s_start = 250.0;
             s_end = 750.0;
         }
-        s_step  = 0.0;
     }
 
-    virtual bool set_sampling(double s_start, double s_end, double s_step) {
+    virtual bool set_sampling(double s_start, double s_end) {
         if (spectra_loaded()) {
             spectr_cut_range(m_ref_spectr, s_start, s_end);
             spectra_resize(m_model_spectr, m_ref_spectr->table->rows);

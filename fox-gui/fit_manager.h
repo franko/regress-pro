@@ -12,8 +12,8 @@ struct fit_manager {
     virtual void   set_parameter_value(unsigned k, double val) = 0;
     virtual double get_parameter_value(unsigned k) = 0;
 
-    virtual void get_sampling(double& s_start, double& s_end, double& s_step) = 0;
-    virtual bool set_sampling(double  s_start, double  s_end, double  s_step) = 0;
+    virtual void get_sampling(double& s_start, double& s_end) = 0;
+    virtual bool set_sampling(double  s_start, double  s_end) = 0;
 
     virtual lmfit_result run(struct fit_parameters* fps) = 0;
 

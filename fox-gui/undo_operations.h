@@ -44,26 +44,25 @@ struct oper_set_parameter : fit_action {
 };
 
 struct oper_set_sampling : fit_action {
-    oper_set_sampling(double os, double oe, double op, double ns, double ne, double np):
-        old_start(os), old_end(oe), old_step(op),
-        new_start(ns), new_end(ne), new_step(np)
+    oper_set_sampling(double os, double oe, double ns, double ne):
+        old_start(os), old_end(oe),
+        new_start(ns), new_end(ne)
     {}
     virtual void apply(fit_manager *fm) {
-        fm->set_sampling(new_start, new_end, new_step);
+        fm->set_sampling(new_start, new_end);
     }
     virtual void undo(fit_manager *fm) {
-        fm->set_sampling(old_start, old_end, old_step);
+        fm->set_sampling(old_start, old_end);
     }
     virtual bool fuse(fit_action *_that) {
         oper_set_sampling *that = (oper_set_sampling *) _that;
         new_start = that->new_start;
         new_end = that->new_end;
-        new_step = that->new_step;
         return true;
     }
     virtual int class_id() const { return action_set_sampling; }
-    double old_start, old_end, old_step;
-    double new_start, new_end, new_step;
+    double old_start, old_end;
+    double new_start, new_end;
 };
 
 struct oper_run_fit : fit_action {
