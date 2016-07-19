@@ -88,17 +88,27 @@ public:
             gsl_vector_set(x, k, val);
         }
 
+        int ref_samples_number = disp_samples_number(m_fit_engine->ref_disp);
+        size_t wavelength_array_size = (ref_samples_number > 0 ? ref_samples_number : m_sampling.size());
+
         if(! m_fit_engine->wl) {
-            m_fit_engine->wl = gsl_vector_alloc(m_sampling.size());
+            m_fit_engine->wl = gsl_vector_alloc(wavelength_array_size);
         } else {
-            if(m_fit_engine->wl->size != m_sampling.size()) {
+            if(m_fit_engine->wl->size != wavelength_array_size) {
                 gsl_vector_free(m_fit_engine->wl);
-                m_fit_engine->wl = gsl_vector_alloc(m_sampling.size());
+                m_fit_engine->wl = gsl_vector_alloc(wavelength_array_size);
             }
         }
 
-        for(unsigned k = 0; k < m_sampling.size(); k++) {
-            gsl_vector_set(m_fit_engine->wl, k, m_sampling[k]);
+        if (ref_samples_number > 0) {
+            for(int k = 0; k < ref_samples_number; k++) {
+                double wavelength = disp_sample_wavelength(m_fit_engine->ref_disp, k);
+                gsl_vector_set(m_fit_engine->wl, k, wavelength);
+            }
+        } else {
+            for(unsigned k = 0; k < m_sampling.size(); k++) {
+                gsl_vector_set(m_fit_engine->wl, k, m_sampling[k]);
+            }
         }
 
         disp_fit_engine_set_parameters(m_fit_engine, fps);
