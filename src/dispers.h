@@ -55,10 +55,18 @@ struct deriv_info {
     cmpl_vector *val;
 };
 
+struct disp_info {
+    str_t name;
+    str_t description;
+    float wavelength_start, wavelength_end;
+};
+
+// typedef struct _disp_info disp_info;
+
 struct disp_struct {
     struct disp_class *dclass;
     enum disp_type type;
-    str_t name;
+    struct disp_info *info;
     union {
         struct disp_table table;
         struct disp_sample_table sample_table;
@@ -92,6 +100,9 @@ extern disp_t * disp_new(enum disp_type tp);
 extern disp_t * disp_new_with_name(enum disp_type tp, const char *name);
 extern int      disp_get_number_of_params(const disp_t *d);
 extern double   disp_get_param_value(const disp_t *d, const fit_param_t *fp);
+extern void     disp_set_name(disp_t *d, const char *name);
+extern const char *
+                disp_get_name(const disp_t *d);
 extern int      disp_integrity_check(disp_t *d);
 extern int      disp_check_fit_param(disp_t *d, fit_param_t *fp);
 

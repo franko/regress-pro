@@ -146,7 +146,7 @@ fx_file_disp_selector::fx_file_disp_selector(FXWindow *chooser, FXComposite *p, 
     m_combo->setNumVisible(nb_loaded_disp + 1);
     m_combo->appendItem("-- select a file");
     for (disp_node *nd = files_list->first; nd; nd = nd->next) {
-        m_combo->appendItem(CSTR(nd->content->name));
+        m_combo->appendItem(disp_get_name(nd->content));
     }
     if (nb_loaded_disp == 0) {
         m_combo->disable();
@@ -196,7 +196,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
             return 1;
         }
         disp_list_add(files_list, disp, NULL);
-        m_combo->appendItem(CSTR(disp->name));
+        m_combo->appendItem(disp_get_name(disp));
         int items_nb = m_combo->getNumItems();
         m_combo->setCurrentItem(items_nb - 1);
         if (items_nb > 1) {

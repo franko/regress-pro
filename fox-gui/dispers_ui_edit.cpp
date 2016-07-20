@@ -50,7 +50,7 @@ void fx_disp_window::setup_name()
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
     new FXLabel(namehf, "Name ");
     FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
-    tf->setText(CSTR(disp->name));
+    tf->setText(disp_get_name(disp));
 }
 
 long
@@ -65,7 +65,7 @@ fx_disp_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
 long
 fx_disp_window::on_changed_name(FXObject *, FXSelector, void *text)
 {
-    str_copy_c(disp->name, (FXchar *) text);
+    disp_set_name(disp, (FXchar *) text);
     return 1;
 }
 
@@ -311,7 +311,7 @@ void fx_disp_lookup_window::add_matrix_component(int index, bool create)
     istr.format("%d", index + 1);
     FXButton *db = new FXButton(matrix, istr, NULL, this, ID_MENU_COMPONENT + index, FRAME_SUNKEN);
     FXTextField *tf1 = new FXTextField(matrix, 24, this, ID_COMPONENT_NAME + index, FRAME_SUNKEN);
-    tf1->setText(CSTR(disp->disp.lookup.component[index].disp->name));
+    tf1->setText(disp_get_name(disp->disp.lookup.component[index].disp));
     FXTextField *tf2 = create_textfield(matrix, this, ID_PARAM_0 + 1 + index);
     if (create) {
         db->create();
@@ -394,7 +394,7 @@ long fx_disp_lookup_window::on_cmd_edit_comp(FXObject *, FXSelector, void *)
     if (new_disp) {
         lookup->component[i].disp = new_disp;
         FXTextField *tf = (FXTextField *) matrix->childAtRowCol(i + 1, 1);
-        tf->setText(CSTR(new_disp->name));
+        tf->setText(disp_get_name(new_disp));
     }
     return 1;
 }
@@ -408,7 +408,7 @@ long fx_disp_lookup_window::on_cmd_replace_comp(FXObject *, FXSelector, void *)
     disp_free(lookup->component[i].disp);
     lookup->component[i].disp = new_disp;
     FXTextField *tf = (FXTextField *) matrix->childAtRowCol(i + 1, 1);
-    tf->setText(CSTR(new_disp->name));
+    tf->setText(disp_get_name(new_disp));
     return 1;
 }
 
@@ -426,7 +426,7 @@ long fx_disp_lookup_window::on_changed_component_name(FXObject *, FXSelector sel
 {
     int index = FXSELID(sel) - ID_COMPONENT_NAME;
     disp_lookup *lookup = &disp->disp.lookup;
-    str_copy_c(lookup->component[index].disp->name, (FXchar *)text);
+    disp_set_name(lookup->component[index].disp, (FXchar *)text);
     return 1;
 }
 

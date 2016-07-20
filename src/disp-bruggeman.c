@@ -40,22 +40,16 @@ bruggeman_free(struct disp_struct *d)
 {
     struct disp_bruggeman *bd = & d->disp.bruggeman;
     assert(d->type == DISP_BRUGGEMAN);
-    str_free(d->name);
     disp_free(bd->comp[0]);
     disp_free(bd->comp[1]);
-    free(d);
+    disp_base_free(d);
 }
 
 disp_t *
 bruggeman_copy(const disp_t *src)
 {
-    struct disp_struct *res;
-    struct disp_bruggeman *bd;
-
-    res = emalloc(sizeof(struct disp_struct));
-    memcpy(res, src, sizeof(struct disp_struct));
-    str_init_from_str(res->name, src->name);
-    bd = & res->disp.bruggeman;
+    struct disp_struct *res = disp_base_copy(src);
+    struct disp_bruggeman *bd = & res->disp.bruggeman;
     bd->comp[0] = disp_copy(bd->comp[0]);
     bd->comp[1] = disp_copy(bd->comp[1]);
     return res;

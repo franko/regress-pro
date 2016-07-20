@@ -21,7 +21,7 @@ struct disp_iterator {
 
     const char *next() {
         disp_t *d = next_disp();
-        return (d ? CSTR(d->name) : NULL);
+        return (d ? disp_get_name(d) : NULL);
     }
 
     int length() {

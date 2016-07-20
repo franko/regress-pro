@@ -13,6 +13,10 @@
 #include "fit-params.h"
 #include "dispers-library.h"
 
+static void disp_info_init(struct disp_info *info, const char *name);
+static void disp_info_free(struct disp_info *info);
+static void disp_info_copy(struct disp_info *src, struct disp_info *dst);
+
 static void
 remove_filename_extension(str_t name)
 {
@@ -35,8 +39,10 @@ load_nk_table(const char * filename, str_ptr *error_msg)
         return NULL;
     }
 
-    str_path_basename(disp->name, filename);
-    remove_filename_extension(disp->name);
+    if (disp->info) {
+        str_path_basename(disp->info->name, filename);
+        remove_filename_extension(disp->info->name);
+    }
 
     return disp;
 }
@@ -134,9 +140,10 @@ disp_new_with_name(enum disp_type tp, const char *name)
     d->dclass = disp_class_lookup(tp);
     d->type = tp;
     if(name) {
-        str_init_from_c(d->name, name);
+        d->info = emalloc(sizeof(struct disp_info));
+        disp_info_init(d->info, name);
     } else {
-        str_init(d->name, 15);
+        d->info = NULL;
     }
     return d;
 }
@@ -146,14 +153,17 @@ disp_base_copy(const disp_t *src)
 {
     disp_t *res = emalloc(sizeof(disp_t));
     memcpy(res, src, sizeof(disp_t));
-    str_init_from_str(res->name, src->name);
+    if (src->info) {
+        res->info = emalloc(sizeof(struct disp_info));
+        disp_info_copy(res->info, src->info);
+    }
     return res;
 }
 
 void
 disp_base_free(disp_t *d)
 {
-    str_free(d->name);
+    disp_info_free(d->info);
     free(d);
 }
 
@@ -282,4 +292,46 @@ int
 disp_is_tabular(const disp_t *d)
 {
     return (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE);
+}
+
+const char *
+disp_get_name(const disp_t *d)
+{
+    return d->info ? CSTR(d->info->name) : "";
+}
+
+void
+disp_set_name(disp_t *d, const char *name)
+{
+    if (!d->info) {
+        d->info = emalloc(sizeof(struct disp_info));
+        disp_info_init(d->info, name);
+    }
+    str_copy_c(d->info->name, name);
+}
+
+
+void
+disp_info_init(struct disp_info *info, const char *name)
+{
+    str_init_from_c(info->name, name);
+    str_init(info->description, 15);
+    info->wavelength_start = 0.0;
+    info->wavelength_end   = 0.0;
+}
+
+void
+disp_info_free(struct disp_info *info)
+{
+    str_free(info->name);
+    str_free(info->description);
+}
+
+void
+disp_info_copy(struct disp_info *src, struct disp_info *dst)
+{
+    str_init_from_str(src->name, dst->name);
+    str_init_from_str(src->description, dst->description);
+    src->wavelength_start = dst->wavelength_start;
+    src->wavelength_end   = dst->wavelength_end;
 }

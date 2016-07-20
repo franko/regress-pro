@@ -75,7 +75,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
         nstr.format("%d", i);
         new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i, FRAME_SUNKEN);
         FXTextField *filmtf = new FXTextField(matrix, 16, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
-        filmtf->setText(CSTR(stack->disp[i]->name));
+        filmtf->setText(disp_get_name(stack->disp[i]));
         if (i > 0 && i < stack->nb - 1) {
             FXTextField *thktf = new FXTextField(matrix, 6, this, ID_FILM_THICKNESS + i, FRAME_SUNKEN|TEXTFIELD_REAL);
             nstr.format("%.4g", stack->thickness[i - 1]);
@@ -193,7 +193,7 @@ long
 filmstack_window::on_change_name(FXObject*, FXSelector sel, void *data)
 {
     int index = FXSELID(sel) - ID_FILM_NAME;
-    str_copy_c(stack->disp[index]->name, (FXchar *)data);
+    disp_set_name(stack->disp[index], (FXchar *)data);
     return 1;
 }
 

@@ -156,10 +156,10 @@ dispers_save_dialog::save_dispersion()
             }
             uniform_sampler usampler(sstart, send, sstep);
             disp_source<uniform_sampler> src(m_disp, &usampler);
-            mat_table_write(CSTR(m_disp->name), &ostream, &src);
+            mat_table_write(disp_get_name(m_disp), &ostream, &src);
         } else if (m_disp->type == DISP_SAMPLE_TABLE) {
             dst_source src(&m_disp->disp.sample_table);
-            mat_table_write(CSTR(m_disp->name), &ostream, &src);
+            mat_table_write(disp_get_name(m_disp), &ostream, &src);
         }
     }
     return 0;

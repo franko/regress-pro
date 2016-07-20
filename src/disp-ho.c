@@ -94,9 +94,8 @@ ho_free(disp_t *d)
 {
     struct disp_ho *ho = & d->disp.ho;
     assert(d->type == DISP_HO);
-    str_free(d->name);
     free(ho->params);
-    free(d);
+    disp_base_free(d);
 }
 
 disp_t *
@@ -307,7 +306,7 @@ int
 ho_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_ho *d = &_d->disp.ho;
-    writer_printf(w, "ho \"%s\" %d", CSTR(_d->name), d->nb_hos);
+    writer_printf(w, "ho \"%s\" %d", disp_get_name(_d), d->nb_hos);
     writer_newline_enter(w);
     struct ho_params *ho = d->params;
     int i;

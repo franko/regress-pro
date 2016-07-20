@@ -62,9 +62,8 @@ void
 fb_free(disp_t *d)
 {
     struct disp_fb *fb = & d->disp.fb;
-    str_free(d->name);
     free(fb->osc);
-    free(d);
+    disp_base_free(d);
 }
 
 disp_t *
@@ -335,7 +334,7 @@ int
 fb_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_fb *d = &_d->disp.fb;
-    writer_printf(w, "%s \"%s\" %d %d", _d->dclass->short_name, CSTR(_d->name), d->n, d->form);
+    writer_printf(w, "%s \"%s\" %d %d", _d->dclass->short_name, disp_get_name(_d), d->n, d->form);
     writer_printf(w, " %g %g", d->n_inf, d->eg);
     writer_newline_enter(w);
     struct fb_osc *fb = d->osc;

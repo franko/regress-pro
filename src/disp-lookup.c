@@ -73,8 +73,7 @@ lookup_free(disp_t *d)
         disp_free(lk->component[j].disp);
     }
     free(lk->component);
-    str_free(d->name);
-    free(d);
+    disp_base_free(d);
 }
 
 disp_t *
@@ -179,7 +178,7 @@ lookup_encode_param(str_t param, const fit_param_t *fp)
 int
 lookup_write(writer_t *w, const disp_t *_d) {
     const struct disp_lookup *d = & _d->disp.lookup;
-    writer_printf(w, "lookup \"%s\" %d %g", CSTR(_d->name), d->nb_comps, d->p);
+    writer_printf(w, "lookup \"%s\" %d %g", disp_get_name(_d), d->nb_comps, d->p);
     writer_newline_enter(w);
     struct lookup_comp *comp = d->component;
     int i;

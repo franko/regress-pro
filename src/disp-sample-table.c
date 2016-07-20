@@ -217,7 +217,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
         int j, lines;
 
         disp = disp_new(DISP_SAMPLE_TABLE);
-        str_copy(disp->name, name);
+        disp_set_name(disp, CSTR(name));
         dt = & disp->disp.sample_table;
         clear(dt);
 
@@ -313,7 +313,7 @@ int
 disp_sample_table_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_sample_table *d = &_d->disp.sample_table;
-    writer_printf(w, "table \"%s\" %d", CSTR(_d->name), d->len);
+    writer_printf(w, "table \"%s\" %d", disp_get_name(_d), d->len);
     writer_newline_enter(w);
     rc_matrix_write(w, d->table, RC_MATRIX_TRANSPOSED);
     writer_newline_exit(w);
