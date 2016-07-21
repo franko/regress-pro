@@ -155,6 +155,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     } else {
         /* we take care to commit the results obtained from the fit */
         fit_engine_commit_parameters(fit, x);
+        fit_engine_update_disp_info(fit);
     }
 
     gsl_vector_memcpy(fit->run->results, x);

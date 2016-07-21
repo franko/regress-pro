@@ -298,3 +298,11 @@ spectra_get_values(struct spectrum const *s, int idx)
 {
     return data_view_get_row(s->table, idx);
 }
+
+void
+spectra_wavelength_range(struct spectrum *s, double *wl_min, double *wl_max)
+{
+    int n = spectra_points(s);
+    *wl_min = data_view_get(s->table, 0, 0);
+    *wl_max = data_view_get(s->table, n-1, 0);
+}

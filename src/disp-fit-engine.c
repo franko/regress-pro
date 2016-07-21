@@ -70,6 +70,14 @@ commit_fit_parameters(struct disp_fit_engine *fit, const gsl_vector *x)
     }
 }
 
+static void
+update_disp_info(struct disp_fit_engine *fit)
+{
+    double wavelength_start = gsl_vector_get(fit->wl, 0);
+    double wavelength_end   = gsl_vector_get(fit->wl, fit->wl->size - 1);
+    disp_set_info_wavelength(fit->model_disp, wavelength_start, wavelength_end);
+}
+
 int
 disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
              gsl_matrix * jacob)
@@ -191,6 +199,7 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
     }
 
     commit_fit_parameters(fit, x);
+    update_disp_info(fit);
 
     cmpl_vector_free(fit->model_der);
     fit->model_der = NULL;

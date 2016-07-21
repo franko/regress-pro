@@ -160,14 +160,10 @@ public:
     }
 
     void set_default_sampling() {
-        int ref_samples_number = disp_samples_number(m_fit_engine->ref_disp);
-        if (ref_samples_number > 0) {
-            double wavelength_start = disp_sample_wavelength(m_fit_engine->ref_disp, 0);
-            double wavelength_end   = disp_sample_wavelength(m_fit_engine->ref_disp, ref_samples_number - 1);
-            m_sampling.set(wavelength_start, wavelength_end, SAMPLING_POINTS);
-        } else {
-            m_sampling.set(240.0, 780.0, SAMPLING_POINTS);
-        }
+        double wavelength_start, wavelength_end;
+        int samples_number;
+        disp_get_wavelength_range(m_fit_engine->ref_disp, &wavelength_start, &wavelength_end, &samples_number);
+        m_sampling.set(wavelength_start, wavelength_end, samples_number);
     }
 
     void set_reference(disp_t *d) {

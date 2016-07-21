@@ -300,16 +300,63 @@ disp_get_name(const disp_t *d)
     return d->info ? CSTR(d->info->name) : "";
 }
 
-void
-disp_set_name(disp_t *d, const char *name)
+static void
+ensure_disp_info(disp_t *d)
 {
     if (!d->info) {
         d->info = emalloc(sizeof(struct disp_info));
-        disp_info_init(d->info, name);
+        disp_info_init(d->info, "undefined");
     }
+}
+
+void
+disp_set_name(disp_t *d, const char *name)
+{
+    ensure_disp_info(d);
     str_copy_c(d->info->name, name);
 }
 
+void
+disp_set_info_wavelength(disp_t *d, double wavelength_start, double wavelength_end)
+{
+    ensure_disp_info(d);
+    d->info->wavelength_start = wavelength_start;
+    d->info->wavelength_end   = wavelength_end;
+}
+
+void
+disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wavelength_end, int *samples_number)
+{
+    if (d->info && d->info->wavelength_start != 0.0 && d->info->wavelength_end > d->info->wavelength_start) {
+        *wavelength_start = d->info->wavelength_start;
+        *wavelength_end   = d->info->wavelength_end;
+        *samples_number   = 512;
+    } else if (disp_is_tabular(d)) {
+        int n = disp_samples_number(d);
+        *wavelength_start = disp_sample_wavelength(d, 0);
+        *wavelength_end   = disp_sample_wavelength(d, n - 1);
+        *samples_number   = 512;
+    } else {
+        *wavelength_start = 250.0;
+        *wavelength_end   = 750.0;
+        *samples_number   = 251;
+    }
+}
+
+void
+disp_copy_info(disp_t *src, const disp_t *dst)
+{
+    if (!dst->info) return;
+    ensure_disp_info(src);
+    str_copy(src->info->name, dst->info->name);
+    if (!str_is_null(dst->info->description)) {
+        str_copy(src->info->description, dst->info->description);
+    }
+    if (dst->info->wavelength_start > 0.0 && dst->info->wavelength_end > dst->info->wavelength_start) {
+        src->info->wavelength_start = dst->info->wavelength_start;
+        src->info->wavelength_end   = dst->info->wavelength_end;
+    }
+}
 
 void
 disp_info_init(struct disp_info *info, const char *name)

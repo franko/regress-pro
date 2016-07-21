@@ -100,9 +100,7 @@ public:
 
     virtual void get_sampling(double& s_start, double& s_end) {
         if (spectra_loaded()) {
-            int n = spectra_points(m_ref_spectr);
-            s_start = floor(data_view_get(m_ref_spectr->table, 0, 0));
-            s_end   = ceil(data_view_get(m_ref_spectr->table, n-1, 0));
+            spectra_wavelength_range(m_ref_spectr, &s_start, &s_end);
         } else {
             s_start = 250.0;
             s_end = 750.0;
@@ -157,6 +155,7 @@ public:
             double val = fit_engine_get_parameter_value(src_fit, fp);
             fit_engine_apply_param(m_fit_engine, fp, val);
         }
+        fit_engine_copy_disp_info(m_fit_engine, src_fit);
         generate_spectra();
         return 0;
     }

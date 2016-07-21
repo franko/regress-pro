@@ -105,7 +105,9 @@ extern const char *
                 disp_get_name(const disp_t *d);
 extern int      disp_integrity_check(disp_t *d);
 extern int      disp_check_fit_param(disp_t *d, fit_param_t *fp);
-
+extern void     disp_set_info_wavelength(disp_t *d, double wavelength_start, double wavelength_end);
+extern void     disp_copy_info(disp_t *src, const disp_t *dst);
+extern void     disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wavelength_end, int *samples_number);
 extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
 extern int      disp_base_fp_number(const disp_t *src);

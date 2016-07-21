@@ -3,6 +3,13 @@
 #include "sampling_win.h"
 #include "disp_vs.h"
 
+static sampling_unif get_disp_wavelength_sampling(disp_t* disp) {
+    double wavelength_start, wavelength_end;
+    int samples_number;
+    disp_get_wavelength_range(disp, &wavelength_start, &wavelength_end, &samples_number);
+    return sampling_unif(wavelength_start, wavelength_end, samples_number);
+}
+
 // Map
 FXDEFMAP(dispers_win) dispers_win_map[]= {
     FXMAPFUNC(SEL_COMMAND, dispers_win::ID_SPECTR_RANGE, dispers_win::on_cmd_set_range),
@@ -13,7 +20,7 @@ FXIMPLEMENT(dispers_win,FXDialogBox,dispers_win_map,ARRAYNUMBER(dispers_win_map)
 
 dispers_win::dispers_win(FXWindow* w, disp_t* disp)
     : FXDialogBox(w, "Dispersion Plot", DECOR_ALL, 0, 0, 480, 360, 0,0,0,0,0,0),
-      m_dispers(disp), m_sampling(240.0, 780.0, 271)
+      m_dispers(disp), m_sampling(get_disp_wavelength_sampling(disp))
 {
 
     FXMenuBar *menubar = new FXMenuBar(this, LAYOUT_SIDE_TOP|LAYOUT_FILL_X);

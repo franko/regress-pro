@@ -186,6 +186,45 @@ fit_engine_commit_parameters(struct fit_engine *fit, const gsl_vector *x)
     fit_engine_apply_parameters(fit, fps, x);
 }
 
+void
+fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wavelength_start, double *wavelength_end)
+{
+    spectra_wavelength_range(fit->run->spectr, wavelength_start, wavelength_end);
+    if (fit->config->spectr_range.active) {
+        if (fit->config->spectr_range.min > *wavelength_start) {
+            *wavelength_start = fit->config->spectr_range.min;
+        }
+        if (fit->config->spectr_range.max < *wavelength_end) {
+            *wavelength_end   = fit->config->spectr_range.max;
+        }
+    }
+}
+
+void
+fit_engine_update_disp_info(struct fit_engine *fit)
+{
+    double wavelength_start, wavelength_end;
+    fit_engine_get_wavelength_limits(fit, &wavelength_start, &wavelength_end);
+    for (int i = 0; i < fit->stack->nb; i++) {
+        disp_t *d = fit->stack->disp[i];
+        for(size_t j = 0; j < fit->parameters->number; j++) {
+            const fit_param_t *fp = &fit->parameters->values[j];
+            if (fp->id == PID_LAYER_N && fp->layer_nb == i) {
+                disp_set_info_wavelength(d, wavelength_start, wavelength_end);
+                break;
+            }
+        }
+    }
+}
+
+void
+fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src)
+{
+    for (int i = 0; i < dst->stack->nb; i++) {
+        disp_copy_info(dst->stack->disp[i], src->stack->disp[i]);
+    }
+}
+
 int
 fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
 {
