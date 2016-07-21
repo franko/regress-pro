@@ -28,30 +28,42 @@
 #include "disp-fit-engine.h"
 #include "disp_vs.h"
 
-static int interval_samples_number(const disp_t *d, double wavelength_start, double wavelength_end)
+/* It v == NULL this function will just count the number of points. */
+static int interval_set_sampling(const disp_t *d, gsl_vector *v, double wavelength_start, double wavelength_end)
 {
-    int ref_samples_number = disp_samples_number(d);
-    if (ref_samples_number <= 0) return 0;
-    int samples_number = 0;
-    for(int k = 0; k < ref_samples_number; k++) {
+    const double wavelength_tol = 1.0E-10 * (wavelength_end - wavelength_start);
+    const int ref_samples_number = disp_samples_number(d);
+    int i = 0, k;
+    for(k = 0; k < ref_samples_number; k++) {
         double wavelength = disp_sample_wavelength(d, k);
-        if (wavelength >= wavelength_start && wavelength <= wavelength_end) {
-            samples_number ++;
-        }
+        if (wavelength > wavelength_start) break;
     }
-    return samples_number;
+    if (fabs(disp_sample_wavelength(d, k) - wavelength_start) > wavelength_tol) {
+        if (v) {
+            gsl_vector_set(v, i, wavelength_start);
+        }
+        i ++;
+    }
+    for(/* */; k < ref_samples_number; k++) {
+        double wavelength = disp_sample_wavelength(d, k);
+        if (wavelength > wavelength_end) break;
+        if (v) {
+            gsl_vector_set(v, i, wavelength);
+        }
+        i ++;
+    }
+    if (k > 0 && fabs(disp_sample_wavelength(d, k - 1) - wavelength_end) > wavelength_tol) {
+        if (v) {
+            gsl_vector_set(v, i, wavelength_end);
+        }
+        i ++;
+    }
+    return i;
 }
 
-static void interval_set_sampling(const disp_t *d, gsl_vector *v, double wavelength_start, double wavelength_end)
+static int interval_samples_number(const disp_t *d, double wavelength_start, double wavelength_end)
 {
-    int ref_samples_number = disp_samples_number(d);
-    for(int k = 0, i = 0; k < ref_samples_number; k++) {
-        double wavelength = disp_sample_wavelength(d, k);
-        if (wavelength >= wavelength_start && wavelength <= wavelength_end) {
-            gsl_vector_set(v, i, wavelength);
-            i ++;
-        }
-    }
+    return interval_set_sampling(d, NULL, wavelength_start, wavelength_end);
 }
 
 class disp_fit_manager : public fit_manager {
