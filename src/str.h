@@ -62,6 +62,7 @@ extern void     str_copy_c(str_t d, const char *s);
 extern void     str_copy_c_substr(str_t d, const char *s, int len);
 extern void     str_append_c(str_t to, const char *from, int sep);
 extern void     str_append(str_t to, const str_t from, int sep);
+extern void     str_append_char(str_t s, char ch);
 extern void     str_trunc(str_t s, int len);
 extern void     str_get_basename(str_t to, const str_t from, int dirsep);
 extern void     str_dirname(str_t to, const str_t from, int dirsep);

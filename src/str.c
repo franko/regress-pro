@@ -152,6 +152,15 @@ str_append(str_t to, const str_t from, int sep)
 }
 
 void
+str_append_char(str_t s, char ch)
+{
+    STR_SIZE_CHECK(s, s->length + 1);
+    s->heap[s->length] = ch;
+    s->heap[s->length + 1] = '\0';
+    s->length ++;
+}
+
+void
 str_trunc(str_t s, int len)
 {
     if(len < 0 || (size_t)len >= STR_LENGTH(s)) {
