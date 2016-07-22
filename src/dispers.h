@@ -111,11 +111,15 @@ extern void     disp_get_wavelength_range(const disp_t *d, double *wavelength_st
 extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
 extern int      disp_base_fp_number(const disp_t *src);
+extern int      disp_base_write(writer_t *w, const char *tag, const disp_t *d);
 extern int      disp_is_tabular(const disp_t *d);
 extern int      disp_samples_number(const disp_t *d);
 extern double   disp_sample_wavelength(const disp_t *d, int index);
 extern int      disp_write(writer_t *w, const disp_t *_d);
 extern disp_t * disp_read(lexer_t *l);
+
+// Validity condition for a wavelength range store in disp_info.
+#define DISP_VALID_RANGE(wl1, wl2) ((wl1) > 0.0 && (wl2) > (wl1))
 
 __END_DECLS
 

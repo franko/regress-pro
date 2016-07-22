@@ -255,21 +255,73 @@ disp_write(writer_t *w, const disp_t *d)
     return d->dclass->write(w, d);
 }
 
+int
+disp_base_write(writer_t *w, const char *tag, const disp_t *d)
+{
+    writer_printf(w, "%s \"%s\"", tag, disp_get_name(d));
+    writer_newline_enter(w);
+    if (d->info && !str_is_null(d->info->description)) {
+        str_ptr quoted_descr = writer_quote_string(CSTR(d->info->description));
+        writer_printf(w, "description");
+        writer_newline(w);
+        writer_printf(w, "%s", CSTR(quoted_descr));
+        writer_newline(w);
+        str_free(quoted_descr);
+        free(quoted_descr);
+    }
+    if (d->info && d->info->wavelength_start > 0.0 && d->info->wavelength_end > d->info->wavelength_start) {
+        writer_printf(w, "range %g %g", d->info->wavelength_start, d->info->wavelength_end);
+        writer_newline(w);
+    }
+    return 0;
+}
+
 static disp_t *
 disp_read_header(lexer_t *l)
 {
-    if (lexer_ident(l)) return NULL;
+    disp_t *new_disp = NULL;
+    if (lexer_ident(l)) return NULL; // Read the dispersion tag.
     struct disp_class *dclass;
     void *iter;
     for (iter = disp_class_next(NULL); iter; iter = disp_class_next(iter)) {
         dclass = disp_class_from_iter(iter);
+        // Look for a dispersion class that match the tag.
         if (strcmp(dclass->short_name, CSTR(l->store)) == 0) {
             break;
         }
     }
     if (iter == NULL) return NULL;
-    if (lexer_string(l)) return NULL;
-    return disp_new_with_name(dclass->disp_class_id, CSTR(l->store));
+    if (lexer_string(l)) return NULL; // Read the dispersion's name.
+    str_t name;
+    str_init_from_str(name, l->store);
+
+    str_ptr description = NULL;
+    if (lexer_check_ident(l, "description") == 0) {
+        if (lexer_string(l)) goto read_exit_1;
+        description = str_new();
+        str_copy(description, l->store);
+    }
+    double wavelength_start = 0.0, wavelength_end = 0.0;
+    if (lexer_check_ident(l, "range") == 0) {
+        if (lexer_number(l, &wavelength_start)) goto read_exit_2;
+        if (lexer_number(l, &wavelength_end  )) goto read_exit_2;
+    }
+    new_disp = disp_new_with_name(dclass->disp_class_id, CSTR(name));
+    if (description) {
+        str_copy(new_disp->info->description, description);
+    }
+    if (DISP_VALID_RANGE(wavelength_start, wavelength_end)) {
+        new_disp->info->wavelength_start = wavelength_start;
+        new_disp->info->wavelength_end   = wavelength_end;
+    }
+read_exit_2:
+    if (description) {
+        str_free(description);
+        free(description);
+    }
+read_exit_1:
+    str_free(name);
+    return new_disp;
 }
 
 disp_t *
