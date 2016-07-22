@@ -82,3 +82,19 @@ writer_save_tofile(writer_t *w, const char *filename)
     }
     return 1;
 }
+
+str_ptr
+writer_quote_string(const char *s)
+{
+    str_ptr quoted = str_new();
+    str_append_char(quoted, '"');
+    for (int i = 0; s[i] != 0; i++) {
+        if (s[i] == '"') {
+            str_append_c(quoted, "\\\"", 0);
+        } else {
+            str_append_char(quoted, s[i]);
+        }
+    }
+    str_append_char(quoted, '"');
+    return quoted;
+}

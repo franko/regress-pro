@@ -23,6 +23,7 @@ extern void      writer_indent(writer_t *w, int n);
 extern void      writer_newline_enter(writer_t *w);
 extern void      writer_newline_exit(writer_t *w);
 extern int       writer_save_tofile(writer_t *w, const char *filename);
+extern str_ptr   writer_quote_string(const char *s);
 
 __END_DECLS
 
