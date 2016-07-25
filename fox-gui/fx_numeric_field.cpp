@@ -187,3 +187,11 @@ long fx_numeric_field::on_cmd_decrement(FXObject*, FXSelector, void*)
 {
     return change_on_digit(-1);
 }
+
+void fx_numeric_field::setNumber(double x) {
+    setText(FXStringFormat("%g", x));
+}
+
+double fx_numeric_field::getNumber() const {
+    return FXDoubleVal(getText());
+}

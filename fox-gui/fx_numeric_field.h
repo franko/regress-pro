@@ -16,6 +16,9 @@ public:
         FXTextField(p,ncols,tgt,sel,opts,x,y,w,h,pl,pr,pt,pb)
     { }
 
+    void setNumber(double x);
+    double getNumber() const;
+
     long change_on_digit(int sign);
 
     long on_key_press(FXObject*, FXSelector, void*);
