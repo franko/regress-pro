@@ -53,7 +53,6 @@ public:
 private:
     bool range_is_valid() const;
     void set_range_color();
-    bool range_textfield_valid;
     fx_numeric_field *range_start_textfield, *range_end_textfield;
 protected:
     // This is just a reference. The class is not owner of this object.

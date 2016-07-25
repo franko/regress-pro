@@ -59,11 +59,8 @@ void fx_disp_window::setup_name()
     range_start_textfield = new fx_numeric_field(range_hf, 6, this, ID_RANGE, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     range_end_textfield   = new fx_numeric_field(range_hf, 6, this, ID_RANGE,   FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     if (DISP_VALID_RANGE(disp->info->wavelength_start, disp->info->wavelength_end)) {
-        range_textfield_valid = true;
         range_start_textfield->setNumber(disp->info->wavelength_start);
         range_end_textfield  ->setNumber(disp->info->wavelength_end  );
-    } else {
-        range_textfield_valid = false;
     }
     set_range_color();
 }
@@ -96,16 +93,12 @@ fx_disp_window::set_range_color() {
     FX::FXColor color = (range_is_valid() ? regressProApp()->black : regressProApp()->red_warning);
     range_start_textfield->setTextColor(color);
     range_end_textfield  ->setTextColor(color);
-    range_textfield_valid = range_is_valid();
 }
 
 long
 fx_disp_window::on_update_range(FXObject *obj, FXSelector, void *text) {
-    if (range_textfield_valid != range_is_valid()) {
-        set_range_color();
-        return 1;
-    }
-    return 0;
+    set_range_color();
+    return 1;
 }
 
 long
