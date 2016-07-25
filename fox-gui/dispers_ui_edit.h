@@ -33,11 +33,15 @@ public:
 
     long on_cmd_value(FXObject*, FXSelector, void *);
     long on_changed_name(FXObject*, FXSelector, void *);
+    long on_update_range(FXObject*, FXSelector, void *);
+    long on_changed_range(FXObject*, FXSelector, void *);
+    // long on_changed_range_end(FXObject*, FXSelector, void *);
     long on_disp_element_add(FXObject*, FXSelector, void *);
     long on_disp_element_delete(FXObject*, FXSelector, void *);
 
     enum {
         ID_NAME = FXVerticalFrame::ID_LAST,
+        ID_RANGE,
         ID_PARAM_0,
         ID_PARAM_LAST = ID_PARAM_0 + 5 * 16,
         ID_DISP_ELEMENT_DELETE,
@@ -46,6 +50,11 @@ public:
         ID_LAST
     };
 
+private:
+    bool range_is_valid() const;
+    void set_range_color();
+    bool range_textfield_valid;
+    fx_numeric_field *range_start_textfield, *range_end_textfield;
 protected:
     // This is just a reference. The class is not owner of this object.
     disp_t *disp;

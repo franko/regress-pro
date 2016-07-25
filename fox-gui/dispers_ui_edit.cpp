@@ -7,10 +7,12 @@
 
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
-    FXMAPFUNC(SEL_CHANGED, fx_disp_window::ID_NAME, fx_disp_window::on_changed_name),
-    FXMAPFUNC(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_ADD, fx_disp_window::on_disp_element_add),
+    FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_NAME, fx_disp_window::on_changed_name),
+    FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_RANGE,               fx_disp_window::on_changed_range),
+    FXMAPFUNC(SEL_UPDATE,   fx_disp_window::ID_RANGE,             fx_disp_window::on_update_range),
+    FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DISP_ELEMENT_ADD,    fx_disp_window::on_disp_element_add),
     FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
-    FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0, fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
+    FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0,          fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
 };
 
 FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
@@ -51,6 +53,19 @@ void fx_disp_window::setup_name()
     new FXLabel(namehf, "Name ");
     FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
     tf->setText(disp_get_name(disp));
+
+    FXHorizontalFrame *range_hf = namehf;
+    new FXLabel(range_hf, "Range ");
+    range_start_textfield = new fx_numeric_field(range_hf, 6, this, ID_RANGE, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    range_end_textfield   = new fx_numeric_field(range_hf, 6, this, ID_RANGE,   FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    if (DISP_VALID_RANGE(disp->info->wavelength_start, disp->info->wavelength_end)) {
+        range_textfield_valid = true;
+        range_start_textfield->setNumber(disp->info->wavelength_start);
+        range_end_textfield  ->setNumber(disp->info->wavelength_end  );
+    } else {
+        range_textfield_valid = false;
+    }
+    set_range_color();
 }
 
 long
@@ -66,6 +81,39 @@ long
 fx_disp_window::on_changed_name(FXObject *, FXSelector, void *text)
 {
     disp_set_name(disp, (FXchar *) text);
+    return 1;
+}
+
+bool
+fx_disp_window::range_is_valid() const {
+    double wavelength_start = range_start_textfield->getNumber();
+    double wavelength_end   = range_end_textfield  ->getNumber();
+    return DISP_VALID_RANGE(wavelength_start, wavelength_end);
+}
+
+void
+fx_disp_window::set_range_color() {
+    FX::FXColor color = (range_is_valid() ? regressProApp()->black : regressProApp()->red_warning);
+    range_start_textfield->setTextColor(color);
+    range_end_textfield  ->setTextColor(color);
+    range_textfield_valid = range_is_valid();
+}
+
+long
+fx_disp_window::on_update_range(FXObject *obj, FXSelector, void *text) {
+    if (range_textfield_valid != range_is_valid()) {
+        set_range_color();
+        return 1;
+    }
+    return 0;
+}
+
+long
+fx_disp_window::on_changed_range(FXObject *obj, FXSelector, void *text)
+{
+    if (!range_is_valid()) return 1;
+    disp->info->wavelength_start = range_start_textfield->getNumber();
+    disp->info->wavelength_end   = range_end_textfield  ->getNumber();
     return 1;
 }
 
