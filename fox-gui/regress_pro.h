@@ -24,6 +24,7 @@ public:
     FXGIFIcon appicon;
     FXFont small_font;
     FXFont bold_font;
+    FXFont lit_font;
     FXFont monospace_font;
     FXFont big_web_font;
     FXColor blue_web, blue_highlight, red_warning, black;

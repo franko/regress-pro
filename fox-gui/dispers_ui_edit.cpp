@@ -9,7 +9,8 @@
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_NAME, fx_disp_window::on_changed_name),
     FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_RANGE,               fx_disp_window::on_changed_range),
-    FXMAPFUNC(SEL_UPDATE,   fx_disp_window::ID_RANGE,             fx_disp_window::on_update_range),
+    FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_DESCRIPTION,         fx_disp_window::on_changed_description),
+    FXMAPFUNC(SEL_UPDATE,   fx_disp_window::ID_RANGE,               fx_disp_window::on_update_range),
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DISP_ELEMENT_ADD,    fx_disp_window::on_disp_element_add),
     FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0,          fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
@@ -63,6 +64,15 @@ void fx_disp_window::setup_name()
         range_end_textfield  ->setNumber(disp->info->wavelength_end  );
     }
     set_range_color();
+
+    // FXGroupBox *text_frame = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|FRAME_NONE|LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0);
+    description_textfield = new FXText(this, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
+    description_textfield->setFont(&regressProApp()->lit_font);
+    description_textfield->setText(CSTR(disp->info->description));
+    description_textfield->setVisibleRows(3);
+    description_textfield->setVisibleColumns(60);
+    description_textfield->setBackColor(getBackColor());
+    description_textfield->setTipText("Description of the dispersion. Enter a new description or modify the content.");
 }
 
 long
@@ -71,6 +81,17 @@ fx_disp_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
     double *pvalue = this->map_parameter(FXSELID(sel) - ID_PARAM_0);
     double new_value = strtod((FXchar*)data, NULL);
     *pvalue = new_value;
+    return 1;
+}
+
+long
+fx_disp_window::on_changed_description(FXObject *, FXSelector, void *)
+{
+    FXint length = description_textfield->getLength();
+    STR_SIZE_CHECK(disp->info->description, (size_t)length);
+    description_textfield->getText((FXchar *) disp->info->description->heap, length);
+    disp->info->description->heap[length] = 0;
+    disp->info->description->length = length;
     return 1;
 }
 
