@@ -258,7 +258,10 @@ disp_write(writer_t *w, const disp_t *d)
 int
 disp_base_write(writer_t *w, const char *tag, const disp_t *d)
 {
-    writer_printf(w, "%s \"%s\"", tag, disp_get_name(d));
+    str_ptr quoted_name = writer_quote_string(disp_get_name(d));
+    writer_printf(w, "%s %s", tag, CSTR(quoted_name));
+    str_free(quoted_name);
+    free(quoted_name);
     writer_newline_enter(w);
     if (d->info && !str_is_null(d->info->description)) {
         str_ptr quoted_descr = writer_quote_string(CSTR(d->info->description));
@@ -269,7 +272,7 @@ disp_base_write(writer_t *w, const char *tag, const disp_t *d)
         str_free(quoted_descr);
         free(quoted_descr);
     }
-    if (d->info && d->info->wavelength_start > 0.0 && d->info->wavelength_end > d->info->wavelength_start) {
+    if (d->info && DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
         writer_printf(w, "range %g %g", d->info->wavelength_start, d->info->wavelength_end);
         writer_newline(w);
     }
