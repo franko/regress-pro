@@ -22,32 +22,38 @@ lexer_free(lexer_t *l)
     free(l);
 }
 
-static void
+static int
 read_string(const char *text, str_ptr buffer, const char **tail)
 {
-    char c[2] = {0, 0};
     const char *p;
     for (p = text; *p && *p != '"'; p++) {
-        c[0] = *p;
-        str_append_c(buffer, c, 0);
+        if (*p == '\\') { // Escape sequence.
+            p ++;
+            if (*p == '"') {
+                str_append_char(buffer, '"');
+            } else {
+                return 1; // Invalid escape sequence.
+            }
+        } else {
+            str_append_char(buffer, *p);
+        }
     }
     if (*p == '"') {
         *tail = p + 1;
-    } else {
-        *tail = text;
+        return 0;
     }
+    return 1;
 }
 
-static void
+static int
 read_ident(const char *text, str_ptr buffer, const char **tail)
 {
-    char c[2] = {0, 0};
     const char *p;
     for (p = text; *p && ((*p >= 'a' && *p <= 'z') || *p == '-'); p++) {
-        c[0] = *p;
-        str_append_c(buffer, c, 0);
+        str_append_char(buffer, *p);
     }
     *tail = p;
+    return (p == text ? 1 : 0);
 }
 
 void
@@ -75,15 +81,17 @@ lexer_next(lexer_t *l)
     } else if (c == '"') {
         const char *tail;
         str_trunc(l->buffer, 0);
-        read_string(l->text + 1, l->buffer, &tail);
-        l->current.tk = TK_STRING;
-        l->current.value.str = CSTR(l->buffer);
-        l->text = tail;
+        if (read_string(l->text + 1, l->buffer, &tail)) {
+            l->current.tk = TK_UNDEF;
+        } else {
+            l->current.tk = TK_STRING;
+            l->current.value.str = CSTR(l->buffer);
+            l->text = tail;
+        }
     } else {
         const char *tail;
         str_trunc(l->buffer, 0);
-        read_ident(l->text, l->buffer, &tail);
-        if (tail == l->text) {
+        if (read_ident(l->text, l->buffer, &tail)) {
             l->current.tk = TK_UNDEF;
         } else {
             l->current.tk = TK_IDENT;
