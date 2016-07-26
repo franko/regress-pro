@@ -55,15 +55,20 @@ void fx_disp_window::setup_name()
     FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
     tf->setText(disp_get_name(disp));
 
-    FXHorizontalFrame *range_hf = namehf;
-    new FXLabel(range_hf, "Range ");
-    range_start_textfield = new fx_numeric_field(range_hf, 6, this, ID_RANGE, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-    range_end_textfield   = new fx_numeric_field(range_hf, 6, this, ID_RANGE,   FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-    if (DISP_VALID_RANGE(disp->info->wavelength_start, disp->info->wavelength_end)) {
-        range_start_textfield->setNumber(disp->info->wavelength_start);
-        range_end_textfield  ->setNumber(disp->info->wavelength_end  );
+    if (!disp_is_tabular(disp)) {
+        FXHorizontalFrame *range_hf = namehf;
+        new FXLabel(range_hf, "Range ");
+        range_start_textfield = new fx_numeric_field(range_hf, 6, this, ID_RANGE, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+        range_end_textfield   = new fx_numeric_field(range_hf, 6, this, ID_RANGE,   FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+        if (DISP_VALID_RANGE(disp->info->wavelength_start, disp->info->wavelength_end)) {
+            range_start_textfield->setNumber(disp->info->wavelength_start);
+            range_end_textfield  ->setNumber(disp->info->wavelength_end  );
+        }
+        set_range_color();
+    } else {
+        range_start_textfield = NULL;
+        range_end_textfield   = NULL;
     }
-    set_range_color();
 
     // FXGroupBox *text_frame = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|FRAME_NONE|LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0);
     description_textfield = new FXText(this, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
