@@ -91,6 +91,9 @@ writer_quote_string(const char *s)
     for (int i = 0; s[i] != 0; i++) {
         if (s[i] == '"') {
             str_append_c(quoted, "\\\"", 0);
+        } else if (s[i] == '\n') {
+            str_append_c(quoted, "\\n", 0);
+        } else if (s[i] == '\r') {
         } else {
             str_append_char(quoted, s[i]);
         }

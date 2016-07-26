@@ -31,6 +31,8 @@ read_string(const char *text, str_ptr buffer, const char **tail)
             p ++;
             if (*p == '"') {
                 str_append_char(buffer, '"');
+            } else if (*p == 'n') {
+                str_append_char(buffer, '\n');
             } else {
                 return 1; // Invalid escape sequence.
             }
