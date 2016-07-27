@@ -19,6 +19,9 @@ struct disp_sample_table {
 
 extern struct disp_class disp_sample_table_class;
 
+extern void disp_sample_table_init(struct disp_sample_table *dt, int len);
+extern void disp_sample_table_prepare_interp(struct disp_sample_table *dt);
+
 extern struct disp_struct *
 disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg);
 

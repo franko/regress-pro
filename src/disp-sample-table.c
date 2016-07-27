@@ -46,8 +46,8 @@ init_interp(struct disp_sample_table *dt)
     dt->accel = gsl_interp_accel_alloc();
 }
 
-static void
-init(struct disp_sample_table *dt, int len)
+void
+disp_sample_table_init(struct disp_sample_table *dt, int len)
 {
     dt->len = len;
     dt->table = rc_matrix_alloc(3, len);
@@ -106,8 +106,8 @@ void disp_sample_table_get_sample(const struct disp_sample_table *dt, int index,
     *k = get_k(dt, index);
 }
 
-static void
-prepare_interp(struct disp_sample_table *dt)
+void
+disp_sample_table_prepare_interp(struct disp_sample_table *dt)
 {
     gsl_interp_init(dt->interp_n, wavelength_array(dt), n_array(dt), dt->len);
     gsl_interp_init(dt->interp_k, wavelength_array(dt), k_array(dt), dt->len);
@@ -140,7 +140,7 @@ disp_sample_table_copy(const disp_t *src)
     if(dt->len > 0) {
         rc_matrix_ref(dt->table);
         init_interp(dt);
-        prepare_interp(dt);
+        disp_sample_table_prepare_interp(dt);
     }
     return res;
 }
@@ -242,7 +242,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 
         fseek(f, start_pos, SEEK_SET);
 
-        init(dt, lines);
+        disp_sample_table_init(dt, lines);
 
         double *wptr = wavelength_array(dt);
         double *nptr = n_array(dt);
@@ -270,7 +270,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
                 break;
             }
         }
-        prepare_interp(dt);
+        disp_sample_table_prepare_interp(dt);
         break;
     }
     case DISP_CAUCHY:
@@ -331,6 +331,6 @@ disp_sample_table_read(lexer_t *l, disp_t *d_gen)
     if (!d->table) return 1;
     d->len = len;
     init_interp(d);
-    prepare_interp(d);
+    disp_sample_table_prepare_interp(d);
     return 0;
 }
