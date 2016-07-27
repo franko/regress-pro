@@ -36,15 +36,13 @@ class cspline_array_interp {
 public:
     using double_pair = std::pair<double, double>;
 
-    cspline_array_interp(tab_array<double, 3> array)
+    cspline_array_interp(const tab_array<double, 3>& array)
     : m_table(array) {
         const int length = m_table.size();
         m_interp_n = gsl_interp_alloc(gsl_interp_cspline, length);
         m_interp_k = gsl_interp_alloc(gsl_interp_cspline, length);
         m_accel = gsl_interp_accel_alloc();
-
-        gsl_interp_init(m_interp_n, m_table.row(0), m_table.row(1), length);
-        gsl_interp_init(m_interp_k, m_table.row(0), m_table.row(2), length);
+        compute_interpolation();
     }
 
     ~cspline_array_interp() {
@@ -53,13 +51,18 @@ public:
         gsl_interp_accel_free(m_accel);
     }
 
+    void compute_interpolation() {
+        gsl_interp_init(m_interp_n, m_table.row(0), m_table.row(1), m_table.size());
+        gsl_interp_init(m_interp_k, m_table.row(0), m_table.row(2), m_table.size());
+    }
+
     double_pair eval(const double wavelength) const {
         const double n = gsl_interp_eval(m_interp_n, m_table.row(0), m_table.row(1), wavelength, m_accel);
         const double k = gsl_interp_eval(m_interp_k, m_table.row(0), m_table.row(2), wavelength, m_accel);
         return double_pair(n, k);
     }
 private:
-    tab_array<double, 3> m_table;
+    const tab_array<double, 3>& m_table;
 
     gsl_interp *m_interp_n;
     gsl_interp *m_interp_k;
@@ -91,7 +94,7 @@ int subsampling_eval(const tab_matrix& ms, const pod_array<int>& ipoints, const 
     return -1;
 }
 
-double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& ms, const pod_array<int> ipoints, const int i_min, const int i_max) {
+double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& ms, const pod_array<int>& ipoints, const int i_min, const int i_max) {
     double del_n = 0, del_k = 0;
     for (int i = ipoints[i_min]; i < ipoints[i_max]; i++) {
         auto nki = interp.eval(ms(i, 0));
@@ -105,10 +108,15 @@ double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& 
 std::pair<int, double> find_delta_optimal(const tab_matrix& ms, pod_array<int>& ipoints, int i, int ka, int kb) {
     int kbest = ka;
     double del = 1000.0;
+
+    tab_array<double, 3> table = get_array(ipoints, ms);
+    cspline_array_interp interp(table);
+
     for (int k = ka + 1; k < kb - 1; k++) {
-        ipoints[i] = k;
-        tab_array<double, 3> table = get_array(ipoints, ms);
-        cspline_array_interp interp(table);
+        table.row(0)[i] = ms(k, 0);
+        table.row(1)[i] = ms(k, 1);
+        table.row(2)[i] = ms(k, 2);
+        interp.compute_interpolation();
         double kdel = interp_delta_score(interp, ms, ipoints, i - 1, i + 1);
         if (kdel < del) {
             kbest = k;
