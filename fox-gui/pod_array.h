@@ -44,20 +44,6 @@ public:
         }
     }
 
-    void insert(const int index, const T new_element) {
-        T *new_array = new T[m_size + 1];
-        if (index > 0) {
-            memcpy(new_array, m_array, sizeof(T) * index);
-        }
-        new_array[index] = new_element;
-        if (m_size - index > 0) {
-            memcpy(new_array + index + 1, m_array + index, sizeof(T) * (m_size - index));
-        }
-        std::swap(m_array, new_array);
-        m_size += 1;
-        delete new_array;
-    }
-
     self_type& operator = (const self_type& v)
     {
         resize(v.size());
