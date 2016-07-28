@@ -22,16 +22,6 @@ private:
     pod_array<double> m_array;
 };
 
-class tab_matrix {
-public:
-    tab_matrix(const rc_matrix *m): m_matrix(m) { }
-
-    int size() const { return m_matrix->view.matrix.size2; }
-    double operator()(int i, int j) const { return m_matrix->view.matrix.data[j * m_matrix->view.matrix.tda + i]; }
-private:
-    const rc_matrix *m_matrix;
-};
-
 class cspline_array_interp {
 public:
     using double_pair = std::pair<double, double>;
@@ -161,4 +151,20 @@ pod_array<int> optimize_sampling_points(const rc_matrix* m, const double approx_
     }
 
     return ipoints;
+}
+
+disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_array<int>& ipoints, const char *name) {
+    disp_t *new_disp = disp_new(DISP_SAMPLE_TABLE);
+    disp_set_name(new_disp, name);
+    disp_sample_table * const st_disp = &new_disp->disp.sample_table;
+    const int sampling_points = ipoints.size();
+    disp_sample_table_init(st_disp, sampling_points);
+    gsl_matrix * const st_matrix = &st_disp->table->view.matrix;
+    for (int i = 0; i < sampling_points; i++) {
+        st_matrix->data[i                     ] = src(ipoints[i], 0);
+        st_matrix->data[i + 1 * st_matrix->tda] = src(ipoints[i], 1);
+        st_matrix->data[i + 2 * st_matrix->tda] = src(ipoints[i], 2);
+    }
+    disp_sample_table_prepare_interp(st_disp);
+    return new_disp;
 }
