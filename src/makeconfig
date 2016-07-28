@@ -4,7 +4,7 @@ ENABLE_DEBUG = no
 ENABLE_RELEASE = no
 
 CC = gcc
-CXX = gcc
+CXX = gcc -std=c++14
 CFLAGS = -O3 -ffast-math -fomit-frame-pointer
 CXXFLAGS = -O3 -ffast-math -fomit-frame-pointer -fno-exceptions -fno-rtti
 
