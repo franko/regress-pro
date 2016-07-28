@@ -17,7 +17,9 @@ private:
     const rc_matrix *m_matrix;
 };
 
-pod_array<int> optimize_sampling_points(const rc_matrix* m, const double approx_tolerance);
-disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_array<int>& ipoints, const char *name);
+extern pod_array<int> optimize_sampling_points(const rc_matrix* m, const double approx_tolerance);
+extern disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_array<int>& ipoints, const char *name);
+extern disp_t *dispersion_from_sampling_points(const disp_t *disp, const pod_vector<double>& sampling_points, const char *name);
+extern pod_vector<double> optimize_sampling_points_c(const disp_t *disp, const double approx_tolerance);
 
 #endif

@@ -59,7 +59,7 @@ private:
     gsl_interp_accel *m_accel;
 };
 
-tab_array<double, 3> get_array(const pod_array<int> ipoints, const tab_matrix& ms) {
+tab_array<double, 3> get_array(const pod_array<int>& ipoints, const tab_matrix& ms) {
     tab_array<double, 3> table(ipoints.size());
     for (int i = 0; i < ipoints.size(); i++) {
         const int k = ipoints[i];
@@ -153,6 +153,106 @@ pod_array<int> optimize_sampling_points(const rc_matrix* m, const double approx_
     return ipoints;
 }
 
+tab_array<double, 3> get_array_c(const pod_vector<double>& sampling_points, const disp_t *disp) {
+    tab_array<double, 3> table(sampling_points.size());
+    for (int i = 0; i < sampling_points.size(); i++) {
+        const double wavelength = sampling_points[i];
+        const cmpl n = n_value(disp, wavelength);
+        table.at(i, 0) = wavelength;
+        table.at(i, 1) =  creal(n);
+        table.at(i, 2) = -cimag(n);
+    }
+    return table;
+}
+
+double interp_delta_score_c(const cspline_array_interp& interp, const disp_t *disp, double wavelength_inf, double wavelength_sup) {
+    const int test_points_number = 32;
+    double del_n = 0, del_k = 0;
+    for (int k = 1; k < test_points_number; k++) {
+        const double wavelength = wavelength_inf + (wavelength_sup - wavelength_inf) * k / test_points_number;
+        auto nki = interp.eval(wavelength);
+        cmpl nkr = n_value(disp, wavelength);
+        del_n = std::max(del_n, std::abs(nki.first  - creal(nkr)));
+        del_k = std::max(del_k, std::abs(nki.second + cimag(nkr)));
+    }
+    return std::max(del_n, del_k);
+}
+
+void add_new_point_c(const disp_t *disp, pod_vector<double>& sampling_points, int index) {
+    const int search_points_number = 16;
+
+    const double wavelength_inf = sampling_points[index];
+    const double wavelength_sup = sampling_points[index + 1];
+
+    int required_capacity = sampling_points.size() + 1;
+    if (sampling_points.capacity() < required_capacity) {
+        sampling_points.resize(required_capacity * 3 / 2);
+    }
+    sampling_points.resize(sampling_points.size() + 1);
+    sampling_points.insert_at(index + 1, (wavelength_sup + wavelength_inf) / 2);
+
+    double wavelength_best;
+    double del = -1;
+
+    tab_array<double, 3> table = get_array_c(sampling_points, disp);
+    cspline_array_interp interp(table);
+
+    for (int k = 1; k < search_points_number; k++) {
+        const double wavelength = wavelength_inf + (wavelength_sup - wavelength_inf) * k / search_points_number;
+        const cmpl n = n_value(disp, wavelength);
+        table.row(0)[index + 1] = wavelength;
+        table.row(1)[index + 1] =  creal(n);
+        table.row(2)[index + 1] = -cimag(n);
+        interp.compute_interpolation();
+        double kdel = interp_delta_score_c(interp, disp, wavelength_inf, wavelength_sup);
+        if (del < 0 || kdel < del) {
+            wavelength_best = wavelength;
+            del = kdel;
+        }
+    }
+    sampling_points[index + 1] = wavelength_best;
+}
+
+int subsampling_eval_c(const disp_t *disp, const pod_vector<double>& sampling_points, const double tol) {
+    const int test_points_number = 32;
+    tab_array<double, 3> table = get_array_c(sampling_points, disp);
+    cspline_array_interp interp(table);
+    for (int i = 0; i < sampling_points.size() - 1; i++) {
+        const double wavelength_inf = sampling_points[i];
+        const double wavelength_sup = sampling_points[i + 1];
+        for (int k = 0; k < test_points_number; k++) {
+            const double wavelength = wavelength_inf + (wavelength_sup - wavelength_inf) * k / test_points_number;
+            auto nki = interp.eval(wavelength);
+            const cmpl nkr = n_value(disp, wavelength);
+            if (std::abs(nki.first  - creal(nkr)) > tol ||
+                std::abs(nki.second + cimag(nkr)) > tol) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+pod_vector<double> optimize_sampling_points_c(const disp_t *disp, const double approx_tolerance)
+{
+    double wavelength_start, wavelength_end;
+    int unused;
+    disp_get_wavelength_range(disp, &wavelength_start, &wavelength_end, &unused);
+    pod_vector<double> sampling_points(16);
+    sampling_points.push_back(wavelength_start);
+    sampling_points.push_back(wavelength_end);
+
+    add_new_point_c(disp, sampling_points, 0);
+
+    while (true) {
+        int i_nok = subsampling_eval_c(disp, sampling_points, approx_tolerance);
+        if (i_nok < 0) break;
+        add_new_point_c(disp, sampling_points, i_nok);
+    }
+
+    return sampling_points;
+}
+
 disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_array<int>& ipoints, const char *name) {
     disp_t *new_disp = disp_new(DISP_SAMPLE_TABLE);
     disp_set_name(new_disp, name);
@@ -164,6 +264,24 @@ disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_array<i
         st_matrix->data[i                     ] = src(ipoints[i], 0);
         st_matrix->data[i + 1 * st_matrix->tda] = src(ipoints[i], 1);
         st_matrix->data[i + 2 * st_matrix->tda] = src(ipoints[i], 2);
+    }
+    disp_sample_table_prepare_interp(st_disp);
+    return new_disp;
+}
+
+disp_t *dispersion_from_sampling_points(const disp_t *disp, const pod_vector<double>& sampling_points, const char *name) {
+    disp_t *new_disp = disp_new(DISP_SAMPLE_TABLE);
+    disp_set_name(new_disp, name);
+    disp_sample_table * const st_disp = &new_disp->disp.sample_table;
+    const int points_number = sampling_points.size();
+    disp_sample_table_init(st_disp, points_number);
+    gsl_matrix * const st_matrix = &st_disp->table->view.matrix;
+    for (int i = 0; i < points_number; i++) {
+        const double wavelength = sampling_points[i];
+        const cmpl n = n_value(disp, wavelength);
+        st_matrix->data[i                     ] = wavelength;
+        st_matrix->data[i + 1 * st_matrix->tda] =  creal(n);
+        st_matrix->data[i + 2 * st_matrix->tda] = -cimag(n);
     }
     disp_sample_table_prepare_interp(st_disp);
     return new_disp;
