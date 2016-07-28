@@ -22,6 +22,15 @@ private:
     pod_array<double> m_array;
 };
 
+template <typename T>
+void insert_at(pod_vector<T>& vec, int index, const T value) {
+    int required_capacity = vec.size() + 1;
+    if (vec.capacity() < required_capacity) {
+        vec.resize(required_capacity * 3 / 2);
+    }
+    vec.insert_at(index, value);
+}
+
 class cspline_array_interp {
 public:
     using double_pair = std::pair<double, double>;
@@ -59,7 +68,7 @@ private:
     gsl_interp_accel *m_accel;
 };
 
-tab_array<double, 3> get_array(const pod_array<int>& ipoints, const tab_matrix& ms) {
+tab_array<double, 3> get_array(const pod_vector<int>& ipoints, const tab_matrix& ms) {
     tab_array<double, 3> table(ipoints.size());
     for (int i = 0; i < ipoints.size(); i++) {
         const int k = ipoints[i];
@@ -70,7 +79,7 @@ tab_array<double, 3> get_array(const pod_array<int>& ipoints, const tab_matrix& 
     return table;
 }
 
-int subsampling_eval(const tab_matrix& ms, const pod_array<int>& ipoints, const double tol) {
+int subsampling_eval(const tab_matrix& ms, const pod_vector<int>& ipoints, const double tol) {
     tab_array<double, 3> table = get_array(ipoints, ms);
     cspline_array_interp interp(table);
     for (int i = 0; i < ms.size(); i++) {
@@ -84,7 +93,7 @@ int subsampling_eval(const tab_matrix& ms, const pod_array<int>& ipoints, const 
     return -1;
 }
 
-double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& ms, const pod_array<int>& ipoints, const int i_min, const int i_max) {
+double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& ms, const pod_vector<int>& ipoints, const int i_min, const int i_max) {
     double del_n = 0, del_k = 0;
     for (int i = ipoints[i_min]; i < ipoints[i_max]; i++) {
         auto nki = interp.eval(ms(i, 0));
@@ -95,7 +104,7 @@ double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& 
     return std::max(del_n, del_k);
 }
 
-std::pair<int, double> find_delta_optimal(const tab_matrix& ms, pod_array<int>& ipoints, int i, int ka, int kb) {
+std::pair<int, double> find_delta_optimal(const tab_matrix& ms, pod_vector<int>& ipoints, int i, int ka, int kb) {
     int kbest = ka;
     double del = 1000.0;
 
@@ -116,14 +125,14 @@ std::pair<int, double> find_delta_optimal(const tab_matrix& ms, pod_array<int>& 
     return std::pair<int, double>(kbest, del);
 }
 
-void insert_opt_point(const tab_matrix& ms, pod_array<int>& ipoints, int i) {
+void insert_opt_point(const tab_matrix& ms, pod_vector<int>& ipoints, int i) {
     int ka = ipoints[i], kb = ipoints[i+1];
-    ipoints.insert(i + 1, ka + 1);
+    insert_at(ipoints, i + 1, ka + 1);
     auto best = find_delta_optimal(ms, ipoints, i + 1, ka, kb);
     ipoints[i+1] = best.first;
 }
 
-void add_new_point(const tab_matrix& ms, pod_array<int>& ipoints, int i_nok) {
+void add_new_point(const tab_matrix& ms, pod_vector<int>& ipoints, int i_nok) {
     const double wi = ms(i_nok, 0);
     for (int i = 0; i < ipoints.size(); i++) {
         const double wa = ms(ipoints[i    ], 0);
@@ -135,12 +144,12 @@ void add_new_point(const tab_matrix& ms, pod_array<int>& ipoints, int i_nok) {
     }
 }
 
-pod_array<int> optimize_sampling_points(const rc_matrix* m, const double approx_tolerance) {
+pod_vector<int> optimize_sampling_points_tab(const rc_matrix* m, const double approx_tolerance) {
     const tab_matrix ms(m);
 
-    pod_array<int> ipoints(2);
-    ipoints[0] = 0;
-    ipoints[1] = ms.size() - 1;
+    pod_vector<int> ipoints(16);
+    ipoints.push_back(0);
+    ipoints.push_back(ms.size() - 1);
 
     add_new_point(ms, ipoints, ms.size() / 2);
 
@@ -184,12 +193,7 @@ void add_new_point_c(const disp_t *disp, pod_vector<double>& sampling_points, in
     const double wavelength_inf = sampling_points[index];
     const double wavelength_sup = sampling_points[index + 1];
 
-    int required_capacity = sampling_points.size() + 1;
-    if (sampling_points.capacity() < required_capacity) {
-        sampling_points.resize(required_capacity * 3 / 2);
-    }
-    sampling_points.resize(sampling_points.size() + 1);
-    sampling_points.insert_at(index + 1, (wavelength_sup + wavelength_inf) / 2);
+    insert_at(sampling_points, index + 1, (wavelength_sup + wavelength_inf) / 2);
 
     double wavelength_best;
     double del = -1;
@@ -253,7 +257,7 @@ pod_vector<double> optimize_sampling_points_c(const disp_t *disp, const double a
     return sampling_points;
 }
 
-disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_array<int>& ipoints, const char *name) {
+disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_vector<int>& ipoints, const char *name) {
     disp_t *new_disp = disp_new(DISP_SAMPLE_TABLE);
     disp_set_name(new_disp, name);
     disp_sample_table * const st_disp = &new_disp->disp.sample_table;
