@@ -60,7 +60,7 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     new FXRadioButton(autohbox, "Automatic", this, ID_SAMPLING_AUTO);
     m_sampling_listbox = new FXListBox(autohbox, this, ID_SAMPLING_OPTION, FRAME_SUNKEN|LISTBOX_NORMAL);
     m_sampling_listbox->appendItem("Native", NULL, (void *) 0);
-    m_sampling_listbox->appendItem("Optimal", NULL, (void *) 1);
+    m_sampling_listbox->appendItem("Optimize", NULL, (void *) 1);
     new FXLabel(autohbox, "tolerance");
     m_sampling_tol_textfield = new FXTextField(autohbox, 8, this, ID_SAMPLING_TOL, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     m_sampling_tol_textfield->setText("0.001");
@@ -74,11 +74,7 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     new FXLabel(unifhbox, "step");
     m_sampling_step = new FXTextField(unifhbox, 8, this, ID_SAMPLING_STEP, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
-    if (disp_is_tabular(disp)) {
-        m_sampling_type = SAMPLING_AUTO | SAMPLING_NATIVE;
-    } else {
-        m_sampling_type = SAMPLING_AUTO | SAMPLING_OPTIM;
-    }
+    m_sampling_type = SAMPLING_NONE;
 }
 
 dispers_save_dialog::~dispers_save_dialog()
@@ -103,7 +99,6 @@ dispers_save_dialog::on_cmd_format_native(FXObject *, FXSelector, void *)
 {
     m_filebox->setPatternList(disp_patterns);
     m_sampling_type = SAMPLING_NONE;
-    // disable_sampling();
     return 1;
 }
 
@@ -140,7 +135,7 @@ dispers_save_dialog::on_upd_sampling_option(FXObject *sender, FXSelector sel, vo
     } else {
         m_sampling_listbox->setCurrentItem(1);
     }
-    FXuint msgid = ((m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_UNIF || !disp_is_tabular(m_disp) ? ID_DISABLE : ID_ENABLE);
+    FXuint msgid = ((m_sampling_type & SAMPLING_TYPE_MASK) != SAMPLING_AUTO || !disp_is_tabular(m_disp) ? ID_DISABLE : ID_ENABLE);
     m_sampling_listbox->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
     return 1;
 }
