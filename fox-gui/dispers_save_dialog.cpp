@@ -3,6 +3,7 @@
 #include "writer.h"
 #include "mat_table_write.h"
 #include "textfield_utils.h"
+#include "dispers_sampling_optim.h"
 
 static const FXchar disp_patterns[] =
     "Dispersion files (*.dsp)"
@@ -17,6 +18,13 @@ FXDEFMAP(dispers_save_dialog) dispers_save_dialog_map[]= {
     FXMAPFUNC(SEL_COMMAND, dispers_save_dialog::ID_FORMAT_TABULAR, dispers_save_dialog::on_cmd_format_tabular),
     FXMAPFUNC(SEL_COMMAND, dispers_save_dialog::ID_FORMAT_NATIVE, dispers_save_dialog::on_cmd_format_native),
     FXMAPFUNC(SEL_COMMAND, dispers_save_dialog::ID_FILE_SELECT, dispers_save_dialog::on_cmd_file_select),
+    FXMAPFUNC(SEL_COMMAND, dispers_save_dialog::ID_SAMPLING_OPTION, dispers_save_dialog::on_cmd_sampling_option),
+    FXMAPFUNC(SEL_UPDATE,  dispers_save_dialog::ID_SAMPLING_OPTION, dispers_save_dialog::on_upd_sampling_option),
+    FXMAPFUNC(SEL_COMMAND, dispers_save_dialog::ID_SAMPLING_AUTO, dispers_save_dialog::on_cmd_sampling_radio),
+    FXMAPFUNC(SEL_COMMAND, dispers_save_dialog::ID_SAMPLING_UNIFORM, dispers_save_dialog::on_cmd_sampling_radio),
+    FXMAPFUNC(SEL_UPDATE,  dispers_save_dialog::ID_SAMPLING_AUTO, dispers_save_dialog::on_update_sampling_radio),
+    FXMAPFUNC(SEL_UPDATE,  dispers_save_dialog::ID_SAMPLING_UNIFORM, dispers_save_dialog::on_update_sampling_radio),
+    FXMAPFUNC(SEL_UPDATE,  dispers_save_dialog::ID_SAMPLING_TOL, dispers_save_dialog::on_update_sampling_tolerance),
     FXMAPFUNCS(SEL_UPDATE, dispers_save_dialog::ID_SAMPLING_START, dispers_save_dialog::ID_SAMPLING_STEP, dispers_save_dialog::on_update_sampling),
 };
 
@@ -40,54 +48,53 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     new FXOption(m_format_pane, "Native", NULL, this, ID_FORMAT_NATIVE, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
     new FXOption(m_format_pane, "Tabular", NULL, this, ID_FORMAT_TABULAR, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
 
-    m_sampling_pane = new FXPopup(this);
-    new FXOption(m_sampling_pane, "Uniform", NULL, this, ID_SAMPLING_UNIFORM, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
-    FXOption *nat_option = new FXOption(m_sampling_pane, "Native", NULL, this, ID_SAMPLING_NATIVE, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
-
-    if (!disp_is_tabular(disp)) {
-        nat_option->disable();
-    }
-
     FXHorizontalFrame *bbox = new FXHorizontalFrame(top, LAYOUT_FILL_X);
     FXVerticalFrame *fvf = new FXVerticalFrame(bbox, LAYOUT_FILL_Y);
     new FXLabel(fvf, "Format");
     m_format_menu = new FXOptionMenu(fvf, m_format_pane, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
 
-    FXGroupBox *sgroup = new FXGroupBox(bbox, "Sampling", GROUPBOX_NORMAL|FRAME_GROOVE);
-    m_sampling_menu = new FXOptionMenu(sgroup, m_sampling_pane, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT|LAYOUT_SIDE_LEFT);
+    auto sgroup = new FXGroupBox(bbox, "Wavelength sampling", GROUPBOX_NORMAL|FRAME_GROOVE);
+    auto wsampvbox = new FXVerticalFrame(sgroup, LAYOUT_FILL_X);
 
-    FXMatrix *matrix = new FXMatrix(sgroup, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS|LAYOUT_SIDE_RIGHT);
-    new FXLabel(matrix, "Start");
-    new FXLabel(matrix, "End");
-    new FXLabel(matrix, "Step");
-    m_sampling_start = new FXTextField(matrix, 8, this, ID_SAMPLING_START, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-    m_sampling_end = new FXTextField(matrix, 8, this, ID_SAMPLING_END, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-    m_sampling_step = new FXTextField(matrix, 8, this, ID_SAMPLING_STEP, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    auto autohbox = new FXHorizontalFrame(wsampvbox, LAYOUT_FILL_X);
+    new FXRadioButton(autohbox, "Automatic", this, ID_SAMPLING_AUTO);
+    m_sampling_listbox = new FXListBox(autohbox, this, ID_SAMPLING_OPTION, FRAME_SUNKEN|LISTBOX_NORMAL);
+    m_sampling_listbox->appendItem("Native", NULL, (void *) 0);
+    m_sampling_listbox->appendItem("Optimal", NULL, (void *) 1);
+    new FXLabel(autohbox, "tolerance");
+    m_sampling_tol_textfield = new FXTextField(autohbox, 8, this, ID_SAMPLING_TOL, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    m_sampling_tol_textfield->setText("0.001");
 
-    disable_sampling();
+    auto unifhbox = new FXHorizontalFrame(wsampvbox, LAYOUT_FILL_X);
+    new FXRadioButton(unifhbox, "", this, ID_SAMPLING_UNIFORM);
+    new FXLabel(unifhbox, "from");
+    m_sampling_start = new FXTextField(unifhbox, 8, this, ID_SAMPLING_START, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    new FXLabel(unifhbox, "to");
+    m_sampling_end = new FXTextField(unifhbox, 8, this, ID_SAMPLING_END, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    new FXLabel(unifhbox, "step");
+    m_sampling_step = new FXTextField(unifhbox, 8, this, ID_SAMPLING_STEP, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+
+    if (disp_is_tabular(disp)) {
+        m_sampling_type = SAMPLING_AUTO | SAMPLING_NATIVE;
+    } else {
+        m_sampling_type = SAMPLING_AUTO | SAMPLING_OPTIM;
+    }
 }
 
 dispers_save_dialog::~dispers_save_dialog()
 {
     delete m_format_pane;
-    delete m_sampling_pane;
-}
-
-void dispers_save_dialog::disable_sampling()
-{
-    m_sampling_menu->disable();
-}
-
-void dispers_save_dialog::enable_sampling()
-{
-    m_sampling_menu->enable();
 }
 
 long
 dispers_save_dialog::on_cmd_format_tabular(FXObject *, FXSelector, void *)
 {
     m_filebox->setPatternList(tab_patterns);
-    enable_sampling();
+    if (disp_is_tabular(m_disp)) {
+        m_sampling_type = SAMPLING_AUTO | SAMPLING_NATIVE;
+    } else {
+        m_sampling_type = SAMPLING_AUTO | SAMPLING_OPTIM;
+    }
     return 1;
 }
 
@@ -95,7 +102,16 @@ long
 dispers_save_dialog::on_cmd_format_native(FXObject *, FXSelector, void *)
 {
     m_filebox->setPatternList(disp_patterns);
-    disable_sampling();
+    m_sampling_type = SAMPLING_NONE;
+    // disable_sampling();
+    return 1;
+}
+
+long
+dispers_save_dialog::on_cmd_sampling_radio(FXObject *, FXSelector sel, void *)
+{
+    unsigned bit = FXSELID(sel) == ID_SAMPLING_AUTO ? SAMPLING_AUTO : SAMPLING_UNIF;
+    m_sampling_type = (m_sampling_type & SAMPLING_AUTO_TYPE_MASK) | bit;
     return 1;
 }
 
@@ -103,6 +119,49 @@ long
 dispers_save_dialog::on_update_sampling(FXObject *sender, FXSelector sel, void *)
 {
     FXuint msgid = (use_sampling() ? ID_ENABLE : ID_DISABLE);
+    sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+    return 1;
+}
+
+long
+dispers_save_dialog::on_cmd_sampling_option(FXObject *sender, FXSelector sel, void *index)
+{
+    unsigned bit = (index == 0 ? SAMPLING_NATIVE : SAMPLING_OPTIM);
+    m_sampling_type = (m_sampling_type & SAMPLING_TYPE_MASK) | bit;
+    return 1;
+}
+
+long
+dispers_save_dialog::on_upd_sampling_option(FXObject *sender, FXSelector sel, void *)
+{
+    unsigned bit = (m_sampling_type & SAMPLING_AUTO_TYPE_MASK);
+    if (bit == SAMPLING_NATIVE) {
+        m_sampling_listbox->setCurrentItem(0);
+    } else {
+        m_sampling_listbox->setCurrentItem(1);
+    }
+    FXuint msgid = ((m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_UNIF || !disp_is_tabular(m_disp) ? ID_DISABLE : ID_ENABLE);
+    m_sampling_listbox->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+    return 1;
+}
+
+long
+dispers_save_dialog::on_update_sampling_radio(FXObject *sender, FXSelector sel, void *)
+{
+    FXuint msgid = (FXSELID(sel) == ID_SAMPLING_AUTO ?
+        (use_sampling() ? ID_UNCHECK : ID_CHECK) :
+        (use_sampling() ? ID_CHECK   : ID_UNCHECK));
+    sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+
+    FXuint enable_msgid = (m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_NONE ? ID_DISABLE : ID_ENABLE;
+    sender->handle(this, FXSEL(SEL_COMMAND, enable_msgid), NULL);
+    return 1;
+}
+
+long
+dispers_save_dialog::on_update_sampling_tolerance(FXObject *sender, FXSelector sel, void *)
+{
+    FXuint msgid = (m_sampling_type == (SAMPLING_AUTO | SAMPLING_OPTIM)) ? ID_ENABLE : ID_DISABLE;
     sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
     return 1;
 }
@@ -145,21 +204,32 @@ dispers_save_dialog::save_dispersion()
     } else {
         file_writer ostream;
         if (!ostream.open(filename.text())) return 1;
-        if (use_sampling() || m_disp->type == DISP_TABLE) {
+
+        if (use_sampling()) {
             double sstart, send, sstep;
-            if (use_sampling()) {
-                if (get_sampling_values(&sstart, &send, &sstep)) return 1;
-            } else {
-                sstart = m_disp->disp.table.lambda_min;
-                send = m_disp->disp.table.lambda_max;
-                sstep = m_disp->disp.table.lambda_stride;
-            }
+            if (get_sampling_values(&sstart, &send, &sstep)) return 1;
             uniform_sampler usampler(sstart, send, sstep);
             disp_source<uniform_sampler> src(m_disp, &usampler);
             mat_table_write(disp_get_name(m_disp), &ostream, &src);
-        } else if (m_disp->type == DISP_SAMPLE_TABLE) {
-            dst_source src(&m_disp->disp.sample_table);
-            mat_table_write(disp_get_name(m_disp), &ostream, &src);
+        } else {
+            if ((m_sampling_type & SAMPLING_AUTO_TYPE_MASK) == SAMPLING_NATIVE) {
+                sampled_dispersion_source src(m_disp);
+                mat_table_write(disp_get_name(m_disp), &ostream, &src);
+            } else {
+                double tol;
+                textfield_get_double(m_sampling_tol_textfield, &tol);
+                auto wavelengths = optimize_sampling_points_c(m_disp, tol);
+                printf("OPTIMAL SAMPLING:\n");
+                for (auto wl : wavelengths) {
+                    cmpl nk = n_value(m_disp, wl);
+                    printf("%g %g %g\n", wl, creal(nk), -cimag(nk));
+                }
+
+                disp_t *disp_optim = dispersion_from_sampling_points(m_disp, wavelengths, "");
+                sampled_dispersion_source src(disp_optim);
+                mat_table_write(disp_get_name(m_disp), &ostream, &src);
+                disp_free(disp_optim);
+            }
         }
     }
     return 0;
@@ -167,7 +237,7 @@ dispers_save_dialog::save_dispersion()
 
 bool dispers_save_dialog::use_sampling() const
 {
-    return (m_sampling_menu->isEnabled() && m_sampling_menu->getCurrentNo() == 0);
+    return ((m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_UNIF);
 }
 
 long

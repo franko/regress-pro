@@ -24,34 +24,54 @@ public:
 
     long on_cmd_format_tabular(FXObject *, FXSelector, void *);
     long on_cmd_format_native(FXObject *, FXSelector, void *);
+    long on_cmd_sampling_option(FXObject *, FXSelector, void *);
+    long on_upd_sampling_option(FXObject *, FXSelector, void *);
+    long on_cmd_sampling_radio(FXObject *, FXSelector, void *);
     long on_update_sampling(FXObject *, FXSelector, void *);
+    long on_update_sampling_native(FXObject *, FXSelector, void *);
+    long on_update_sampling_radio(FXObject *, FXSelector, void *);
+    long on_update_sampling_tolerance(FXObject *, FXSelector, void *);
     long on_cmd_file_select(FXObject *, FXSelector, void *);
 
     bool format_is_native() const { return m_format_menu->getCurrentNo() == 0; }
 
     enum {
+        SAMPLING_NATIVE = 0,
+        SAMPLING_OPTIM  = 1,
+        SAMPLING_NONE   = 0 << 1,
+        SAMPLING_AUTO   = 1 << 1,
+        SAMPLING_UNIF   = 2 << 1,
+
+        SAMPLING_AUTO_TYPE_MASK = 1,
+        SAMPLING_TYPE_MASK      = 3 << 1,
+    };
+
+    enum {
         ID_FORMAT_NATIVE = FXDialogBox::ID_LAST,
         ID_FORMAT_TABULAR,
         ID_FILE_SELECT,
-        ID_SAMPLING_NATIVE,
+        ID_SAMPLING_OPTION,
+        ID_SAMPLING_AUTO,
         ID_SAMPLING_UNIFORM,
         ID_SAMPLING_OPTIMIZED,
+        ID_SAMPLING_TOL,
         ID_SAMPLING_START,
         ID_SAMPLING_END,
         ID_SAMPLING_STEP,
         ID_LAST
     };
 private:
-    void disable_sampling();
-    void enable_sampling();
     int get_sampling_values(double *sstart, double *send, double *sstep) const;
     bool use_sampling() const;
 
     const disp_t *m_disp;
     FXFileSelector *m_filebox;
     FXPopup *m_format_pane, *m_sampling_pane;
-    FXOptionMenu *m_format_menu, *m_sampling_menu;
+    FXOptionMenu *m_format_menu;
+    FXListBox *m_sampling_listbox;
     FXTextField *m_sampling_start, *m_sampling_end, *m_sampling_step;
+    FXTextField *m_sampling_tol_textfield;
+    unsigned m_sampling_type;
 };
 
 #endif

@@ -33,15 +33,18 @@ public:
     }
 };
 
-class dst_source {
-    const disp_sample_table *m_dst;
+class sampled_dispersion_source {
+    const disp_t *m_disp;
 public:
     typedef double float_type;
 
-    dst_source(const disp_sample_table *d): m_dst(d) {}
-    int rows() const { return m_dst->len; }
+    sampled_dispersion_source(const disp_t *d): m_disp(d) {}
+    int rows() const { return disp_samples_number(m_disp); }
     void get_row(int i, double *w, double *n, double *k) const {
-        disp_sample_table_get_sample(m_dst, i, w, n, k);
+        *w = disp_sample_wavelength(m_disp, i);
+        const cmpl nk = n_value(m_disp, *w);
+        *n =  creal(nk);
+        *k = -cimag(nk);
     }
 };
 
