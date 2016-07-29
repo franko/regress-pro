@@ -106,14 +106,14 @@ long
 dispers_save_dialog::on_cmd_sampling_radio(FXObject *, FXSelector sel, void *)
 {
     unsigned bit = FXSELID(sel) == ID_SAMPLING_AUTO ? SAMPLING_AUTO : SAMPLING_UNIF;
-    m_sampling_type = (m_sampling_type & SAMPLING_AUTO_TYPE_MASK) | bit;
+    m_sampling_type = (m_sampling_type & SAMPLING_OPTIM_MASK) | bit;
     return 1;
 }
 
 long
 dispers_save_dialog::on_update_sampling(FXObject *sender, FXSelector sel, void *)
 {
-    FXuint msgid = (use_sampling() ? ID_ENABLE : ID_DISABLE);
+    FXuint msgid = (use_uniform_sampling() ? ID_ENABLE : ID_DISABLE);
     sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
     return 1;
 }
@@ -129,7 +129,7 @@ dispers_save_dialog::on_cmd_sampling_option(FXObject *sender, FXSelector sel, vo
 long
 dispers_save_dialog::on_upd_sampling_option(FXObject *sender, FXSelector sel, void *)
 {
-    unsigned bit = (m_sampling_type & SAMPLING_AUTO_TYPE_MASK);
+    unsigned bit = (m_sampling_type & SAMPLING_OPTIM_MASK);
     if (bit == SAMPLING_NATIVE) {
         m_sampling_listbox->setCurrentItem(0);
     } else {
@@ -144,8 +144,8 @@ long
 dispers_save_dialog::on_update_sampling_radio(FXObject *sender, FXSelector sel, void *)
 {
     FXuint msgid = (FXSELID(sel) == ID_SAMPLING_AUTO ?
-        (use_sampling() ? ID_UNCHECK : ID_CHECK) :
-        (use_sampling() ? ID_CHECK   : ID_UNCHECK));
+        (use_uniform_sampling() ? ID_UNCHECK : ID_CHECK) :
+        (use_uniform_sampling() ? ID_CHECK   : ID_UNCHECK));
     sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
 
     FXuint enable_msgid = (m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_NONE ? ID_DISABLE : ID_ENABLE;
@@ -200,14 +200,14 @@ dispers_save_dialog::save_dispersion()
         file_writer ostream;
         if (!ostream.open(filename.text())) return 1;
 
-        if (use_sampling()) {
+        if (use_uniform_sampling()) {
             double sstart, send, sstep;
             if (get_sampling_values(&sstart, &send, &sstep)) return 1;
             uniform_sampler usampler(sstart, send, sstep);
             disp_source<uniform_sampler> src(m_disp, &usampler);
             mat_table_write(disp_get_name(m_disp), &ostream, &src);
         } else {
-            if ((m_sampling_type & SAMPLING_AUTO_TYPE_MASK) == SAMPLING_NATIVE) {
+            if ((m_sampling_type & SAMPLING_OPTIM_MASK) == SAMPLING_NATIVE) {
                 sampled_dispersion_source src(m_disp);
                 mat_table_write(disp_get_name(m_disp), &ostream, &src);
             } else {
@@ -230,15 +230,10 @@ dispers_save_dialog::save_dispersion()
     return 0;
 }
 
-bool dispers_save_dialog::use_sampling() const
-{
-    return ((m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_UNIF);
-}
-
 long
 dispers_save_dialog::on_cmd_file_select(FXObject *, FXSelector, void *)
 {
-    if (use_sampling()) {
+    if (use_uniform_sampling()) {
         double a, b, c;
         if (get_sampling_values(&a, &b, &c)) {
             FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Invalid sampling specification.");

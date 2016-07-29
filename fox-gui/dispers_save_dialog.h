@@ -42,8 +42,8 @@ public:
         SAMPLING_AUTO   = 1 << 1,
         SAMPLING_UNIF   = 2 << 1,
 
-        SAMPLING_AUTO_TYPE_MASK = 1,
-        SAMPLING_TYPE_MASK      = 3 << 1,
+        SAMPLING_OPTIM_MASK = 1,
+        SAMPLING_TYPE_MASK  = 3 << 1,
     };
 
     enum {
@@ -62,7 +62,7 @@ public:
     };
 private:
     int get_sampling_values(double *sstart, double *send, double *sstep) const;
-    bool use_sampling() const;
+    bool use_uniform_sampling() const { return ((m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_UNIF); }
 
     const disp_t *m_disp;
     FXFileSelector *m_filebox;
