@@ -22,6 +22,18 @@ private:
     pod_array<double> m_array;
 };
 
+/* Provide accessors for elements from rc_matrix.
+   We assume that data are stored in column-major form. */
+class tab_matrix {
+public:
+    tab_matrix(const rc_matrix *m): m_matrix(m) { }
+
+    int size() const { return m_matrix->view.matrix.size2; }
+    double operator()(int i, int j) const { return m_matrix->view.matrix.data[j * m_matrix->view.matrix.tda + i]; }
+private:
+    const rc_matrix *m_matrix;
+};
+
 template <typename T>
 void insert_at(pod_vector<T>& vec, int index, const T value) {
     int required_capacity = vec.size() + 1;
@@ -111,7 +123,7 @@ std::pair<int, double> find_delta_optimal(const tab_matrix& ms, pod_vector<int>&
     tab_array<double, 3> table = get_array(ipoints, ms);
     cspline_array_interp interp(table);
 
-    for (int k = ka + 1; k < kb - 1; k++) {
+    for (int k = ka + 1; k <= kb - 1; k++) {
         table.row(0)[i] = ms(k, 0);
         table.row(1)[i] = ms(k, 1);
         table.row(2)[i] = ms(k, 2);
@@ -144,8 +156,8 @@ void add_new_point(const tab_matrix& ms, pod_vector<int>& ipoints, int i_nok) {
     }
 }
 
-pod_vector<int> optimize_sampling_points_tab(const rc_matrix* m, const double approx_tolerance) {
-    const tab_matrix ms(m);
+pod_vector<int> optimize_sampling_points(const disp_sample_table *disp, const double approx_tolerance) {
+    const tab_matrix ms(disp->table);
 
     pod_vector<int> ipoints(16);
     ipoints.push_back(0);
@@ -257,7 +269,8 @@ pod_vector<double> optimize_sampling_points_c(const disp_t *disp, const double a
     return sampling_points;
 }
 
-disp_t *dispersion_from_sampling_points(const tab_matrix& src, const pod_vector<int>& ipoints, const char *name) {
+disp_t *dispersion_from_sampling_points(const disp_sample_table *disp, const pod_vector<int>& ipoints, const char *name) {
+    const tab_matrix src(disp->table);
     disp_t *new_disp = disp_new(DISP_SAMPLE_TABLE);
     disp_set_name(new_disp, name);
     disp_sample_table * const st_disp = &new_disp->disp.sample_table;

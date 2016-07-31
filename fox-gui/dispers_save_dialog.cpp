@@ -213,14 +213,15 @@ dispers_save_dialog::save_dispersion()
             } else {
                 double tol;
                 textfield_get_double(m_sampling_tol_textfield, &tol);
-                auto wavelengths = optimize_sampling_points_c(m_disp, tol);
-                printf("OPTIMAL SAMPLING:\n");
-                for (auto wl : wavelengths) {
-                    cmpl nk = n_value(m_disp, wl);
-                    printf("%g %g %g\n", wl, creal(nk), -cimag(nk));
+                disp_t *disp_optim;
+                if (m_disp->type == DISP_SAMPLE_TABLE) {
+                    const disp_sample_table *disp_st = &m_disp->disp.sample_table;
+                    auto sampling_points = optimize_sampling_points(disp_st, tol);
+                    disp_optim = dispersion_from_sampling_points(disp_st, sampling_points, "");
+                } else {
+                    auto wavelengths = optimize_sampling_points_c(m_disp, tol);
+                    disp_optim = dispersion_from_sampling_points(m_disp, wavelengths, "");
                 }
-
-                disp_t *disp_optim = dispersion_from_sampling_points(m_disp, wavelengths, "");
                 sampled_dispersion_source src(disp_optim);
                 mat_table_write(disp_get_name(m_disp), &ostream, &src);
                 disp_free(disp_optim);
