@@ -252,6 +252,7 @@ disp_write(writer_t *w, const disp_t *d)
     if (lib_id) {
         return write_library_id(w, lib_id);
     }
+    disp_base_write(w, d->dclass->short_name, d);
     return d->dclass->write(w, d);
 }
 
@@ -265,8 +266,7 @@ disp_base_write(writer_t *w, const char *tag, const disp_t *d)
     writer_newline_enter(w);
     if (d->info && !str_is_null(d->info->description)) {
         str_ptr quoted_descr = writer_quote_string(CSTR(d->info->description));
-        writer_printf(w, "description");
-        writer_newline(w);
+        writer_printf(w, "description ");
         writer_printf(w, "%s", CSTR(quoted_descr));
         writer_newline(w);
         str_free(quoted_descr);
@@ -382,7 +382,7 @@ disp_set_info_wavelength(disp_t *d, double wavelength_start, double wavelength_e
 void
 disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wavelength_end, int *samples_number)
 {
-    if (d->info && d->info->wavelength_start != 0.0 && d->info->wavelength_end > d->info->wavelength_start) {
+    if (d->info && DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
         *wavelength_start = d->info->wavelength_start;
         *wavelength_end   = d->info->wavelength_end;
         *samples_number   = 512;

@@ -178,7 +178,7 @@ lookup_encode_param(str_t param, const fit_param_t *fp)
 int
 lookup_write(writer_t *w, const disp_t *_d) {
     const struct disp_lookup *d = & _d->disp.lookup;
-    writer_printf(w, "lookup \"%s\" %d %g", disp_get_name(_d), d->nb_comps, d->p);
+    writer_printf(w, "%d %g", d->nb_comps, d->p);
     writer_newline_enter(w);
     struct lookup_comp *comp = d->component;
     int i;

@@ -306,7 +306,6 @@ int
 ho_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_ho *d = &_d->disp.ho;
-    disp_base_write(w, "ho", _d);
     writer_printf(w, "%d", d->nb_hos);
     writer_newline(w);
     struct ho_params *ho = d->params;

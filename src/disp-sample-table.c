@@ -313,7 +313,7 @@ int
 disp_sample_table_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_sample_table *d = &_d->disp.sample_table;
-    writer_printf(w, "table \"%s\" %d", disp_get_name(_d), d->len);
+    writer_printf(w, "%d", d->len);
     writer_newline_enter(w);
     rc_matrix_write(w, d->table, RC_MATRIX_TRANSPOSED);
     writer_newline_exit(w);

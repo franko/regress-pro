@@ -195,7 +195,7 @@ int
 disp_table_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_table *d = &_d->disp.table;
-    writer_printf(w, "uniform-table \"%s\" %d", disp_get_name(_d), d->points_number);
+    writer_printf(w, "%d", d->points_number);
     writer_newline_enter(w);
     writer_printf(w, "%g %g %g", d->lambda_min, d->lambda_max, d->lambda_stride);
     writer_newline(w);
