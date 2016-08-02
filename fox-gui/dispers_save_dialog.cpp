@@ -61,6 +61,7 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     m_sampling_listbox = new FXListBox(autohbox, this, ID_SAMPLING_OPTION, FRAME_SUNKEN|LISTBOX_NORMAL);
     m_sampling_listbox->appendItem("Native", NULL, (void *) 0);
     m_sampling_listbox->appendItem("Optimize", NULL, (void *) 1);
+    m_sampling_listbox->setNumVisible(2);
     new FXLabel(autohbox, "tolerance");
     m_sampling_tol_textfield = new FXTextField(autohbox, 8, this, ID_SAMPLING_TOL, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     m_sampling_tol_textfield->setText("0.001");
