@@ -46,13 +46,13 @@ void fit_panel::config_spectral_range()
 {
     double wls, wle;
     m_fit->get_sampling(wls, wle);
-    m_wl_entry->setText(FXStringFormat("%g-%g", wls, wle));
+    m_wl_entry->setText(FXString::value("%g-%g", wls, wle));
     range_dirty = false;
 }
 
 void fit_panel::set_fit_result(const lmfit_result& result)
 {
-    m_result_label->setText(FXStringFormat("Chi Square: %10.4g   points: %4d   iterations: %4d   fit status: %s", result.chisq, result.nb_points, result.nb_iterations, lmfit_result_error_string(&result)));
+    m_result_label->setText(FXString::value("Chi Square: %10.4g   points: %4d   iterations: %4d   fit status: %s", result.chisq, result.nb_points, result.nb_iterations, lmfit_result_error_string(&result)));
 }
 
 void fit_panel::setup()
@@ -135,7 +135,7 @@ fit_panel::on_update_param(FXObject *_txt, FXSelector, void*)
     param_info* p = (param_info*) txt->getUserData();
     if(p->is_dirty) {
         unsigned k = this->get_parameter_index(p);
-        FXString s = FXStringFormat("%g", m_fit->get_parameter_value(k));
+        FXString s = FXString::value("%g", m_fit->get_parameter_value(k));
         txt->setText(s, false);
         p->is_dirty = false;
         return 1;
@@ -239,7 +239,7 @@ long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
 
         for(unsigned k = 0; k < m_parameters.size(); k++) {
             param_info& p = m_parameters[k];
-            FXString s = FXStringFormat("%g", m_fit->get_parameter_value(k));
+            FXString s = FXString::value("%g", m_fit->get_parameter_value(k));
             p.text_field->setText(s);
             p.is_dirty = true;
         }

@@ -15,8 +15,8 @@ ifeq ($(HOST_SYS),Windows)
   FOX_LIBS = -L$(FOX_HOME)/src -lfox
   FOX_INCLUDES = -I$(FOX_HOME)/include
 else
-  FOX_LIBS = $(shell fox-config --libs)
-  FOX_INCLUDES = $(shell fox-config --cflags)
+  FOX_LIBS = -L/home/francesco/src/fox-1.7.54/lib/.libs -lFOX-1.7 # $(shell fox-config --libs)
+  FOX_INCLUDES = -I/home/francesco/src/fox-1.7.54/include # $(shell fox-config --cflags)
 endif
 
 GSL_LIBS = -lgsl -lblas -lm

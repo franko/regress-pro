@@ -139,7 +139,7 @@ denormalize(int norm, int pow_exp, int& dot_pos)
         return FXString(buf);
     }
 
-    return FXStringFormat("%s.%.*d", buf, pow_exp, frac_part);
+    return FXString::value("%s.%.*d", buf, pow_exp, frac_part);
 }
 
 long fx_numeric_field::change_on_digit(int sign)
@@ -189,9 +189,9 @@ long fx_numeric_field::on_cmd_decrement(FXObject*, FXSelector, void*)
 }
 
 void fx_numeric_field::setNumber(double x) {
-    setText(FXStringFormat("%g", x));
+    setText(FXString::value("%g", x));
 }
 
 double fx_numeric_field::getNumber() const {
-    return FXDoubleVal(getText());
+    return getText().toDouble();
 }

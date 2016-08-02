@@ -59,7 +59,7 @@ sampling_win::on_cmd_accept(FXObject* sender,FXSelector sel,void*)
         if(npt > 8 && npt < 1024) {
             m_sampling->set(wls, wle, npt);
 
-            getApp()->stopModal(this, TRUE);
+            getApp()->stopModal(this, 1);
             hide();
         }
     }

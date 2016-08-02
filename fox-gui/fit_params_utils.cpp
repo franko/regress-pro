@@ -51,7 +51,7 @@ int listbox_select_parameter(FXListBox *listbox, int fp_index)
 {
     for (int j = 0; j < listbox->getNumItems(); j++) {
         if ((intptr_t)(listbox->getItemData(j)) - 1 == fp_index) {
-            listbox->setCurrentItem(j, TRUE);
+            listbox->setCurrentItem(j, true);
             return 1;
         }
     }

@@ -286,7 +286,7 @@ regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
 #ifdef GIT_BUILD
     str_printf(git_build, " git build %s", gitversion);
 #endif
-    new FXLabel(side,FXStringFormat("\nRegress Pro, version %d.%d.%d%s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,CSTR(git_build),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    new FXLabel(side,FXString::value("\nRegress Pro, version %d.%d.%d%s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,CSTR(git_build),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
     button->setFocus();
     str_free(git_build);
@@ -426,7 +426,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     text_fit_result.append(analysis.cstr());
 
     resulttext->setText(text_fit_result);
-    resulttext->setModified(TRUE);
+    resulttext->setModified(true);
 
     set_stack_result(stack_copy(fit->stack_list[0]));
     m_result_stack_match = true;
@@ -517,7 +517,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append(analysis.cstr());
 
     resulttext->setText(fitresult);
-    resulttext->setModified(TRUE);
+    resulttext->setModified(true);
 
     update_interactive_fit(fit, result);
     fit_engine_disable(fit);
