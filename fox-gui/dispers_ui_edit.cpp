@@ -63,7 +63,7 @@ void fx_disp_window::setup_name()
 
     FXHorizontalFrame *namehf = new FXHorizontalFrame(this, LAYOUT_FILL_X);
     new FXLabel(namehf, "Name ");
-    FXTextField *tf = new FXTextField(namehf, 24, this, ID_NAME, FRAME_SUNKEN);
+    FXTextField *tf = new FXTextField(namehf, 16, this, ID_NAME, FRAME_SUNKEN);
     tf->setText(disp_get_name(disp));
 
     if (!disp_is_tabular(disp)) {
