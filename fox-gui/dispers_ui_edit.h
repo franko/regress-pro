@@ -36,6 +36,7 @@ public:
     long on_update_range(FXObject*, FXSelector, void *);
     long on_changed_range(FXObject*, FXSelector, void *);
     long on_changed_description(FXObject*, FXSelector, void *);
+    long on_update_description(FXObject *, FXSelector, void *);
     long on_disp_element_add(FXObject*, FXSelector, void *);
     long on_disp_element_delete(FXObject*, FXSelector, void *);
 

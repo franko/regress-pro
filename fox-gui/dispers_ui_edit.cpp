@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "dispers_ui_edit.h"
 #include "disp-ho.h"
 #include "disp-fb.h"
@@ -11,6 +13,7 @@ FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_RANGE,               fx_disp_window::on_changed_range),
     FXMAPFUNC(SEL_CHANGED,  fx_disp_window::ID_DESCRIPTION,         fx_disp_window::on_changed_description),
     FXMAPFUNC(SEL_UPDATE,   fx_disp_window::ID_RANGE,               fx_disp_window::on_update_range),
+    FXMAPFUNC(SEL_UPDATE,   fx_disp_window::ID_DESCRIPTION,         fx_disp_window::on_update_description),
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DISP_ELEMENT_ADD,    fx_disp_window::on_disp_element_add),
     FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0,          fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
@@ -36,6 +39,14 @@ void fx_disp_window::reload()
     }
     this->setup();
     this->create();
+}
+
+static FXColor whiter(const FXColor c) {
+    auto mod = [] (FXuint a) { return a + (255 - a) / 3; };
+    FXuint r = FXREDVAL(c);
+    FXuint g = FXGREENVAL(c);
+    FXuint b = FXBLUEVAL(c);
+    return FXRGB(mod(r), mod(g), mod(b));
 }
 
 void fx_disp_window::setup_name()
@@ -70,13 +81,14 @@ void fx_disp_window::setup_name()
         range_end_textfield   = NULL;
     }
 
-    // FXGroupBox *text_frame = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|FRAME_NONE|LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0);
     description_textfield = new FXText(this, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
     description_textfield->setFont(&regressProApp()->lit_font);
     description_textfield->setText(CSTR(disp->info->description));
-    description_textfield->setVisibleRows(3);
+    const FXint nrows = description_textfield->getNumRows();
+    description_textfield->setVisibleRows(std::min(nrows,3));
     description_textfield->setVisibleColumns(60);
-    description_textfield->setBackColor(getBackColor());
+    const FXColor bgcol = getBackColor();
+    description_textfield->setBackColor(whiter(bgcol));
     description_textfield->setTipText("Description of the dispersion. Enter a new description or modify the content.");
 }
 
@@ -97,7 +109,21 @@ fx_disp_window::on_changed_description(FXObject *, FXSelector, void *)
     description_textfield->getText((FXchar *) disp->info->description->heap, length);
     disp->info->description->heap[length] = 0;
     disp->info->description->length = length;
+    this->handle(this, FXSEL(SEL_UPDATE, ID_DESCRIPTION), NULL);
     return 1;
+}
+
+long
+fx_disp_window::on_update_description(FXObject *, FXSelector, void *)
+{
+    FXint nrows = std::min(description_textfield->getNumRows(), 3);
+    FXint nvisi = std::min(description_textfield->getVisibleRows(), 3);
+    if (nrows != nvisi) {
+        description_textfield->setVisibleRows(nrows);
+        recalc();
+        return 1;
+    }
+    return 0;
 }
 
 long
