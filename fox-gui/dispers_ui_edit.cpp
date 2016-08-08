@@ -41,14 +41,6 @@ void fx_disp_window::reload()
     this->create();
 }
 
-static FXColor whiter(const FXColor c) {
-    auto mod = [] (FXuint a) { return a + (255 - a) / 3; };
-    FXuint r = FXREDVAL(c);
-    FXuint g = FXGREENVAL(c);
-    FXuint b = FXBLUEVAL(c);
-    return FXRGB(mod(r), mod(g), mod(b));
-}
-
 void fx_disp_window::setup_name()
 {
     regress_pro *app = (regress_pro *) getApp();
@@ -66,29 +58,31 @@ void fx_disp_window::setup_name()
     FXTextField *tf = new FXTextField(namehf, 16, this, ID_NAME, FRAME_SUNKEN);
     tf->setText(disp_get_name(disp));
 
-    if (!disp_is_tabular(disp)) {
-        FXHorizontalFrame *range_hf = namehf;
-        new FXLabel(range_hf, "Range ");
-        range_start_textfield = new fx_numeric_field(range_hf, 6, this, ID_RANGE, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-        range_end_textfield   = new fx_numeric_field(range_hf, 6, this, ID_RANGE,   FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
-        if (DISP_VALID_RANGE(disp->info->wavelength_start, disp->info->wavelength_end)) {
-            range_start_textfield->setNumber(disp->info->wavelength_start);
-            range_end_textfield  ->setNumber(disp->info->wavelength_end  );
-        }
-        set_range_color();
-    } else {
-        range_start_textfield = NULL;
-        range_end_textfield   = NULL;
+    FXHorizontalFrame *range_hf = namehf;
+    new FXLabel(range_hf, "Range ");
+    range_start_textfield = new fx_numeric_field(range_hf, 8, this, ID_RANGE, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    range_end_textfield   = new fx_numeric_field(range_hf, 8, this, ID_RANGE,   FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    double wavelength_start, wavelength_end;
+    int samples_number;
+    disp_get_wavelength_range(disp, &wavelength_start, &wavelength_end, &samples_number);
+    if (disp_is_tabular(disp) || DISP_VALID_RANGE(disp->info->wavelength_start, disp->info->wavelength_end)) {
+        range_start_textfield->setNumber(wavelength_start);
+        range_end_textfield->setNumber(wavelength_end);
+    }
+    set_range_color();
+    if (disp_is_tabular(disp)) {
+        range_start_textfield->disable();
+        range_end_textfield->disable();
     }
 
-    description_textfield = new FXText(this, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
+    auto descr_group = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|LAYOUT_FILL_X|FRAME_GROOVE);
+    description_textfield = new FXText(descr_group, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
     description_textfield->setFont(&regressProApp()->lit_font);
     description_textfield->setText(CSTR(disp->info->description));
     const FXint nrows = description_textfield->getNumRows();
     description_textfield->setVisibleRows(std::min(nrows,3));
     description_textfield->setVisibleColumns(60);
-    const FXColor bgcol = getBackColor();
-    description_textfield->setBackColor(whiter(bgcol));
+    description_textfield->setBackColor(FXRGB(255,255,240));
     description_textfield->setTipText("Description of the dispersion. Enter a new description or modify the content.");
 }
 
