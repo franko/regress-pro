@@ -2,6 +2,8 @@
 *.exe
 *.deb
 *~
+builds
+examples/stuff
 debian_build
 fox-gui/gitversion.cpp
 fox-gui/regress

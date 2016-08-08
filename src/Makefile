@@ -2,10 +2,10 @@
 include makeconfig
 include makesystem
 
-GSL_LIBS = -lgsl -lgslcblas -lm
-GSL_INCLUDES =
+GSL_LIBS = $(shell pkg-config --libs gsl)
+GSL_INCLUDES = $(shell pkg-config --cflags gsl)
 
-INCLUDES = $(GSL_INCLUDES)
+INCLUDES += $(GSL_INCLUDES)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
