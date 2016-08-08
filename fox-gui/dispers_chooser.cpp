@@ -141,7 +141,7 @@ fx_file_disp_selector::fx_file_disp_selector(FXWindow *chooser, FXComposite *p, 
     : fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
     m_chooser(chooser)
 {
-    m_combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
+    m_combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, LAYOUT_FIX_WIDTH|COMBOBOX_STATIC|FRAME_SUNKEN, 0, 0, 160, 0);
     int nb_loaded_disp = disp_list_length(files_list); // loaded_disp_list.number();
     m_combo->setNumVisible(nb_loaded_disp + 1);
     m_combo->appendItem("-- select a file");
