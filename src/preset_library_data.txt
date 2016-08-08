@@ -66,6 +66,7 @@ library-id "tin-ho-2"
   2.29427 1.55968 1.09569 0.333333 -6.99969
 library-id "copper-ho-1"
   ho "Copper HO"
+  description "S. Babar and J. H. Weaver\nAppl. Opt. 54, 477-481 (2015)\nHarmonic Oscillator model"
   range 190 1000
   5
   64.3688 0 0.224816 0 0.192398
@@ -75,6 +76,7 @@ library-id "copper-ho-1"
   5.01839 4.56509 1.08323 0 4.73722
 library-id "aluminium-ho-1"
 ho "Aluminium HO"
+  description "K. M. McPeak et al.\nACS Photonics 2, 326-333 (2015)\nHarmonic Oscillator model"
   range 190 1000
   3
   106.818 0 0.168007 0 0.0415207

@@ -166,7 +166,7 @@ lookup "Poly Lookup"
   1.4 library "silicon-1"
 library-id "copper-1"
 table "Copper"
-description "Based on Copper after CMP polishing\nSTMicroelectronics Crolles"
+description "Ellipsometry caracterization after CMP polishing\nNH3 surface treatment and dielectric deposition.\nSTMicroelectronics Crolles"
 44
 44 3
 190 0.999992 1.73575
@@ -215,7 +215,7 @@ description "Based on Copper after CMP polishing\nSTMicroelectronics Crolles"
 980 0.285194 7.25162
 library-id "copper-2"
 table "Copper Babar"
-description "S. Babar and J. H. Weaver. Optical constants of Cu, Ag, and Au revisited\nAppl. Opt. 54, 477-481 (2015)"
+description "S. Babar and J. H. Weaver\nOptical constants of Cu, Ag, and Au revisited\nAppl. Opt. 54, 477-481 (2015)"
 39
 39 3
 206.6 1.02  1.597
