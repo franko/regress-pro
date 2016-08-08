@@ -39,10 +39,8 @@ load_nk_table(const char * filename, str_ptr *error_msg)
         return NULL;
     }
 
-    if (disp->info) {
-        str_path_basename(disp->info->name, filename);
-        remove_filename_extension(disp->info->name);
-    }
+    str_path_basename(disp->info->name, filename);
+    remove_filename_extension(disp->info->name);
 
     return disp;
 }
@@ -136,15 +134,12 @@ disp_new(enum disp_type tp)
 disp_t *
 disp_new_with_name(enum disp_type tp, const char *name)
 {
+    assert(name != NULL);
     disp_t *d = emalloc(sizeof(disp_t));
     d->dclass = disp_class_lookup(tp);
     d->type = tp;
-    if(name) {
-        d->info = emalloc(sizeof(struct disp_info));
-        disp_info_init(d->info, name);
-    } else {
-        d->info = NULL;
-    }
+    d->info = emalloc(sizeof(struct disp_info));
+    disp_info_init(d->info, name);
     return d;
 }
 
@@ -153,10 +148,8 @@ disp_base_copy(const disp_t *src)
 {
     disp_t *res = emalloc(sizeof(disp_t));
     memcpy(res, src, sizeof(disp_t));
-    if (src->info) {
-        res->info = emalloc(sizeof(struct disp_info));
-        disp_info_copy(res->info, src->info);
-    }
+    res->info = emalloc(sizeof(struct disp_info));
+    disp_info_copy(res->info, src->info);
     return res;
 }
 
@@ -264,7 +257,7 @@ disp_base_write(writer_t *w, const char *tag, const disp_t *d)
     str_free(quoted_name);
     free(quoted_name);
     writer_newline_enter(w);
-    if (d->info && !str_is_null(d->info->description)) {
+    if (!str_is_null(d->info->description)) {
         str_ptr quoted_descr = writer_quote_string(CSTR(d->info->description));
         writer_printf(w, "description ");
         writer_printf(w, "%s", CSTR(quoted_descr));
@@ -272,7 +265,7 @@ disp_base_write(writer_t *w, const char *tag, const disp_t *d)
         str_free(quoted_descr);
         free(quoted_descr);
     }
-    if (d->info && DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
+    if (DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
         writer_printf(w, "range %g %g", d->info->wavelength_start, d->info->wavelength_end);
         writer_newline(w);
     }
@@ -352,29 +345,18 @@ disp_is_tabular(const disp_t *d)
 const char *
 disp_get_name(const disp_t *d)
 {
-    return d->info ? CSTR(d->info->name) : "";
-}
-
-static void
-ensure_disp_info(disp_t *d)
-{
-    if (!d->info) {
-        d->info = emalloc(sizeof(struct disp_info));
-        disp_info_init(d->info, "undefined");
-    }
+    return CSTR(d->info->name);
 }
 
 void
 disp_set_name(disp_t *d, const char *name)
 {
-    ensure_disp_info(d);
     str_copy_c(d->info->name, name);
 }
 
 void
 disp_set_info_wavelength(disp_t *d, double wavelength_start, double wavelength_end)
 {
-    ensure_disp_info(d);
     d->info->wavelength_start = wavelength_start;
     d->info->wavelength_end   = wavelength_end;
 }
@@ -382,7 +364,7 @@ disp_set_info_wavelength(disp_t *d, double wavelength_start, double wavelength_e
 void
 disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wavelength_end, int *samples_number)
 {
-    if (d->info && DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
+    if (DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
         *wavelength_start = d->info->wavelength_start;
         *wavelength_end   = d->info->wavelength_end;
         *samples_number   = 512;
@@ -401,8 +383,6 @@ disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wav
 void
 disp_copy_info(disp_t *src, const disp_t *dst)
 {
-    if (!dst->info) return;
-    ensure_disp_info(src);
     str_copy(src->info->name, dst->info->name);
     if (!str_is_null(dst->info->description)) {
         str_copy(src->info->description, dst->info->description);
