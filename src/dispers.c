@@ -15,7 +15,7 @@
 
 static void disp_info_init(struct disp_info *info, const char *name);
 static void disp_info_free(struct disp_info *info);
-static void disp_info_copy(struct disp_info *src, struct disp_info *dst);
+static void disp_info_init_and_copy(struct disp_info *src, struct disp_info *dst);
 
 static void
 remove_filename_extension(str_t name)
@@ -149,7 +149,7 @@ disp_base_copy(const disp_t *src)
     disp_t *res = emalloc(sizeof(disp_t));
     memcpy(res, src, sizeof(disp_t));
     res->info = emalloc(sizeof(struct disp_info));
-    disp_info_copy(res->info, src->info);
+    disp_info_init_and_copy(res->info, src->info);
     return res;
 }
 
@@ -310,6 +310,7 @@ disp_read_header(lexer_t *l)
         new_disp->info->wavelength_start = wavelength_start;
         new_disp->info->wavelength_end   = wavelength_end;
     }
+    new_disp->info->modifications_stamp = NULL;
 read_exit_2:
     if (description) {
         str_free(description);
@@ -381,23 +382,11 @@ disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wav
 }
 
 void
-disp_copy_info(disp_t *src, const disp_t *dst)
-{
-    str_copy(src->info->name, dst->info->name);
-    if (!str_is_null(dst->info->description)) {
-        str_copy(src->info->description, dst->info->description);
-    }
-    if (dst->info->wavelength_start > 0.0 && dst->info->wavelength_end > dst->info->wavelength_start) {
-        src->info->wavelength_start = dst->info->wavelength_start;
-        src->info->wavelength_end   = dst->info->wavelength_end;
-    }
-}
-
-void
 disp_info_init(struct disp_info *info, const char *name)
 {
     str_init_from_c(info->name, name);
     str_init(info->description, 15);
+    info->modifications_stamp = NULL;
     info->wavelength_start = 0.0;
     info->wavelength_end   = 0.0;
 }
@@ -407,13 +396,57 @@ disp_info_free(struct disp_info *info)
 {
     str_free(info->name);
     str_free(info->description);
+    if (info->modifications_stamp) {
+        str_free(info->modifications_stamp);
+        free(info->modifications_stamp);
+    }
+}
+
+static void disp_info_clear_modifications(struct disp_info *info) {
+    if (info->modifications_stamp) {
+        str_free(info->modifications_stamp);
+        free(info->modifications_stamp);
+    }
+    info->modifications_stamp = NULL;
+}
+
+void
+disp_info_init_and_copy(struct disp_info *src, struct disp_info *dst)
+{
+    str_init_from_str(src->name, dst->name);
+    str_init_from_str(src->description, dst->description);
+    if (dst->modifications_stamp) {
+        src->modifications_stamp = str_new();
+        str_copy(src->modifications_stamp, dst->modifications_stamp);
+    } else {
+        src->modifications_stamp = NULL;
+    }
+    src->wavelength_start = dst->wavelength_start;
+    src->wavelength_end   = dst->wavelength_end;
 }
 
 void
 disp_info_copy(struct disp_info *src, struct disp_info *dst)
 {
-    str_init_from_str(src->name, dst->name);
-    str_init_from_str(src->description, dst->description);
+    str_copy(src->name, dst->name);
+    str_copy(src->description, dst->description);
+    if (dst->modifications_stamp) {
+        if (!src->modifications_stamp) {
+            src->modifications_stamp = str_new();
+        }
+        str_copy(src->modifications_stamp, dst->modifications_stamp);
+    } else {
+        disp_info_clear_modifications(src);
+    }
     src->wavelength_start = dst->wavelength_start;
     src->wavelength_end   = dst->wavelength_end;
+}
+
+void
+disp_set_modifications_flag(const disp_t *d, const char *text)
+{
+    if (!d->info->modifications_stamp) {
+        d->info->modifications_stamp = str_new();
+    }
+    str_copy_c(d->info->modifications_stamp, text);
 }

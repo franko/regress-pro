@@ -5,3 +5,5 @@ extern const unsigned char delete_gif[];
 
 /* created by reswrap from file new.gif */
 extern const unsigned char new_gif[];
+
+extern const unsigned char broom_gif[];

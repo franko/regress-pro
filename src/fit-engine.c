@@ -27,7 +27,7 @@
 #include "elliss.h"
 #include "error-messages.h"
 #include "minsampling.h"
-
+#include "fit-timestamp.h"
 
 static void build_fit_engine_cache(struct fit_engine *f);
 
@@ -211,6 +211,10 @@ fit_engine_update_disp_info(struct fit_engine *fit)
             const fit_param_t *fp = &fit->parameters->values[j];
             if (fp->id == PID_LAYER_N && fp->layer_nb == i) {
                 disp_set_info_wavelength(d, wavelength_start, wavelength_end);
+                char buffer[128];
+                if (fit_timestamp(128, buffer) != 0) {
+                    disp_set_modifications_flag(d, buffer);
+                }
                 break;
             }
         }
@@ -221,7 +225,7 @@ void
 fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src)
 {
     for (int i = 0; i < dst->stack->nb; i++) {
-        disp_copy_info(dst->stack->disp[i], src->stack->disp[i]);
+        disp_info_copy(dst->stack->disp[i]->info, src->stack->disp[i]->info);
     }
 }
 

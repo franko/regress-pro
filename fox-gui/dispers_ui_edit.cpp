@@ -17,6 +17,7 @@ FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DISP_ELEMENT_ADD,    fx_disp_window::on_disp_element_add),
     FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0,          fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
+    FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_CLEAR_FLAG,          fx_disp_window::on_cmd_clear_flag),
 };
 
 FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
@@ -75,7 +76,7 @@ void fx_disp_window::setup_name()
         range_end_textfield->disable();
     }
 
-    auto descr_group = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|LAYOUT_FILL_X|FRAME_GROOVE);
+    auto descr_group = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|LAYOUT_FILL_X|FRAME_GROOVE, 0, 0, 0, 0, 0, 0, DEFAULT_PAD, 0);
     description_textfield = new FXText(descr_group, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
     description_textfield->setFont(&regressProApp()->lit_font);
     description_textfield->setText(CSTR(disp->info->description));
@@ -84,6 +85,14 @@ void fx_disp_window::setup_name()
     description_textfield->setVisibleColumns(60);
     description_textfield->setBackColor(FXRGB(255,255,240));
     description_textfield->setTipText("Description of the dispersion. Enter a new description or modify the content.");
+
+    if (disp->info->modifications_stamp) {
+        m_message_frame = new FXHorizontalFrame(descr_group, LAYOUT_FILL_X | FRAME_NONE, 0, 0, 0, 0, 0, 0, 0, 0);
+        new FXButton(m_message_frame, "", app->broom_icon, this, ID_CLEAR_FLAG, BUTTON_TOOLBAR, 0, 0, 0, 0, 0, 0, 0, 0);
+        auto label = new FXLabel(m_message_frame, CSTR(disp->info->modifications_stamp), NULL, LABEL_NORMAL);
+        label->setFont(&app->small_font);
+        label->setTextColor(app->blue_highlight);
+    }
 }
 
 long
@@ -548,4 +557,17 @@ void fx_disp_table_window::setup_dialog()
         m_table->setItemText(i, 1, FXStringFormat("%g", n));
         m_table->setItemText(i, 2, FXStringFormat("%g", k));
     }
+}
+
+long
+fx_disp_window::on_cmd_clear_flag(FXObject*, FXSelector, void *data)
+{
+    if (disp->info->modifications_stamp) {
+        str_free(disp->info->modifications_stamp);
+        free(disp->info->modifications_stamp);
+        disp->info->modifications_stamp = NULL;
+    }
+    delete m_message_frame;
+    recalc();
+    return 1;
 }

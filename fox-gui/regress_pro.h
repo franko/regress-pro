@@ -28,7 +28,7 @@ public:
     FXFont monospace_font;
     FXFont big_web_font;
     FXColor blue_web, blue_highlight, red_warning, black;
-    FXIcon *delete_icon, *add_icon;
+    FXIcon *delete_icon, *add_icon, *broom_icon;
     FXString spectra_dir, recipe_dir, disp_dir;
 };
 

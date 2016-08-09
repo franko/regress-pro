@@ -39,6 +39,7 @@ public:
     long on_update_description(FXObject *, FXSelector, void *);
     long on_disp_element_add(FXObject*, FXSelector, void *);
     long on_disp_element_delete(FXObject*, FXSelector, void *);
+    long on_cmd_clear_flag(FXObject*, FXSelector, void *);
 
     enum {
         ID_NAME = FXVerticalFrame::ID_LAST,
@@ -49,6 +50,7 @@ public:
         ID_DISP_ELEMENT_DELETE,
         ID_DISP_ELEMENT_DELETE_LAST = ID_DISP_ELEMENT_DELETE + 16,
         ID_DISP_ELEMENT_ADD,
+        ID_CLEAR_FLAG,
         ID_LAST
     };
 
@@ -57,6 +59,7 @@ private:
     void set_range_color();
     fx_numeric_field *range_start_textfield, *range_end_textfield;
     FXText *description_textfield;
+    FXHorizontalFrame *m_message_frame;
 protected:
     // This is just a reference. The class is not owner of this object.
     disp_t *disp;

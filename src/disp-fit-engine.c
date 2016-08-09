@@ -8,6 +8,7 @@
 #include "lmfit.h"
 #include "vector_print.h"
 #include "str.h"
+#include "fit-timestamp.h"
 
 static int disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
                         gsl_matrix * jacob);
@@ -76,6 +77,10 @@ update_disp_info(struct disp_fit_engine *fit)
     double wavelength_start = gsl_vector_get(fit->wl, 0);
     double wavelength_end   = gsl_vector_get(fit->wl, fit->wl->size - 1);
     disp_set_info_wavelength(fit->model_disp, wavelength_start, wavelength_end);
+    char buffer[128];
+    if (fit_timestamp(128, buffer) != 0) {
+        disp_set_modifications_flag(fit->model_disp, buffer);
+    }
 }
 
 int

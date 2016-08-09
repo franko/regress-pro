@@ -58,6 +58,7 @@ struct deriv_info {
 struct disp_info {
     str_t name;
     str_t description;
+    str_ptr modifications_stamp;
     float wavelength_start, wavelength_end;
 };
 
@@ -106,7 +107,6 @@ extern const char *
 extern int      disp_integrity_check(disp_t *d);
 extern int      disp_check_fit_param(disp_t *d, fit_param_t *fp);
 extern void     disp_set_info_wavelength(disp_t *d, double wavelength_start, double wavelength_end);
-extern void     disp_copy_info(disp_t *src, const disp_t *dst);
 extern void     disp_get_wavelength_range(const disp_t *d, double *wavelength_start, double *wavelength_end, int *samples_number);
 extern disp_t * disp_base_copy(const disp_t *src);
 extern void     disp_base_free(disp_t *d);
@@ -115,8 +115,10 @@ extern int      disp_base_write(writer_t *w, const char *tag, const disp_t *d);
 extern int      disp_is_tabular(const disp_t *d);
 extern int      disp_samples_number(const disp_t *d);
 extern double   disp_sample_wavelength(const disp_t *d, int index);
+extern void     disp_set_modifications_flag(const disp_t *d, const char *text);
 extern int      disp_write(writer_t *w, const disp_t *_d);
 extern disp_t * disp_read(lexer_t *l);
+extern void     disp_info_copy(struct disp_info *src, struct disp_info *dst);;
 
 // Validity condition for a wavelength range store in disp_info.
 #define DISP_VALID_RANGE(wl1, wl2) ((wl1) > 0.0 && (wl2) > (wl1))

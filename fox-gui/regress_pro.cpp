@@ -27,10 +27,12 @@ regress_pro::regress_pro() :
 {
     delete_icon = new FXGIFIcon(this, delete_gif);
     add_icon = new FXGIFIcon(this, new_gif);
+    broom_icon = new FXGIFIcon(this, broom_gif);
 }
 
 regress_pro::~regress_pro()
 {
 	delete delete_icon;
 	delete add_icon;
+    delete broom_icon;
 }
