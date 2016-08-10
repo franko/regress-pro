@@ -83,10 +83,10 @@ writer_save_tofile(writer_t *w, const char *filename)
     return 1;
 }
 
-str_ptr
-writer_quote_string(const char *s)
+void
+writer_quote_string(str_ptr quoted, const char *s)
 {
-    str_ptr quoted = str_new();
+    str_trunc(quoted, 0);
     str_append_char(quoted, '"');
     for (int i = 0; s[i] != 0; i++) {
         if (s[i] == '"') {
@@ -99,5 +99,11 @@ writer_quote_string(const char *s)
         }
     }
     str_append_char(quoted, '"');
-    return quoted;
+}
+
+void
+writer_put_string(writer_t *w, const char *s)
+{
+    begin_write(w);
+    str_append_c(w->text, s, 0);
 }

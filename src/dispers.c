@@ -252,23 +252,28 @@ disp_write(writer_t *w, const disp_t *d)
 int
 disp_base_write(writer_t *w, const char *tag, const disp_t *d)
 {
-    str_ptr quoted_name = writer_quote_string(disp_get_name(d));
-    writer_printf(w, "%s %s", tag, CSTR(quoted_name));
-    str_free(quoted_name);
-    free(quoted_name);
+    str_t quoted;
+    str_init(quoted, 127);
+    writer_quote_string(quoted, disp_get_name(d));
+    writer_printf(w, "%s %s", tag, CSTR(quoted));
     writer_newline_enter(w);
     if (!str_is_null(d->info->description)) {
-        str_ptr quoted_descr = writer_quote_string(CSTR(d->info->description));
-        writer_printf(w, "description ");
-        writer_printf(w, "%s", CSTR(quoted_descr));
+        writer_quote_string(quoted, CSTR(d->info->description));
+        writer_put_string(w, "description ");
+        writer_put_string(w, CSTR(quoted));
         writer_newline(w);
-        str_free(quoted_descr);
-        free(quoted_descr);
+    }
+    if (d->info->modifications_stamp) {
+        writer_quote_string(quoted, CSTR(d->info->modifications_stamp));
+        writer_put_string(w, "annotation ");
+        writer_put_string(w, CSTR(quoted));
+        writer_newline(w);
     }
     if (DISP_VALID_RANGE(d->info->wavelength_start, d->info->wavelength_end)) {
         writer_printf(w, "range %g %g", d->info->wavelength_start, d->info->wavelength_end);
         writer_newline(w);
     }
+    str_free(quoted);
     return 0;
 }
 
@@ -297,20 +302,35 @@ disp_read_header(lexer_t *l)
         description = str_new();
         str_copy(description, l->store);
     }
+    str_ptr modifications_stamp = NULL;
+    if (lexer_check_ident(l, "annotation") == 0) {
+        if (lexer_string(l)) goto read_exit_2;
+        modifications_stamp = str_new();
+        str_copy(modifications_stamp, l->store);
+    }
     double wavelength_start = 0.0, wavelength_end = 0.0;
     if (lexer_check_ident(l, "range") == 0) {
-        if (lexer_number(l, &wavelength_start)) goto read_exit_2;
-        if (lexer_number(l, &wavelength_end  )) goto read_exit_2;
+        if (lexer_number(l, &wavelength_start)) goto read_exit_3;
+        if (lexer_number(l, &wavelength_end  )) goto read_exit_3;
     }
     new_disp = disp_new_with_name(dclass->disp_class_id, CSTR(name));
     if (description) {
         str_copy(new_disp->info->description, description);
     }
+    assert(new_disp->info->modifications_stamp == NULL);
+    if (modifications_stamp) {
+        new_disp->info->modifications_stamp = modifications_stamp;
+        modifications_stamp = NULL;
+    }
     if (DISP_VALID_RANGE(wavelength_start, wavelength_end)) {
         new_disp->info->wavelength_start = wavelength_start;
         new_disp->info->wavelength_end   = wavelength_end;
     }
-    new_disp->info->modifications_stamp = NULL;
+read_exit_3:
+    if (modifications_stamp) {
+        str_free(modifications_stamp);
+        free(modifications_stamp);
+    }
 read_exit_2:
     if (description) {
         str_free(description);
