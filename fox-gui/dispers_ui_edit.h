@@ -137,7 +137,6 @@ public:
 
     virtual void create();
 
-    virtual void setup_dialog();
     virtual void add_dispersion_element();
     virtual double *map_parameter(int index);
 
@@ -162,15 +161,35 @@ public:
         ID_LAST
     };
 
-private:
-    void add_matrix_component(int index, bool create = false);
+protected:
+    void add_matrix_component(int index, FXuint sel_id, bool use_textfield, bool create = false);
+    virtual FXuint get_param_id(int index) { return 0; }
 
-    FXFont *small_font;
     FXMatrix *matrix;
     FXVerticalFrame *vframe;
+
+    disp_components *m_components;
+private:
+
+    FXFont *small_font;
     FXMenuPane *popupmenu;
     int selected_component;
-    disp_components *m_components;
+};
+
+class fx_lookup_window : public fx_components_window {
+public:
+    fx_lookup_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    void setup_dialog() override;
+protected:
+    FXuint get_param_id(int index) override;
+};
+
+class fx_bruggeman_window : public fx_components_window {
+public:
+    fx_bruggeman_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    void setup_dialog() override;
+protected:
+    FXuint get_param_id(int index) override;
 };
 
 struct table_nk_iterator {

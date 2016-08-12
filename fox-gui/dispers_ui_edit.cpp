@@ -7,6 +7,7 @@
 #include "dispers-library.h"
 #include "regress_pro.h"
 #include "disp-lookup-components.h"
+#include "disp-bruggeman-components.h"
 
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
@@ -339,8 +340,9 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
     } else if (d->type == DISP_CAUCHY) {
         dispwin = new fx_disp_cauchy_window(d, comp, opts);
     } else if (d->type == DISP_LOOKUP) {
-        auto components = new disp_lookup_components(d);
-        dispwin = new fx_components_window(d, components, comp, opts);
+        dispwin = new fx_lookup_window(d, comp, opts);
+    } else if (d->type == DISP_BRUGGEMAN) {
+        dispwin = new fx_bruggeman_window(d, comp, opts);
     } else if (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE) {
         dispwin = new fx_disp_table_window(d, comp, opts);
     } else if (d->type == DISP_FB) {
@@ -403,45 +405,23 @@ void fx_components_window::create()
     popupmenu->create();
 }
 
-void fx_components_window::add_matrix_component(int index, bool create)
-{
+void fx_components_window::add_matrix_component(int index, FXuint sel_id, bool use_textfield, bool create) {
     FXString istr;
     istr.format("%d", index + 1);
     FXButton *db = new FXButton(matrix, istr, NULL, this, ID_MENU_COMPONENT + index, FRAME_SUNKEN);
     FXTextField *tf1 = new FXTextField(matrix, 24, this, ID_COMPONENT_NAME + index, FRAME_SUNKEN);
     tf1->setText(disp_get_name(m_components->disp(index)));
-    FXTextField *tf2 = create_textfield(matrix, this, ID_PARAM_0 + 1 + index);
+    FXWindow *tf2;
+    if (use_textfield) {
+        tf2 = create_textfield(matrix, this, sel_id);
+    } else {
+        tf2 = new FXLabel(matrix, "", NULL);
+    }
     if (create) {
         db->create();
         tf1->create();
         tf2->create();
     }
-}
-
-void fx_components_window::setup_dialog()
-{
-    regress_pro *app = regressProApp();
-
-    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-
-    FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
-    new FXLabel(thf, "P");
-    create_textfield(thf, this, ID_PARAM_0);
-
-    matrix = new FXMatrix(vframe, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
-    new FXLabel(matrix, "");
-    FXLabel *h1 = new FXLabel(matrix, "-- Dispersion --");
-    h1->setFont(&app->small_font);
-    h1->setTextColor(app->blue_highlight);
-    FXLabel *h2 = new FXLabel(matrix, "-- P --");
-    h2->setFont(&app->small_font);
-    h2->setTextColor(app->blue_highlight);
-
-    for (int i = 0; i < m_components->length(); i++) {
-        add_matrix_component(i);
-    }
-    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 void fx_components_window::add_dispersion_element()
@@ -450,7 +430,7 @@ void fx_components_window::add_dispersion_element()
     if (!comp) return;
     int index_append = m_components->length();
     m_components->insert(index_append, comp);
-    add_matrix_component(index_append, true);
+    add_matrix_component(index_append, get_param_id(index_append), true, true);
     vframe->recalc();
 }
 
@@ -521,6 +501,66 @@ fx_components_window::on_button_menu_component(FXObject*sender, FXSelector sel, 
         getApp()->runModalWhileShown(popupmenu);
     }
     return 1;
+}
+
+fx_lookup_window::fx_lookup_window(disp_t *d, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+: fx_components_window(d, new disp_lookup_components(d), p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+{ }
+
+FXuint fx_lookup_window::get_param_id(int index) { return ID_PARAM_0 + 1 + index; }
+
+void fx_lookup_window::setup_dialog()
+{
+    regress_pro *app = regressProApp();
+
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
+    new FXLabel(thf, "P");
+    create_textfield(thf, this, ID_PARAM_0);
+
+    matrix = new FXMatrix(vframe, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    new FXLabel(matrix, "");
+    FXLabel *h1 = new FXLabel(matrix, "-- Dispersion --");
+    h1->setFont(&app->small_font);
+    h1->setTextColor(app->blue_highlight);
+    FXLabel *h2 = new FXLabel(matrix, "-- P --");
+    h2->setFont(&app->small_font);
+    h2->setTextColor(app->blue_highlight);
+
+    for (int i = 0; i < m_components->length(); i++) {
+        add_matrix_component(i, get_param_id(i), true);
+    }
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+}
+
+fx_bruggeman_window::fx_bruggeman_window(disp_t *d, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+: fx_components_window(d, new disp_bruggeman_components(d), p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+{ }
+
+FXuint fx_bruggeman_window::get_param_id(int index) { return ID_PARAM_0 + index - 1; }
+
+void fx_bruggeman_window::setup_dialog()
+{
+    regress_pro *app = regressProApp();
+
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    matrix = new FXMatrix(vframe, 3, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    new FXLabel(matrix, "");
+    FXLabel *h1 = new FXLabel(matrix, "-- Dispersion --");
+    h1->setFont(&app->small_font);
+    h1->setTextColor(app->blue_highlight);
+    FXLabel *h2 = new FXLabel(matrix, "-- Fraction --");
+    h2->setFont(&app->small_font);
+    h2->setTextColor(app->blue_highlight);
+
+    for (int i = 0; i < m_components->length(); i++) {
+        add_matrix_component(i, get_param_id(i), i > 0);
+    }
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
 void fx_disp_table_window::setup_dialog()

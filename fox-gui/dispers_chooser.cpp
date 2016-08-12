@@ -61,13 +61,14 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 {
     new FXLabel(this, "New Model");
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
-    combo->setNumVisible(6);
+    combo->setNumVisible(7);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy");
     combo->appendItem("Lookup");
     combo->appendItem("Forouhi-Bloomer");
     combo->appendItem("Tauc-Lorentz");
+    combo->appendItem("Bruggeman");
 }
 
 disp_t *
@@ -92,6 +93,12 @@ fx_newmodel_selector::get_dispersion()
     } else if (name == "Tauc-Lorentz") {
         struct fb_osc osc0 = {190, 3.5, 2};
         return disp_new_tauc_lorentz("* TL", TAUC_LORENTZ_STANDARD, 1, 1.0, 1.5, &osc0);
+    } else if (name == "Bruggeman") {
+        disp_t *comp1 = lib_disp_table_get("sio2");
+        struct bema_component components[1];
+        components[0].fraction = 0.5;
+        components[0].disp = lib_disp_table_get("nitride-2");
+        return bruggeman_new("* bruggeman", comp1, 1, components);
     }
     return NULL;
 }

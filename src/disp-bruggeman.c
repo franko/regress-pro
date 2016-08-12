@@ -340,3 +340,23 @@ read_exit_clean:
     free(components);
     return 1;
 }
+
+void
+bruggeman_add_comp(disp_t *disp, int index, disp_t *new_comp) {
+    struct disp_bruggeman *d = &disp->disp.bruggeman;
+    const int n = d->components_number;
+    struct bema_component *new_components = malloc(sizeof(struct bema_component) * (n + 1));
+    memcpy(new_components, d->components, sizeof(struct bema_component) * index);
+    memcpy(new_components + index + 1, d->components + index, sizeof(struct bema_component) * (n - index));
+    d->components = new_components;
+    d->components[index].fraction = 0.0;
+    d->components[index].disp = new_comp;
+    d->components_number ++;
+}
+
+void bruggeman_delete_comp(disp_t *disp, int index) {
+    struct disp_bruggeman *d = &disp->disp.bruggeman;
+    const int n = d->components_number;
+    memmove(d->components + index, d->components + index + 1, (n - index - 1) * sizeof(struct bema_component));
+    d->components_number --;
+}

@@ -21,6 +21,8 @@ struct disp_bruggeman {
 extern struct disp_class bruggeman_disp_class;
 
 extern struct disp_struct *bruggeman_new(const char *name, struct disp_struct *disp_base, int components_number, struct bema_component *components);
+extern void bruggeman_add_comp(struct disp_struct *disp, int i, struct disp_struct *new_comp);
+extern void bruggeman_delete_comp(struct disp_struct *disp, int index);
 
 __END_DECLS
 
