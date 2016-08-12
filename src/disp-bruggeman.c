@@ -1,6 +1,10 @@
 
 #include <assert.h>
 #include <string.h>
+
+// DEBUG ONLY
+#include <gsl/gsl_deriv.h>
+
 #include "dispers.h"
 #include "cmpl.h"
 
@@ -112,20 +116,58 @@ bruggeman_debug_verif(const struct disp_bruggeman *d, const cmpl eps, double lam
     return sum;
 }
 
+struct deriv_eval_params {
+    const disp_t *disp;
+    double wavelength;
+    int i;
+};
+
+double eval_real(double x, void *_p) {
+    struct deriv_eval_params *p = _p;
+    const struct disp_bruggeman *bema = &p->disp->disp.bruggeman;
+    bema->components[p->i].fraction = x;
+    const cmpl n = bruggeman_n_value_deriv(p->disp, p->wavelength, NULL);
+    return creal(n);
+}
+
+double eval_imag(double x, void *_p) {
+    struct deriv_eval_params *p = _p;
+    const struct disp_bruggeman *bema = &p->disp->disp.bruggeman;
+    bema->components[p->i].fraction = x;
+    const cmpl n = bruggeman_n_value_deriv(p->disp, p->wavelength, NULL);
+    return cimag(n);
+}
+
 static void
 bruggeman_debug_verif_deriv(const disp_t *disp, double lam, int *VERIF_DEBUG) {
     *VERIF_DEBUG = 0;
     const struct disp_bruggeman *bema = &disp->disp.bruggeman;
     cmpl_vector *v_test = cmpl_vector_alloc(bema->components_number);
     cmpl_vector *v_num  = cmpl_vector_alloc(bema->components_number);
-    const cmpl n0 = bruggeman_n_value_deriv(disp, lam, v_test);
+    bruggeman_n_value_deriv(disp, lam, v_test);
+
+    struct deriv_eval_params deriv_params[1] = {{disp, lam, 0}};
+    gsl_function F_re, F_im;
+    F_re.function = &eval_real;
+    F_re.params = deriv_params;
+    F_im.function = &eval_imag;
+    F_im.params = deriv_params;
+
     for (int i = 0; i < bema->components_number; i++) {
         const double f0 = bema->components[i].fraction;
-        const double df = 0.005;
-        bema->components[i].fraction = f0 + df;
-        cmpl n1 = bruggeman_n_value_deriv(disp, lam, NULL);
+
+        deriv_params->i = i;
+
+        double h = 1e-4;
+        double abserr;
+        double deriv_re, deriv_im;
+        gsl_deriv_central(&F_re, f0, h, &deriv_re, &abserr);
         bema->components[i].fraction = f0;
-        cmpl_vector_set(v_num, i, (n1 - n0) / df);
+
+        gsl_deriv_central(&F_im, f0, h, &deriv_im, &abserr);
+        bema->components[i].fraction = f0;
+
+        cmpl_vector_set(v_num, i, deriv_re + I * deriv_im);
     }
     for (int i = 0; i < bema->components_number; i++) {
         const cmpl d_test = cmpl_vector_get(v_test, i);
