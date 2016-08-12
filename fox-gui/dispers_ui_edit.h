@@ -5,6 +5,7 @@
 
 #include "dispers.h"
 #include "fx_numeric_field.h"
+#include "disp-components.h"
 
 class regress_pro;
 
@@ -121,18 +122,18 @@ public:
     virtual void setup_dialog();
 };
 
-class fx_disp_lookup_window : public fx_disp_window {
-    FXDECLARE(fx_disp_lookup_window)
+class fx_components_window : public fx_disp_window {
+    FXDECLARE(fx_components_window)
 
 protected:
-    fx_disp_lookup_window() {};
+    fx_components_window() {};
 private:
-    fx_disp_lookup_window(const fx_disp_lookup_window&);
-    fx_disp_lookup_window &operator=(const fx_disp_lookup_window&);
+    fx_components_window(const fx_components_window&);
+    fx_components_window &operator=(const fx_components_window&);
 
 public:
-    fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
-    virtual ~fx_disp_lookup_window();
+    fx_components_window(disp_t *d, disp_components *comps, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    virtual ~fx_components_window();
 
     virtual void create();
 
@@ -169,6 +170,7 @@ private:
     FXVerticalFrame *vframe;
     FXMenuPane *popupmenu;
     int selected_component;
+    disp_components *m_components;
 };
 
 struct table_nk_iterator {

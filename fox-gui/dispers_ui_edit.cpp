@@ -6,6 +6,7 @@
 #include "dispers_ui_utils.h"
 #include "dispers-library.h"
 #include "regress_pro.h"
+#include "disp-lookup-components.h"
 
 // Map
 FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
@@ -338,7 +339,8 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
     } else if (d->type == DISP_CAUCHY) {
         dispwin = new fx_disp_cauchy_window(d, comp, opts);
     } else if (d->type == DISP_LOOKUP) {
-        dispwin = new fx_disp_lookup_window(d, comp, opts);
+        auto components = new disp_lookup_components(d);
+        dispwin = new fx_components_window(d, components, comp, opts);
     } else if (d->type == DISP_TABLE || d->type == DISP_SAMPLE_TABLE) {
         dispwin = new fx_disp_table_window(d, comp, opts);
     } else if (d->type == DISP_FB) {
@@ -353,20 +355,20 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
 }
 
 // Map
-FXDEFMAP(fx_disp_lookup_window) fx_disp_lookup_window_map[]= {
-    FXMAPFUNCS(SEL_CHANGED, fx_disp_lookup_window::ID_COMPONENT_NAME, fx_disp_lookup_window::ID_COMPONENT_NAME_LAST, fx_disp_lookup_window::on_changed_component_name),
-    FXMAPFUNCS(SEL_LEFTBUTTONPRESS, fx_disp_lookup_window::ID_MENU_COMPONENT, fx_disp_lookup_window::ID_MENU_COMPONENT_LAST, fx_disp_lookup_window::on_button_menu_component),
-    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_DELETE_COMP, fx_disp_lookup_window::on_cmd_delete_comp),
-    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_INSERT_COMP, fx_disp_lookup_window::on_cmd_insert_comp),
-    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_EDIT_COMP, fx_disp_lookup_window::on_cmd_edit_comp),
-    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_REPLACE_COMP, fx_disp_lookup_window::on_cmd_replace_comp),
-    FXMAPFUNC(SEL_COMMAND, fx_disp_lookup_window::ID_SAVE_USERLIB, fx_disp_lookup_window::on_cmd_save_userlib),
+FXDEFMAP(fx_components_window) fx_components_window_map[]= {
+    FXMAPFUNCS(SEL_CHANGED, fx_components_window::ID_COMPONENT_NAME, fx_components_window::ID_COMPONENT_NAME_LAST, fx_components_window::on_changed_component_name),
+    FXMAPFUNCS(SEL_LEFTBUTTONPRESS, fx_components_window::ID_MENU_COMPONENT, fx_components_window::ID_MENU_COMPONENT_LAST, fx_components_window::on_button_menu_component),
+    FXMAPFUNC(SEL_COMMAND, fx_components_window::ID_DELETE_COMP, fx_components_window::on_cmd_delete_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_components_window::ID_INSERT_COMP, fx_components_window::on_cmd_insert_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_components_window::ID_EDIT_COMP, fx_components_window::on_cmd_edit_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_components_window::ID_REPLACE_COMP, fx_components_window::on_cmd_replace_comp),
+    FXMAPFUNC(SEL_COMMAND, fx_components_window::ID_SAVE_USERLIB, fx_components_window::on_cmd_save_userlib),
 };
 
-FXIMPLEMENT(fx_disp_lookup_window,fx_disp_window,fx_disp_lookup_window_map,ARRAYNUMBER(fx_disp_lookup_window_map));
+FXIMPLEMENT(fx_components_window,fx_disp_window,fx_components_window_map,ARRAYNUMBER(fx_components_window_map));
 
-fx_disp_lookup_window::fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
-    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+fx_components_window::fx_components_window(disp_t *d, disp_components *components, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
+    : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs), m_components(components)
 {
     popupmenu = new FXMenuPane(this);
     new FXMenuCommand(popupmenu,"Remove Component", NULL, this, ID_DELETE_COMP);
@@ -377,37 +379,37 @@ fx_disp_lookup_window::fx_disp_lookup_window(disp_t *d, FXComposite *p, FXuint o
     new FXMenuCommand(popupmenu,"Save to User Library", NULL, this, ID_SAVE_USERLIB);
 }
 
-fx_disp_lookup_window::~fx_disp_lookup_window()
+fx_components_window::~fx_components_window()
 {
     delete popupmenu;
 }
 
-double *fx_disp_lookup_window::map_parameter(int index)
+double *fx_components_window::map_parameter(int index)
 {
     int nat = disp_get_number_of_params(disp);
     if (index < nat) {
         return fx_disp_window::map_parameter(index);
     }
     index -= nat;
-    if (index < disp->disp.lookup.nb_comps) {
-        return &disp->disp.lookup.component[index].p;
+    if (index < m_components->length()) {
+        return m_components->map_component_value(index);
     }
     return NULL;
 }
 
-void fx_disp_lookup_window::create()
+void fx_components_window::create()
 {
     fx_disp_window::create();
     popupmenu->create();
 }
 
-void fx_disp_lookup_window::add_matrix_component(int index, bool create)
+void fx_components_window::add_matrix_component(int index, bool create)
 {
     FXString istr;
     istr.format("%d", index + 1);
     FXButton *db = new FXButton(matrix, istr, NULL, this, ID_MENU_COMPONENT + index, FRAME_SUNKEN);
     FXTextField *tf1 = new FXTextField(matrix, 24, this, ID_COMPONENT_NAME + index, FRAME_SUNKEN);
-    tf1->setText(disp_get_name(disp->disp.lookup.component[index].disp));
+    tf1->setText(disp_get_name(m_components->disp(index)));
     FXTextField *tf2 = create_textfield(matrix, this, ID_PARAM_0 + 1 + index);
     if (create) {
         db->create();
@@ -416,7 +418,7 @@ void fx_disp_lookup_window::add_matrix_component(int index, bool create)
     }
 }
 
-void fx_disp_lookup_window::setup_dialog()
+void fx_components_window::setup_dialog()
 {
     regress_pro *app = regressProApp();
 
@@ -436,98 +438,81 @@ void fx_disp_lookup_window::setup_dialog()
     h2->setFont(&app->small_font);
     h2->setTextColor(app->blue_highlight);
 
-    for (int i = 0; i < disp->disp.lookup.nb_comps; i++) {
+    for (int i = 0; i < m_components->length(); i++) {
         add_matrix_component(i);
     }
     new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
 }
 
-void fx_disp_lookup_window::add_dispersion_element()
+void fx_components_window::add_dispersion_element()
 {
     disp_t *comp = ui_choose_dispersion(this);
     if (!comp) return;
-    disp_lookup *lookup = &disp->disp.lookup;
-    int n = lookup->nb_comps;
-    double p1 = lookup->component[0].p, p2 = lookup->component[n-1].p;
-    double p0 = p2 + (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
-    disp_lookup_add_comp(disp, n, comp, p0);
-    add_matrix_component(n, true);
+    int index_append = m_components->length();
+    m_components->insert(index_append, comp);
+    add_matrix_component(index_append, true);
     vframe->recalc();
 }
 
-long fx_disp_lookup_window::on_cmd_delete_comp(FXObject *, FXSelector, void *)
+long fx_components_window::on_cmd_delete_comp(FXObject *, FXSelector, void *)
 {
-    disp_lookup_delete_comp(disp, selected_component);
+    m_components->remove(selected_component);
     reload();
     return 1;
 }
 
-long fx_disp_lookup_window::on_cmd_insert_comp(FXObject *, FXSelector, void *)
+long fx_components_window::on_cmd_insert_comp(FXObject *, FXSelector, void *)
 {
     disp_t *comp = ui_choose_dispersion(this);
     if (!comp) return 1;
-    disp_lookup *lookup = &disp->disp.lookup;
-    const int i = selected_component;
-    const int n = lookup->nb_comps;
-    double new_p;
-    if (i > 0) {
-        double p1 = lookup->component[i-1].p, p2 = lookup->component[i].p;
-        new_p = (p1 + p2) / 2.0;
-    } else {
-        double p1 = lookup->component[0].p, p2 = lookup->component[n-1].p;
-        new_p = p1 - (n > 1 ? (p2 - p1) / (n - 1) : 1.0);
-    }
-    disp_lookup_add_comp(disp, i, comp, new_p);
+    m_components->insert(selected_component, comp);
     reload();
     return 1;
 }
 
-long fx_disp_lookup_window::on_cmd_edit_comp(FXObject *, FXSelector, void *)
+long fx_components_window::on_cmd_edit_comp(FXObject *, FXSelector, void *)
 {
     const int i = selected_component;
-    disp_lookup *lookup = &disp->disp.lookup;
-    disp_t *new_disp = ui_edit_dispersion(this, lookup->component[i].disp);
+    disp_t *new_disp = ui_edit_dispersion(this, m_components->disp(i));
     if (new_disp) {
-        lookup->component[i].disp = new_disp;
+        m_components->assign_disp(i, new_disp);
         FXTextField *tf = (FXTextField *) matrix->childAtRowCol(i + 1, 1);
-        tf->setText(disp_get_name(new_disp));
+        tf->setText(disp_get_name(m_components->disp(i)));
     }
     return 1;
 }
 
-long fx_disp_lookup_window::on_cmd_replace_comp(FXObject *, FXSelector, void *)
+long fx_components_window::on_cmd_replace_comp(FXObject *, FXSelector, void *)
 {
     const int i = selected_component;
-    disp_lookup *lookup = &disp->disp.lookup;
     disp_t *new_disp = ui_choose_dispersion(this);
     if (!new_disp) return 1;
-    disp_free(lookup->component[i].disp);
-    lookup->component[i].disp = new_disp;
+    disp_t *old_disp = m_components->disp(i);
+    m_components->assign_disp(i, new_disp);
+    disp_free(old_disp);
     FXTextField *tf = (FXTextField *) matrix->childAtRowCol(i + 1, 1);
-    tf->setText(disp_get_name(new_disp));
+    tf->setText(disp_get_name(m_components->disp(i)));
     return 1;
 }
 
-long fx_disp_lookup_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
+long fx_components_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
 {
     const int i = selected_component;
-    disp_lookup *lookup = &disp->disp.lookup;
-    disp_t *d = disp_copy(lookup->component[i].disp);
+    disp_t *d = disp_copy(m_components->disp(i));
     disp_list_add(user_lib, d, NULL);
     return 1;
 }
 
 
-long fx_disp_lookup_window::on_changed_component_name(FXObject *, FXSelector sel, void *text)
+long fx_components_window::on_changed_component_name(FXObject *, FXSelector sel, void *text)
 {
     int index = FXSELID(sel) - ID_COMPONENT_NAME;
-    disp_lookup *lookup = &disp->disp.lookup;
-    disp_set_name(lookup->component[index].disp, (FXchar *)text);
+    disp_set_name(m_components->disp(index), (FXchar *) text);
     return 1;
 }
 
 long
-fx_disp_lookup_window::on_button_menu_component(FXObject*sender, FXSelector sel, void *ptr)
+fx_components_window::on_button_menu_component(FXObject*sender, FXSelector sel, void *ptr)
 {
     FXEvent *event = (FXEvent *) ptr;
     selected_component = FXSELID(sel) - ID_MENU_COMPONENT;
