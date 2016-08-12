@@ -128,7 +128,7 @@ disp_free(disp_t *d)
 disp_t *
 disp_new(enum disp_type tp)
 {
-    return disp_new_with_name(tp, NULL);
+    return disp_new_with_name(tp, "");
 }
 
 disp_t *
