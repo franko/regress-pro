@@ -140,8 +140,13 @@ bruggeman_debug_verif_deriv(const disp_t *disp, double lam, int *VERIF_DEBUG) {
 cmpl
 bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
 {
-    // TODO: cache the n values of the components.
     const struct disp_bruggeman *d = &disp->disp.bruggeman;
+    cmpl eps_c[d->components_number];
+    for (int i = 0; i < d->components_number; i++) {
+        const cmpl n = n_value(d->components[i].disp, lam);
+        eps_c[i] = n * n;
+    }
+
     double f_base = 1.0;
     for (int i = 0; i < d->components_number; i++) {
         f_base -= d->components[i].fraction;
@@ -151,14 +156,13 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
     cmpl eps0 = f_base * eps_base;
 
     for (int i = 0; i < d->components_number; i++) {
-        const cmpl n = n_value(d->components[i].disp, lam);
-        eps0 += d->components[i].fraction * n * n;
+        eps0 += d->components[i].fraction * eps_c[i];
     }
 
     cmpl eps1;
     cmpl sum_fe, sum_f1, sum_fesq;
     int final_iteration = 0;
-    while (1) {
+    for (int iteration = 0; iteration < 200; iteration++) {
         const cmpl den = eps_base + 2 * eps0;
         sum_fe = f_base * eps_base / den;
         sum_f1 = f_base / den;
@@ -166,41 +170,43 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
         sum_fesq = 3 * f_base * eps_base / den_square;
 
         for (int i = 0; i < d->components_number; i++) {
-            const cmpl n_i = n_value(d->components[i].disp, lam);
             const double f = d->components[i].fraction;
-            const cmpl eps_i = n_i * n_i;
-            const cmpl den_i = eps_i + 2 * eps0;
+            const cmpl den_i = eps_c[i] + 2 * eps0;
             const cmpl den_square_i = den_i * den_i;
-            sum_fe += f * eps_i / den_i;
+            sum_fe += f * eps_c[i] / den_i;
             sum_f1 += f / den_i;
-            sum_fesq += 3 * f * eps_i / den_square_i;
+            sum_fesq += 3 * f * eps_c[i] / den_square_i;
         }
 
         if (final_iteration) {
+            printf("final value: (%10g, %10g)\n", creal(eps1), cimag(eps1));
+            printf("number of iterations: %d\n", iteration);
             break;
         }
 
         eps1 = sum_fe / sum_f1;
+        if (iteration == 0) {
+            printf("first value: (%10g, %10g)\n", creal(eps1), cimag(eps1));
+        }
         cmpl delta_eps = eps1 - eps0;
-        if (fabs(creal(delta_eps)) < 1e-4 && fabs(cimag(delta_eps)) < 1e-4) {
+        if (fabs(creal(delta_eps)) < 1e-6 && fabs(cimag(delta_eps)) < 1e-6) {
             final_iteration = 1;
+            // if (!v) break;
         }
 
         eps0 = eps1;
     }
 
     if(v != NULL) {
+        const cmpl resid_base = (eps_base - eps1) / (eps_base + 2 * eps1);
+        const cmpl eps_der_base = resid_base / sum_fesq + eps1;
+        const cmpl deriv_factor = 1.0 / (2.0 * csqrt(eps1));
+        const cmpl n_der_base = deriv_factor * eps_der_base;
+
         for (int i = 0; i < d->components_number; i++) {
-            const cmpl n_i = n_value(d->components[i].disp, lam);
-            const cmpl eps_i = n_i * n_i;
-            const cmpl resid_i = (eps_i - eps1) / (eps_i + 2 * eps1);
+            const cmpl resid_i = (eps_c[i] - eps1) / (eps_c[i] + 2 * eps1);
             const cmpl eps_der_i = resid_i / sum_fesq + eps1;
-            cmpl n_der_i = 1.0 / (2.0 * csqrt(eps1)) * eps_der_i;
-
-            const cmpl resid_base = (eps_base - eps1) / (eps_base + 2 * eps1);
-            const cmpl eps_der_base = resid_base / sum_fesq + eps1;
-            cmpl n_der_base = 1.0 / (2.0 * csqrt(eps1)) * eps_der_base;
-
+            const cmpl n_der_i = deriv_factor * eps_der_i;
             cmpl_vector_set(v, i, n_der_i - n_der_base);
         }
     }
@@ -208,6 +214,7 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
     static int VERIF_DEBUG = 1;
     if (VERIF_DEBUG) {
         cmpl sum_verif = bruggeman_debug_verif(d, eps1, lam);
+        printf("sum: (%g,%g)\n", creal(sum_verif), cimag(sum_verif));
         bruggeman_debug_verif_deriv(disp, lam, &VERIF_DEBUG);
     }
 
