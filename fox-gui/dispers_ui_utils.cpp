@@ -5,7 +5,7 @@
 disp_t *ui_edit_dispersion(FXWindow *win, disp_t *disp)
 {
     disp_t *edit_disp = disp_copy(disp);
-    dispers_edit_window *edit_win = new dispers_edit_window(edit_disp, win, DECOR_TITLE|DECOR_BORDER, 0, 0, 400, 360);
+    dispers_edit_window *edit_win = new dispers_edit_window(edit_disp, win, DECOR_TITLE|DECOR_BORDER, 0, 0, 460, 420);
     if (edit_win->execute() == TRUE) {
         disp_free(disp);
         return edit_disp;

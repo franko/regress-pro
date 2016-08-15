@@ -66,7 +66,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
 
     FXGroupBox *fpgroup = new FXGroupBox(pframe, "Add Fit Parameters", GROUPBOX_NORMAL|LAYOUT_FILL_Y|FRAME_GROOVE);
     params_group = new FXPacker(fpgroup, LAYOUT_FILL_Y|LAYOUT_SIDE_LEFT);
-    param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT, FRAME_SUNKEN|LISTBOX_NORMAL|LAYOUT_FIX_WIDTH, 0, 0, 100, 0);
+    param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT, FRAME_SUNKEN|LISTBOX_NORMAL|LAYOUT_FIX_WIDTH, 0, 0, 120, 0);
     param_listbox->setNumVisible(8);
 
     setup_parameters_list();

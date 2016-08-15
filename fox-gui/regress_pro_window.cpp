@@ -94,7 +94,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,520),
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,780,580),
       spectrum(NULL), recipeFilename("untitled"),
       result_filmstack_window(NULL), m_disp_fit_window(NULL), my_batch_window(NULL),
       m_enlarged_window(false), m_result_stack_match(true)
@@ -145,7 +145,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     FXSpring *rcpspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     FXHorizontalFrame *rcphf = new FXHorizontalFrame(rcpspring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
-    FXSpring *resultspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 30);
+    FXSpring *resultspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 35);
     FXGroupBox *rgb = new FXGroupBox(resultspring, "Fit output", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
     resulttext = new FXText(rgb, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
