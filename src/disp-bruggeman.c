@@ -2,8 +2,9 @@
 #include <assert.h>
 #include <string.h>
 
-// DEBUG ONLY
+#ifdef DEBUG_BRUGGEMAN
 #include <gsl/gsl_deriv.h>
+#endif
 
 #include "dispers.h"
 #include "cmpl.h"
@@ -95,6 +96,7 @@ bruggeman_n_value(const disp_t *disp, double lam)
     return bruggeman_n_value_deriv(disp, lam, NULL);
 }
 
+#ifdef DEBUG_BRUGGEMAN
 static cmpl
 bruggeman_debug_verif(const struct disp_bruggeman *d, const cmpl eps, double lam) {
     double f_base = 1.0;
@@ -178,6 +180,7 @@ bruggeman_debug_verif_deriv(const disp_t *disp, double lam, int *VERIF_DEBUG) {
     cmpl_vector_free(v_num);
     *VERIF_DEBUG = 1;
 }
+#endif
 
 cmpl
 bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
@@ -221,19 +224,23 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
         }
 
         if (final_iteration) {
+#ifdef DEBUG_BRUGGEMAN
             printf("final value: (%10g, %10g)\n", creal(eps1), cimag(eps1));
             printf("number of iterations: %d\n", iteration);
+#endif
             break;
         }
 
         eps1 = sum_fe / sum_f1;
+#ifdef DEBUG_BRUGGEMAN
         if (iteration == 0) {
             printf("first value: (%10g, %10g)\n", creal(eps1), cimag(eps1));
         }
+#endif
         cmpl delta_eps = eps1 - eps0;
         if (fabs(creal(delta_eps)) < 1e-6 && fabs(cimag(delta_eps)) < 1e-6) {
             final_iteration = 1;
-            // if (!v) break;
+            if (!v) break;
         }
 
         eps0 = eps1;
@@ -253,12 +260,14 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
         }
     }
 
+#ifdef DEBUG_BRUGGEMAN
     static int VERIF_DEBUG = 1;
     if (VERIF_DEBUG) {
         cmpl sum_verif = bruggeman_debug_verif(d, eps1, lam);
         printf("sum: (%g,%g)\n", creal(sum_verif), cimag(sum_verif));
         bruggeman_debug_verif_deriv(disp, lam, &VERIF_DEBUG);
     }
+#endif
 
     return csqrt(eps1);
 }
