@@ -208,13 +208,14 @@ static int
 bruggeman_epsilon_f(const gsl_vector *x, void *params, gsl_vector *f) {
     const struct epsilon_sequence *seq = params;
     const cmpl eps = gsl_vector_get(x, 0) + I * gsl_vector_get(x, 1);
-    if (cimag(eps) > 0.0) return GSL_EDOM;
+    // if (cimag(eps) > 0.0) return GSL_EDOM;
     const cmpl resid = epsilon_eqs_residual(seq, eps);
     gsl_vector_set(f, 0, creal(resid));
     gsl_vector_set(f, 1, cimag(resid));
     return GSL_SUCCESS;
 }
 
+#if 0
 static int
 bruggeman_epsilon_df(const gsl_vector *x, void *params, gsl_matrix *J) {
     const struct epsilon_sequence *seq = params;
@@ -287,6 +288,7 @@ static int bruggeman_epsilon_fdf(const gsl_vector *x, void *params, gsl_vector *
 
     return GSL_SUCCESS;
 }
+#endif
 
 static cmpl epsilon_start(const struct epsilon_sequence *seq) {
     cmpl eps = 0;
@@ -326,14 +328,14 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
     double eps0_data[2] = {creal(eps0), cimag(eps0)};
     gsl_vector_view eps0_view = gsl_vector_view_array(eps0_data, 2);
 
-    gsl_multiroot_function_fdf fdf = {&bruggeman_epsilon_f, &bruggeman_epsilon_df, &bruggeman_epsilon_fdf, 2, seq};
+    gsl_multiroot_function f = {&bruggeman_epsilon_f, 2, seq};
 
-    const gsl_multiroot_fdfsolver_type *T = gsl_multiroot_fdfsolver_hybridsj;
-    gsl_multiroot_fdfsolver *s = gsl_multiroot_fdfsolver_alloc(T, 2);
-    gsl_multiroot_fdfsolver_set(s, &fdf, &eps0_view.vector);
+    const gsl_multiroot_fsolver_type *T = gsl_multiroot_fsolver_hybrids;
+    gsl_multiroot_fsolver *s = gsl_multiroot_fsolver_alloc(T, 2);
+    gsl_multiroot_fsolver_set(s, &f, &eps0_view.vector);
 
     for (int iter = 0; iter < 200; iter++) {
-        int status = gsl_multiroot_fdfsolver_iterate(s);
+        int status = gsl_multiroot_fsolver_iterate(s);
         if (status) {
             printf("stopping iterations: %s\n", gsl_strerror(status));
             break;
@@ -347,7 +349,7 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
     }
 
     const cmpl eps = gsl_vector_get(s->x, 0) + I * gsl_vector_get(s->x, 1);
-    gsl_multiroot_fdfsolver_free(s);
+    gsl_multiroot_fsolver_free(s);
 
     const cmpl residual = bruggeman_debug_verif(d, eps, lam);
     printf("%g,%g,%g,%g,%g,%g,%g,", lam,creal(eps0), cimag(eps0), creal(eps), cimag(eps), creal(residual), cimag(residual));
