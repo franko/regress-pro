@@ -4,6 +4,13 @@
 #include <stdio.h>
 #include <dispers.h>
 
+enum {
+    TABULAR_FORMAT_NONE,
+    TABULAR_FORMAT_MAT,
+    TABULAR_FORMAT_TXT,
+    TABULAR_FORMAT_NKF,
+};
+
 class file_writer {
     FILE *m_file;
 public:
@@ -75,11 +82,15 @@ public:
 };
 
 template <typename OutputStream, typename Source>
-void mat_table_write(const char *name, OutputStream *dest, const Source *src)
-{
+void mat_table_write(const char *name, OutputStream *dest, const Source *src, int format) {
+    if (format == TABULAR_FORMAT_NKF) {
+        dest->write("; ");
+    }
     dest->write_line(name);
-    dest->write_line("nm");
-    dest->write_line("NK");
+    if (format == TABULAR_FORMAT_MAT) {
+        dest->write_line("nm");
+        dest->write_line("NK");
+    }
     int n = src->rows();
     for (int i = 0; i < n; i++) {
         typename Source::float_type w, n, k;

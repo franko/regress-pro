@@ -10,7 +10,7 @@ static const FXchar disp_patterns[] =
     "\nAll Files (*)";
 
 static const FXchar tab_patterns[] =
-    "Mat Dispersion files (*.mat)"
+    "Text format (*.mat,*.txt,*.nkf)"
     "\nAll Files (*)";
 
 // Map
@@ -172,31 +172,63 @@ dispers_save_dialog::get_sampling_values(double *sstart, double *send, double *s
     return 0;
 }
 
+static int write_native_format(const disp_t *disp, const char *filename) {
+    writer_t *w = writer_new();
+    disp_write(w, disp);
+    if (writer_save_tofile(w, filename)) {
+        return 1;
+    }
+    writer_free(w);
+    return 0;
+}
+
 int
 dispers_save_dialog::save_dispersion()
 {
     FXString filename = m_filebox->getFilename();
     regress_pro_app()->disp_dir = m_filebox->getDirectory();
     bool use_native = format_is_native();
+    int tabular_format = TABULAR_FORMAT_NONE;
     if (filename.find('.') < 0) {
         if (use_native) {
             filename.append(".dsp");
         } else {
             filename.append(".mat");
+            tabular_format = TABULAR_FORMAT_MAT;
+        }
+    } else {
+        FXString ext = filename.rafter('.');
+        if (ext == "txt") {
+            tabular_format = TABULAR_FORMAT_TXT;
+        } else if (ext == "nkf") {
+            tabular_format = TABULAR_FORMAT_NKF;
+        } else if (ext == "mat") {
+            tabular_format = TABULAR_FORMAT_MAT;
+        }
+        if (use_native && tabular_format != TABULAR_FORMAT_NONE) {
+            FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Please choose \".dsp\" for native format.");
+            return 1;
+        }
+        if (!use_native && ext == "dsp") {
+            if (m_disp->type == DISP_SAMPLE_TABLE) {
+                use_native = true;
+            } else {
+                const double tol = 1e-3;
+                auto wavelengths = optimize_sampling_points_c(m_disp, tol);
+                disp_t *disp_optim = dispersion_from_sampling_points(m_disp, wavelengths, disp_get_name(m_disp));
+                if (write_native_format(disp_optim, filename.text())) {
+                    FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error writing file %s.", filename.text());
+                }
+                disp_free(disp_optim);
+                return 0;
+            }
         }
     }
 
     if (use_native) {
-        writer_t *w = writer_new();
-        if (disp_write(w, m_disp)) {
-            FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error saving dispersion file.");
-            writer_free(w);
-            return 1;
-        }
-        if (writer_save_tofile(w, filename.text())) {
+        if (write_native_format(m_disp, filename.text())) {
             FXMessageBox::error(getShell(), MBOX_OK, "Save Dispersion", "Error writing file %s.", filename.text());
         }
-        writer_free(w);
     } else {
         file_writer ostream;
         if (!ostream.open(filename.text())) return 1;
@@ -206,11 +238,11 @@ dispers_save_dialog::save_dispersion()
             if (get_sampling_values(&sstart, &send, &sstep)) return 1;
             uniform_sampler usampler(sstart, send, sstep);
             disp_source<uniform_sampler> src(m_disp, &usampler);
-            mat_table_write(disp_get_name(m_disp), &ostream, &src);
+            mat_table_write(disp_get_name(m_disp), &ostream, &src, tabular_format);
         } else {
             if ((m_sampling_type & SAMPLING_OPTIM_MASK) == SAMPLING_NATIVE) {
                 sampled_dispersion_source src(m_disp);
-                mat_table_write(disp_get_name(m_disp), &ostream, &src);
+                mat_table_write(disp_get_name(m_disp), &ostream, &src, tabular_format);
             } else {
                 double tol;
                 textfield_get_double(m_sampling_tol_textfield, &tol);
@@ -224,7 +256,7 @@ dispers_save_dialog::save_dispersion()
                     disp_optim = dispersion_from_sampling_points(m_disp, wavelengths, "");
                 }
                 sampled_dispersion_source src(disp_optim);
-                mat_table_write(disp_get_name(m_disp), &ostream, &src);
+                mat_table_write(disp_get_name(m_disp), &ostream, &src, tabular_format);
                 disp_free(disp_optim);
             }
         }
