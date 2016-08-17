@@ -208,7 +208,6 @@ static int
 bruggeman_epsilon_f(const gsl_vector *x, void *params, gsl_vector *f) {
     const struct epsilon_sequence *seq = params;
     const cmpl eps = gsl_vector_get(x, 0) + I * gsl_vector_get(x, 1);
-    if (cimag(eps) > 0.0) return GSL_EDOM;
     const cmpl resid = epsilon_eqs_residual(seq, eps);
     gsl_vector_set(f, 0, creal(resid));
     gsl_vector_set(f, 1, cimag(resid));
@@ -219,7 +218,6 @@ static int
 bruggeman_epsilon_df(const gsl_vector *x, void *params, gsl_matrix *J) {
     const struct epsilon_sequence *seq = params;
     const cmpl eps = gsl_vector_get(x, 0) + I * gsl_vector_get(x, 1);
-    if (cimag(eps) > 0.0) return GSL_EDOM;
     cmpl sum = 0;
     for (int i = 0; i < seq->length; i++) {
         const struct epsilon_fraction *t = &seq->terms[i];
@@ -239,7 +237,6 @@ bruggeman_epsilon_df(const gsl_vector *x, void *params, gsl_matrix *J) {
 static int bruggeman_epsilon_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *J) {
     const struct epsilon_sequence *seq = params;
     const cmpl eps = gsl_vector_get(x, 0) + I * gsl_vector_get(x, 1);
-    if (cimag(eps) > 0.0) return GSL_EDOM;
     cmpl sum = 0, sum_der = 0;
     for (int i = 0; i < seq->length; i++) {
         const struct epsilon_fraction *t = &seq->terms[i];
@@ -289,11 +286,11 @@ static int bruggeman_epsilon_fdf(const gsl_vector *x, void *params, gsl_vector *
 }
 
 static cmpl epsilon_start(const struct epsilon_sequence *seq) {
-    cmpl eps = 0;
+    cmpl inv_eps = 0;
     for (int i = 0; i < seq->length; i++) {
-        eps += seq->terms[i].f * seq->terms[i].eps;
+        inv_eps += seq->terms[i].f / seq->terms[i].eps;
     }
-    return eps;
+    return 1 / inv_eps;
 }
 
 cmpl
