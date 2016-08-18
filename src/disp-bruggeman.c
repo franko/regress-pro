@@ -6,6 +6,9 @@
 #include <gsl/gsl_deriv.h>
 #endif
 
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_odeiv2.h>
+
 #include "dispers.h"
 #include "cmpl.h"
 
@@ -182,94 +185,73 @@ bruggeman_debug_verif_deriv(const disp_t *disp, double lam, int *VERIF_DEBUG) {
 }
 #endif
 
+struct epsilon_fraction {
+    double f;
+    cmpl eps;
+};
+
+struct epsilon_sequence {
+    int length;
+    struct epsilon_fraction *terms;
+};
+
+static int
+epsilon_ode_func(double t, const double y[], double f[], void *params) {
+    const struct epsilon_sequence *seq = params;
+    const cmpl eps = y[0] + I * y[1];
+    cmpl sum_num = 0;
+    const struct epsilon_fraction *e0 = &seq->terms[0];
+    const cmpl den0 = e0->eps + 2 * eps;
+    cmpl sum_den = e0->f * e0->eps / (den0 * den0);
+    for (int i = 1; i < seq->length; i++) {
+        const struct epsilon_fraction *e = &seq->terms[i];
+        const cmpl den = e->eps + 2 * eps;
+        sum_num += e->f * (e->eps - eps) / den;
+        sum_den += e->f * t * e->eps / (den * den);
+    }
+    const cmpl dedt = sum_num / (3 * sum_den);
+    f[0] = creal(dedt);
+    f[1] = cimag(dedt);
+    return GSL_SUCCESS;
+}
+
+static void
+compute_epsilon_sequence(struct epsilon_sequence *seq, const struct disp_bruggeman *d, double lam) {
+    const cmpl n_base = n_value(d->disp_base, lam);
+    const cmpl eps_base = n_base * n_base;
+    double f_base = 1;
+    for (int i = 1; i < seq->length; i++) {
+        struct epsilon_fraction *t = &seq->terms[i];
+        t->f = d->components[i - 1].fraction;
+        const cmpl n = n_value(d->components[i - 1].disp, lam);
+        t->eps = n * n;
+        f_base -= t->f;
+    }
+    seq->terms[0].f = f_base;
+    seq->terms[0].eps = eps_base;
+}
+
 cmpl
 bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
 {
     const struct disp_bruggeman *d = &disp->disp.bruggeman;
-    cmpl eps_c[d->components_number];
-    for (int i = 0; i < d->components_number; i++) {
-        const cmpl n = n_value(d->components[i].disp, lam);
-        eps_c[i] = n * n;
+
+    const int terms_no = d->components_number + 1;
+    struct epsilon_fraction terms[terms_no];
+    struct epsilon_sequence seq[1] = {{terms_no, terms}};
+    compute_epsilon_sequence(seq, d, lam);
+
+    gsl_odeiv2_system sys = {epsilon_ode_func, NULL, 2, seq};
+    gsl_odeiv2_driver *ode_driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rkf45, 1e-4, 1e-4, 0.0);
+    double t = 0.0, t_final = 1.0;
+    const cmpl eps0 = seq->terms[0].eps;
+    double eps_data[2] = {creal(eps0), cimag(eps0)};
+    int status = gsl_odeiv2_driver_apply(ode_driver, &t, t_final, eps_data);
+    if (status != GSL_SUCCESS) {
+      printf ("error, return value=%d\n", status);
     }
-
-    double f_base = 1.0;
-    for (int i = 0; i < d->components_number; i++) {
-        f_base -= d->components[i].fraction;
-    }
-    const cmpl n_base = n_value(d->disp_base, lam);
-    const cmpl eps_base = n_base * n_base;
-    cmpl eps0 = f_base * eps_base;
-
-    for (int i = 0; i < d->components_number; i++) {
-        eps0 += d->components[i].fraction * eps_c[i];
-    }
-
-    cmpl eps1;
-    cmpl sum_fe, sum_f1, sum_fesq;
-    int final_iteration = 0;
-    for (int iteration = 0; iteration < 200; iteration++) {
-        const cmpl den = eps_base + 2 * eps0;
-        sum_fe = f_base * eps_base / den;
-        sum_f1 = f_base / den;
-        const cmpl den_square = den * den;
-        sum_fesq = 3 * f_base * eps_base / den_square;
-
-        for (int i = 0; i < d->components_number; i++) {
-            const double f = d->components[i].fraction;
-            const cmpl den_i = eps_c[i] + 2 * eps0;
-            const cmpl den_square_i = den_i * den_i;
-            sum_fe += f * eps_c[i] / den_i;
-            sum_f1 += f / den_i;
-            sum_fesq += 3 * f * eps_c[i] / den_square_i;
-        }
-
-        if (final_iteration) {
-#ifdef DEBUG_BRUGGEMAN
-            printf("final value: (%10g, %10g)\n", creal(eps1), cimag(eps1));
-            printf("number of iterations: %d\n", iteration);
-#endif
-            break;
-        }
-
-        eps1 = sum_fe / sum_f1;
-#ifdef DEBUG_BRUGGEMAN
-        if (iteration == 0) {
-            printf("first value: (%10g, %10g)\n", creal(eps1), cimag(eps1));
-        }
-#endif
-        cmpl delta_eps = eps1 - eps0;
-        if (fabs(creal(delta_eps)) < 1e-6 && fabs(cimag(delta_eps)) < 1e-6) {
-            final_iteration = 1;
-            if (!v) break;
-        }
-
-        eps0 = eps1;
-    }
-
-    if(v != NULL) {
-        const cmpl resid_base = (eps_base - eps1) / (eps_base + 2 * eps1);
-        const cmpl eps_der_base = resid_base / sum_fesq + eps1;
-        const cmpl deriv_factor = 1.0 / (2.0 * csqrt(eps1));
-        const cmpl n_der_base = deriv_factor * eps_der_base;
-
-        for (int i = 0; i < d->components_number; i++) {
-            const cmpl resid_i = (eps_c[i] - eps1) / (eps_c[i] + 2 * eps1);
-            const cmpl eps_der_i = resid_i / sum_fesq + eps1;
-            const cmpl n_der_i = deriv_factor * eps_der_i;
-            cmpl_vector_set(v, i, n_der_i - n_der_base);
-        }
-    }
-
-#ifdef DEBUG_BRUGGEMAN
-    static int VERIF_DEBUG = 1;
-    if (VERIF_DEBUG) {
-        cmpl sum_verif = bruggeman_debug_verif(d, eps1, lam);
-        printf("sum: (%g,%g)\n", creal(sum_verif), cimag(sum_verif));
-        bruggeman_debug_verif_deriv(disp, lam, &VERIF_DEBUG);
-    }
-#endif
-
-    return csqrt(eps1);
+    cmpl eps = eps_data[0] + I * eps_data[1];
+    return csqrt(eps);
 }
 
 int
