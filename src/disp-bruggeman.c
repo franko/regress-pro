@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <gsl/gsl_vector.h>
-#include <gsl/gsl_multiroots.h>
+#include <gsl/gsl_multimin.h>
 
 #ifdef DEBUG_BRUGGEMAN
 #include <gsl/gsl_deriv.h>
@@ -204,15 +204,12 @@ static cmpl epsilon_eqs_residual(const struct epsilon_sequence *seq, cmpl eps) {
     return sum;
 }
 
-static int
-bruggeman_epsilon_f(const gsl_vector *x, void *params, gsl_vector *f) {
+static double
+bruggeman_epsilon_f(const gsl_vector *x, void *params) {
     const struct epsilon_sequence *seq = params;
     const cmpl eps = gsl_vector_get(x, 0) + I * gsl_vector_get(x, 1);
-    // if (cimag(eps) > 0.0) return GSL_EDOM;
     const cmpl resid = epsilon_eqs_residual(seq, eps);
-    gsl_vector_set(f, 0, creal(resid));
-    gsl_vector_set(f, 1, cimag(resid));
-    return GSL_SUCCESS;
+    return sqrt(CSQABS(resid)) + (cimag(eps) < 0 ? 0 : 10 * cimag(eps));
 }
 
 #if 0
@@ -291,80 +288,137 @@ static int bruggeman_epsilon_fdf(const gsl_vector *x, void *params, gsl_vector *
 #endif
 
 static cmpl epsilon_start(const struct epsilon_sequence *seq) {
+#if 0
     cmpl eps = 0;
     for (int i = 0; i < seq->length; i++) {
         eps += seq->terms[i].f * seq->terms[i].eps;
     }
     return eps;
+#endif
+    return 1;
+}
+
+static void epsilon_step_size(gsl_vector *step, const struct epsilon_sequence *seq, double factor) {
+    double sr = 1, si = 1;
+    for (int i = 0; i < seq->length; i++) {
+        double re = factor * fabs(creal(seq->terms[i].eps));
+        double im = factor * fabs(cimag(seq->terms[i].eps));
+        sr = (re > sr ? re : sr);
+        si = (im > si ? im : si);
+    }
+    gsl_vector_set(step, 0, sr);
+    gsl_vector_set(step, 1, si);
+}
+
+void compute_epsilon_sequence_terms(const struct disp_bruggeman *d, struct epsilon_sequence *seq, double lam) {
+    const cmpl n_base = n_value(d->disp_base, lam);
+    const cmpl eps_base = n_base * n_base;
+    double f_base = 1;
+    for (int i = 1; i < seq->length; i++) {
+        struct epsilon_fraction *t = &seq->terms[i];
+        const cmpl n = n_value(d->components[i - 1].disp, lam);
+        t->f = d->components[i - 1].fraction;
+        t->eps = n * n;
+        f_base -= t->f;
+    }
+    seq->terms[0].f = f_base;
+    seq->terms[0].eps = eps_base;
+}
+
+static cmpl epsilon_iterative_refine(const struct epsilon_sequence *seq, cmpl eps0) {
+    cmpl eps1;
+    cmpl sum_fe = 0, sum_f1 = 0, sum_fesq = 0;
+    for (int iteration = 0; iteration < 200; iteration++) {
+        for (int i = 0; i < seq->length; i++) {
+            const struct epsilon_fraction *t = &seq->terms[i];
+            const cmpl den = t->eps + 2 * eps0;
+            const cmpl den_square = den * den;
+            sum_fe += t->f * t->eps / den;
+            sum_f1 += t->f / den;
+            sum_fesq += 3 * t->f * t->eps / den_square;
+        }
+        eps1 = sum_fe / sum_f1;
+        cmpl delta_eps = eps1 - eps0;
+        if (fabs(creal(delta_eps)) < 1e-6 && fabs(cimag(delta_eps)) < 1e-6) {
+            break;
+        }
+        eps0 = eps1;
+    }
+    return eps1;
+}
+
+static cmpl compute_sum_fesq(const struct epsilon_sequence *seq, const cmpl eps) {
+    cmpl sum_fesq = 0;
+    for (int i = 0; i < seq->length; i++) {
+        const struct epsilon_fraction *t = &seq->terms[i];
+        const cmpl den = t->eps + 2 * eps;
+        sum_fesq += 3 * t->f * t->eps / (den * den);
+    }
+    return sum_fesq;
 }
 
 cmpl
 bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
 {
     const struct disp_bruggeman *d = &disp->disp.bruggeman;
-    cmpl eps_c[d->components_number];
-    for (int i = 0; i < d->components_number; i++) {
-        const cmpl n = n_value(d->components[i].disp, lam);
-        eps_c[i] = n * n;
-    }
 
     const int terms_no = d->components_number + 1;
     struct epsilon_fraction terms[terms_no];
     struct epsilon_sequence seq[1] = {{terms_no, terms}};
 
-    const cmpl n_base = n_value(d->disp_base, lam);
-    const cmpl eps_base = n_base * n_base;
-    double f_base = 1;
-    for (int i = 1; i < seq->length; i++) {
-        struct epsilon_fraction *t = &seq->terms[i];
-        t->f = d->components[i - 1].fraction;
-        t->eps = eps_c[i - 1];
-        f_base -= t->f;
-    }
-    seq->terms[0].f = f_base;
-    seq->terms[0].eps = eps_base;
+    compute_epsilon_sequence_terms(d, seq, lam);
 
     const cmpl eps0 = epsilon_start(seq);
     double eps0_data[2] = {creal(eps0), cimag(eps0)};
     gsl_vector_view eps0_view = gsl_vector_view_array(eps0_data, 2);
 
-    gsl_multiroot_function f = {&bruggeman_epsilon_f, 2, seq};
+    const gsl_multimin_fminimizer_type *T = gsl_multimin_fminimizer_nmsimplex2;
+    gsl_multimin_fminimizer *s = gsl_multimin_fminimizer_alloc(T, 2);
+    gsl_multimin_function f = {&bruggeman_epsilon_f, 2, seq};
 
-    const gsl_multiroot_fsolver_type *T = gsl_multiroot_fsolver_hybrids;
-    gsl_multiroot_fsolver *s = gsl_multiroot_fsolver_alloc(T, 2);
-    gsl_multiroot_fsolver_set(s, &f, &eps0_view.vector);
+    for (int min_iter = 0; min_iter < 20; min_iter++) {
+        double eps_step_data[2];
+        gsl_vector_view eps_step_view = gsl_vector_view_array(eps_step_data, 2);
+        epsilon_step_size(&eps_step_view.vector, seq, 3.0 * (min_iter + 1));
 
-    for (int iter = 0; iter < 200; iter++) {
-        int status = gsl_multiroot_fsolver_iterate(s);
-        if (status) {
-            printf("stopping iterations: %s\n", gsl_strerror(status));
-            break;
+        gsl_multimin_fminimizer_set(s, &f, &eps0_view.vector, &eps_step_view.vector);
+
+        int iter, status;
+        for (iter = 0; iter < 200; iter++) {
+            status = gsl_multimin_fminimizer_iterate(s);
+            if (status) {
+                printf("ERROR: stopping iterations: %s\n", gsl_strerror(status));
+                break;
+            }
+            double size = gsl_multimin_fminimizer_size(s);
+            status = gsl_multimin_test_size(size, 1e-2);
+            if (status != GSL_CONTINUE) {
+                printf("%d,", iter);
+                break;
+            }
         }
-        status = gsl_multiroot_test_residual(s->f, 1e-8);
-        if (status != GSL_CONTINUE) {
-            printf("%d,", iter);
-            // printf("convergence ok after %d iterations\n", iter);
+        if (iter >= 200 || status) {
+            printf("ERROR: algorithm fails to converge, %d %s\n", iter, gsl_strerror(status));
+        } else {
             break;
         }
     }
 
-    const cmpl eps = gsl_vector_get(s->x, 0) + I * gsl_vector_get(s->x, 1);
-    gsl_multiroot_fsolver_free(s);
+    const cmpl eps_min = gsl_vector_get(s->x, 0) + I * gsl_vector_get(s->x, 1);
+    gsl_multimin_fminimizer_free(s);
 
-    const cmpl residual = bruggeman_debug_verif(d, eps, lam);
-    printf("%g,%g,%g,%g,%g,%g,%g,", lam,creal(eps0), cimag(eps0), creal(eps), cimag(eps), creal(residual), cimag(residual));
+#if 0
+    const cmpl residual = bruggeman_debug_verif(d, eps_min, lam);
+    printf("%g,%g,%g,%g,%g,%g,%g,", lam,creal(eps0), cimag(eps0), creal(eps_min), cimag(eps_min), creal(residual), cimag(residual));
     cmpl n0 = csqrt(eps0);
-    cmpl n = csqrt(eps);
+    cmpl n = csqrt(eps_min);
     printf("%g,%g,%g,%g\n", creal(n0), cimag(n0), creal(n), cimag(n));
+#endif
+
+    cmpl eps = epsilon_iterative_refine(seq, eps_min);
 
     if (v != NULL) {
-        cmpl sum_fesq = 0;
-        for (int i = 0; i < seq->length; i++) {
-            const struct epsilon_fraction *t = &seq->terms[i];
-            const cmpl den = t->eps + 2 * eps;
-            sum_fesq += 3 * t->f * t->eps / (den * den);
-        }
-
+        cmpl sum_fesq = compute_sum_fesq(seq, eps);
         const cmpl deriv_factor = 1.0 / (2.0 * csqrt(eps));
         cmpl n_der0;
         for (int i = 0; i < seq->length; i++) {
