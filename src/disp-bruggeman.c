@@ -127,7 +127,7 @@ struct deriv_eval_params {
     int i;
 };
 
-double eval_real(double x, void *_p) {
+static double eval_real(double x, void *_p) {
     struct deriv_eval_params *p = _p;
     const struct disp_bruggeman *bema = &p->disp->disp.bruggeman;
     bema->components[p->i].fraction = x;
@@ -135,7 +135,7 @@ double eval_real(double x, void *_p) {
     return creal(n);
 }
 
-double eval_imag(double x, void *_p) {
+static double eval_imag(double x, void *_p) {
     struct deriv_eval_params *p = _p;
     const struct disp_bruggeman *bema = &p->disp->disp.bruggeman;
     bema->components[p->i].fraction = x;
@@ -221,9 +221,17 @@ compute_epsilon_sequence(struct epsilon_sequence *seq, const struct disp_bruggem
     seq->terms[0].eps = eps_base;
 }
 
+static void sequence_swap_term(struct epsilon_sequence *seq, int i) {
+    if (i > 0) {
+        struct epsilon_fraction tmp = seq->terms[0];
+        seq->terms[0] = seq->terms[i];
+        seq->terms[i] = tmp;
+    }
+}
+
 /* Swap the first term of the sequence with the one having the biggest
    fraction. */
-static void sequence_normalize_fraction_order(struct epsilon_sequence *seq) {
+static int sequence_normalize_fraction_order(struct epsilon_sequence *seq) {
     int i_best = 0;
     double f_best = seq->terms[0].f;
     for (int i = 1; i < seq->length; i++) {
@@ -233,11 +241,18 @@ static void sequence_normalize_fraction_order(struct epsilon_sequence *seq) {
             f_best = t->f;
         }
     }
-    if (i_best != 0) {
-        struct epsilon_fraction tmp = seq->terms[0];
-        seq->terms[0] = seq->terms[i_best];
-        seq->terms[i_best] = tmp;
+    sequence_swap_term(seq, i_best);
+    return i_best;
+}
+
+static cmpl compute_sum_fesq(const struct epsilon_sequence *seq, const cmpl eps) {
+    cmpl sum_fesq = 0;
+    for (int i = 0; i < seq->length; i++) {
+        const struct epsilon_fraction *t = &seq->terms[i];
+        const cmpl den = t->eps + 2 * eps;
+        sum_fesq += 3 * t->f * t->eps / (den * den);
     }
+    return sum_fesq;
 }
 
 cmpl
@@ -250,7 +265,7 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
     struct epsilon_sequence seq[1] = {{terms_no, terms}};
     compute_epsilon_sequence(seq, d, lam);
 
-    sequence_normalize_fraction_order(seq);
+    int i_swap = sequence_normalize_fraction_order(seq);
 
     gsl_odeiv2_system sys = {epsilon_ode_func, NULL, 2, seq};
     gsl_odeiv2_driver *ode_driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rkf45, 1e-4, 1e-4, 0.0);
@@ -258,10 +273,43 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
     const cmpl eps0 = seq->terms[0].eps;
     double eps_data[2] = {creal(eps0), cimag(eps0)};
     int status = gsl_odeiv2_driver_apply(ode_driver, &t, t_final, eps_data);
+#ifdef DEBUG_BRUGGEMAN
     if (status != GSL_SUCCESS) {
       printf ("error, return value=%d\n", status);
     }
+#else
+    (void)status;
+#endif
     const cmpl eps = eps_data[0] + I * eps_data[1];
+
+    if (v != NULL) {
+        /* Re-swaps sequence terms in the correct order to compute the
+           derivative. */
+        sequence_swap_term(seq, i_swap);
+
+        const cmpl sum_fesq = compute_sum_fesq(seq, eps);
+        const cmpl deriv_factor = 1.0 / (2.0 * csqrt(eps));
+        cmpl n_der0;
+        for (int i = 0; i < seq->length; i++) {
+            const struct epsilon_fraction *t = &seq->terms[i];
+            const cmpl resid = (t->eps - eps) / (t->eps + 2 * eps);
+            const cmpl n_der = deriv_factor * (resid / sum_fesq + eps);
+            if (i == 0) {
+                n_der0 = n_der;
+            } else {
+                cmpl_vector_set(v, i - 1, n_der - n_der0);
+            }
+        }
+    }
+
+#ifdef DEBUG_BRUGGEMAN
+    static int VERIF_DEBUG = 1;
+    if (VERIF_DEBUG) {
+        cmpl sum_verif = bruggeman_debug_residual(seq, eps, lam);
+        printf("sum: (%g,%g)\n", creal(sum_verif), cimag(sum_verif));
+        bruggeman_debug_verif_deriv(disp, lam, &VERIF_DEBUG);
+    }
+#endif
     return csqrt(eps);
 }
 
