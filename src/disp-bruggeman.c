@@ -185,10 +185,8 @@ bruggeman_debug_verif_deriv(const disp_t *disp, double lam, int *VERIF_DEBUG) {
 }
 #endif
 
-static int
-epsilon_ode_func(double t, const double y[], double f[], void *params) {
-    const struct epsilon_sequence *seq = params;
-    const cmpl eps = y[0] + I * y[1];
+static cmpl
+epsilon_ode_eval(const struct epsilon_sequence *seq, double t, const cmpl eps) {
     cmpl sum_num = 0;
     const struct epsilon_fraction *e0 = &seq->terms[0];
     const cmpl den0 = e0->eps + 2 * eps;
@@ -199,10 +197,86 @@ epsilon_ode_func(double t, const double y[], double f[], void *params) {
         sum_num += e->f * (e->eps - eps) / den;
         sum_den += e->f * t * e->eps / (den * den);
     }
-    const cmpl dedt = sum_num / (3 * sum_den);
-    f[0] = creal(dedt);
-    f[1] = cimag(dedt);
-    return GSL_SUCCESS;
+    return sum_num / (3 * sum_den);
+}
+
+struct bruggeman_rkf45 {
+    const struct epsilon_sequence *seq;
+    cmpl y0;
+    cmpl y;
+    cmpl yerr;
+};
+
+/* Runge-Kutta-Fehlberg coefficients. Zero elements left out */
+
+static const double ah[] =
+  { 1.0 / 4.0, 3.0 / 8.0, 12.0 / 13.0, 1.0, 1.0 / 2.0 };
+static const double b3[] = { 3.0 / 32.0, 9.0 / 32.0 };
+static const double b4[] =
+  { 1932.0 / 2197.0, -7200.0 / 2197.0, 7296.0 / 2197.0 };
+static const double b5[] =
+  { 8341.0 / 4104.0, -32832.0 / 4104.0, 29440.0 / 4104.0, -845.0 / 4104.0 };
+static const double b6[] =
+  { -6080.0 / 20520.0, 41040.0 / 20520.0, -28352.0 / 20520.0,
+  9295.0 / 20520.0, -5643.0 / 20520.0
+};
+
+static const double c1 = 902880.0 / 7618050.0;
+static const double c3 = 3953664.0 / 7618050.0;
+static const double c4 = 3855735.0 / 7618050.0;
+static const double c5 = -1371249.0 / 7618050.0;
+static const double c6 = 277020.0 / 7618050.0;
+
+/* These are the differences of fifth and fourth order coefficients
+   for error estimation */
+
+static const double ec[] = { 0.0,
+  1.0 / 360.0,
+  0.0,
+  -128.0 / 4275.0,
+  -2197.0 / 75240.0,
+  1.0 / 50.0,
+  2.0 / 55.0
+};
+
+static void rkf45_apply (struct bruggeman_rkf45 *state, double t, double h,
+             const cmpl dydt_in, cmpl *dydt_out)
+{
+  cmpl k1, k2, k3, k4, k5, k6;
+  cmpl ytmp;
+
+  state->y0 = state->y;
+  const cmpl y = state->y;
+
+  /* k1 step */
+  k1 = dydt_in;
+  ytmp = y + ah[0] * h * k1;
+
+  /* k2 step */
+  k2 = epsilon_ode_eval(state->seq, t + ah[0] * h, ytmp);
+  ytmp = y + h * (b3[0] * k1 + b3[1] * k2);
+
+  /* k3 step */
+  k3 = epsilon_ode_eval(state->seq, t + ah[1] * h, ytmp);
+  ytmp = y + h * (b4[0] * k1 + b4[1] * k2 + b4[2] * k3);
+
+  /* k4 step */
+  k4 = epsilon_ode_eval(state->seq, t + ah[2] * h, ytmp);
+  ytmp = y + h * (b5[0] * k1 + b5[1] * k2 + b5[2] * k3 + b5[3] * k4);
+
+  /* k5 step */
+  k5 = epsilon_ode_eval(state->seq, t + ah[3] * h, ytmp);
+  ytmp = y + h * (b6[0] * k1 + b6[1] * k2 + b6[2] * k3 + b6[3] * k4 + b6[4] * k5);
+
+  /* k6 step and final sum */
+  k6 = epsilon_ode_eval(state->seq, t + ah[4] * h, ytmp);
+  state->y = y + h * (c1 * k1 + c3 * k3 + c4 * k4 + c5 * k5 + c6 * k6);
+
+  /* Derivatives at output */
+  *dydt_out = epsilon_ode_eval(state->seq, t + h, state->y);
+
+  /* difference between 4th and 5th order */
+  state->yerr = h * (ec[1] * k1 + ec[3] * k3 + ec[4] * k4 + ec[5] * k5 + ec[6] * k6);
 }
 
 static void
@@ -267,20 +341,26 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
 
     int i_swap = sequence_normalize_fraction_order(seq);
 
-    gsl_odeiv2_system sys = {epsilon_ode_func, NULL, 2, seq};
-    gsl_odeiv2_driver *ode_driver = gsl_odeiv2_driver_alloc_y_new(&sys, gsl_odeiv2_step_rkf45, 1e-4, 1e-4, 0.0);
-    double t = 0.0, t_final = 1.0;
     const cmpl eps0 = seq->terms[0].eps;
-    double eps_data[2] = {creal(eps0), cimag(eps0)};
-    int status = gsl_odeiv2_driver_apply(ode_driver, &t, t_final, eps_data);
-#ifdef DEBUG_BRUGGEMAN
-    if (status != GSL_SUCCESS) {
-      printf ("error, return value=%d\n", status);
+    struct bruggeman_rkf45 state[1] = {{seq, eps0, eps0}};
+    double t = 0.0, t_stop = 1.0;
+    cmpl dydt0 = epsilon_ode_eval(state->seq, t, eps0), dydt1;
+    const double ytol = 1e-4, h_start = 0.091;
+    while (t < t_stop) {
+        double t1 = (t + h_start < t_stop ? t + h_start : t_stop);
+        for (int k = 0; k < 20; k++) {
+            rkf45_apply(state, t, t1 - t, dydt0, &dydt1);
+            if (CSQABS(state->yerr) > ytol * ytol) {
+                t1 = t + (t1 - t) / 2;
+                state->y = state->y0;
+            } else {
+                break;
+            }
+        }
+        t = t1;
+        dydt0 = dydt1;
     }
-#else
-    (void)status;
-#endif
-    const cmpl eps = eps_data[0] + I * eps_data[1];
+    const cmpl eps = state->y;
 
     if (v != NULL) {
         /* Re-swaps sequence terms in the correct order to compute the
