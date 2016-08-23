@@ -6,9 +6,6 @@
 #include <gsl/gsl_deriv.h>
 #endif
 
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_odeiv2.h>
-
 #include "dispers.h"
 #include "cmpl.h"
 
