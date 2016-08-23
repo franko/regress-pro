@@ -329,18 +329,7 @@ static cmpl compute_sum_fesq(const struct epsilon_sequence *seq, const cmpl eps)
     return sum_fesq;
 }
 
-cmpl
-bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
-{
-    const struct disp_bruggeman *d = &disp->disp.bruggeman;
-
-    const int terms_no = d->components_number + 1;
-    struct epsilon_fraction terms[terms_no];
-    struct epsilon_sequence seq[1] = {{terms_no, terms}};
-    compute_epsilon_sequence(seq, d, lam);
-
-    int i_swap = sequence_normalize_fraction_order(seq);
-
+static cmpl epsilon_ode_solve(const struct epsilon_sequence *seq) {
     const cmpl eps0 = seq->terms[0].eps;
     struct bruggeman_rkf45 state[1] = {{seq, eps0, eps0}};
     double t = 0.0, t_stop = 1.0;
@@ -360,7 +349,22 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
         t = t1;
         dydt0 = dydt1;
     }
-    const cmpl eps = state->y;
+    return state->y;
+}
+
+cmpl
+bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
+{
+    const struct disp_bruggeman *d = &disp->disp.bruggeman;
+
+    const int terms_no = d->components_number + 1;
+    struct epsilon_fraction terms[terms_no];
+    struct epsilon_sequence seq[1] = {{terms_no, terms}};
+    compute_epsilon_sequence(seq, d, lam);
+
+    int i_swap = sequence_normalize_fraction_order(seq);
+
+    const cmpl eps = epsilon_ode_solve(seq);
 
     if (v != NULL) {
         /* Re-swaps sequence terms in the correct order to compute the
