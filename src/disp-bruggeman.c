@@ -9,6 +9,16 @@
 #include "dispers.h"
 #include "cmpl.h"
 
+struct epsilon_fraction {
+    double f;
+    cmpl eps;
+};
+
+struct epsilon_sequence {
+    int length;
+    struct epsilon_fraction *terms;
+};
+
 static void     bruggeman_free(struct disp_struct *d);
 static disp_t * bruggeman_copy(const disp_t *d);
 
@@ -25,6 +35,8 @@ static double bruggeman_get_param_value(const struct disp_struct *d,
 static double * bruggeman_map_param(disp_t *d, int index);
 static int bruggeman_write(writer_t *w, const disp_t *_d);
 static int bruggeman_read(lexer_t *l, disp_t *d);
+static cmpl bruggeman_bicomp_quad_solve(const struct epsilon_sequence *seq, double lam);
+static cmpl bruggeman_epsilon_ode_newton(struct epsilon_sequence *seq, double lam);
 
 static inline double dmin(double a, double b) {
     return (a > b ? b : a);
@@ -33,16 +45,6 @@ static inline double dmin(double a, double b) {
 static inline double dmax(double a, double b) {
     return (a > b ? a : b);
 }
-
-struct epsilon_fraction {
-    double f;
-    cmpl eps;
-};
-
-struct epsilon_sequence {
-    int length;
-    struct epsilon_fraction *terms;
-};
 
 struct disp_class bruggeman_disp_class = {
     .disp_class_id       = DISP_BRUGGEMAN,
@@ -63,6 +65,18 @@ struct disp_class bruggeman_disp_class = {
     .write               = bruggeman_write,
     .read                = bruggeman_read,
 };
+
+static cmpl epsilon_sqrt(const cmpl epsilon) {
+    const double THETA_TOL = M_PI / 4;
+    const double er = creal(epsilon), ei = cimag(epsilon);
+    const double r = sqrt(er * er + ei * ei);
+    double theta = atan2(ei, er);
+    if (theta > M_PI - THETA_TOL) {
+        theta -= 2 * M_PI;
+    }
+    const double rr = sqrt(r);
+    return rr * cos(theta / 2) + I * rr * sin(theta / 2);
+}
 
 void
 bruggeman_free(struct disp_struct *_d)
@@ -113,82 +127,6 @@ bruggeman_n_value(const disp_t *disp, double lam)
 {
     return bruggeman_n_value_deriv(disp, lam, NULL);
 }
-
-#ifdef DEBUG_BRUGGEMAN
-static cmpl
-bruggeman_debug_residual(const struct epsilon_sequence *seq, const cmpl eps, double lam) {
-    cmpl sum = 0;
-    for (int i = 0; i < seq->length; i++) {
-        const struct epsilon_fraction *t = &seq->terms[i];
-        const cmpl den = t->eps + 2 * eps;
-        sum += t->f * (t->eps - eps) / den;
-    }
-    return sum;
-}
-
-struct deriv_eval_params {
-    const disp_t *disp;
-    double wavelength;
-    int i;
-};
-
-static double eval_real(double x, void *_p) {
-    struct deriv_eval_params *p = _p;
-    const struct disp_bruggeman *bema = &p->disp->disp.bruggeman;
-    bema->components[p->i].fraction = x;
-    const cmpl n = bruggeman_n_value_deriv(p->disp, p->wavelength, NULL);
-    return creal(n);
-}
-
-static double eval_imag(double x, void *_p) {
-    struct deriv_eval_params *p = _p;
-    const struct disp_bruggeman *bema = &p->disp->disp.bruggeman;
-    bema->components[p->i].fraction = x;
-    const cmpl n = bruggeman_n_value_deriv(p->disp, p->wavelength, NULL);
-    return cimag(n);
-}
-
-static void
-bruggeman_debug_verif_deriv(const disp_t *disp, double lam, int *VERIF_DEBUG) {
-    *VERIF_DEBUG = 0;
-    const struct disp_bruggeman *bema = &disp->disp.bruggeman;
-    cmpl_vector *v_test = cmpl_vector_alloc(bema->components_number);
-    cmpl_vector *v_num  = cmpl_vector_alloc(bema->components_number);
-    bruggeman_n_value_deriv(disp, lam, v_test);
-
-    struct deriv_eval_params deriv_params[1] = {{disp, lam, 0}};
-    gsl_function F_re, F_im;
-    F_re.function = &eval_real;
-    F_re.params = deriv_params;
-    F_im.function = &eval_imag;
-    F_im.params = deriv_params;
-
-    for (int i = 0; i < bema->components_number; i++) {
-        const double f0 = bema->components[i].fraction;
-
-        deriv_params->i = i;
-
-        double h = 1e-4;
-        double abserr;
-        double deriv_re, deriv_im;
-        gsl_deriv_central(&F_re, f0, h, &deriv_re, &abserr);
-        bema->components[i].fraction = f0;
-
-        gsl_deriv_central(&F_im, f0, h, &deriv_im, &abserr);
-        bema->components[i].fraction = f0;
-
-        cmpl_vector_set(v_num, i, deriv_re + I * deriv_im);
-    }
-    for (int i = 0; i < bema->components_number; i++) {
-        const cmpl d_test = cmpl_vector_get(v_test, i);
-        const cmpl d_num  = cmpl_vector_get(v_num,  i);
-        printf("%3i: (%10g, %10g) (%10g, %10g)\n", i, creal(d_test), cimag(d_test), creal(d_num), cimag(d_num));
-    }
-    cmpl_vector_free(v_test);
-    cmpl_vector_free(v_num);
-    *VERIF_DEBUG = 1;
-}
-#endif
 
 static cmpl
 epsilon_ode_eval(const struct epsilon_sequence *seq, double t, const cmpl eps) {
@@ -284,20 +222,23 @@ static void rkf45_apply (struct bruggeman_rkf45 *state, double t, double h,
   state->yerr = h * (ec[1] * k1 + ec[3] * k3 + ec[4] * k4 + ec[5] * k5 + ec[6] * k6);
 }
 
-static void
+static unsigned int
 compute_epsilon_sequence(struct epsilon_sequence *seq, const struct disp_bruggeman *d, double lam) {
     const cmpl n_base = n_value(d->disp_base, lam);
     const cmpl eps_base = n_base * n_base;
     double f_base = 1;
+    int eps_physical = 1;
     for (int i = 1; i < seq->length; i++) {
         struct epsilon_fraction *t = &seq->terms[i];
         t->f = d->components[i - 1].fraction;
         const cmpl n = n_value(d->components[i - 1].disp, lam);
         t->eps = n * n;
         f_base -= t->f;
+        eps_physical = eps_physical && (t->f >= 0 && cimag(t->eps) - 1e-12 <= 0);
     }
     seq->terms[0].f = f_base;
     seq->terms[0].eps = eps_base;
+    return eps_physical && (f_base >= 0 && cimag(eps_base) - 1e-12 <= 0);
 }
 
 static void sequence_swap_term(struct epsilon_sequence *seq, int i) {
@@ -339,14 +280,12 @@ static cmpl epsilon_ode_solve(const struct epsilon_sequence *seq, const double y
     struct bruggeman_rkf45 state[1] = {{seq, eps0, eps0}};
     double t = 0.0, t_stop = 1.0;
     cmpl dydt0 = epsilon_ode_eval(state->seq, t, eps0), dydt1;
-    const double h_start = 0.091;
-    int iterations = 0;
+    const double h_start = 0.21;
     while (t < t_stop) {
         double t1 = dmin(t + h_start, t_stop);
         for (int k = 0; k < 20; k++) {
-            iterations ++;
             rkf45_apply(state, t, t1 - t, dydt0, &dydt1);
-            if (CSQABS(state->yerr) > ytol * ytol) {
+            if (fabs(creal(state->yerr)) > ytol || fabs(cimag(state->yerr)) > ytol) {
                 t1 = t + (t1 - t) / 2;
                 state->y = state->y0;
             } else {
@@ -356,9 +295,6 @@ static cmpl epsilon_ode_solve(const struct epsilon_sequence *seq, const double y
         t = t1;
         dydt0 = dydt1;
     }
-#ifdef DEBUG_BRUGGEMAN
-    printf("ODE iterations: %d\n", iterations);
-#endif
     return state->y;
 }
 
@@ -380,9 +316,6 @@ static cmpl epsilon_newton_refine(const struct epsilon_sequence *seq, cmpl eps, 
             break;
         }
     }
-#ifdef DEBUG_BRUGGEMAN
-    printf("newton iterations: %d\n", k);
-#endif
     return eps;
 }
 
@@ -397,28 +330,48 @@ static double epsilon_abs_magnitude(const struct epsilon_sequence *seq) {
     return eps_abs;
 }
 
+cmpl bruggeman_epsilon_ode_newton(struct epsilon_sequence *seq, double lam) {
+    int i_swap = sequence_normalize_fraction_order(seq);
+
+    const double eps_abs = epsilon_abs_magnitude(seq);
+    const cmpl eps_ode = epsilon_ode_solve(seq, dmin(1e-3, eps_abs * 1e-3));
+
+    /* Re-swaps sequence terms in the correct order to compute the derivative. */
+    sequence_swap_term(seq, i_swap);
+
+    return epsilon_newton_refine(seq, eps_ode, eps_abs * 1e-8);
+}
+
+/* Assume the bruggeman has only two components (including the base). */
+cmpl bruggeman_bicomp_quad_solve(const struct epsilon_sequence *seq, double lam) {
+    const cmpl e1 = seq->terms[0].eps, e2 = seq->terms[1].eps;
+    const double f1 = seq->terms[0].f, f2 = seq->terms[1].f;
+    const cmpl b = 2 * f1 * e1 + 2 * f2 * e2 - f1 * e2 - f2 * e1;
+    const cmpl root = csqrt(b*b + 8 * e1 * e2);
+    const int sign = cimag(root) <= 0.0 ? 1 : -1;
+    return 1/4.0 * (b + sign * root);
+}
+
 cmpl
 bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
 {
     const struct disp_bruggeman *d = &disp->disp.bruggeman;
-
     const int terms_no = d->components_number + 1;
     struct epsilon_fraction terms[terms_no];
     struct epsilon_sequence seq[1] = {{terms_no, terms}};
-    compute_epsilon_sequence(seq, d, lam);
-    int i_swap = sequence_normalize_fraction_order(seq);
+    int is_physical = compute_epsilon_sequence(seq, d, lam);
 
-    const double eps_abs = epsilon_abs_magnitude(seq);
-    const cmpl eps_ode = epsilon_ode_solve(seq, dmin(1e-5, eps_abs * 1e-4));
-    const cmpl eps = epsilon_newton_refine(seq, eps_ode, eps_abs * 1e-8);
+    cmpl eps;
+    if (d->components_number == 1 && is_physical) {
+        eps = bruggeman_bicomp_quad_solve(seq, lam);
+    } else {
+        eps = bruggeman_epsilon_ode_newton(seq, lam);
+    }
 
+    const cmpl n = epsilon_sqrt(eps);
     if (v != NULL) {
-        /* Re-swaps sequence terms in the correct order to compute the
-           derivative. */
-        sequence_swap_term(seq, i_swap);
-
         const cmpl sum_fesq = compute_sum_fesq(seq, eps);
-        const cmpl deriv_factor = 1.0 / (2.0 * csqrt(eps));
+        const cmpl deriv_factor = 1.0 / (2.0 * n);
         cmpl n_der0;
         for (int i = 0; i < seq->length; i++) {
             const struct epsilon_fraction *t = &seq->terms[i];
@@ -432,15 +385,7 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
         }
     }
 
-#ifdef DEBUG_BRUGGEMAN
-    static int VERIF_DEBUG = 1;
-    if (VERIF_DEBUG) {
-        cmpl sum_verif = bruggeman_debug_residual(seq, eps, lam);
-        printf("sum: (%g,%g)\n", creal(sum_verif), cimag(sum_verif));
-        bruggeman_debug_verif_deriv(disp, lam, &VERIF_DEBUG);
-    }
-#endif
-    return csqrt(eps);
+    return n;
 }
 
 int
