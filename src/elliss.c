@@ -360,33 +360,18 @@ mult_layer_se_jacob(enum se_type type,
                     double anlz, ell_ab_t e,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n)
 {
-#define NB_JAC_STATIC 10
-    static struct {
-        cmpl th[2*NB_JAC_STATIC], n[2*NB_JAC_STATIC];
-    } jacs;
-    struct {
-        cmpl *th, *n;
-    } jac;
     const int nb = _nb, nblyr = nb - 2;
-    int use_static = (nb <= NB_JAC_STATIC);
+    cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
     double tanlz = tan(anlz);
     cmpl R[2], nsin0;
     size_t j;
 
-    if(use_static) {
-        jac.th = jacs.th;
-        jac.n  = jacs.n;
-    } else {
-        jac.th = emalloc(2*nb*sizeof(cmpl));
-        jac.n  = emalloc(2*nb*sizeof(cmpl));
-    }
-
     nsin0 = ns[0] * csin((cmpl) phi0);
 
     if(jacob_th && jacob_n) {
-        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, jac.th, jac.n);
+        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th, mlr_jacob_n);
     } else if(jacob_th) {
-        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, jac.th);
+        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th);
     } else {
         mult_layer_refl(nb, ns, nsin0, ds, lambda, R);
     }
@@ -405,7 +390,7 @@ mult_layer_se_jacob(enum se_type type,
             struct {
                 cmpl alpha, beta;
             } d;
-            cmpl dR[2] = {jac.n[j], jac.n[nb+j]};
+            cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
 
             if(type == SE_ALPHA_BETA) {
                 se_ab_der(R, dR, tanlz, &d.alpha, &d.beta);
@@ -423,7 +408,7 @@ mult_layer_se_jacob(enum se_type type,
             struct {
                 cmpl alpha, beta;
             } d;
-            cmpl dR[2] = {jac.th[j], jac.th[nblyr+j]};
+            cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
 
             if(type == SE_ALPHA_BETA) {
                 se_ab_der(R, dR, tanlz, &d.alpha, &d.beta);
@@ -434,10 +419,5 @@ mult_layer_se_jacob(enum se_type type,
             gsl_vector_set(jacob_th, j, creal(d.alpha));
             gsl_vector_set(jacob_th, nblyr+j, creal(d.beta));
         }
-    }
-
-    if(! use_static) {
-        free(jac.th);
-        free(jac.n);
     }
 }

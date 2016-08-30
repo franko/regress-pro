@@ -174,57 +174,36 @@ mult_layer_refl_ni(size_t _nb, const cmpl ns[], const double ds[],
                    double lambda,
                    gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
 {
-#define NB_JAC_STATIC 10
-    struct {
-        cmpl th[NB_JAC_STATIC], n[NB_JAC_STATIC];
-    } jacs;
-    struct {
-        cmpl *th, *n;
-    } jacd;
     int nb = _nb;
-    int use_static = (nb <= NB_JAC_STATIC);
+    cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
     size_t k;
     cmpl r;
 
     assert(nb >= 2);
 
-    if(use_static) {
-        jacd.th = jacs.th;
-        jacd.n  = jacs.n;
-    } else {
-        jacd.th = emalloc(nb * sizeof(cmpl));
-        jacd.n  = emalloc(nb * sizeof(cmpl));
-    }
-
     if(r_jacob_th && r_jacob_n) {
-        r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda, jacd.th, jacd.n);
+        r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda, mlr_jacob_th, mlr_jacob_n);
     } else if(r_jacob_th) {
-        r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda, jacd.th);
+        r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda, mlr_jacob_th);
     } else {
         r = mult_layer_refl_ni_nojacob(nb, ns, ds, lambda);
     }
 
     if(r_jacob_th)
         for(k = 0; k < (size_t) nb-2; k++) {
-            cmpl dr = jacd.th[k];
+            cmpl dr = mlr_jacob_th[k];
             double drsq = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
             gsl_vector_set(r_jacob_th, k, drsq);
         }
 
     if(r_jacob_n)
         for(k = 0; k < (size_t) nb; k++) {
-            cmpl dr = jacd.n[k];
+            cmpl dr = mlr_jacob_n[k];
             double drsqr = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
             double drsqi = 2 * (cimag(r)*creal(dr) - creal(r)*cimag(dr));
             gsl_vector_set(r_jacob_n, k, drsqr);
             gsl_vector_set(r_jacob_n, nb + k, drsqi);
         }
 
-    if(! use_static) {
-        free(jacd.th);
-        free(jacd.n);
-    }
-
     return CSQABS(r);
-#undef NB_JAC_STATIC
 }
