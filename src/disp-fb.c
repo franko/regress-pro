@@ -334,15 +334,11 @@ int
 fb_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_fb *d = &_d->disp.fb;
-    writer_printf(w, "%d %d", d->n, d->form);
-    writer_printf(w, " %g %g", d->n_inf, d->eg);
-    writer_newline_enter(w);
+    writer_printf(w, "%d %d %g %g", d->n, d->form, d->n_inf, d->eg);
+    writer_newline(w);
     struct fb_osc *fb = d->osc;
     int i;
     for (i = 0; i < d->n; i++, fb++) {
-        if (i > 0) {
-            writer_newline(w);
-        }
         writer_printf(w, "%g %g %g", fb->a, fb->b, fb->c);
     }
     writer_newline_exit(w);

@@ -435,7 +435,7 @@ int bruggeman_write(writer_t *w, const disp_t *d) {
         writer_newline(w);
         disp_write(w, bema->components[i].disp);
     }
-    writer_indent(w, -1);
+    writer_indent(w, -2);
     return 0;
 }
 

@@ -145,7 +145,6 @@ int
 cauchy_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_cauchy *d = & _d->disp.cauchy;
-    writer_newline_enter(w);
     writer_printf(w, "%g %g %g", d->n[0], d->n[1], d->n[2]);
     writer_newline(w);
     writer_printf(w, "%g %g %g", d->k[0], d->k[1], d->k[2]);
