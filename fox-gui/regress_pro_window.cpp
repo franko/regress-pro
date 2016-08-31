@@ -158,7 +158,8 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     recipe->setup_default_stack();
     m_interactive_fit = new interactive_fit(recipe->stack, recipe->config);
 
-    main_filmstack_window = new filmstack_window(recipe->stack, rcphf, LAYOUT_FILL_Y);
+    auto scroll_window = new FXScrollWindow(rcphf, HSCROLLING_OFF | LAYOUT_FILL_Y);
+    main_filmstack_window = new filmstack_window(recipe->stack, scroll_window, LAYOUT_FILL_Y | LAYOUT_FILL_X);
     main_filmstack_window->set_target_stack_changes(this, FXSEL(SEL_COMMAND,ID_STACK_CHANGE), FXSEL(SEL_COMMAND,ID_STACK_SHIFT));
 
     new FXVerticalSeparator(rcphf, SEPARATOR_GROOVE|LAYOUT_FILL_Y);
