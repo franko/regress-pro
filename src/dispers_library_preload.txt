@@ -14,7 +14,7 @@ table "Thermal SiO2" 9
 library-id "sio2-ho" ho "Thermal SiO2 HO" 1 143.747 15.6982 0 0.3333 0
 library-id "silicon-1"
 table "Silicon"
-description "C. M. Herzinger, B. Johs, W. A. McGahan,\nJ. A. Woollam and W. Paulson\nApplied Physics, 83, 6, (1998) 3323-3336"
+description "C. M. Herzinger, B. Johs, W. A. McGahan, J. A. Woollam and W. Paulson\nApplied Physics, 83, 6, (1998) 3323-3336"
 108
 108 3
 187.285 0.818733 2.57585
@@ -166,7 +166,7 @@ lookup "Poly Lookup"
   1.4 library "silicon-1"
 library-id "copper-1"
 table "Copper"
-description "Ellipsometry caracterization after CMP polishing\nNH3 surface treatment and dielectric deposition.\nSTMicroelectronics Crolles"
+description "Cu caracterization after CMP polishing with NH3 surface treatment and dielectric deposition.\nSTMicroelectronics Crolles"
 44
 44 3
 190 0.999992 1.73575
