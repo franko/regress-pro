@@ -20,6 +20,7 @@ FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0,          fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_CLEAR_FLAG,          fx_disp_window::on_cmd_clear_flag),
+    FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DESCRIPTION_TOGGLE,  fx_disp_window::on_cmd_description_toggle),
 };
 
 FXIMPLEMENT(fx_disp_window,FXVerticalFrame,fx_disp_window_map,ARRAYNUMBER(fx_disp_window_map));
@@ -42,6 +43,20 @@ void fx_disp_window::reload()
     }
     this->setup();
     this->create();
+}
+
+FXWindow *fx_disp_window::new_description_area(FXComposite *container, const char *text) {
+    auto frame = new FXPacker(container, FRAME_LINE | LAYOUT_FILL_X| LAYOUT_FILL_Y, 0, 0, 0, 0, 0, 0, 0, 0);
+    frame->setBorderColor(FXRGB(197,213,221));
+    auto textfield = new FXText(frame, this, ID_DESCRIPTION, TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    textfield->setFont(&regressProApp()->lit_font);
+    textfield->setText(text);
+    const FXint nrows = textfield->getNumRows();
+    textfield->setVisibleRows(std::min(nrows,3));
+    textfield->setVisibleColumns(60);
+    textfield->setBackColor(FXRGB(230,241,246));
+    textfield->setTipText("Description of the dispersion. Enter a new description or modify the content.");
+    return frame;
 }
 
 void fx_disp_window::setup_name()
@@ -78,15 +93,20 @@ void fx_disp_window::setup_name()
         range_end_textfield->disable();
     }
 
-    auto descr_group = new FXGroupBox(this, "Description", GROUPBOX_NORMAL|LAYOUT_FILL_X|FRAME_GROOVE, 0, 0, 0, 0, 0, 0, DEFAULT_PAD, 0);
-    description_textfield = new FXText(descr_group, this, ID_DESCRIPTION, FRAME_LINE|LAYOUT_FILL_X);
-    description_textfield->setFont(&regressProApp()->lit_font);
-    description_textfield->setText(CSTR(disp->info->description));
-    const FXint nrows = description_textfield->getNumRows();
-    description_textfield->setVisibleRows(std::min(nrows,3));
-    description_textfield->setVisibleColumns(60);
-    description_textfield->setBackColor(FXRGB(255,255,240));
-    description_textfield->setTipText("Description of the dispersion. Enter a new description or modify the content.");
+    auto descr_group = new FXVerticalFrame(this, FRAME_NONE | LAYOUT_FILL_X, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    m_description_frame = new FXVerticalFrame(descr_group, FRAME_NONE | LAYOUT_FILL_X | LAYOUT_FILL_Y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    auto descr_label_frame = new FXHorizontalFrame(m_description_frame, FRAME_NONE, 0, 0, 0, 0, 0, 0, 0, 0);
+    m_description_button = new FXButton(descr_label_frame, ">", NULL, this, ID_DESCRIPTION_TOGGLE, BUTTON_TOOLBAR, 0, 0, 0, 0, 0, 0, 0, 0);
+    m_description_button->setFont(&app->monospace_font);
+    new FXLabel(descr_label_frame, "Description", NULL, LABEL_NORMAL);
+
+    if (str_is_null(disp->info->description)) {
+        m_description_widget = nullptr;
+    } else {
+        m_description_widget = new_description_area(m_description_frame, CSTR(disp->info->description));
+        m_description_button->setText("v");
+    }
 
     if (disp->info->modifications_stamp) {
         m_message_frame = new FXHorizontalFrame(descr_group, LAYOUT_FILL_X | FRAME_NONE, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -95,6 +115,22 @@ void fx_disp_window::setup_name()
         label->setFont(&app->small_font);
         label->setTextColor(app->blue_highlight);
     }
+}
+
+long
+fx_disp_window::on_cmd_description_toggle(FXObject*, FXSelector sel, void *data)
+{
+    if (m_description_widget) {
+        m_description_button->setText(">");
+        delete m_description_widget;
+        m_description_widget = nullptr;
+    } else {
+        m_description_button->setText("v");
+        m_description_widget = new_description_area(m_description_frame, CSTR(disp->info->description));
+        m_description_widget->create();
+    }
+    recalc();
+    return 1;
 }
 
 long
@@ -109,6 +145,7 @@ fx_disp_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
 long
 fx_disp_window::on_changed_description(FXObject *, FXSelector, void *)
 {
+    FXText *description_textfield = (FXText *) m_description_widget->getFirst();
     FXint length = description_textfield->getLength();
     STR_SIZE_CHECK(disp->info->description, (size_t)length);
     description_textfield->getText((FXchar *) disp->info->description->heap, length);
@@ -121,6 +158,7 @@ fx_disp_window::on_changed_description(FXObject *, FXSelector, void *)
 long
 fx_disp_window::on_update_description(FXObject *, FXSelector, void *)
 {
+    FXText *description_textfield = (FXText *) m_description_widget->getFirst();
     FXint nrows = std::min(description_textfield->getNumRows(), 3);
     FXint nvisi = std::min(description_textfield->getVisibleRows(), 3);
     if (nrows != nvisi) {

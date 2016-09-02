@@ -38,6 +38,7 @@ public:
     long on_changed_range(FXObject*, FXSelector, void *);
     long on_changed_description(FXObject*, FXSelector, void *);
     long on_update_description(FXObject *, FXSelector, void *);
+    long on_cmd_description_toggle(FXObject *, FXSelector, void *);
     long on_disp_element_add(FXObject*, FXSelector, void *);
     long on_disp_element_delete(FXObject*, FXSelector, void *);
     long on_cmd_clear_flag(FXObject*, FXSelector, void *);
@@ -46,6 +47,7 @@ public:
         ID_NAME = FXVerticalFrame::ID_LAST,
         ID_RANGE,
         ID_DESCRIPTION,
+        ID_DESCRIPTION_TOGGLE,
         ID_PARAM_0,
         ID_PARAM_LAST = ID_PARAM_0 + 5 * 16,
         ID_DISP_ELEMENT_DELETE,
@@ -58,8 +60,11 @@ public:
 private:
     bool range_is_valid() const;
     void set_range_color();
+    FXWindow *new_description_area(FXComposite *container, const char *text);
     fx_numeric_field *range_start_textfield, *range_end_textfield;
-    FXText *description_textfield;
+    FXWindow *m_description_widget;
+    FXVerticalFrame *m_description_frame;
+    FXButton *m_description_button;
     FXHorizontalFrame *m_message_frame;
 protected:
     // This is just a reference. The class is not owner of this object.

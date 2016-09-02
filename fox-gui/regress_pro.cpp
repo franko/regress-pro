@@ -3,10 +3,10 @@
 
 #ifdef WIN32
 #define SCRIPT_FONT_NAME "Consolas"
-#define LITERATE_FONT_NAME "Constantia"
+#define LITERATE_FONT_NAME "Segoe UI"
 #else
 #define SCRIPT_FONT_NAME "Monospace"
-#define LITERATE_FONT_NAME "URW Palladio L"
+#define LITERATE_FONT_NAME "Helvetica"
 #endif
 
 FXDEFMAP(regress_pro) regress_pro_map[]= {
@@ -20,7 +20,7 @@ regress_pro::regress_pro() :
     appicon(this, regressproicon),
     small_font(this, "helvetica", 9, FXFont::Normal, FXFont::Straight),
     bold_font(this, "helvetica", 9, FXFont::Bold, FXFont::Italic),
-    lit_font(this, LITERATE_FONT_NAME, 11, FXFont::Normal, FXFont::Straight),
+    lit_font(this, LITERATE_FONT_NAME, 10, FXFont::Normal, FXFont::Straight),
     monospace_font(this, SCRIPT_FONT_NAME, 9),
     big_web_font(this, "helvetica", 14, FXFont::Bold, FXFont::Straight),
     blue_web(FXRGB(100,114,161)), blue_highlight(FXRGB(3,12,180)), red_warning(FXRGB(180,5,10)), black(FXRGB(0,0,0))
