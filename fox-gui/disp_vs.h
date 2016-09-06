@@ -19,17 +19,19 @@ public:
     }
 
     unsigned vertex(double* x, double* y) {
-        if(m_index >= m_sampling.size()) {
-            return agg::path_cmd_stop;
+        bool line_start = (m_index == 0);
+        while (m_index < m_sampling.size()) {
+            cmpl n = n_value(m_disp, m_sampling[m_index]);
+            *x = m_sampling[m_index];
+            m_index ++;
+            double c = n.data[m_comp];
+            if (isfinite(c)) {
+                *y = (m_comp == cmpl::real_part ? c : -c);
+                return (line_start ? agg::path_cmd_move_to : agg::path_cmd_line_to);
+            }
+            line_start = true;
         }
-
-        cmpl n = n_value(m_disp, m_sampling[m_index]);
-        *x = m_sampling[m_index];
-
-        double c = n.data[m_comp];
-        *y = (m_comp == cmpl::real_part ? c : -c);
-
-        return (m_index++ == 0 ? agg::path_cmd_move_to : agg::path_cmd_line_to);
+        return agg::path_cmd_stop;
     }
 
 private:
