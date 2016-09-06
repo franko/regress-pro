@@ -63,7 +63,10 @@ static int interval_set_sampling(const disp_t *d, gsl_vector *v, double waveleng
 
 static int interval_samples_number(const disp_t *d, double wavelength_start, double wavelength_end)
 {
-    return interval_set_sampling(d, NULL, wavelength_start, wavelength_end);
+    if (disp_is_tabular(d)) {
+        return interval_set_sampling(d, NULL, wavelength_start, wavelength_end);
+    }
+    return 0;
 }
 
 class disp_fit_manager : public fit_manager {
