@@ -61,7 +61,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 {
     new FXLabel(this, "New Model");
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
-    combo->setNumVisible(7);
+    combo->setNumVisible(8);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy");
@@ -69,6 +69,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
     combo->appendItem("Forouhi-Bloomer");
     combo->appendItem("Tauc-Lorentz");
     combo->appendItem("Bruggeman");
+    combo->appendItem("Sellmeier");
 }
 
 disp_t *
@@ -99,6 +100,11 @@ fx_newmodel_selector::get_dispersion()
         components[0].fraction = 0.5;
         components[0].disp = lib_disp_table_get("nitride-2");
         return bruggeman_new("* bruggeman", comp1, 1, components);
+    } else if (name == "Sellmeier") {
+        // Coefficients for BK7 Crown Glass
+        double a[3] = { 1.03961212, 0.231792344, 1.01046945 };
+        double b[3] = { 6.00069867e-3, 2.00179144e-2, 1.03560653e+2 };
+        return disp_new_sellmeier("*sellmeier", a, b);
     }
     return NULL;
 }

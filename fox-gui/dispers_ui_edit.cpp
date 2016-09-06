@@ -360,8 +360,8 @@ long fx_disp_fb_window::on_cmd_coeff_form(FXObject *, FXSelector, void *data)
 void fx_disp_cauchy_window::setup_dialog()
 {
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS, 0,0,0,0, 8*DEFAULT_SPACING,8*DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, 6*DEFAULT_SPACING,DEFAULT_SPACING);
-    new FXLabel(matrix, "N", NULL, LAYOUT_CENTER_X);
-    new FXLabel(matrix, "K", NULL, LAYOUT_CENTER_X);
+    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "N" : "A", NULL, LAYOUT_CENTER_X);
+    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "K" : "B", NULL, LAYOUT_CENTER_X);
 
     for (int p = 0; p < 6; p++) {
         int i = p / 2, j = p % 2;
@@ -375,7 +375,7 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
     fx_disp_window *dispwin;
     if (d->type == DISP_HO) {
         dispwin = new fx_disp_ho_window(d, comp, opts);
-    } else if (d->type == DISP_CAUCHY) {
+    } else if (d->type == DISP_CAUCHY || d->type == DISP_SELLMEIER) {
         dispwin = new fx_disp_cauchy_window(d, comp, opts);
     } else if (d->type == DISP_LOOKUP) {
         dispwin = new fx_lookup_window(d, comp, opts);

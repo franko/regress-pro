@@ -12,6 +12,7 @@
 #include "disp-fb.h"
 #include "disp-lookup.h"
 #include "disp-cauchy.h"
+#include "disp-sellmeier.h"
 #include "dispers-classes.h"
 #include "writer.h"
 #include "lexer.h"
@@ -62,8 +63,6 @@ struct disp_info {
     float wavelength_start, wavelength_end;
 };
 
-// typedef struct _disp_info disp_info;
-
 struct disp_struct {
     struct disp_class *dclass;
     enum disp_type type;
@@ -72,6 +71,7 @@ struct disp_struct {
         struct disp_table table;
         struct disp_sample_table sample_table;
         struct disp_cauchy cauchy;
+        struct disp_sellmeier sellmeier;
         struct disp_ho ho;
         struct disp_lookup lookup;
         struct disp_bruggeman bruggeman;
