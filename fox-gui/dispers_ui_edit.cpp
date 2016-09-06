@@ -361,7 +361,7 @@ void fx_disp_cauchy_window::setup_dialog()
 {
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS, 0,0,0,0, 8*DEFAULT_SPACING,8*DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, 6*DEFAULT_SPACING,DEFAULT_SPACING);
     new FXLabel(matrix, disp->type == DISP_CAUCHY ? "N" : "A", NULL, LAYOUT_CENTER_X);
-    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "K" : "B", NULL, LAYOUT_CENTER_X);
+    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "K" : "B (µm^2)", NULL, LAYOUT_CENTER_X);
 
     for (int p = 0; p < 6; p++) {
         int i = p / 2, j = p % 2;

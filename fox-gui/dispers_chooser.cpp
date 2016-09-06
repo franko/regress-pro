@@ -2,6 +2,7 @@
 #include "regress_pro.h"
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
+#include "glass_sellmeier_data.h"
 #include "error-messages.h"
 #include "str-util.h"
 #include "lexer.h"
@@ -237,6 +238,43 @@ fx_file_disp_selector::reset()
     m_combo->setCurrentItem(0);
 }
 
+class fx_glass_selector : public fx_dispers_selector {
+public:
+    fx_glass_selector(FXWindow *chooser, const char *name, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING);
+    virtual disp_t *get_dispersion();
+    virtual void reset();
+private:
+    FXComboBox *combo;
+};
+
+fx_glass_selector::fx_glass_selector(FXWindow *chooser, const char *name, FXComposite *p, FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
+    fx_dispers_selector(chooser, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
+{
+    new FXLabel(this, name);
+    combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
+    combo->setNumVisible(GLASS_DATA_SIZE + 1);
+    combo->appendItem("- choose a dispersion");
+    for (int i = 0; i < GLASS_DATA_SIZE; i++) {
+        combo->appendItem(glass_coeff_table[i].name);
+    }
+}
+
+disp_t *
+fx_glass_selector::get_dispersion()
+{
+    FXint index = combo->getCurrentItem() - 1;
+    const struct glass_coeff *glass = &glass_coeff_table[index];
+    disp_t *new_disp = disp_new_sellmeier(glass->name, glass->coeff, &glass->coeff[3]);
+    disp_set_info_wavelength(new_disp, 326, 1129);
+    return new_disp;
+}
+
+void
+fx_glass_selector::reset()
+{
+    combo->setCurrentItem(0);
+}
+
 // Map
 FXDEFMAP(dispers_chooser) dispers_chooser_map[]= {
     FXMAPFUNC(SEL_COMMAND, dispers_chooser::ID_CATEGORY, dispers_chooser::on_cmd_category),
@@ -257,6 +295,7 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     catlist->appendItem("New Model", NULL, NULL, TRUE);
     catlist->appendItem("User List", NULL, NULL, TRUE);
     catlist->appendItem("Preset List", NULL, NULL, TRUE);
+    catlist->appendItem("Glass Library", NULL, NULL, TRUE);
     catlist->selectItem(0, FALSE);
 
     FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 80, 0);
@@ -267,6 +306,7 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     new fx_newmodel_selector(this, choose_switcher);
     new fx_library_selector(this, "User Model", user_lib, choose_switcher);
     new fx_library_selector(this, "Preset Model", preset_lib, choose_switcher);
+    new fx_glass_selector(this, "Glass Library", choose_switcher);
 
     dispwin = new_dispwin_dummy(vframe);
     dispwin_dummy = dispwin;
