@@ -105,15 +105,18 @@ int subsampling_eval(const tab_matrix& ms, const pod_vector<int>& ipoints, const
     return -1;
 }
 
+template <typename T> T square(T a) { return a * a; }
+
 double interp_delta_score(const cspline_array_interp& interp, const tab_matrix& ms, const pod_vector<int>& ipoints, const int i_min, const int i_max) {
     double del_n = 0, del_k = 0;
     for (int i = ipoints[i_min]; i < ipoints[i_max]; i++) {
         auto nki = interp.eval(ms(i, 0));
         auto nkr = std::pair<double, double>(ms(i, 1), ms(i, 2));
-        del_n = std::max(del_n, std::abs(nki.first  - nkr.first ));
-        del_k = std::max(del_k, std::abs(nki.second - nkr.second));
+        del_n += square(nki.first  - nkr.first );
+        del_k += square(nki.second - nkr.second);
     }
-    return std::max(del_n, del_k);
+    int points_number = ipoints[i_max] - ipoints[i_min];
+    return sqrt(del_n / points_number) + sqrt(del_k / points_number);
 }
 
 std::pair<int, double> find_delta_optimal(const tab_matrix& ms, pod_vector<int>& ipoints, int i, int ka, int kb) {
