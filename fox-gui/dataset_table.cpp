@@ -170,8 +170,11 @@ int dataset_table::write(writer_t *w)
     writer_newline_enter(w);
     for (int i = 0; i < n; i++) {
         FXString name = getItemText(i, 0);
-        // IMPORTANT: TODO, use escaped string here!
-        writer_printf(w, "\"%s\"", name.text());
+        str_t quoted_name;
+        str_init(quoted_name, 127);
+        writer_quote_string(quoted_name, name.text());
+        writer_put_string(w, CSTR(quoted_name));
+        str_free(quoted_name);
         for (fit_param_node *p = fplink.top; p; p = p->next) {
             double cell_value;
             if (get_cell_value(i, p->column, &cell_value)) {
