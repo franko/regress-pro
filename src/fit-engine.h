@@ -34,13 +34,8 @@
 
 __BEGIN_DECLS
 
-struct extra_params {
-    /* Reflectometry parameters */
-    double rmult;
-};
-
 struct fit_run {
-    enum system_kind system_kind;
+    enum system_kind acquisition_type;
 
     struct spectrum *spectr;
 
@@ -58,7 +53,7 @@ struct fit_run {
 };
 
 struct fit_engine {
-    struct extra_params extra[1];
+    struct acquisition_parameters acquisition[1];
     struct fit_config config[1];
 
     struct stack *stack;
@@ -117,8 +112,6 @@ extern void build_stack_cache(struct stack_cache *cache,
 
 extern void dispose_stack_cache(struct stack_cache *cache);
 
-extern void set_default_extra_param(struct extra_params *extra);
-
 extern void fit_engine_generate_spectrum(struct fit_engine *fit,
         struct spectrum *ref,
         struct spectrum *synth);
@@ -141,6 +134,9 @@ fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, c
 
 extern void
 fit_config_set_default(struct fit_config *cfg);
+
+extern void
+fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters *acquisition);
 
 extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);

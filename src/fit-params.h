@@ -2,9 +2,9 @@
 #define FIT_PARAMS_H
 
 #include "common.h"
-#include "spectra.h"
 #include "str.h"
 #include "writer.h"
+#include "lexer.h"
 #include "dispers-classes.h"
 
 __BEGIN_DECLS
@@ -12,8 +12,10 @@ __BEGIN_DECLS
 enum params_id {
     PID_THICKNESS = 1,
     PID_LAYER_N,
-    PID_LAYER_INDIPENDENT, /* Beginning of layer-indipendent parameters */
-    PID_FIRSTMUL = PID_LAYER_INDIPENDENT,
+    PID_ACQUISITION_PARAMETER, /* Beginning of acquisition parameters */
+    PID_FIRSTMUL = PID_ACQUISITION_PARAMETER,
+    PID_AOI,
+    PID_ANALYZER,
     PID_INVALID,
 };
 

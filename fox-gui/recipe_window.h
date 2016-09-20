@@ -22,6 +22,7 @@ public:
     regress_pro* regressProApp() const { return (regress_pro*) getApp(); }
 
     void bind_new_fit_recipe(fit_recipe *rcp);
+    void bind_new_acquisition(const struct acquisition_parameters *acquisition);
 
     long on_cmd_param_select(FXObject*, FXSelector, void*);
     long on_cmd_seed(FXObject*, FXSelector, void*);
@@ -83,6 +84,8 @@ private:
 
     fit_recipe *recipe;
     fit_parameters *param_list;
+    acquisition_parameters known_acquisition;
+
     bool seed_dirty;
 
     FXSpring *iparams_spring, *cparams_spring;

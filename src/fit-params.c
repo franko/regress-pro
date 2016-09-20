@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "fit-params.h"
 #include "dispers.h"
+#include "acquisition.h"
 
 static void get_disp_param_name(const fit_param_t *fp, str_ptr buf);
 
@@ -28,17 +30,13 @@ set_thick_param(fit_param_t *fpres, int lyr)
 void
 get_param_name(const fit_param_t *fp, str_t name)
 {
-    switch(fp->id) {
-    case PID_THICKNESS:
+    if (fp->id >= PID_ACQUISITION_PARAMETER) {
+        acquisition_parameter_to_string(name, fp->id);
+    } else if (fp->id == PID_THICKNESS) {
         str_printf(name, "T%i", fp->layer_nb);
-        break;
-    case PID_FIRSTMUL:
-        str_printf(name, "1stmult");
-        break;
-    case PID_LAYER_N:
+    } else if (fp->id == PID_LAYER_N) {
         get_disp_param_name(fp, name);
-        break;
-    default:
+    } else {
         str_printf(name, "###");
     }
 }
@@ -46,23 +44,17 @@ get_param_name(const fit_param_t *fp, str_t name)
 void
 get_full_param_name(const fit_param_t *fp, str_t name)
 {
-    switch(fp->id) {
-    case PID_THICKNESS:
+    if (fp->id >= PID_ACQUISITION_PARAMETER) {
+        acquisition_parameter_to_string(name, fp->id);
+    } else if (fp->id == PID_THICKNESS) {
         str_printf(name, "T%i", fp->layer_nb);
-        break;
-    case PID_FIRSTMUL:
-        str_printf(name, "1stmult");
-        break;
-    case PID_LAYER_N:
-    {
+    } else if (fp->id == PID_LAYER_N) {
         str_t dname;
         str_init(dname, 15);
         get_disp_param_name(fp, dname);
         str_printf(name, "Layer%d / %s", fp->layer_nb, CSTR(dname));
         str_free(dname);
-        break;
-    }
-    default:
+    } else {
         str_printf(name, "###");
     }
 }
@@ -318,7 +310,7 @@ fix_delete_layer(struct fit_parameters *lst, int index)
     size_t i;
     for (i = 0; i < lst->number; i++) {
         fit_param_t *fp = &lst->values[i];
-        if (fp->id < PID_LAYER_INDIPENDENT && fp->layer_nb >= index) {
+        if (fp->id < PID_ACQUISITION_PARAMETER && fp->layer_nb >= index) {
             if (fp->layer_nb > index) {
                 fp->layer_nb --;
             } else {
@@ -334,7 +326,7 @@ fix_insert_layer(struct fit_parameters *lst, int index)
     size_t i;
     for (i = 0; i < lst->number; i++) {
         fit_param_t *fp = &lst->values[i];
-        if (fp->id < PID_LAYER_INDIPENDENT && fp->layer_nb >= index) {
+        if (fp->id < PID_ACQUISITION_PARAMETER && fp->layer_nb >= index) {
             fp->layer_nb ++;
         }
     }
@@ -357,7 +349,7 @@ fit_param_write(writer_t *w, const fit_param_t *fp)
 {
     int id = fp->id;
     writer_printf(w, "%s", (id >= PID_THICKNESS && id < PID_INVALID) ? id_name[id-1] : "invalid");
-    if (id < PID_LAYER_INDIPENDENT) {
+    if (id < PID_ACQUISITION_PARAMETER) {
         writer_printf(w, " %d", fp->layer_nb);
         if (id == PID_LAYER_N) {
             struct disp_class *dclass = disp_class_lookup(fp->model_id);

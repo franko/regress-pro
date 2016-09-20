@@ -102,7 +102,7 @@ dispose_stack_cache(struct stack_cache *cache)
 void
 build_fit_engine_cache(struct fit_engine *f)
 {
-    size_t dmultipl = (f->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
+    size_t dmultipl = (f->acquisition->type == SYSTEM_REFLECTOMETER ? 1 : 2);
     int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
     size_t nb = f->stack->nb;
     int nblyr = nb - 2;
@@ -111,7 +111,7 @@ build_fit_engine_cache(struct fit_engine *f)
 
     f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
-    switch(f->run->system_kind) {
+    switch(f->acquisition->type) {
     case SYSTEM_REFLECTOMETER:
         f->run->jac_n.refl = gsl_vector_alloc(2 * nb);
         break;
@@ -129,7 +129,7 @@ dispose_fit_engine_cache(struct fit_run *run)
 {
     gsl_vector_free(run->jac_th);
 
-    switch(run->system_kind) {
+    switch(run->acquisition_type) {
     case SYSTEM_REFLECTOMETER:
         gsl_vector_free(run->jac_n.refl);
         break;
@@ -149,15 +149,11 @@ fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp,
                        double val)
 {
     int res = 0;
-
-    switch(fp->id) {
-    case PID_FIRSTMUL:
-        fit->extra->rmult = val;
-        break;
-    default:
+    if (fp->id >= PID_ACQUISITION_PARAMETER) {
+        res = acquisition_apply_param(fit->acquisition, fp->id, val);
+    } else {
         res = stack_apply_param(fit->stack, fp, val);
     }
-
     return res;
 }
 
@@ -233,9 +229,9 @@ int
 fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
 {
     struct fit_config *cfg = fit->config;
-    enum system_kind syskind = s->config.system;
+    enum system_kind syskind = s->acquisition->type;
 
-    fit->run->system_kind = syskind;
+    fit->acquisition[0] = s->acquisition[0];
     fit->run->spectr = spectra_copy(s);
 
     if(fit->config->spectr_range.active)
@@ -348,15 +344,9 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
 
 struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
-    fit_param_t fp[1];
-
     struct fit_parameters *fps = fit_parameters_new();
-
-    fp->id = PID_FIRSTMUL;
-    fit_parameters_add(fps, fp);
-
+    acquisition_get_all_parameters(fit->acquisition, fps);
     stack_get_all_parameters(fit->stack, fps);
-
     return fps;
 }
 
@@ -364,8 +354,8 @@ double
 fit_engine_get_parameter_value(const struct fit_engine *fit,
                                const fit_param_t *fp)
 {
-    if(fp->id == PID_FIRSTMUL) {
-        return fit->extra->rmult;
+    if(fp->id >= PID_ACQUISITION_PARAMETER) {
+        return acquisition_get_parameter(fit->acquisition, fp->id);
     } else {
         return stack_get_parameter_value(fit->stack, fp);
     }
@@ -438,7 +428,7 @@ void
 fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
                              struct spectrum *synth)
 {
-    enum system_kind syskind = ref->config.system;
+    enum system_kind syskind = ref->acquisition->type;
     size_t nb_med = fit->stack->nb;
     struct data_table *table = synth->table[0].table;
     int j, npt = spectra_points(ref);
@@ -447,7 +437,7 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 
     assert(spectra_points(ref) == spectra_points(synth));
 
-    synth->config = ref->config;
+    synth->acquisition[0] = ref->acquisition[0];
 
     ths = stack_get_ths_list(fit->stack);
 
@@ -462,14 +452,18 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
         case SYSTEM_REFLECTOMETER: {
             double r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda,
                                               NULL, NULL);
-            data_table_set(table, j, 1, fit->extra->rmult * r_raw);
+            double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
+            data_table_set(table, j, 1, rmult * r_raw);
             break;
         }
         case SYSTEM_ELLISS_AB:
         case SYSTEM_ELLISS_PSIDEL: {
             const enum se_type se_type = GET_SE_TYPE(syskind);
-            double phi0 = ref->config.aoi;
-            double anlz = ref->config.analyzer;
+            double phi0 = acquisition_get_parameter(fit->acquisition, PID_AOI);
+            double anlz = 0;
+            if (syskind == SYSTEM_ELLISS_AB) {
+                anlz = acquisition_get_parameter(fit->acquisition, PID_ANALYZER);
+            }
             ell_ab_t ell;
 
             mult_layer_se_jacob(se_type, nb_med, ns, phi0,
@@ -492,7 +486,7 @@ struct fit_engine *
 fit_engine_new()
 {
     struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
-    set_default_extra_param(fit->extra);
+    acquisition_set_default(fit->acquisition);
     fit->parameters = NULL;
     fit->stack = NULL;
     return fit;
@@ -534,12 +528,6 @@ fit_engine_free(struct fit_engine *fit)
 }
 
 void
-set_default_extra_param(struct extra_params *extra)
-{
-    extra->rmult = 1.0;
-}
-
-void
 fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 {
     str_t pname, value;
@@ -563,6 +551,12 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 
     str_free(value);
     str_free(pname);
+}
+
+void
+fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters *acquisition)
+{
+    fit->acquisition[0] = *acquisition;
 }
 
 void

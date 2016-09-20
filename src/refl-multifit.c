@@ -50,7 +50,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
             const double lambda = spectr_data[0];
             const double r_meas = spectr_data[1];
             double r_raw, r_theory;
-            double rmult = fit->extra.rmult;
+            double rmult = acquisition_get_parameter(&fit->acquisitions[sample], PID_FIRSTMUL);
             const size_t nb_priv_params = fit->private_parameters->number;
 
             actual.ns = fit->cache.ns;

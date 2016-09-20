@@ -6,7 +6,7 @@
 void
 spectra_plot_simple(plot_canvas* canvas, struct spectrum* spectr)
 {
-    enum system_kind skind = spectr->config.system;
+    enum system_kind skind = spectr->acquisition->type;
 
     canvas->clear_plots();
 
@@ -40,9 +40,9 @@ void
 spectra_plot(plot_canvas* canvas, struct spectrum* ref_spectr,
              struct spectrum *mod_spectr)
 {
-    enum system_kind skind = ref_spectr->config.system;
+    enum system_kind skind = ref_spectr->acquisition->type;
 
-    assert(ref_spectr->config.system == mod_spectr->config.system);
+    assert(ref_spectr->acquisition->type == mod_spectr->acquisition->type);
 
     canvas->clear_plots();
 

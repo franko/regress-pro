@@ -223,6 +223,7 @@ regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
 
     m_interactive_fit->bind_spectrum(spectrum);
     m_fit_window->reload();
+    main_recipe_window->bind_new_acquisition(spectrum->acquisition);
 }
 
 long

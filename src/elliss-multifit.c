@@ -46,8 +46,8 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
             const double lambda     = spectr_data[0];
             const double meas_alpha = spectr_data[1];
             const double meas_beta  = spectr_data[2];
-            const double phi0 = spectrum->config.aoi;
-            const double anlz = spectrum->config.analyzer;
+            const double phi0 = acquisition_get_parameter(&fit->acquisitions[sample], PID_AOI);
+            const double anlz = acquisition_get_parameter(&fit->acquisitions[sample], PID_ANALYZER);
             struct elliss_ab theory[1];
 
             actual.ns = fit->cache.ns;

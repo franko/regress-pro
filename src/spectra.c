@@ -7,7 +7,7 @@
 #include "error-messages.h"
 #include "data-table.h"
 #include "str.h"
-
+#include "fit-params.h"
 
 static struct spectrum * load_ellips_spectrum(const char *filename, str_ptr *error_msg);
 
@@ -15,7 +15,6 @@ static struct spectrum * load_ellips_spectrum(const char *filename, str_ptr *err
 struct spectrum *
 load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
     struct spectrum *s;
-    struct system_config *cfg;
     struct data_table *data_table;
     int iseof, nr;
     str_t ln;
@@ -32,21 +31,21 @@ load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
 
     s = emalloc(sizeof(struct spectrum));
 
-    cfg = & s->config;
+    struct acquisition_parameters *acquisition = s->acquisition;
 
-    cfg->system   = SYSTEM_UNDEFINED;
-    cfg->aoi      = 71.7;
-    cfg->analyzer = 25.0;
-    cfg->numap    = 0.0;
+    acquisition->type = SYSTEM_UNDEFINED;
 
     str_getline(ln, f);
     if(strstr(CSTR(ln), "SE ALPHA BETA")) {
-        cfg->system = SYSTEM_ELLISS_AB;
+        acquisition_set_default_rpe(acquisition);
     } else if(strstr(CSTR(ln), "SE PSI DELTA")) {
-        cfg->system = SYSTEM_ELLISS_PSIDEL;
+        acquisition_set_default_se(acquisition);
     } else {
         goto invalid_s;
     }
+
+    double *aoi_ptr = acquisition_parameter_pointer(acquisition, PID_AOI);
+    double *analyzer_ptr = acquisition_parameter_pointer(acquisition, PID_ANALYZER);
 
     for(;;) {
         iseof = str_getline(ln, f);
@@ -55,27 +54,24 @@ load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
             break;
         }
 
-        nr = sscanf(CSTR(ln), "AOI %lf", & cfg->aoi);
-        if(nr == 1) {
-            continue;
+        if (aoi_ptr) {
+            nr = sscanf(CSTR(ln), "AOI %lf", aoi_ptr);
+            if(nr == 1) {
+                *aoi_ptr = DEGREE(*aoi_ptr); // To radians.
+                continue;
+            }
         }
 
-        nr = sscanf(CSTR(ln), "NA %lf", & cfg->numap);
-        if(nr == 1) {
-            continue;
-        }
-
-        nr = sscanf(CSTR(ln), "A %lf", & cfg->analyzer);
-        if(nr == 1) {
-            continue;
+        if (analyzer_ptr) {
+            nr = sscanf(CSTR(ln), "A %lf", analyzer_ptr);
+            if(nr == 1) {
+                *analyzer_ptr = DEGREE(*analyzer_ptr); // To radians.
+                continue;
+            }
         }
 
         break;
     }
-
-    /* the values get converted in radians */
-    cfg->aoi      = DEGREE(cfg->aoi);
-    cfg->analyzer = DEGREE(cfg->analyzer);
 
     do {
         float lambda, alpha, beta;
@@ -118,7 +114,6 @@ static struct spectrum *
 load_vase_spectrum(const char *filename, str_ptr *error_msg)
 {
     struct spectrum *s;
-    struct system_config *cfg;
     struct data_table *data_table;
 
     FILE *f = fopen(filename, "r");
@@ -138,18 +133,26 @@ load_vase_spectrum(const char *filename, str_ptr *error_msg)
     }
 
     s = emalloc(sizeof(struct spectrum));
-    cfg = & s->config;
-    cfg->system   = (VASE_CONVERT_TO_ALPHA_BETA ? SYSTEM_ELLISS_AB : SYSTEM_ELLISS_PSIDEL);
-    cfg->analyzer = (VASE_CONVERT_TO_ALPHA_BETA ? DEGREE(25.0) : DEGREE(0.0));
-    cfg->numap    = 0.0;
+    struct acquisition_parameters *acquisition = s->acquisition;
+    acquisition->type   = (VASE_CONVERT_TO_ALPHA_BETA ? SYSTEM_ELLISS_AB : SYSTEM_ELLISS_PSIDEL);
+    double tana;
+    double *aoi_ptr;
+    if (VASE_CONVERT_TO_ALPHA_BETA) {
+        acquisition->parameters.rpe.aoi = DEGREE(65.0);
+        acquisition->parameters.rpe.analyzer = DEGREE(25.0);
+        aoi_ptr = &acquisition->parameters.rpe.aoi;
+        tana = tanf(acquisition->parameters.rpe.analyzer);
+    } else {
+        acquisition->parameters.se.aoi = DEGREE(65.0);
+        aoi_ptr = &acquisition->parameters.se.aoi;
+    }
 
     /* In order to know the AOI we lookup just the first line and
        reset the position just after. */
     long data_pos = ftell(f);
-    float aoi;
-    int nread = fscanf(f, "E %*f %f", &aoi);
+    int nread = fscanf(f, "E %*f %lf", aoi_ptr);
     if (nread == 0) goto invalid_vase;
-    cfg->aoi = DEGREE(aoi);
+    *aoi_ptr = DEGREE(*aoi_ptr);
     fseek(f, data_pos, SEEK_SET);
 
     /* The following function reads the integrality of the tabular data. */
@@ -157,7 +160,6 @@ load_vase_spectrum(const char *filename, str_ptr *error_msg)
     if(data_table == NULL) goto invalid_vase;
 
     int i;
-    const float tana = tanf(cfg->analyzer);
     for (i = 0; i < data_table->rows; i++) {
         const float psi = data_table_get(data_table, i, 1);
         const float delta = data_table_get(data_table, i, 2);
@@ -264,7 +266,7 @@ spectr_cut_range(struct spectrum *s, float inf, float sup)
 struct spectrum *
 spectra_copy(struct spectrum *src) {
     struct spectrum *copy = emalloc(sizeof(struct spectrum));
-    copy->config = src->config;
+    copy->acquisition[0] = src->acquisition[0];
     data_view_copy(copy->table, src->table);
     return copy;
 }
@@ -274,7 +276,7 @@ spectra_alloc(struct spectrum *s) {
     struct spectrum *synth = emalloc(sizeof(struct spectrum));
     int rows = spectra_points(s), cols = s->table->columns;
     struct data_table *table = data_table_new(rows, cols);
-    synth->config = s->config;
+    synth->acquisition[0] = s->acquisition[0];
     data_view_init(synth->table, table);
     return synth;
 }

@@ -22,8 +22,8 @@ elliss_fit_test_deriv(struct fit_engine *fit)
 
     for(j = 0; j < spectra_points(s); j += 10) {
         double lambda = get_lambda_by_index(s, j);
-        const double phi0 = s->config.aoi;
-        const double anlz = s->config.analyzer;
+        const double phi0 = acquisition_get_parameter(fit->acquisition, PID_AOI);
+        const double anlz = acquisition_get_parameter(fit->acquisition, PID_ANALYZER);
 
         if(fit->run->cache.th_only) {
             actual.ns = fit->run->cache.ns_full_spectr + j * nb_med;
@@ -32,7 +32,7 @@ elliss_fit_test_deriv(struct fit_engine *fit)
             stack_get_ns_list(fit->stack, actual.ns, lambda);
         }
 
-        test_elliss_deriv(s->config.system,
+        test_elliss_deriv(s->acquisition->type,
                           nb_med, actual.ns, phi0, actual.ths, lambda, anlz);
     }
 }
@@ -89,7 +89,7 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         cmpl_vector *n;
     } wjacob;
     size_t npt = spectra_points(s);
-    const enum se_type se_type = GET_SE_TYPE(fit->run->system_kind);
+    const enum se_type se_type = GET_SE_TYPE(fit->acquisition->type);
     size_t j;
 
     /* STEP 1 : We apply the actual values of the fit parameters
@@ -110,8 +110,8 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         const double lambda     = spectr_data[0];
         const double meas_alpha = spectr_data[1];
         const double meas_beta  = spectr_data[2];
-        const double phi0 = s->config.aoi;
-        const double anlz = s->config.analyzer;
+        const double phi0 = acquisition_get_parameter(fit->acquisition, PID_AOI);
+        const double anlz = acquisition_get_parameter(fit->acquisition, PID_ANALYZER);
         struct elliss_ab theory[1];
 
         if(fit->run->cache.th_only) {
