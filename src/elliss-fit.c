@@ -6,6 +6,8 @@
 /* helper function */
 #include "elliss-get-jacob.h"
 
+static double deg_to_radians(double x) { return x * M_PI / 180.0; }
+
 #ifdef DEBUG_REGRESS
 void
 elliss_fit_test_deriv(struct fit_engine *fit)
@@ -20,10 +22,10 @@ elliss_fit_test_deriv(struct fit_engine *fit)
 
     actual.ths = stack_get_ths_list(fit->stack);
 
+    const double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
+    const double anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
     for(j = 0; j < spectra_points(s); j += 10) {
         double lambda = get_lambda_by_index(s, j);
-        const double phi0 = acquisition_get_parameter(fit->acquisition, PID_AOI);
-        const double anlz = acquisition_get_parameter(fit->acquisition, PID_ANALYZER);
 
         if(fit->run->cache.th_only) {
             actual.ns = fit->run->cache.ns_full_spectr + j * nb_med;
@@ -105,13 +107,13 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     wjacob.th = (jacob ? fit->run->jac_th : NULL);
     wjacob.n  = (jacob && !fit->run->cache.th_only ? fit->run->jac_n.ell : NULL);
 
+    const double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
+    const double anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
     for(j = 0; j < npt; j++) {
         float const * spectr_data = spectra_get_values(s, j);
         const double lambda     = spectr_data[0];
         const double meas_alpha = spectr_data[1];
         const double meas_beta  = spectr_data[2];
-        const double phi0 = acquisition_get_parameter(fit->acquisition, PID_AOI);
-        const double anlz = acquisition_get_parameter(fit->acquisition, PID_ANALYZER);
         struct elliss_ab theory[1];
 
         if(fit->run->cache.th_only) {

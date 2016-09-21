@@ -33,6 +33,7 @@ static void build_fit_engine_cache(struct fit_engine *f);
 
 static void dispose_fit_engine_cache(struct fit_run *run);
 
+static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 void
 build_stack_cache(struct stack_cache *cache, stack_t *stack,
@@ -459,10 +460,10 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
         case SYSTEM_ELLISS_AB:
         case SYSTEM_ELLISS_PSIDEL: {
             const enum se_type se_type = GET_SE_TYPE(syskind);
-            double phi0 = acquisition_get_parameter(fit->acquisition, PID_AOI);
+            double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
             double anlz = 0;
             if (syskind == SYSTEM_ELLISS_AB) {
-                anlz = acquisition_get_parameter(fit->acquisition, PID_ANALYZER);
+                anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
             }
             ell_ab_t ell;
 

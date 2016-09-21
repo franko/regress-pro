@@ -5,6 +5,8 @@
 /* helper function */
 #include "elliss-get-jacob.h"
 
+static double deg_to_radians(double x) { return x * M_PI / 180.0; }
+
 int
 elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     gsl_matrix * jacob)
@@ -41,13 +43,13 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         stack_jacob.th = (jacob ? fit->jac_th    : NULL);
         stack_jacob.n  = (jacob ? fit->jac_n.ell : NULL);
 
+        const double phi0 = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_AOI));
+        const double anlz = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_ANALYZER));
         for(j = 0; j < npt; j++, j_sample++) {
             float const * spectr_data = spectra_get_values(spectrum, j);
             const double lambda     = spectr_data[0];
             const double meas_alpha = spectr_data[1];
             const double meas_beta  = spectr_data[2];
-            const double phi0 = acquisition_get_parameter(&fit->acquisitions[sample], PID_AOI);
-            const double anlz = acquisition_get_parameter(&fit->acquisitions[sample], PID_ANALYZER);
             struct elliss_ab theory[1];
 
             actual.ns = fit->cache.ns;

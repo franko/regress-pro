@@ -11,6 +11,7 @@
 
 static struct spectrum * load_ellips_spectrum(const char *filename, str_ptr *error_msg);
 
+static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 struct spectrum *
 load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
@@ -57,7 +58,6 @@ load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
         if (aoi_ptr) {
             nr = sscanf(CSTR(ln), "AOI %lf", aoi_ptr);
             if(nr == 1) {
-                *aoi_ptr = DEGREE(*aoi_ptr); // To radians.
                 continue;
             }
         }
@@ -65,7 +65,6 @@ load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
         if (analyzer_ptr) {
             nr = sscanf(CSTR(ln), "A %lf", analyzer_ptr);
             if(nr == 1) {
-                *analyzer_ptr = DEGREE(*analyzer_ptr); // To radians.
                 continue;
             }
         }
@@ -138,12 +137,12 @@ load_vase_spectrum(const char *filename, str_ptr *error_msg)
     double tana;
     double *aoi_ptr;
     if (VASE_CONVERT_TO_ALPHA_BETA) {
-        acquisition->parameters.rpe.aoi = DEGREE(65.0);
-        acquisition->parameters.rpe.analyzer = DEGREE(25.0);
+        acquisition->parameters.rpe.aoi = 65.0;
+        acquisition->parameters.rpe.analyzer = 25.0;
         aoi_ptr = &acquisition->parameters.rpe.aoi;
-        tana = tanf(acquisition->parameters.rpe.analyzer);
+        tana = tanf(deg_to_radians(acquisition->parameters.rpe.analyzer));
     } else {
-        acquisition->parameters.se.aoi = DEGREE(65.0);
+        acquisition->parameters.se.aoi = 65.0;
         aoi_ptr = &acquisition->parameters.se.aoi;
     }
 
@@ -152,7 +151,6 @@ load_vase_spectrum(const char *filename, str_ptr *error_msg)
     long data_pos = ftell(f);
     int nread = fscanf(f, "E %*f %lf", aoi_ptr);
     if (nread == 0) goto invalid_vase;
-    *aoi_ptr = DEGREE(*aoi_ptr);
     fseek(f, data_pos, SEEK_SET);
 
     /* The following function reads the integrality of the tabular data. */
@@ -163,8 +161,8 @@ load_vase_spectrum(const char *filename, str_ptr *error_msg)
     for (i = 0; i < data_table->rows; i++) {
         const float psi = data_table_get(data_table, i, 1);
         const float delta = data_table_get(data_table, i, 2);
-        const float tpsi = tanf(DEGREE(psi));
-        const float cosdelta = cosf(DEGREE(delta));
+        const float tpsi = tanf(deg_to_radians(psi));
+        const float cosdelta = cosf(deg_to_radians(delta));
 #if VASE_CONVERT_TO_ALPHA_BETA
         const float alpha = (tpsi*tpsi - tana*tana) / (tpsi*tpsi + tana*tana);
         const float beta = (2*tpsi*cosdelta*tana) / (tpsi*tpsi + tana*tana);

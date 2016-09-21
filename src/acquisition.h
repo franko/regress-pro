@@ -36,16 +36,15 @@ enum system_kind {
     SYSTEM_EXCEED_VALUE
 };
 
-
 /* Ellipsometry parameters: */
 struct rpe_acquisition_parameters {
-    double aoi;
-    double analyzer;
+    double aoi; /* Angle in degrees. */
+    double analyzer;  /* Angle in degrees. */
 };
 
 /* Ellipsometry parameters: */
 struct se_acquisition_parameters {
-    double aoi;
+    double aoi; /* Angle in degrees. */
 };
 
 /* Reflectometry parameters */

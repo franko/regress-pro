@@ -3,8 +3,6 @@
 #include "acquisition.h"
 #include "fit-params.h"
 
-#define DEGREE(d) ((d) * M_PI / 180.0)
-
 double *
 acquisition_parameter_pointer(struct acquisition_parameters *acquisition, int parameter_id)
 {
@@ -71,8 +69,8 @@ void
 acquisition_set_default_rpe(struct acquisition_parameters *acquisition)
 {
     acquisition->type = SYSTEM_ELLISS_AB;
-    acquisition->parameters.rpe.aoi = DEGREE(65.0);
-    acquisition->parameters.rpe.analyzer = DEGREE(25.0);
+    acquisition->parameters.rpe.aoi = 65.0;
+    acquisition->parameters.rpe.analyzer = 25.0;
 }
 
 
@@ -80,7 +78,7 @@ void
 acquisition_set_default_se(struct acquisition_parameters *acquisition)
 {
     acquisition->type = SYSTEM_ELLISS_PSIDEL;
-    acquisition->parameters.rpe.aoi = DEGREE(65.0);
+    acquisition->parameters.rpe.aoi = 65.0;
 }
 
 void
