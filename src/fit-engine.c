@@ -346,8 +346,8 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
 struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
     struct fit_parameters *fps = fit_parameters_new();
-    acquisition_get_all_parameters(fit->acquisition, fps);
     stack_get_all_parameters(fit->stack, fps);
+    acquisition_get_all_parameters(fit->acquisition, fps);
     return fps;
 }
 
