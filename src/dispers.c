@@ -157,6 +157,7 @@ void
 disp_base_free(disp_t *d)
 {
     disp_info_free(d->info);
+    free(d->info);
     free(d);
 }
 
