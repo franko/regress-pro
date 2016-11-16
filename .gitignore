@@ -3,9 +3,14 @@
 *.deb
 *~
 builds
-examples/stuff
+metro-crolles
 debian_build
 fox-gui/gitversion.cpp
 fox-gui/regress
+CMakeFiles
+.ninja*
+*.ninja
+CMakeCache.txt
+cmake_install.cmake
 .deps
 
