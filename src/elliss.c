@@ -245,7 +245,7 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
         const cmpl rho = cexp(beta * THICKNESS_TO_NM(th));
         const cmpl drhodth = rho * beta * THICKNESS_TO_NM(1.0);
         const cmpl drhodn = - bphase * rho * THICKNESS_TO_NM(th) / cosc;
-        const cmpl drhodaoi = rho * (bphase * nsin0 * ((ns[j] * cost) / (ns[j+1] * cosc)) * THICKNESS_TO_NM(th));
+        const cmpl drhodaoi = rho * bphase * nsin0 * ncos0 / (ns[j+1] * cosc) * THICKNESS_TO_NM(th);
 
         cmpl r[2];
         fresnel_coeffs_diff(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, r, drdnt, drdnb, drdaoi);
