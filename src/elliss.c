@@ -17,6 +17,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+// FOR DEBUG ONLY
+#include <gsl/gsl_deriv.h>
 
 #include "elliss.h"
 
@@ -46,7 +48,7 @@ refl_coeff(cmpl nt, cmpl cost, cmpl nb, cmpl cosb, polar_t pol)
 static cmpl
 refl_coeff_ext(cmpl nt, cmpl cost,
                cmpl nb, cmpl cosb,
-               cmpl * drdnt, cmpl * drdnb, polar_t pol)
+               cmpl * drdnt, cmpl * drdnb, cmpl *den_out, polar_t pol)
 {
     cmpl rc;
 
@@ -56,12 +58,14 @@ refl_coeff_ext(cmpl nt, cmpl cost,
         rc = (nb*cost - nt*cosb) / den;
         *drdnt = - 2.0 * cosb * nb * (2*cost*cost-1) * isqden / cost;
         *drdnb =   2.0 * cost * nt * (2*cosb*cosb-1) * isqden / cosb;
+        *den_out = den;
     } else {
         cmpl den = nt*cost + nb*cosb;
         cmpl isqden = 1 / csqr(den);
         rc = (nt*cost - nb*cosb) / den;
         *drdnt =   2.0 * cosb * nb * isqden / cost;
         *drdnb = - 2.0 * cost * nt * isqden / cosb;
+        *den_out = den;
     }
 
     return rc;
@@ -74,41 +78,31 @@ snell_cos(cmpl nsin0, cmpl nlyr)
     return csqrt(1.0 - csqr(s));
 }
 
+/* In this procedure we assume (nb > 2). This condition should be
+   ensured in advance. */
 static void
 mult_layer_refl(int nb, const cmpl ns[], cmpl nsin0,
                 const double ds[], double lambda, cmpl R[])
 {
     const double omega = 2 * M_PI / lambda;
-    cmpl cosc, cost;
-    const cmpl *nptr;
-    int j;
+    int j = nb - 2; /* Start from the layer just above the substrate. */
 
-    /* In this procedure we assume (nb > 2). This condition should be
-       ensured in advance. */
+    cmpl cost = snell_cos(nsin0, ns[j]);
+    cmpl cosc = snell_cos(nsin0, ns[j+1]);
 
-    nptr = ns + (nb-2);
+    R[0] = refl_coeff(ns[j], cost, ns[j+1], cosc, POL_S);
+    R[1] = refl_coeff(ns[j], cost, ns[j+1], cosc, POL_P);
 
-    cost = snell_cos(nsin0, nptr[0]);
-    cosc = snell_cos(nsin0, nptr[1]);
-
-    R[0] = refl_coeff(nptr[0], cost, nptr[1], cosc, POL_S);
-    R[1] = refl_coeff(nptr[0], cost, nptr[1], cosc, POL_P);
-
-    for(j = nb - 3; j >= 0; j--) {
-        cmpl r[2], rho, beta;
-        double th = ds[j];
-        polar_t p;
-
-        nptr --;
-
+    for(j--; j >= 0; j--) { /* Iterate through layers from bottom to top. */
         cosc = cost;
-        cost = snell_cos(nsin0, nptr[0]);
+        cost = snell_cos(nsin0, ns[j]);
 
-        beta = - 2.0 * I * omega * nptr[1] * cosc;
-        rho = cexp(beta * THICKNESS_TO_NM(th));
+        const cmpl beta = - 2.0 * I * omega * ns[j+1] * cosc;
+        const cmpl rho = cexp(beta * THICKNESS_TO_NM(ds[j]));
 
-        for(p = 0; p <= 1; p++) {
-            r[p] = refl_coeff(nptr[0], cost, nptr[1], cosc, p);
+        cmpl r[2];
+        for(polar_t p = 0; p <= 1; p++) {
+            r[p] = refl_coeff(ns[j], cost, ns[j+1], cosc, p);
 
             R[p] = (r[p] + R[p] * rho) / (1 + r[p] * R[p] * rho);
         }
@@ -121,54 +115,38 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
                          cmpl *jacth)
 {
     const double omega = 2 * M_PI / lambda;
-    const int nblyr = nb - 2;
-    cmpl cosc, cost;
-    const cmpl *nptr;
-    int j;
+    const int films_number = nb - 2;
+    int j = nb - 2; /* Start from the layer just above the substrate. */
 
-    /* In this procedure we assume (nb > 2). This condition should be
-       ensured in advance. */
+    cmpl cost = snell_cos(nsin0, ns[j]);
+    cmpl cosc = snell_cos(nsin0, ns[j+1]);
 
-    nptr = ns + (nb-2);
+    R[0] = refl_coeff(ns[j], cost, ns[j+1], cosc, POL_S);
+    R[1] = refl_coeff(ns[j], cost, ns[j+1], cosc, POL_P);
 
-    cost = snell_cos(nsin0, nptr[0]);
-    cosc = snell_cos(nsin0, nptr[1]);
-
-    R[0] = refl_coeff(nptr[0], cost, nptr[1], cosc, POL_S);
-    R[1] = refl_coeff(nptr[0], cost, nptr[1], cosc, POL_P);
-
-    for(j = nb - 3; j >= 0; j--) {
-        cmpl r[2], rho, beta, drhodth;
-        double th = ds[j];
-        polar_t p;
-        int k;
-
-        nptr --;
-
+    for(j--; j >= 0; j--) { /* Iterate through layers from bottom to top. */
         cosc = cost;
-        cost = snell_cos(nsin0, nptr[0]);
+        cost = snell_cos(nsin0, ns[j]);
 
-        beta = - 2.0 * I * omega * nptr[1] * cosc;
-        rho = cexp(beta * THICKNESS_TO_NM(th));
-        drhodth = rho * beta * THICKNESS_TO_NM(1.0);
+        const cmpl beta = - 2.0 * I * omega * ns[j+1] * cosc;
+        const cmpl rho = cexp(beta * THICKNESS_TO_NM(ds[j]));
+        const cmpl drhodth = rho * beta * THICKNESS_TO_NM(1.0);
 
-        for(p = 0; p <= 1; p++) {
-            cmpl dfdR, dfdrho;
-            cmpl *pjacth = jacth + (p == 0 ? 0 : nblyr);
-            cmpl den, isqden;
+        cmpl r[2];
+        for(polar_t p = 0; p <= 1; p++) {
+            cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
 
-            r[p] = refl_coeff(nptr[0], cost, nptr[1], cosc, p);
+            r[p] = refl_coeff(ns[j], cost, ns[j+1], cosc, p);
 
-            den = 1 + r[p] * R[p] * rho;
-            isqden = 1 / csqr(den);
-            dfdR = rho * (1 - r[p]*r[p]) * isqden;
+            const cmpl den = 1 + r[p] * R[p] * rho;
+            const cmpl isqden = 1 / csqr(den);
+            const cmpl dfdR = rho * (1 - r[p]*r[p]) * isqden;
 
-            for(k = nblyr; k > j+1; k--) {
-                pjacth[k-1] *= dfdR;
+            for(int k = films_number; k > j+1; k--) {
+                pjacth[k - 1] *= dfdR;
             }
 
-            dfdrho = R[p] * (1 - r[p]*r[p]) * isqden;
-
+            const cmpl dfdrho = R[p] * (1 - r[p]*r[p]) * isqden;
             pjacth[j] = dfdrho * drhodth;
 
             R[p] = (r[p] + R[p] * rho) / den;
@@ -177,29 +155,79 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
 }
 
 static void
+fresnel_coeffs_diff(const cmpl nsin0, const cmpl ncos0, const cmpl n0, const cmpl cos0, const cmpl n1, const cmpl cos1, cmpl r[2], cmpl drdn0[2], cmpl drdn1[2], cmpl drdaoi[2])
+{
+    const cmpl drdaoi_prefact = 2 * nsin0 * ncos0 * ((n0 * cos0) / (n1 * cos1) - (n1 * cos1) / (n0 * cos0));
+    for(polar_t p = 0; p <= 1; p++) {
+        cmpl fc_den;
+        r[p] = refl_coeff_ext(n0, cos0, n1, cos1, drdn0, drdn1, &fc_den, p);
+        drdaoi[p] = drdaoi_prefact / csqr(fc_den);
+    }
+}
+
+struct ref_coeff_deriv_params {
+    cmpl n_env;
+    cmpl n0;
+    cmpl n1;
+    int pol;
+    int real_part;
+};
+
+static double ref_coeff_deriv_func(double x, void *params) {
+    struct ref_coeff_deriv_params *p = params;
+    const cmpl nsin0x = p->n_env * csin((cmpl) x);
+    const cmpl cos0 = snell_cos(nsin0x, p->n0);
+    const cmpl cos1 = snell_cos(nsin0x, p->n1);
+    cmpl r = refl_coeff(p->n0, cos0, p->n1, cos1, p->pol);
+    return (p->real_part ? creal(r) : cimag(r));
+}
+
+/* DEBUG ONLY */
+static void frenel_coeff_verif_deriv(int i, cmpl n_env, double aoi_rad, cmpl n0, cmpl cos0, cmpl n1, cmpl cos1)
+{
+    gsl_function F;
+    struct ref_coeff_deriv_params p[1] = {{n_env, n0, n1, 0, 0}};
+    F.function = &ref_coeff_deriv_func;
+    F.params = p;
+    double der[4], abserr;
+    p->pol = 0;
+    p->real_part = 1;
+    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[0], &abserr);
+    p->real_part = 0;
+    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[1], &abserr);
+    p->pol = 1;
+    p->real_part = 1;
+    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[2], &abserr);
+    p->real_part = 0;
+    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[3], &abserr);
+
+    printf("NUM LAYER:%2d POL:%d (%g, %g)\n", i, 0, der[0], der[1]);
+    printf("NUM LAYER:%2d POL:%d (%g, %g)\n", i, 1, der[2], der[3]);
+}
+
+static void
 mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
                       const double ds[], double lambda, cmpl R[],
-                      cmpl *jacth, cmpl *jacn)
+                      cmpl *jacth, cmpl *jacn /* , cmpl *drdaoi */)
 {
     const double omega = 2 * M_PI / lambda;
-    const int nblyr = nb - 2;
-    cmpl cosc, cost;
-    const cmpl *nptr;
+    const cmpl bphase = 2.0 * I * omega;
+    const int films_number = nb - 2;
     cmpl drdnt[2], drdnb[2];
-    int j;
+    cmpl dRdaoi[2], drdaoi[2];
+    int j = nb - 2; /* Start from the layer just above the substrate. */
 
-    /* In this procedure we assume (nb > 2). This condition should be
-       ensured in advance. */
+    const cmpl ncos0 = snell_cos(nsin0, ns[0]) * ns[0];
 
-    nptr = ns + (nb-2);
+    cmpl cost = snell_cos(nsin0, ns[j]);
+    cmpl cosc = snell_cos(nsin0, ns[j+1]);
 
-    cost = snell_cos(nsin0, nptr[0]);
-    cosc = snell_cos(nsin0, nptr[1]);
+    fresnel_coeffs_diff(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, R, drdnt, drdnb, dRdaoi);
 
-    R[0] = refl_coeff_ext(nptr[0], cost, nptr[1], cosc,
-                          &drdnt[0], &drdnb[0], POL_S);
-    R[1] = refl_coeff_ext(nptr[0], cost, nptr[1], cosc,
-                          &drdnt[1], &drdnb[1], POL_P);
+    /* DEBUG ONLY */
+    frenel_coeff_verif_deriv(j, ns[0], asin(nsin0 / ns[0]), ns[j], cost, ns[j+1], cosc);
+    printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 0, creal(dRdaoi[0]), cimag(dRdaoi[0]));
+    printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 1, creal(dRdaoi[1]), cimag(dRdaoi[1]));
 
     jacn[nb-1]      = drdnb[0];
     jacn[nb + nb-1] = drdnb[1];
@@ -207,54 +235,57 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
     jacn[nb-2]      = drdnt[0];
     jacn[nb + nb-2] = drdnt[1];
 
-    for(j = nb - 3; j >= 0; j--) {
-        cmpl r[2], rho, beta, drhodn, drhodth;
-        double th = ds[j];
-        polar_t p;
-        int k;
-
-        nptr --;
+    for(j--; j >= 0; j--) { /* Iterate through layers from bottom to top. */
+        const double th = ds[j];
 
         cosc = cost;
-        cost = snell_cos(nsin0, nptr[0]);
+        cost = snell_cos(nsin0, ns[j]);
 
-        beta = - 2.0 * I * omega * nptr[1] * cosc;
-        rho = cexp(beta * THICKNESS_TO_NM(th));
-        drhodth = rho * beta * THICKNESS_TO_NM(1.0);
-        drhodn = - 2.0 * I * rho * omega * THICKNESS_TO_NM(th) / cosc;
+        const cmpl beta = - bphase * ns[j+1] * cosc;
+        const cmpl rho = cexp(beta * THICKNESS_TO_NM(th));
+        const cmpl drhodth = rho * beta * THICKNESS_TO_NM(1.0);
+        const cmpl drhodn = - bphase * rho * THICKNESS_TO_NM(th) / cosc;
+        const cmpl drhodaoi = rho * (bphase * nsin0 * ((ns[j] * cost) / (ns[j+1] * cosc)) * THICKNESS_TO_NM(th));
 
-        for(p = 0; p <= 1; p++) {
-            cmpl dfdR, dfdr, dfdrho;
+        cmpl r[2];
+        fresnel_coeffs_diff(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, r, drdnt, drdnb, drdaoi);
+
+        /* DEBUG ONLY */
+        frenel_coeff_verif_deriv(j, ns[0], asin(nsin0 / ns[0]), ns[j], cost, ns[j+1], cosc);
+        printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 0, creal(drdaoi[0]), cimag(drdaoi[0]));
+        printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 1, creal(drdaoi[1]), cimag(drdaoi[1]));
+
+        for(polar_t p = 0; p <= 1; p++) {
             cmpl *pjacn  = jacn  + (p == 0 ? 0 : nb);
-            cmpl *pjacth = jacth + (p == 0 ? 0 : nblyr);
-            cmpl den, isqden;
+            cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
 
-            r[p] = refl_coeff_ext(nptr[0], cost, nptr[1], cosc,
-                                  &drdnt[p], &drdnb[p], p);
+            const cmpl den = 1 + r[p] * R[p] * rho;
+            const cmpl isqden = 1 / csqr(den);
+            const cmpl dfdR = rho * (1 - r[p]*r[p]) * isqden;
 
-            den = 1 + r[p] * R[p] * rho;
-            isqden = 1 / csqr(den);
-            dfdR = rho * (1 - r[p]*r[p]) * isqden;
-
-            for(k = nb - 1; k > j+1; k--) {
+            for(int k = nb - 1; k > j+1; k--) {
                 pjacn[k] *= dfdR;
             }
 
-            for(k = nblyr; k > j+1; k--) {
+            for(int k = films_number; k > j+1; k--) {
                 pjacth[k-1] *= dfdR;
             }
 
-            dfdr = (1 - csqr(R[p]*rho)) * isqden;
-            dfdrho = R[p] * (1 - r[p]*r[p]) * isqden;
+            const cmpl dfdr = (1 - csqr(R[p]*rho)) * isqden;
+            const cmpl dfdrho = R[p] * (1 - r[p]*r[p]) * isqden;
 
             pjacn[j+1] = dfdR * pjacn[j+1] + dfdr * drdnb[p] + dfdrho * drhodn;
             pjacn[j] = (j == 0 ? 0.0 : dfdr * drdnt[p]);
 
             pjacth[j] = dfdrho * drhodth;
 
+            dRdaoi[p] = dfdr * drdaoi[p] + dfdrho * drhodaoi + dfdR * dRdaoi[p];
+
             R[p] = (r[p] + R[p] * rho) / den;
         }
     }
+    printf("ANALYTIC dRdAOI(S) (%g, %g)\n", creal(dRdaoi[0]), cimag(dRdaoi[0]));
+    printf("ANALYTIC dRdAOI(P) (%g, %g)\n", creal(dRdaoi[1]), cimag(dRdaoi[1]));
 }
 
 #if 0
@@ -353,6 +384,24 @@ se_ab_der(cmpl R[], cmpl dR[], double tanlz, cmpl *dalpha, cmpl *dbeta)
     *dbeta = 2 * tanlz * z * isqden;
 }
 
+struct R_diff_params {
+    const int nb;
+    const cmpl *ns;
+    const double *ds;
+    const double lambda;
+    int pol;
+    int real_part;
+};
+
+double R_DEBUG_diff_f(double x, void *params)
+{
+    struct R_diff_params *p = params;
+    cmpl R[2];
+    const cmpl nsin0 = p->ns[0] * csin((cmpl) x);
+    mult_layer_refl(p->nb, p->ns, nsin0, p->ds, p->lambda, R);
+    return (p->real_part ? creal(R[p->pol]) : cimag(R[p->pol]));
+}
+
 void
 mult_layer_se_jacob(enum se_type type,
                     size_t _nb, const cmpl ns[], double phi0,
@@ -369,7 +418,42 @@ mult_layer_se_jacob(enum se_type type,
     nsin0 = ns[0] * csin((cmpl) phi0);
 
     if(jacob_th && jacob_n) {
+        /* DEBUG ONLY */
+        gsl_function F;
+        struct R_diff_params diff_params[1] = {{nb, ns, ds, lambda, 0, 0}};
+        F.function = &R_DEBUG_diff_f;
+        F.params = diff_params;
+        double dRNUM_real[2], dRNUM_imag[2];
+        double abserr;
+        diff_params->pol = 0;
+        diff_params->real_part = 1;
+        gsl_deriv_central (&F, phi0, 1e-8, &dRNUM_real[0], &abserr);
+        diff_params->real_part = 0;
+        gsl_deriv_central (&F, phi0, 1e-8, &dRNUM_imag[0], &abserr);
+
+        diff_params->pol = 1;
+        diff_params->real_part = 1;
+        gsl_deriv_central (&F, phi0, 1e-8, &dRNUM_real[1], &abserr);
+        diff_params->real_part = 0;
+        gsl_deriv_central (&F, phi0, 1e-8, &dRNUM_imag[1], &abserr);
+
+#if 0
+        const double phi_delta = 0.001;
+        cmpl R_plus[2];
+        cmpl nsin0_plus = ns[0] * csin((cmpl) (phi0 + phi_delta));
+        mult_layer_refl_jacob(nb, ns, nsin0_plus, ds, lambda, R_plus, mlr_jacob_th, mlr_jacob_n);
+#endif
+
         mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th, mlr_jacob_n);
+
+        /* DEBUG ONLY */
+        printf("NUMERIC dRdAOI(S) (%g, %g)\n", dRNUM_real[0], dRNUM_imag[0]);
+        printf("NUMERIC dRdAOI(P) (%g, %g)\n", dRNUM_real[1], dRNUM_imag[1]);
+#if 0
+        cmpl dRNUM[2] = {(R_plus[0] - R[0]) / phi_delta, (R_plus[1] - R[1]) / phi_delta};
+        printf("NUMERIC dRdAOI(S) (%g, %g)\n", creal(dRNUM[0]), cimag(dRNUM[0]));
+        printf("NUMERIC dRdAOI(P) (%g, %g)\n", creal(dRNUM[1]), cimag(dRNUM[1]));
+#endif
     } else if(jacob_th) {
         mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th);
     } else {
@@ -387,37 +471,33 @@ mult_layer_se_jacob(enum se_type type,
         cmpl_vector_set(jacob_n, 0, 0.0i);
         cmpl_vector_set(jacob_n, (size_t) nb, 0.0i);
         for(j = 1; j < (size_t) nb; j++) {
-            struct {
-                cmpl alpha, beta;
-            } d;
+            cmpl d_alpha, d_beta;
             cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
 
             if(type == SE_ALPHA_BETA) {
-                se_ab_der(R, dR, tanlz, &d.alpha, &d.beta);
+                se_ab_der(R, dR, tanlz, &d_alpha, &d_beta);
             } else {
-                se_psidel_der(R, dR, &d.alpha, &d.beta);
+                se_psidel_der(R, dR, &d_alpha, &d_beta);
             }
 
-            cmpl_vector_set(jacob_n, j,    d.alpha);
-            cmpl_vector_set(jacob_n, nb+j, d.beta);
+            cmpl_vector_set(jacob_n, j,    d_alpha);
+            cmpl_vector_set(jacob_n, nb+j, d_beta);
         }
     }
 
     if(jacob_th) {
         for(j = 0; j < (size_t) nblyr; j++) {
-            struct {
-                cmpl alpha, beta;
-            } d;
+            cmpl d_alpha, d_beta;
             cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
 
             if(type == SE_ALPHA_BETA) {
-                se_ab_der(R, dR, tanlz, &d.alpha, &d.beta);
+                se_ab_der(R, dR, tanlz, &d_alpha, &d_beta);
             } else {
-                se_psidel_der(R, dR, &d.alpha, &d.beta);
+                se_psidel_der(R, dR, &d_alpha, &d_beta);
             }
 
-            gsl_vector_set(jacob_th, j, creal(d.alpha));
-            gsl_vector_set(jacob_th, nblyr+j, creal(d.beta));
+            gsl_vector_set(jacob_th, j, creal(d_alpha));
+            gsl_vector_set(jacob_th, nblyr+j, creal(d_beta));
         }
     }
 }
