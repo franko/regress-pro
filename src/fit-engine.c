@@ -279,12 +279,6 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_a
 
     fit->run->results = gsl_vector_alloc(fit->parameters->number);
 
-#ifdef DEBUG_REGRESS
-    if(syskind != SYSTEM_REFLECTOMETER) {
-        elliss_fit_test_deriv(fit);
-    }
-#endif
-
     return 0;
 }
 

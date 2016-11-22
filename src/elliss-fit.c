@@ -1,44 +1,11 @@
 #include "elliss-fit.h"
 #include "fit-engine.h"
 #include "elliss.h"
-#include "test-deriv.h"
 
 /* helper function */
 #include "elliss-get-jacob.h"
 
 static double deg_to_radians(double x) { return x * M_PI / 180.0; }
-
-#ifdef DEBUG_REGRESS
-void
-elliss_fit_test_deriv(struct fit_engine *fit)
-{
-    struct spectrum *s = fit->run->spectr;
-    size_t nb_med = fit->stack->nb;
-    struct {
-        double const * ths;
-        cmpl * ns;
-    } actual;
-    int j;
-
-    actual.ths = stack_get_ths_list(fit->stack);
-
-    const double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
-    const double anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
-    for(j = 0; j < spectra_points(s); j += 10) {
-        double lambda = get_lambda_by_index(s, j);
-
-        if(fit->run->cache.th_only) {
-            actual.ns = fit->run->cache.ns_full_spectr + j * nb_med;
-        } else {
-            actual.ns = fit->run->cache.ns;
-            stack_get_ns_list(fit->stack, actual.ns, lambda);
-        }
-
-        test_elliss_deriv(s->acquisition->type,
-                          nb_med, actual.ns, phi0, actual.ths, lambda, anlz);
-    }
-}
-#endif
 
 void
 get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,

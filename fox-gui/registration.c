@@ -111,10 +111,6 @@ registration_check(const char *user_name, const char *user_email,
 
     verif = (mpz_cmp(c, h) == 0);
 
-#ifdef DEBUG_REGRESS
-    fprintf(stderr, verif ? "registration successfull\n" : "registration failed\n");
-#endif
-
     mpz_clear(M);
     mpz_clear(c);
     mpz_clear(h);

@@ -11,7 +11,7 @@ CXXFLAGS = -O3 -ffast-math -fomit-frame-pointer -fno-exceptions -fno-rtti
 DEFS += -DHAVE_INLINE
 
 ifeq ($(ENABLE_DEBUG),yes)
-  DEFS = -DDEBUG_MEM -DDEBUG_REGRESS
+  DEFS = -DDEBUG_MEM
 endif
 
 ifeq ($(PRODUCT_REGISTRATION),yes)
