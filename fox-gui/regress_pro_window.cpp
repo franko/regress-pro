@@ -482,7 +482,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 {
     Str analysis;
 
-    fit_engine_prepare(fit, fspectrum);
+    fit_engine_prepare(fit, fspectrum, FIT_ENGINE_RESET_ACQ);
 
     ProgressInfo progress(this->getApp(), this);
 

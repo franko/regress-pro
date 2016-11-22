@@ -34,6 +34,11 @@
 
 __BEGIN_DECLS
 
+enum fit_engine_acq {
+  FIT_ENGINE_KEEP_ACQ,
+  FIT_ENGINE_RESET_ACQ,
+};
+
 struct fit_run {
     enum system_kind acquisition_type;
 
@@ -81,7 +86,7 @@ extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 extern void fit_engine_free(struct fit_engine *fit);
 
 extern int  fit_engine_prepare(struct fit_engine *f,
-                               struct spectrum *s);
+                               struct spectrum *s, enum fit_engine_acq acq_policy);
 
 extern void fit_engine_disable(struct fit_engine *f);
 

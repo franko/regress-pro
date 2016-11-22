@@ -227,12 +227,14 @@ fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src)
 }
 
 int
-fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
+fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_acq acq_policy)
 {
     struct fit_config *cfg = fit->config;
     enum system_kind syskind = s->acquisition->type;
 
-    fit->acquisition[0] = s->acquisition[0];
+    if (acq_policy == FIT_ENGINE_RESET_ACQ) {
+        fit->acquisition[0] = s->acquisition[0];
+    }
     fit->run->spectr = spectra_copy(s);
 
     if(fit->config->spectr_range.active)

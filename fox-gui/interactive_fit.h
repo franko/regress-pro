@@ -128,7 +128,7 @@ public:
         }
 
         m_fit_engine->parameters = fps;
-        fit_engine_prepare(m_fit_engine, m_ref_spectr);
+        fit_engine_prepare(m_fit_engine, m_ref_spectr, FIT_ENGINE_KEEP_ACQ);
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
         for(unsigned k = 0; k < fps->number; k++) {
