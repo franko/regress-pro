@@ -270,13 +270,23 @@ int
 fit_parameters_are_RI_fixed(struct fit_parameters *f)
 {
     int j;
-
-    for(j = 0; j < f->number; j++)
+    for(j = 0; j < f->number; j++) {
         if(f->values[j].id == PID_LAYER_N) {
             break;
         }
-
+    }
     return (j >= f->number);
+}
+
+int
+fit_parameters_have_aoi(struct fit_parameters *f)
+{
+    for(int j = 0; j < f->number; j++) {
+        if(f->values[j].id == PID_AOI) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int

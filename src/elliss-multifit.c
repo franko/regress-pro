@@ -34,6 +34,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     for(sample = 0; sample < samples_number; sample++) {
         struct spectrum *spectrum = fit->spectra_list[sample];
         size_t npt = spectra_points(spectrum);
+        double aoi_der_data[2], *aoi_der;
 
         /* STEP 2 : From the stack we retrive the thicknesses and RIs
         informations. */
@@ -42,6 +43,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
         stack_jacob.th = (jacob ? fit->jac_th    : NULL);
         stack_jacob.n  = (jacob ? fit->jac_n.ell : NULL);
+        aoi_der = (jacob ? aoi_der_data : NULL);
 
         const double phi0 = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_AOI));
         const double anlz = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_ANALYZER));
@@ -59,7 +61,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
             mult_layer_se_jacob(se_type,
                                 nb_med, actual.ns, phi0, actual.ths, lambda,
-                                anlz, theory, stack_jacob.th, stack_jacob.n);
+                                anlz, theory, aoi_der, stack_jacob.th, stack_jacob.n);
 
             if(f != NULL) {
                 gsl_vector_set(f, j_sample,       theory->alpha - meas_alpha);
@@ -83,7 +85,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     fit_param_t const *fp = fit->common_parameters->values + kp;
 
                     get_parameter_jacobian(fp, fit->stack_list[sample],
-                                           ideriv, lambda,
+                                           ideriv, lambda, aoi_der,
                                            stack_jacob.th, stack_jacob.n,
                                            jac);
 
@@ -100,7 +102,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     fit_param_t *fp = fit->private_parameters->values + ikp;
 
                     get_parameter_jacobian(fp, fit->stack_list[sample],
-                                           ideriv, lambda,
+                                           ideriv, lambda, aoi_der,
                                            stack_jacob.th, stack_jacob.n,
                                            jac);
 

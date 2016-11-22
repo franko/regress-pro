@@ -37,7 +37,7 @@ static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 void
 build_stack_cache(struct stack_cache *cache, stack_t *stack,
-                  struct spectrum *spectr, int th_only_optimize)
+                  struct spectrum *spectr, int th_only_optimize, int need_aoi_derivative)
 {
     size_t nb_med = stack->nb;
     size_t j;
@@ -56,6 +56,7 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
     }
 
     cache->th_only = th_only_optimize;
+    cache->need_aoi_derivative = need_aoi_derivative;
 
     if(th_only_optimize) {
         int k, npt = spectra_points(spectr);
@@ -105,10 +106,11 @@ build_fit_engine_cache(struct fit_engine *f)
 {
     size_t dmultipl = (f->acquisition->type == SYSTEM_REFLECTOMETER ? 1 : 2);
     int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
+    int need_aoi_derivative = fit_parameters_have_aoi(f->parameters);
     size_t nb = f->stack->nb;
     int nblyr = nb - 2;
 
-    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed);
+    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, need_aoi_derivative);
 
     f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
@@ -336,6 +338,8 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
                 return 1;
             }
             break;
+        case PID_AOI:
+            break;
         default:
             *error_msg = new_error_message(RECIPE_CHECK, "ill-formed fit parameter");
             return 1;
@@ -470,7 +474,7 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
             ell_ab_t ell;
 
             mult_layer_se_jacob(se_type, nb_med, ns, phi0,
-                                ths, lambda, anlz, ell, NULL, NULL);
+                                ths, lambda, anlz, ell, NULL, NULL, NULL);
 
             data_table_set(table, j, 1, ell->alpha);
             data_table_set(table, j, 2, ell->beta);

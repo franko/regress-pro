@@ -44,7 +44,7 @@ extern void
 mult_layer_se_jacob(enum se_type type,
                     size_t nb, const cmpl ns[], double phi0,
                     const double ds[], double lambda,
-                    double anlz, ell_ab_t e,
+                    double anlz, ell_ab_t e, double *aoi_der,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n);
 
 #endif

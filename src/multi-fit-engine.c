@@ -33,7 +33,7 @@ build_multi_fit_engine_cache(struct multi_fit_engine *f)
        A cache for each sample is not needed because we assume that
        the RI are not fixed and so we don't do presampling of n values */
     build_stack_cache(& f->cache, f->stack_list[0],
-                      f->spectra_list[0], RI_IS_VARIABLE);
+                      f->spectra_list[0], RI_IS_VARIABLE, 1);
 
     f->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
