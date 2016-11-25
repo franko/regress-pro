@@ -315,6 +315,8 @@ fit_engine_check_deriv(struct fit_engine *fit) {
     const int parameters_number = fit->run->mffun.p;
     struct fdf_deriv_ws ws[1];
 
+    fprintf(stderr, "Checking derivatives for fit.\nnumber of points: %d, number of parameters: %d\n", points_number, parameters_number);
+
     ws->fm1 = gsl_vector_alloc(points_number);
     ws->fp1 = gsl_vector_alloc(points_number);
     ws->fmh = gsl_vector_alloc(points_number);
@@ -354,8 +356,10 @@ fit_engine_check_deriv(struct fit_engine *fit) {
             double num = gsl_matrix_get(num_jacob, i, j);
             double abserr = gsl_matrix_get(abserr_mat, i, j);
             double com = gsl_matrix_get(com_jacob, i, j);
+            double err_min = fabs(num) * 1e-8;
+            if (abserr < err_min) abserr = err_min;
             if (com > num + abserr || com < num - abserr) {
-                fprintf(stderr, "DERIV DIFFER %d PARAM: %d: NUM: %g COMPUTED: %g\n", i, j, num, com);
+                fprintf(stderr, "DERIV DIFFER %d PARAM: %d: NUM: %g +/- %g, COMPUTED: %g\n", i, j, num, abserr, com);
             }
         }
     }
@@ -371,6 +375,9 @@ fit_engine_check_deriv(struct fit_engine *fit) {
     gsl_vector_free(ws->r3);
     gsl_vector_free(ws->r5);
     gsl_vector_free(ws->r_aux);
+
+    fprintf(stderr, "done\n");
+    fflush(stderr);
 }
 #endif
 
