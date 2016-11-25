@@ -17,13 +17,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-// FOR DEBUG ONLY
-#include <gsl/gsl_deriv.h>
-
 #include "elliss.h"
 
 static double deg_to_radians(double x) { return x * M_PI / 180.0; }
-static double radians_to_deg(double x) { return x * 180.0 / M_PI; }
 
 static inline cmpl
 csqr(cmpl x)
@@ -239,46 +235,6 @@ mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
     }
 }
 
-struct ref_coeff_deriv_params {
-    cmpl n_env;
-    cmpl n0;
-    cmpl n1;
-    int pol;
-    int real_part;
-};
-
-static double ref_coeff_deriv_func(double x, void *params) {
-    struct ref_coeff_deriv_params *p = params;
-    const cmpl nsin0x = p->n_env * csin((cmpl) x);
-    const cmpl cos0 = snell_cos(nsin0x, p->n0);
-    const cmpl cos1 = snell_cos(nsin0x, p->n1);
-    cmpl r = refl_coeff(p->n0, cos0, p->n1, cos1, p->pol);
-    return (p->real_part ? creal(r) : cimag(r));
-}
-
-/* DEBUG ONLY */
-static void frenel_coeff_verif_deriv(int i, cmpl n_env, double aoi_rad, cmpl n0, cmpl cos0, cmpl n1, cmpl cos1)
-{
-    gsl_function F;
-    struct ref_coeff_deriv_params p[1] = {{n_env, n0, n1, 0, 0}};
-    F.function = &ref_coeff_deriv_func;
-    F.params = p;
-    double der[4], abserr;
-    p->pol = 0;
-    p->real_part = 1;
-    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[0], &abserr);
-    p->real_part = 0;
-    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[1], &abserr);
-    p->pol = 1;
-    p->real_part = 1;
-    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[2], &abserr);
-    p->real_part = 0;
-    gsl_deriv_central (&F, aoi_rad, 1e-8, &der[3], &abserr);
-
-    printf("NUM LAYER:%2d POL:%d (%g, %g)\n", i, 0, der[0], der[1]);
-    printf("NUM LAYER:%2d POL:%d (%g, %g)\n", i, 1, der[2], der[3]);
-}
-
 static void
 mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
                       const double ds[], double lambda,
@@ -298,12 +254,6 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
 
     fresnel_coeffs_diff(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, R, drdnt, drdnb, dRdaoi);
 
-#if 0
-    /* DEBUG ONLY */
-    frenel_coeff_verif_deriv(j, ns[0], asin(nsin0 / ns[0]), ns[j], cost, ns[j+1], cosc);
-    printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 0, creal(dRdaoi[0]), cimag(dRdaoi[0]));
-    printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 1, creal(dRdaoi[1]), cimag(dRdaoi[1]));
-#endif
     jacn[nb-1]      = drdnb[0];
     jacn[nb + nb-1] = drdnb[1];
 
@@ -324,12 +274,7 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
 
         cmpl r[2];
         fresnel_coeffs_diff(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, r, drdnt, drdnb, drdaoi);
-#if 0
-        /* DEBUG ONLY */
-        frenel_coeff_verif_deriv(j, ns[0], asin(nsin0 / ns[0]), ns[j], cost, ns[j+1], cosc);
-        printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 0, creal(drdaoi[0]), cimag(drdaoi[0]));
-        printf("COM LAYER:%2d POL:%d (%g, %g)\n", j, 1, creal(drdaoi[1]), cimag(drdaoi[1]));
-#endif
+
         for(polar_t p = 0; p <= 1; p++) {
             cmpl *pjacn  = jacn  + (p == 0 ? 0 : nb);
             cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
@@ -359,10 +304,6 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
             R[p] = (r[p] + R[p] * rho) / den;
         }
     }
-#if 0
-    printf("ANALYTIC dRdaoi(S) (%g, %g)\n", creal(dRdaoi[0]), cimag(dRdaoi[0]));
-    printf("ANALYTIC dRdaoi(P) (%g, %g)\n", creal(dRdaoi[1]), cimag(dRdaoi[1]));
-#endif
 }
 
 #if 0
@@ -461,31 +402,6 @@ se_ab_der(cmpl R[], cmpl dR[], double tanlz, cmpl *dalpha, cmpl *dbeta)
     *dbeta = 2 * tanlz * z * isqden;
 }
 
-struct se_ab_diff_params {
-    const int nb;
-    const cmpl *ns;
-    const double *ds;
-    const double lambda;
-    const double tanlz;
-    const enum se_type type;
-    int alpha;
-};
-
-double se_ab_DEBUG_diff_f(double x, void *params)
-{
-    struct se_ab_diff_params *p = params;
-    cmpl R[2];
-    const cmpl nsin0 = p->ns[0] * csin((cmpl) deg_to_radians(x));
-    mult_layer_refl(p->nb, p->ns, nsin0, p->ds, p->lambda, R);
-    ell_ab_t e;
-    if(p->type == SE_ALPHA_BETA) {
-        se_ab(R, p->tanlz, e);
-    } else {
-        se_psidel(R, e);
-    }
-    return (p->alpha ? e->alpha : e->beta);
-}
-
 void
 mult_layer_se_jacob(enum se_type type,
                     size_t _nb, const cmpl ns[], double phi0,
@@ -502,20 +418,6 @@ mult_layer_se_jacob(enum se_type type,
     nsin0 = ns[0] * csin((cmpl) phi0);
 
     if(jacob_th && jacob_n) {
-        /* DEBUG ONLY */
-        gsl_function F;
-        struct se_ab_diff_params diff_params[1] = {{nb, ns, ds, lambda, tanlz, type, 0}};
-        F.function = &se_ab_DEBUG_diff_f;
-        F.params = diff_params;
-        double dnum_alpha, dnum_beta;
-        double abserr;
-        diff_params->alpha = 1;
-        gsl_deriv_central (&F, radians_to_deg(phi0), 0.01, &dnum_alpha, &abserr);
-        diff_params->alpha = 0;
-        gsl_deriv_central (&F, radians_to_deg(phi0), 0.01, &dnum_beta, &abserr);
-
-        printf("NUM d(SE alpha, beta) / dAOI %g %g\n", dnum_alpha, dnum_beta);
-
         mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
     } else if (jacob_th || aoi_der) {
         mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th);
@@ -575,7 +477,5 @@ mult_layer_se_jacob(enum se_type type,
         }
         aoi_der[0] = deg_to_radians(creal(d_alpha));
         aoi_der[1] = deg_to_radians(creal(d_beta));
-
-        printf("COM d(SE alpha, beta) / dAOI %g %g\n", aoi_der[0], aoi_der[1]);
     }
 }
