@@ -95,7 +95,7 @@ fresnel_coeffs_diff(const cmpl nsin0, const cmpl ncos0, const cmpl n0, const cmp
     const cmpl drdaoi_prefact = 2 * nsin0 * ncos0 * ((n0 * cos0) / (n1 * cos1) - (n1 * cos1) / (n0 * cos0));
     for(polar_t p = 0; p <= 1; p++) {
         cmpl fc_den;
-        r[p] = refl_coeff_ext(n0, cos0, n1, cos1, drdn0, drdn1, &fc_den, p);
+        r[p] = refl_coeff_ext(n0, cos0, n1, cos1, &drdn0[p], &drdn1[p], &fc_den, p);
         drdaoi[p] = drdaoi_prefact / csqr(fc_den);
     }
 }
