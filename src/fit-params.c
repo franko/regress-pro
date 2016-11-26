@@ -353,13 +353,21 @@ fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shi
     }
 }
 
-static const char *id_name[] = {"thickness", "n", "firstmul", NULL};
-
 static int
 fit_param_write(writer_t *w, const fit_param_t *fp)
 {
     int id = fp->id;
-    writer_printf(w, "%s", (id >= PID_THICKNESS && id < PID_INVALID) ? id_name[id-1] : "invalid");
+    const char *fp_name;
+    if (id == PID_THICKNESS) {
+        fp_name = "thickness";
+    } else if (id == PID_LAYER_N) {
+        fp_name = "n";
+    } else if (id >= PID_ACQUISITION_PARAMETER && id < PID_INVALID) {
+        fp_name = acquisition_parameter_name(id);
+    } else {
+        fp_name = "invalid";
+    }
+    writer_printf(w, "%s", fp_name);
     if (id < PID_ACQUISITION_PARAMETER) {
         writer_printf(w, " %d", fp->layer_nb);
         if (id == PID_LAYER_N) {
@@ -391,8 +399,12 @@ fit_param_read(lexer_t *l, fit_param_t *fp)
         }
         if (iter == NULL) return 1;
         if (lexer_integer(l, &fp->param_nb)) return 1;
-    } else if (strcmp(CSTR(l->store), "firstmul") == 0) {
+    } else if (strcmp(CSTR(l->store), "rmult") == 0) {
         fp->id = PID_FIRSTMUL;
+    } else if (strcmp(CSTR(l->store), "aoi") == 0) {
+        fp->id = PID_AOI;
+    } else if (strcmp(CSTR(l->store), "analyzer") == 0) {
+        fp->id = PID_ANALYZER;
     }
     return 0;
 }

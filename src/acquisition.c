@@ -93,3 +93,16 @@ acquisition_parameter_to_string(str_t name, int parameter_id) {
         str_copy_c(name, "###");
     }
 }
+
+const char *
+acquisition_parameter_name(int param_id)
+{
+    if (param_id == PID_AOI) {
+        return "aoi";
+    } else if (param_id == PID_ANALYZER) {
+        return "analyzer";
+    } else if (param_id == PID_FIRSTMUL) {
+        return "rmult";
+    }
+    return NULL;
+}
