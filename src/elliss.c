@@ -21,6 +21,8 @@
 
 static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
+static double sqr(double x) { return x*x; }
+
 static inline cmpl
 csqr(cmpl x)
 {
@@ -372,7 +374,7 @@ se_psidel_der(cmpl R[], cmpl dR[], cmpl *dtpsi, cmpl *dcdelta)
 }
 
 static void
-se_psidel_der_acquisition(cmpl R[], cmpl dR[], gsl_matrix *jacob_acquisition)
+se_psidel_der_acquisition(cmpl R[], cmpl dR[], double *jac)
 {
     const cmpl rho = R[1] / R[0];
     const cmpl drho = (R[0]*dR[1] - R[1]*dR[0]) / (R[0]*R[0]);
@@ -380,11 +382,8 @@ se_psidel_der_acquisition(cmpl R[], cmpl dR[], gsl_matrix *jacob_acquisition)
     const double iden = sqrt(irhosq);
 
     /* Derivatives with AOI. */
-    gsl_matrix_set(jacob_acquisition, 0, 0, creal(iden * conj(rho) * drho));
-    gsl_matrix_set(jacob_acquisition, 1, 0, creal(iden * (1 - conj(rho) / rho) * drho / 2.0));
-
-    // *dtpsi = iden * conj(rho) * drho;
-    // *dcdelta = iden * (1 - conj(rho) / rho) * drho / 2.0;
+    jac[SE_ACQ_INDEX(SE_TANPSI, SE_AOI)] = creal(iden * conj(rho) * drho);
+    jac[SE_ACQ_INDEX(SE_COSDEL, SE_AOI)] = creal(iden * (1 - conj(rho) / rho) * drho / 2.0);
 }
 
 static void
@@ -401,26 +400,22 @@ se_ab(cmpl R[], double tanlz, ell_ab_t e)
 static void
 se_ab_der(cmpl R[], cmpl dR[], double tanlz, cmpl *dalpha, cmpl *dbeta)
 {
-    cmpl rho = R[1] / R[0];
-    cmpl drho = (R[0]*dR[1] - R[1]*dR[0]) / (R[0]*R[0]);
-    double sqtpsi = CSQABS(rho);
-    double tasq = tanlz * tanlz;
-    double isqden;
-    cmpl z;
+    const cmpl rho = R[1] / R[0];
+    const cmpl drho = (R[0]*dR[1] - R[1]*dR[0]) / (R[0]*R[0]);
+    const double sqtpsi = CSQABS(rho);
+    const double tasq = tanlz * tanlz;
+    const double isqden = sqr(1 / (sqtpsi + tasq));
 
-    isqden = 1 / (sqtpsi + tasq);
-    isqden *= isqden;
+    const cmpl z1 = conj(rho) * drho;
+    *dalpha = 4 * tasq * z1 * isqden;
 
-    z = conj(rho) * drho;
-    *dalpha = 4 * tasq * z * isqden;
-
-    z = conj(tasq - rho*rho) * drho;
-    *dbeta = 2 * tanlz * z * isqden;
+    const cmpl z2 = conj(tasq - rho*rho) * drho;
+    *dbeta = 2 * tanlz * z2 * isqden;
 }
 
 
 static void
-se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, gsl_matrix *jacob_acquisition)
+se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
 {
     const cmpl rho = R[1] / R[0];
     const cmpl drho = (R[0]*dR[1] - R[1]*dR[0]) / (R[0]*R[0]);
@@ -434,15 +429,13 @@ se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, gsl_matrix *jacob_acqui
     const cmpl z2 = conj(tasq - rho*rho) * drho;
 
     /* Derivatives with AOI. */
-    gsl_matrix_set(jacob_acquisition, 0, 0, creal(4 * tasq * z1 * isqden));
-    gsl_matrix_set(jacob_acquisition, 1, 0, creal(2 * tanlz * z2 * isqden));
-    // *dalpha = 4 * tasq * z * isqden;
-    // *dbeta = 2 * tanlz * z * isqden;
+    jac[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = creal(4 * tasq * z1 * isqden);
+    jac[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = creal(2 * tanlz * z2 * isqden);
 
     /* Derivatives with Analyzer angle (A). */
     const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
-    gsl_matrix_set(jacob_acquisition, 0, 1, - 4 * tanlz * sqtpsi / isqden * secsqa);
-    gsl_matrix_set(jacob_acquisition, 1, 1, 2 * creal(rho) * (sqtpsi - tasq) / isqden * secsqa);
+    jac[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * tanlz * sqtpsi * isqden * secsqa;
+    jac[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * creal(rho) * (sqtpsi - tasq) * isqden * secsqa;
 }
 
 void
@@ -450,7 +443,7 @@ mult_layer_se_jacob(enum se_type type,
                     size_t _nb, const cmpl ns[], double phi0,
                     const double ds[], double lambda,
                     double anlz, ell_ab_t e,
-                    gsl_vector *jacob_th, cmpl_vector *jacob_n, gsl_matrix *jacob_acquisition)
+                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition)
 {
     const int nb = _nb, nblyr = nb - 2;
     cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
@@ -512,19 +505,13 @@ mult_layer_se_jacob(enum se_type type,
     }
 
     if (jacob_acquisition) {
-        cmpl d_alpha, d_beta;
         if(type == SE_ALPHA_BETA) {
             se_ab_der_acquisition(R, dRdaoi, tanlz, jacob_acquisition);
         } else {
             se_psidel_der_acquisition(R, dRdaoi, jacob_acquisition);
         }
-        for (int i = 0; i < (int) jacob_acquisition->size1; i++) {
-            for (int j = 0; j < (int) jacob_acquisition->size2; j++) {
-                double ydeg = deg_to_radians(gsl_matrix_get(jacob_acquisition, i, j));
-                gsl_matrix_set(jacob_acquisition, i, j, ydeg);
-            }
+        for (int i = 0; i < 2 * SE_ACQ_PARAMETERS_NB(type); i++) {
+            jacob_acquisition[i] = deg_to_radians(jacob_acquisition[i]);
         }
-        // aoi_der[0] = deg_to_radians(creal(d_alpha));
-        // aoi_der[1] = deg_to_radians(creal(d_beta));
     }
 }

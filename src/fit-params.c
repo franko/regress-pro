@@ -279,10 +279,11 @@ fit_parameters_are_RI_fixed(struct fit_parameters *f)
 }
 
 int
-fit_parameters_have_aoi(struct fit_parameters *f)
+fit_parameters_contains_acquisition_parameters(struct fit_parameters *f)
 {
     for(int j = 0; j < f->number; j++) {
-        if(f->values[j].id == PID_AOI) {
+        const int id = f->values[j].id;
+        if(id >= PID_ACQUISITION_PARAMETER || id < PID_INVALID) {
             return 1;
         }
     }

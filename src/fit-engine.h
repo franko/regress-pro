@@ -113,7 +113,7 @@ extern void fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_e
 extern void build_stack_cache(struct stack_cache *cache,
                               stack_t *stack,
                               struct spectrum *spectr,
-                              int th_only_optimize, int need_aoi_derivative);
+                              int th_only_optimize, int require_acquisition_jacob);
 
 extern void dispose_stack_cache(struct stack_cache *cache);
 

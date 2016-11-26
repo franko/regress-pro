@@ -11,7 +11,7 @@ struct stack_cache {
     int is_valid;
     int nb_med;
     short int th_only;
-    short int need_aoi_derivative;
+    short int require_acquisition_jacob;
     cmpl *ns;
     struct deriv_info * deriv_info;
     cmpl *ns_full_spectr;

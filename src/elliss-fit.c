@@ -9,9 +9,9 @@ static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 void
 get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
-                       struct deriv_info *ideriv, double lambda, double aoi_der[2],
+                       struct deriv_info *ideriv, double lambda,
                        gsl_vector *stack_jacob_th, cmpl_vector *stack_jacob_n,
-                       struct elliss_ab *result)
+                       double *jacob_acquisition, struct elliss_ab *result)
 {
     const int nb_med = stack->nb, nb_lyr = nb_med - 2;
     const int layer = fp->layer_nb;
@@ -37,8 +37,12 @@ get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
         result->beta  = creal(drdn.beta) *dnr - cimag(drdn.beta) *dni;
         break;
     case PID_AOI:
-        result->alpha = aoi_der[0];
-        result->beta = aoi_der[1];
+        result->alpha = jacob_acquisition[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)];
+        result->beta  = jacob_acquisition[SE_ACQ_INDEX(SE_BETA , SE_AOI)];
+        break;
+    case PID_ANALYZER:
+        result->alpha = jacob_acquisition[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)];
+        result->beta  = jacob_acquisition[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)];
         break;
     default:
         result->alpha = 0.0;
@@ -52,7 +56,8 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 {
     struct fit_engine *fit = params;
     struct spectrum *s = fit->run->spectr;
-    size_t nb_med = fit->stack->nb;
+    const int nb_med = fit->stack->nb;
+    const int npt = spectra_points(s);
     struct {
         double const * ths;
         cmpl * ns;
@@ -61,10 +66,8 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         gsl_vector *th;
         cmpl_vector *n;
     } wjacob;
-    size_t npt = spectra_points(s);
     const enum se_type se_type = GET_SE_TYPE(fit->acquisition->type);
-    double aoi_der_data[2], *aoi_der;
-    size_t j;
+    double jacob_acq_data[2 * SE_ACQ_PARAMETERS_NB(se_type)];
 
     /* STEP 1 : We apply the actual values of the fit parameters
                 to the stack. */
@@ -78,11 +81,11 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
     wjacob.th = (jacob ? fit->run->jac_th : NULL);
     wjacob.n  = (jacob && !fit->run->cache.th_only ? fit->run->jac_n.ell : NULL);
-    aoi_der = (jacob && fit->run->cache.need_aoi_derivative ? aoi_der_data : NULL);
+    double *jacob_acquisition = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : NULL);
 
     const double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
     const double anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
-    for(j = 0; j < npt; j++) {
+    for(int j = 0; j < npt; j++) {
         float const * spectr_data = spectra_get_values(s, j);
         const double lambda     = spectr_data[0];
         const double meas_alpha = spectr_data[1];
@@ -98,10 +101,9 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
         /* STEP 3 : We call the ellipsometer kernel function */
 
-
         mult_layer_se_jacob(se_type,
                             nb_med, actual.ns, phi0, actual.ths, lambda,
-                            anlz, theory, aoi_der, wjacob.th, wjacob.n);
+                            anlz, theory, wjacob.th, wjacob.n, jacob_acquisition);
 
         if(f != NULL) {
             gsl_vector_set(f, j,       theory->alpha - meas_alpha);
@@ -111,19 +113,18 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         if(jacob) {
             struct deriv_info * ideriv = fit->run->cache.deriv_info;
             struct elliss_ab jac[1];
-            size_t kp, ic;
 
             if(! fit->run->cache.th_only) {
-                for(ic = 0; ic < nb_med; ic++) {
+                for(int ic = 0; ic < nb_med; ic++) {
                     ideriv[ic].is_valid = 0;
                 }
             }
 
-            for(kp = 0; kp < fit->parameters->number; kp++) {
+            for(int kp = 0; kp < fit->parameters->number; kp++) {
                 fit_param_t *fp = fit->parameters->values + kp;
 
                 get_parameter_jacobian(fp, fit->stack, ideriv, lambda,
-                                       aoi_der, wjacob.th, wjacob.n, jac);
+                                       wjacob.th, wjacob.n, jacob_acquisition, jac);
 
                 gsl_matrix_set(jacob, j,       kp, jac->alpha);
                 gsl_matrix_set(jacob, npt + j, kp, jac->beta);

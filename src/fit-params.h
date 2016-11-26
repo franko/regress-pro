@@ -82,7 +82,7 @@ extern void     fit_parameters_fix_layer_shift(struct fit_parameters *lst, struc
 extern int      fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp);
 
 extern int      fit_parameters_are_RI_fixed(struct fit_parameters *f);
-extern int      fit_parameters_have_aoi(struct fit_parameters *f);
+extern int      fit_parameters_contains_acquisition_parameters(struct fit_parameters *f);
 extern int      fit_param_compare(const fit_param_t *a, const fit_param_t *b);
 extern int      fit_parameters_write(writer_t *w, const struct fit_parameters *s);
 extern struct fit_parameters *fit_parameters_read(lexer_t *l);

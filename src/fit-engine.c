@@ -37,7 +37,7 @@ static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 void
 build_stack_cache(struct stack_cache *cache, stack_t *stack,
-                  struct spectrum *spectr, int th_only_optimize, int need_aoi_derivative)
+                  struct spectrum *spectr, int th_only_optimize, int require_acquisition_jacob)
 {
     size_t nb_med = stack->nb;
     size_t j;
@@ -56,7 +56,7 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
     }
 
     cache->th_only = th_only_optimize;
-    cache->need_aoi_derivative = need_aoi_derivative;
+    cache->require_acquisition_jacob = require_acquisition_jacob;
 
     if(th_only_optimize) {
         int k, npt = spectra_points(spectr);
@@ -106,11 +106,11 @@ build_fit_engine_cache(struct fit_engine *f)
 {
     size_t dmultipl = (f->acquisition->type == SYSTEM_REFLECTOMETER ? 1 : 2);
     int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
-    int need_aoi_derivative = fit_parameters_have_aoi(f->parameters);
+    int require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
     size_t nb = f->stack->nb;
     int nblyr = nb - 2;
 
-    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, need_aoi_derivative);
+    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, require_acquisition_jacob);
 
     f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
@@ -463,9 +463,11 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
 
     for(j = 0; j < fps->number; j++) {
         fit_param_t *fp = fps->values + j;
+
+        if (fp->id >= PID_ACQUISITION_PARAMETER && fp->id < PID_INVALID)
+            return 0;
+
         switch(fp->id) {
-        case PID_FIRSTMUL:
-            break;
         case PID_THICKNESS:
             if(fp->layer_nb == 0 || fp->layer_nb >= nb_med - 1) {
                 *error_msg = new_error_message(RECIPE_CHECK, "reference to thickness of layer %i", fp->layer_nb);
@@ -488,8 +490,6 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
                 str_free(pname);
                 return 1;
             }
-            break;
-        case PID_AOI:
             break;
         default:
             *error_msg = new_error_message(RECIPE_CHECK, "ill-formed fit parameter");
