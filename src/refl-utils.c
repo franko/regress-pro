@@ -222,6 +222,7 @@ load_filmetrics_spectrum(const char *filename, str_ptr *error_msg) {
 
     s = emalloc(sizeof(struct spectrum));
     s->acquisition->type = SYSTEM_REFLECTOMETER;
+    s->acquisition->parameters.sr.rmult = 1.0;
 
     str_init(ln, 64);
     str_getline(ln, f);
