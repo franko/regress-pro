@@ -25,6 +25,9 @@ extern void disp_sample_table_prepare_interp(struct disp_sample_table *dt);
 extern struct disp_struct *
 disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg);
 
+extern struct disp_struct *
+disp_sample_table_new_from_txt_file(const char * filename, int nkf_headers, str_ptr *error_msg);
+
 extern void disp_sample_table_get_sample(const struct disp_sample_table *dt, int index, double *w, double *n, double *k);
 
 __END_DECLS

@@ -119,7 +119,7 @@ fx_newmodel_selector::reset()
 static disp_list files_list[1] = {{NULL, NULL}};
 
 static const FXchar disp_file_patterns[] =
-    "Dispersion files (*.mat,*.nk,*.dsp)"
+    "Dispersion files (*.mat,*.txt,*.nkf,*.nk,*.dsp)"
     "\nAll Files (*)";
 
 class fx_file_disp_selector : public fx_dispers_selector {
@@ -182,6 +182,10 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
         FXString extension = filename.after('.');
         if (comparecase(extension, "mat") == 0) {
             disp = load_mat_dispers(filename.text(), &error_message);
+        } else if (comparecase(extension, "txt") == 0) {
+            disp = disp_sample_table_new_from_txt_file(filename.text(), 0, &error_message);
+        } else if (comparecase(extension, "nkf") == 0) {
+            disp = disp_sample_table_new_from_txt_file(filename.text(), 1, &error_message);
         } else if (comparecase(extension, "nk") == 0) {
             disp = load_nk_table(filename.text(), &error_message);
         } else if (comparecase(extension, "dsp") == 0) {

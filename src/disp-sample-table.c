@@ -165,6 +165,103 @@ enum {
     WL_UNIT_CONVERT_ANGSTROMS = 1 << 1,
 };
 
+static int
+count_nk_text_lines(FILE *f)
+{
+    int lines;
+    for(lines = 0; ;) {
+        float xd[3];
+        int read_status = fscanf(f, "%f %f %f\n", xd, xd+1, xd+2);
+        if(read_status == 3) {
+            lines ++;
+        }
+        if(read_status == EOF) {
+            break;
+        }
+    }
+    return lines;
+}
+
+disp_t *
+disp_sample_table_new_from_txt_file(const char * filename, int nkf_headers, str_ptr *error_msg)
+{
+    FILE *f = fopen(filename, "r");
+
+    if(f == NULL) {
+        *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" does not exists or cannot be opened", filename);
+        return NULL;
+    }
+
+    str_t name;
+    str_init(name, 64);
+    str_getline(name, f);
+
+    const char *name_ptr = CSTR(name);
+    if (nkf_headers) {
+        while (*name_ptr == ' ') name_ptr++;
+        if (*name_ptr != ';') {
+            *error_msg = new_error_message(LOADING_FILE_ERROR, "File \"%s\" has invalid NKF header", filename);
+            str_free(name);
+            return NULL;
+        }
+        name_ptr++;
+        while (*name_ptr == ' ') name_ptr++;
+    }
+
+    str_t row;
+    str_init(row, 64);
+
+    long start_pos = ftell(f);
+
+    while (nkf_headers) {
+        str_getline(row, f);
+        const char *row_ptr = CSTR(row);
+        while (*row_ptr == ' ') row_ptr++;
+        if (*row_ptr != ';') break;
+        start_pos = ftell(f);
+    }
+
+    fseek(f, start_pos, SEEK_SET);
+
+    disp_t *disp = disp_new(DISP_SAMPLE_TABLE);
+    disp_set_name(disp, name_ptr);
+    struct disp_sample_table *dt = & disp->disp.sample_table;
+    clear(dt);
+
+    int lines = count_nk_text_lines(f);
+
+    if(lines < 2) {
+        disp_free(disp);
+        disp = NULL;
+        goto close_exit_txt;
+    }
+
+    fseek(f, start_pos, SEEK_SET);
+
+    disp_sample_table_init(dt, lines);
+
+    double *wptr = wavelength_array(dt);
+    double *nptr = n_array(dt);
+    double *kptr = k_array(dt);
+    for(int j = 0; j < lines; j++, wptr++, nptr++, kptr++) {
+        int read_status;
+        do {
+            read_status = fscanf(f, "%lf %lf %lf\n", wptr, nptr, kptr);
+        } while(read_status < 3 && read_status != EOF);
+
+        if(read_status == EOF) {
+            break;
+        }
+    }
+    disp_sample_table_prepare_interp(dt);
+
+close_exit_txt:
+    fclose(f);
+    str_free(name);
+    str_free(row);
+    return disp;
+}
+
 disp_t *
 disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 {
@@ -214,7 +311,6 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
     case DISP_SAMPLE_TABLE: {
         struct disp_sample_table *dt;
         long start_pos = ftell(f);
-        int j, lines;
 
         disp = disp_new(DISP_SAMPLE_TABLE);
         disp_set_name(disp, CSTR(name));
@@ -223,16 +319,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
 
         start_pos = ftell(f);
 
-        for(lines = 0; ;) {
-            float xd[3];
-            int read_status = fscanf(f, "%f %f %f\n", xd, xd+1, xd+2);
-            if(read_status == 3) {
-                lines ++;
-            }
-            if(read_status == EOF) {
-                break;
-            }
-        }
+        int lines = count_nk_text_lines(f);
 
         if(lines < 2) {
             disp_free(disp);
@@ -247,7 +334,7 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
         double *wptr = wavelength_array(dt);
         double *nptr = n_array(dt);
         double *kptr = k_array(dt);
-        for(j = 0; j < lines; j++, wptr++, nptr++, kptr++) {
+        for(int j = 0; j < lines; j++, wptr++, nptr++, kptr++) {
             int read_status;
             do {
                 read_status = fscanf(f, "%lf %lf %lf\n", wptr, nptr, kptr);
