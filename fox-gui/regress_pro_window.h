@@ -104,7 +104,6 @@ public:
     long onCmdRunSimul(FXObject*,FXSelector,void*);
     long onCmdBatchWindow(FXObject*,FXSelector,void*);
     long onCmdAbout(FXObject*,FXSelector,void*);
-    long onCmdRegister(FXObject*,FXSelector,void*);
     long onCmdStackChange(FXObject*,FXSelector,void*);
     long onCmdStackShift(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
@@ -123,7 +122,6 @@ public:
         ID_RUN_SIMUL,
         ID_ABOUT,
         ID_SCRIPT_TEXT,
-        ID_REGISTER,
         ID_DATASET_EDIT,
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,

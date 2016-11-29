@@ -59,7 +59,6 @@ static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters
 FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_UPDATE,  0, regress_pro_window::onUpdate),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ABOUT,  regress_pro_window::onCmdAbout),
-    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_REGISTER,  regress_pro_window::onCmdRegister),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_DATASET_EDIT, regress_pro_window::onCmdDatasetEdit),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_SAVE, regress_pro_window::onCmdRecipeSaveAs),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RECIPE_LOAD, regress_pro_window::onCmdRecipeLoad),
@@ -135,7 +134,6 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
 
     helpmenu = new FXMenuPane(this);
-    new FXMenuCommand(helpmenu, "&Register", NULL, this, ID_REGISTER);
     new FXMenuCommand(helpmenu, "&About", NULL, this, ID_ABOUT);
     new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
 
@@ -189,13 +187,10 @@ regress_pro_window::onUpdate(FXObject* sender, FXSelector sel, void* ptr)
     FXMainWindow::onUpdate(sender, sel, ptr);
 
     if(m_title_dirty) {
-        bool is_reg = regressProApp()->is_registered();
-
         FXString filename = recipeFilename.rafter(DIR_SEPARATOR);
         FXString pathname = recipeFilename.rbefore(DIR_SEPARATOR);
-        FXString appname(is_reg ? "Regress Pro" : "(UNREGISTERED)");
 
-        this->setTitle(filename + " - " + pathname + " - " + appname);
+        this->setTitle(filename + " - " + pathname + " - Regress Pro");
 
         m_title_dirty = false;
 
@@ -229,8 +224,6 @@ regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
 long
 regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
-    reg_check_point(this);
-
     regress_pro *app = regressProApp();
 
     FXFileDialog open(this,"Open Spectra");
@@ -259,8 +252,6 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
-    reg_check_point(this);
-
     if (!m_disp_fit_window) {
         struct disp_fit_engine *fit = disp_fit_engine_new();
         fit->ref_disp = disp_list_search(app_lib, "sio2");
@@ -296,14 +287,6 @@ regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
     return 1;
 }
 
-long
-regress_pro_window::onCmdRegister(FXObject *, FXSelector, void *)
-{
-    reg_form(this);
-    m_title_dirty = true;
-    return 1;
-}
-
 // Clean up
 regress_pro_window::~regress_pro_window()
 {
@@ -325,7 +308,6 @@ regress_pro_window::~regress_pro_window()
 long
 regress_pro_window::onCmdBatchWindow(FXObject *, FXSelector, void *)
 {
-    reg_check_point(this);
     if (!my_batch_window) {
         my_batch_window = new batch_window(this);
         my_batch_window->create();
@@ -546,7 +528,6 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
     if(! check_spectrum("Fitting")) {
         return 0;
     }
-    reg_check_point(this);
     str_ptr error_msg;
     fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
     if (!fit) {
@@ -565,7 +546,6 @@ regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 long
 regress_pro_window::onCmdInteractiveFit(FXObject*,FXSelector,void*)
 {
-    reg_check_point(this);
     m_fit_window->show(FX::PLACEMENT_SCREEN);
     return 1;
 }

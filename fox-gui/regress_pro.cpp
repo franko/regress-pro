@@ -17,10 +17,10 @@ FXDEFMAP(regress_pro) regress_pro_map[]= {
 };
 
 // Object implementation
-FXIMPLEMENT(regress_pro, registered_app, regress_pro_map,ARRAYNUMBER(regress_pro_map));
+FXIMPLEMENT(regress_pro, FX::FXApp, regress_pro_map,ARRAYNUMBER(regress_pro_map));
 
 regress_pro::regress_pro() :
-    registered_app("Regress Pro", "Francesco Abbate"),
+    FX::FXApp("Regress Pro", "Francesco Abbate"),
     appicon(this, regressproicon),
     small_font(this, SMALL_UI_FONT_NAME, 9, FXFont::Normal, FXFont::Straight),
     bold_font(this, SMALL_UI_FONT_NAME, 9, FXFont::Bold, FXFont::Italic),
