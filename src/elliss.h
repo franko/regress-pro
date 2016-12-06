@@ -55,4 +55,11 @@ mult_layer_se_jacob(enum se_type type,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n,
                     double *jacob_acquisition);
 
+extern void
+mult_layer_se_bandwidth_jacob(enum se_type type,
+                    size_t _nb, const cmpl ns[], double phi0,
+                    const double ds[], double lambda,
+                    double anlz, const double bandwidth, ell_ab_t e,
+                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition);
+
 #endif

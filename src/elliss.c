@@ -438,6 +438,39 @@ se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
     jac[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * creal(rho) * (sqtpsi - tasq) * isqden * secsqa;
 }
 
+static void
+set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl *mlr_jacob, gsl_vector *jacob)
+{
+    for(int j = 0; j < n; j++) {
+        cmpl d_alpha, d_beta;
+        cmpl dR[2] = {mlr_jacob[j], mlr_jacob[n + j]};
+        if(se_type == SE_ALPHA_BETA) {
+            se_ab_der(R, dR, tanlz, &d_alpha, &d_beta);
+        } else {
+            se_psidel_der(R, dR, &d_alpha, &d_beta);
+        }
+        gsl_vector_set(jacob, j    , creal(d_alpha));
+        gsl_vector_set(jacob, n + j, creal(d_beta));
+    }
+}
+
+static void
+set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl *mlr_jacob, cmpl_vector *jacob)
+{
+    for(int j = 0; j < n; j++) {
+        cmpl d_alpha, d_beta;
+        cmpl dR[2] = {mlr_jacob[j], mlr_jacob[n + j]};
+        if(se_type == SE_ALPHA_BETA) {
+            se_ab_der(R, dR, tanlz, &d_alpha, &d_beta);
+        } else {
+            se_psidel_der(R, dR, &d_alpha, &d_beta);
+        }
+        cmpl_vector_set(jacob, j    , d_alpha);
+        cmpl_vector_set(jacob, n + j, d_beta);
+    }
+
+}
+
 void
 mult_layer_se_jacob(enum se_type type,
                     size_t _nb, const cmpl ns[], double phi0,
@@ -449,7 +482,6 @@ mult_layer_se_jacob(enum se_type type,
     cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
     double tanlz = tan(anlz);
     cmpl R[2], dRdaoi[2], nsin0;
-    size_t j;
 
     nsin0 = ns[0] * csin((cmpl) phi0);
 
@@ -471,37 +503,14 @@ mult_layer_se_jacob(enum se_type type,
 
     if(jacob_n) {
         /* we set the derivative respect to the RI of the ambient to 0.0 */
-        cmpl_vector_set(jacob_n, 0, 0.0i);
-        cmpl_vector_set(jacob_n, (size_t) nb, 0.0i);
-        for(j = 1; j < (size_t) nb; j++) {
-            cmpl d_alpha, d_beta;
-            cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
+        mlr_jacob_n[0 ] = 0.0;
+        mlr_jacob_n[nb] = 0.0;
 
-            if(type == SE_ALPHA_BETA) {
-                se_ab_der(R, dR, tanlz, &d_alpha, &d_beta);
-            } else {
-                se_psidel_der(R, dR, &d_alpha, &d_beta);
-            }
-
-            cmpl_vector_set(jacob_n, j,    d_alpha);
-            cmpl_vector_set(jacob_n, nb+j, d_beta);
-        }
+        set_se_measuring_jacobian_complex(type, nb, R, tanlz, mlr_jacob_n, jacob_n);
     }
 
     if(jacob_th) {
-        for(j = 0; j < (size_t) nblyr; j++) {
-            cmpl d_alpha, d_beta;
-            cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
-
-            if(type == SE_ALPHA_BETA) {
-                se_ab_der(R, dR, tanlz, &d_alpha, &d_beta);
-            } else {
-                se_psidel_der(R, dR, &d_alpha, &d_beta);
-            }
-
-            gsl_vector_set(jacob_th, j, creal(d_alpha));
-            gsl_vector_set(jacob_th, nblyr+j, creal(d_beta));
-        }
+        set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th, jacob_th);
     }
 
     if (jacob_acquisition) {
@@ -513,5 +522,202 @@ mult_layer_se_jacob(enum se_type type,
         for (int i = 0; i < 2 * SE_ACQ_PARAMETERS_NB(type); i++) {
             jacob_acquisition[i] = deg_to_radians(jacob_acquisition[i]);
         }
+    }
+}
+
+static void
+sp_products(const cmpl R[2], double tanlz, double sp[3])
+{
+    sp[0] = CSQABS(R[0]); /* |Rs|^2 */
+    sp[1] = CSQABS(R[1]); /* |Rp|^2 */
+    sp[2] = creal(R[0] * conj(R[1])); /* 1/2 (Rs Rp* + Rs* Rp) = Re(Rs Rp*) */
+}
+
+static void
+sp_products_der(const cmpl R[2], const cmpl dR[2], double tanlz, cmpl dsp[3])
+{
+    dsp[0] = 2 * R[0] * dR[0]; /* derivative of |Rs|^2 */
+    dsp[1] = 2 * R[1] * dR[1]; /* derivative of |Rp|^2 */
+    dsp[2] = R[0] * conj(dR[1]) + R[1] * conj(dR[0]); /* derivative of Re(Rs Rp*) */
+}
+
+void
+mult_layer_sp_products_jacob(const int nb, const cmpl nsin0, const cmpl ns[],
+                    const double ds[], const double lambda,
+                    const double tanlz, double sp[3],
+                    double *jacob_th, cmpl *jacob_n, double *dsp_daoi)
+{
+    const int nblyr = nb - 2;
+    cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
+    cmpl R[2], dRdaoi[2];
+
+    if(jacob_th && jacob_n) {
+        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
+    } else if (jacob_th || dsp_daoi) {
+        mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th);
+    } else if (jacob_th) {
+        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th);
+    } else {
+        mult_layer_refl(nb, ns, nsin0, ds, lambda, R);
+    }
+
+    sp_products(R, tanlz, sp);
+
+    if(jacob_n) {
+        for(int j = 0; j < nb; j++) {
+            if (j == 0) {
+                /* we set the derivative respect to the RI of the ambient to 0.0 */
+                for (int k = 0; k < 3; k++) {
+                    jacob_n[3*j + k] = 0.0;
+                }
+            } else {
+                const cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
+                cmpl dsp[3];
+                sp_products_der(R, dR, tanlz, dsp);
+                for (int k = 0; k < 3; k++) {
+                    jacob_n[3*j + k] = dsp[k];
+                }
+            }
+        }
+    }
+
+    if(jacob_th) {
+        for(int j = 0; j < nblyr; j++) {
+            cmpl dsp[3];
+            cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
+            sp_products_der(R, dR, tanlz, dsp);
+            for (int k = 0; k < 3; k++) {
+                jacob_th[3*j + k] = creal(dsp[k]);
+            }
+        }
+    }
+
+    if (dsp_daoi) {
+        cmpl dsp[3];
+        sp_products_der(R, dRdaoi, tanlz, dsp);
+        for (int k = 0; k < 3; k++) {
+            dsp_daoi[k] = deg_to_radians(creal(dsp[k]));
+        }
+    }
+}
+
+/* Legendre-Gauss quadrature abscissae and coefficients. From:
+   http://pomax.github.io/bezierinfo/legendre-gauss.html */
+static double gauss_quad_5_x[5] = {0.0,                0.5384693101056831, 0.9061798459386640};
+static double gauss_quad_5_w[5] = {0.5688888888888889, 0.4786286704993665, 0.2369268850561891};
+
+void
+mult_layer_se_bandwidth_jacob(enum se_type type,
+                    size_t _nb, const cmpl ns[], double phi0,
+                    const double ds[], double lambda,
+                    double anlz, const double bandwidth, ell_ab_t e,
+                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acq)
+{
+    const int nb = _nb, nblyr = nb - 2;
+    const double tanlz = tan(anlz);
+    const cmpl nsin0 = ns[0] * csin((cmpl) phi0);
+    double jacob_th_sum[3 * nblyr];
+    cmpl jacob_n_sum[3 * nb];
+    double dsp_daoi[3];
+    double sp[3] = {0.0, 0.0, 0.0};
+
+    if (jacob_th) {
+        for (int j = 0; j < nblyr; j++) {
+            jacob_th_sum[j] = 0.0;
+        }
+    }
+
+    if (jacob_n) {
+        for (int j = 0; j < nb; j++) {
+            jacob_n_sum[j] = 0.0;
+        }
+    }
+
+    if (jacob_acq) {
+        for (int k = 0; k < 3; k++) {
+            dsp_daoi[k] = 0.0;
+        }
+    }
+
+    const int ORDER = 5;
+    for (int i = 0; i < ORDER; i++) {
+        const int qc_index = (i >= 2 ? i - 2 : 2 - i);
+        double sp_w[3], jacob_th_w[nblyr], dsp_daoi_w[3];
+        cmpl jacob_n_w[nb];
+
+        const double lambda_w = lambda + gauss_quad_5_x[qc_index] * bandwidth / 2;
+        mult_layer_sp_products_jacob(nb, nsin0, ns, ds, lambda_w, tanlz, sp_w, jacob_th_w, jacob_n_w, dsp_daoi_w);
+
+        const double weight = gauss_quad_5_w[qc_index];
+        for (int k = 0; k < 3; k++) {
+            sp[k] += weight * sp_w[k];
+        }
+
+        if (jacob_th) {
+            for (int j = 0; j < 3 * nblyr; j++) {
+                jacob_th_sum[j] += weight * jacob_th_w[j];
+            }
+        }
+
+        if (jacob_n) {
+            for (int j = 0; j < 3 * nb; j++) {
+                jacob_n_sum[j] += weight * jacob_n_w[j];
+            }
+        }
+
+        if (jacob_acq) {
+            for (int k = 0; k < 3; k++) {
+                dsp_daoi[k] += weight * dsp_daoi_w[k];
+            }
+        }
+    }
+
+    if (type == SE_ALPHA_BETA) {
+        const double tasq = tanlz * tanlz;
+        const cmpl abden = sp[0] + tasq * sp[1];
+        const cmpl densq = sqr(abden);
+
+        e->alpha = (sp[0] - tasq * sp[1]) / abden;
+        e->beta = (2 * sp[2] * tanlz) / abden;
+
+        if (jacob_n) {
+            for(int j = 0; j < nb; j++) {
+                const cmpl dRs2 = jacob_n_sum[3*j], dRp2 = jacob_n_sum[3*j+1], dRsRpcj = jacob_n_sum[3*j+2];
+                const cmpl d_alpha = 2 * tasq / densq * (sp[1] * dRs2 - sp[0] * dRp2);
+                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRs2 - sp[2] * tasq * dRp2 + dRsRpcj);
+                cmpl_vector_set(jacob_n, j,      d_alpha);
+                cmpl_vector_set(jacob_n, nb + j, d_beta );
+            }
+        }
+
+        if (jacob_th) {
+            for(int j = 0; j < nblyr; j++) {
+                const cmpl dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
+                const cmpl d_alpha = 2 * tasq / densq * (sp[1] * dRs2 - sp[0] * dRp2);
+                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRs2 - sp[2] * tasq * dRp2 + dRsRpcj);
+                gsl_vector_set(jacob_th, j,         creal(d_alpha));
+                gsl_vector_set(jacob_th, nblyr + j, creal(d_beta) );
+            }
+        }
+
+        if (jacob_acq) {
+            const cmpl dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
+            const cmpl d_alpha = 2 * tasq / densq * (sp[1] * dRs2 - sp[0] * dRp2);
+            const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRs2 - sp[2] * tasq * dRp2 + dRsRpcj);
+            /* Derivatives with AOI. */
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = creal(d_alpha);
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = creal(d_beta);
+
+            /* Derivatives with Analyzer angle (A). */
+            const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tasq * secsqa / densq;
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[0] - tasq * sp[1]) * secsqa / densq;
+        }
+    } else {
+        const double tpsi = sqrt(sp[0] / sp[1]);
+        e->alpha = tpsi;
+        e->beta = sp[2] / tpsi;
+
+        /* TO BE FINISHED */
     }
 }
