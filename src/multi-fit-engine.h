@@ -7,6 +7,7 @@
 #include "fit-engine.h"
 #include "cmpl.h"
 #include "fit-engine-common.h"
+#include "acquisition.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -23,7 +24,7 @@ struct multi_fit_engine {
     const struct fit_parameters *common_parameters;
     const struct fit_parameters *private_parameters;
 
-    struct extra_params extra;
+    struct acquisition_parameters *acquisitions;
     struct fit_config config;
 
     int initialized;

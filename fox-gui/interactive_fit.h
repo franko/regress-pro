@@ -67,7 +67,10 @@ public:
         dispose_spectra();
         m_ref_spectr = spectra_copy(user_spectr);
         m_model_spectr = spectra_alloc(m_ref_spectr);
+        fit_engine_set_acquisition(m_fit_engine, user_spectr->acquisition);
         fit_engine_generate_spectrum(m_fit_engine, m_ref_spectr, m_model_spectr);
+        fit_parameters_free(m_all_parameters);
+        m_all_parameters = fit_engine_get_all_parameters(m_fit_engine);
     }
 
     void bind_stack(stack_t *s) {
@@ -125,7 +128,7 @@ public:
         }
 
         m_fit_engine->parameters = fps;
-        fit_engine_prepare(m_fit_engine, m_ref_spectr);
+        fit_engine_prepare(m_fit_engine, m_ref_spectr, FIT_ENGINE_KEEP_ACQ);
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
         for(unsigned k = 0; k < fps->number; k++) {

@@ -3,32 +3,17 @@
 
 #include "defs.h"
 #include "data-view.h"
+#include "acquisition.h"
 
 __BEGIN_DECLS
-
-enum system_kind {
-    SYSTEM_UNDEFINED = 0,
-    SYSTEM_REFLECTOMETER,
-    SYSTEM_ELLISS_AB,
-    SYSTEM_ELLISS_PSIDEL,
-    SYSTEM_EXCEED_VALUE
-};
 
 struct spectral_range {
     int active;
     float min, max;
 };
 
-struct system_config {
-    enum system_kind system;
-    /* Ellipsometry parameters: */
-    double aoi;
-    double analyzer;
-    double numap;
-};
-
 struct spectrum {
-    struct system_config config;
+    struct acquisition_parameters acquisition[1];
     struct data_view table[1];
 };
 
@@ -48,9 +33,7 @@ extern float const *     spectra_get_values(struct spectrum const *s, int j);
 
 extern struct spectrum * load_gener_spectrum(const char *filename, str_ptr *error_msg);
 
-extern void              spectr_cut_range(struct spectrum *s,
-        float inf, float sup);
-
+extern void              spectr_cut_range(struct spectrum *s, float inf, float sup);
 
 __END_DECLS
 

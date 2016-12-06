@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "fit-params.h"
 #include "dispers.h"
+#include "acquisition.h"
 
 static void get_disp_param_name(const fit_param_t *fp, str_ptr buf);
 
@@ -28,17 +30,13 @@ set_thick_param(fit_param_t *fpres, int lyr)
 void
 get_param_name(const fit_param_t *fp, str_t name)
 {
-    switch(fp->id) {
-    case PID_THICKNESS:
+    if (fp->id >= PID_ACQUISITION_PARAMETER) {
+        acquisition_parameter_to_string(name, fp->id);
+    } else if (fp->id == PID_THICKNESS) {
         str_printf(name, "T%i", fp->layer_nb);
-        break;
-    case PID_FIRSTMUL:
-        str_printf(name, "1stmult");
-        break;
-    case PID_LAYER_N:
+    } else if (fp->id == PID_LAYER_N) {
         get_disp_param_name(fp, name);
-        break;
-    default:
+    } else {
         str_printf(name, "###");
     }
 }
@@ -46,23 +44,17 @@ get_param_name(const fit_param_t *fp, str_t name)
 void
 get_full_param_name(const fit_param_t *fp, str_t name)
 {
-    switch(fp->id) {
-    case PID_THICKNESS:
+    if (fp->id >= PID_ACQUISITION_PARAMETER) {
+        acquisition_parameter_to_string(name, fp->id);
+    } else if (fp->id == PID_THICKNESS) {
         str_printf(name, "T%i", fp->layer_nb);
-        break;
-    case PID_FIRSTMUL:
-        str_printf(name, "1stmult");
-        break;
-    case PID_LAYER_N:
-    {
+    } else if (fp->id == PID_LAYER_N) {
         str_t dname;
         str_init(dname, 15);
         get_disp_param_name(fp, dname);
         str_printf(name, "Layer%d / %s", fp->layer_nb, CSTR(dname));
         str_free(dname);
-        break;
-    }
-    default:
+    } else {
         str_printf(name, "###");
     }
 }
@@ -278,13 +270,24 @@ int
 fit_parameters_are_RI_fixed(struct fit_parameters *f)
 {
     int j;
-
-    for(j = 0; j < f->number; j++)
+    for(j = 0; j < f->number; j++) {
         if(f->values[j].id == PID_LAYER_N) {
             break;
         }
-
+    }
     return (j >= f->number);
+}
+
+int
+fit_parameters_contains_acquisition_parameters(struct fit_parameters *f)
+{
+    for(int j = 0; j < f->number; j++) {
+        const int id = f->values[j].id;
+        if(id >= PID_ACQUISITION_PARAMETER || id < PID_INVALID) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int
@@ -318,7 +321,7 @@ fix_delete_layer(struct fit_parameters *lst, int index)
     size_t i;
     for (i = 0; i < lst->number; i++) {
         fit_param_t *fp = &lst->values[i];
-        if (fp->id < PID_LAYER_INDIPENDENT && fp->layer_nb >= index) {
+        if (fp->id < PID_ACQUISITION_PARAMETER && fp->layer_nb >= index) {
             if (fp->layer_nb > index) {
                 fp->layer_nb --;
             } else {
@@ -334,7 +337,7 @@ fix_insert_layer(struct fit_parameters *lst, int index)
     size_t i;
     for (i = 0; i < lst->number; i++) {
         fit_param_t *fp = &lst->values[i];
-        if (fp->id < PID_LAYER_INDIPENDENT && fp->layer_nb >= index) {
+        if (fp->id < PID_ACQUISITION_PARAMETER && fp->layer_nb >= index) {
             fp->layer_nb ++;
         }
     }
@@ -350,14 +353,22 @@ fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shi
     }
 }
 
-static const char *id_name[] = {"thickness", "n", "firstmul", NULL};
-
 static int
 fit_param_write(writer_t *w, const fit_param_t *fp)
 {
     int id = fp->id;
-    writer_printf(w, "%s", (id >= PID_THICKNESS && id < PID_INVALID) ? id_name[id-1] : "invalid");
-    if (id < PID_LAYER_INDIPENDENT) {
+    const char *fp_name;
+    if (id == PID_THICKNESS) {
+        fp_name = "thickness";
+    } else if (id == PID_LAYER_N) {
+        fp_name = "n";
+    } else if (id >= PID_ACQUISITION_PARAMETER && id < PID_INVALID) {
+        fp_name = acquisition_parameter_name(id);
+    } else {
+        fp_name = "invalid";
+    }
+    writer_printf(w, "%s", fp_name);
+    if (id < PID_ACQUISITION_PARAMETER) {
         writer_printf(w, " %d", fp->layer_nb);
         if (id == PID_LAYER_N) {
             struct disp_class *dclass = disp_class_lookup(fp->model_id);
@@ -388,8 +399,12 @@ fit_param_read(lexer_t *l, fit_param_t *fp)
         }
         if (iter == NULL) return 1;
         if (lexer_integer(l, &fp->param_nb)) return 1;
-    } else if (strcmp(CSTR(l->store), "firstmul") == 0) {
+    } else if (strcmp(CSTR(l->store), "rmult") == 0) {
         fp->id = PID_FIRSTMUL;
+    } else if (strcmp(CSTR(l->store), "aoi") == 0) {
+        fp->id = PID_AOI;
+    } else if (strcmp(CSTR(l->store), "analyzer") == 0) {
+        fp->id = PID_ANALYZER;
     }
     return 0;
 }

@@ -34,13 +34,13 @@
 
 __BEGIN_DECLS
 
-struct extra_params {
-    /* Reflectometry parameters */
-    double rmult;
+enum fit_engine_acq {
+  FIT_ENGINE_KEEP_ACQ,
+  FIT_ENGINE_RESET_ACQ,
 };
 
 struct fit_run {
-    enum system_kind system_kind;
+    enum system_kind acquisition_type;
 
     struct spectrum *spectr;
 
@@ -58,7 +58,7 @@ struct fit_run {
 };
 
 struct fit_engine {
-    struct extra_params extra[1];
+    struct acquisition_parameters acquisition[1];
     struct fit_config config[1];
 
     struct stack *stack;
@@ -86,7 +86,7 @@ extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 extern void fit_engine_free(struct fit_engine *fit);
 
 extern int  fit_engine_prepare(struct fit_engine *f,
-                               struct spectrum *s);
+                               struct spectrum *s, enum fit_engine_acq acq_policy);
 
 extern void fit_engine_disable(struct fit_engine *f);
 
@@ -113,11 +113,9 @@ extern void fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_e
 extern void build_stack_cache(struct stack_cache *cache,
                               stack_t *stack,
                               struct spectrum *spectr,
-                              int th_only_optimize);
+                              int th_only_optimize, int require_acquisition_jacob);
 
 extern void dispose_stack_cache(struct stack_cache *cache);
-
-extern void set_default_extra_param(struct extra_params *extra);
 
 extern void fit_engine_generate_spectrum(struct fit_engine *fit,
         struct spectrum *ref,
@@ -141,6 +139,9 @@ fit_engine_get_seed_value(const struct fit_engine *fit, const fit_param_t *fp, c
 
 extern void
 fit_config_set_default(struct fit_config *cfg);
+
+extern void
+fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters *acquisition);
 
 extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);

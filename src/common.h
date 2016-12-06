@@ -6,7 +6,6 @@
 
 __BEGIN_DECLS
 
-#define DEGREE(d) ((d) * M_PI / 180.0)
 #define SQR(x) ((x) * (x))
 
 #ifdef DEBUG_MEM

@@ -13,11 +13,4 @@ extern int      elliss_fit_f(const gsl_vector *x, void *params,
 extern int      elliss_fit_df(const gsl_vector *x,
                               void *params, gsl_matrix *jacob);
 
-#ifdef DEBUG_REGRESS
-
-struct fit_engine;
-
-extern void     elliss_fit_test_deriv(struct fit_engine *fit);
-#endif
-
 #endif

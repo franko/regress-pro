@@ -33,7 +33,7 @@ build_multi_fit_engine_cache(struct multi_fit_engine *f)
        A cache for each sample is not needed because we assume that
        the RI are not fixed and so we don't do presampling of n values */
     build_stack_cache(& f->cache, f->stack_list[0],
-                      f->spectra_list[0], RI_IS_VARIABLE);
+                      f->spectra_list[0], RI_IS_VARIABLE, 1);
 
     f->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
@@ -60,11 +60,16 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
 
     assert(fit->spectra_list != NULL);
 
+    /* Copy all the spectra acquisitions info into the fit structure. */
+    for (int j = 0; j < fit->samples_number; j++) {
+        fit->acquisitions[j] = fit->spectra_list[j]->acquisition[0];
+    }
+
     nb_total_params = common->number + fit->samples_number * priv->number;
 
     /* We suppose that all the spectra are of the same kind, so we just
        look the first one */
-    fit->system_kind = fit->spectra_list[0]->config.system;
+    fit->system_kind = fit->spectra_list[0]->acquisition->type;
 
     if(fit->config.spectr_range.active) {
         int k;
@@ -166,21 +171,16 @@ mengine_apply_param_common(struct multi_fit_engine *fit,
                            double val)
 {
     int res = 0;
-
-    switch(fp->id) {
-        int j;
-    case PID_FIRSTMUL:
-        fit->extra.rmult = val;
-        break;
-    default:
-        for(j = 0; j < fit->samples_number; j++) {
+    for(int j = 0; j < fit->samples_number; j++) {
+        if (fp->id >= PID_ACQUISITION_PARAMETER) {
+            res = acquisition_apply_param(&fit->acquisitions[j], fp->id, val);
+        } else {
             res = stack_apply_param(fit->stack_list[j], fp, val);
-            if(res) {
-                break;
-            }
+        }
+        if(res) {
+            break;
         }
     }
-
     return res;
 }
 
@@ -255,8 +255,7 @@ multi_fit_engine_new(struct fit_config const *cfg, int samples_number) {
     f->samples_number = samples_number;
     f->stack_list = emalloc(samples_number * sizeof(void *));
     f->spectra_list = emalloc(samples_number * sizeof(void *));
-
-    set_default_extra_param(& f->extra);
+    f->acquisitions  = emalloc(samples_number * sizeof(struct acquisition_parameters));
 
     memcpy(&f->config, cfg, sizeof(struct fit_config));
 
@@ -361,8 +360,8 @@ multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
 double
 multi_fit_engine_get_parameter_value(const struct multi_fit_engine *fit, const fit_param_t *fp)
 {
-    if(fp->id == PID_FIRSTMUL) {
-        return fit->extra.rmult;
+    if(fp->id >= PID_ACQUISITION_PARAMETER) {
+        return acquisition_get_parameter(&fit->acquisitions[0], fp->id);
     } else {
         if (fit->stack_list[0]) {
             return stack_get_parameter_value(fit->stack_list[0], fp);

@@ -32,6 +32,13 @@ enum se_type {
     SE_PSI_DEL,
 };
 
+enum { SE_AOI = 0, SE_ANALYZER = 1 };
+enum { SE_ALPHA = 0, SE_BETA = 1 };
+enum { SE_TANPSI = 0, SE_COSDEL = 1 };
+
+#define SE_ACQ_INDEX(channel, pid) (2 * (pid) + (channel))
+#define SE_ACQ_PARAMETERS_NB(se) ((se) == SE_ALPHA_BETA ? 2 : 1)
+
 struct elliss_ab {
     double alpha;
     double beta;
@@ -45,6 +52,7 @@ mult_layer_se_jacob(enum se_type type,
                     size_t nb, const cmpl ns[], double phi0,
                     const double ds[], double lambda,
                     double anlz, ell_ab_t e,
-                    gsl_vector *jacob_th, cmpl_vector *jacob_n);
+                    gsl_vector *jacob_th, cmpl_vector *jacob_n,
+                    double *jacob_acquisition);
 
 #endif

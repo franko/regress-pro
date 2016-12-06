@@ -33,10 +33,11 @@ static void build_fit_engine_cache(struct fit_engine *f);
 
 static void dispose_fit_engine_cache(struct fit_run *run);
 
+static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 void
 build_stack_cache(struct stack_cache *cache, stack_t *stack,
-                  struct spectrum *spectr, int th_only_optimize)
+                  struct spectrum *spectr, int th_only_optimize, int require_acquisition_jacob)
 {
     size_t nb_med = stack->nb;
     size_t j;
@@ -55,6 +56,7 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
     }
 
     cache->th_only = th_only_optimize;
+    cache->require_acquisition_jacob = require_acquisition_jacob;
 
     if(th_only_optimize) {
         int k, npt = spectra_points(spectr);
@@ -102,16 +104,17 @@ dispose_stack_cache(struct stack_cache *cache)
 void
 build_fit_engine_cache(struct fit_engine *f)
 {
-    size_t dmultipl = (f->run->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
+    size_t dmultipl = (f->acquisition->type == SYSTEM_REFLECTOMETER ? 1 : 2);
     int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
+    int require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
     size_t nb = f->stack->nb;
     int nblyr = nb - 2;
 
-    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed);
+    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, require_acquisition_jacob);
 
     f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
 
-    switch(f->run->system_kind) {
+    switch(f->acquisition->type) {
     case SYSTEM_REFLECTOMETER:
         f->run->jac_n.refl = gsl_vector_alloc(2 * nb);
         break;
@@ -129,7 +132,7 @@ dispose_fit_engine_cache(struct fit_run *run)
 {
     gsl_vector_free(run->jac_th);
 
-    switch(run->system_kind) {
+    switch(run->acquisition_type) {
     case SYSTEM_REFLECTOMETER:
         gsl_vector_free(run->jac_n.refl);
         break;
@@ -149,15 +152,11 @@ fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp,
                        double val)
 {
     int res = 0;
-
-    switch(fp->id) {
-    case PID_FIRSTMUL:
-        fit->extra->rmult = val;
-        break;
-    default:
+    if (fp->id >= PID_ACQUISITION_PARAMETER) {
+        res = acquisition_apply_param(fit->acquisition, fp->id, val);
+    } else {
         res = stack_apply_param(fit->stack, fp, val);
     }
-
     return res;
 }
 
@@ -229,13 +228,168 @@ fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src)
     }
 }
 
+#ifdef DEBUG
+
+
+struct fdf_deriv_ws {
+    gsl_vector *fmh, *fph;
+    gsl_vector *fm1, *fp1;
+    gsl_vector *r3, *r5, *r_aux;
+};
+
+static void
+central_deriv(const gsl_multifit_function_fdf *f, gsl_vector *x, int parameter_index, double h,
+              struct fdf_deriv_ws *workspace, gsl_vector *result, gsl_vector *abserr)
+{
+  /* Compute the derivative using the 5-point rule (x-h, x-h/2, x,
+     x+h/2, x+h). Note that the central point is not used.
+
+     Compute the error using the difference between the 5-point and
+     the 3-point rule (x-h,x,x+h). Again the central point is not
+     used. */
+
+    const double x0 = gsl_vector_get(x, parameter_index);
+
+    gsl_vector_set(x, parameter_index, x0 - h);
+    f->f(x, f->params, workspace->fm1);
+
+    gsl_vector_set(x, parameter_index, x0 + h);
+    f->f(x, f->params, workspace->fp1);
+
+    gsl_vector_set(x, parameter_index, x0 - h / 2);
+    f->f(x, f->params, workspace->fmh);
+
+    gsl_vector_set(x, parameter_index, x0 + h / 2);
+    f->f(x, f->params, workspace->fph);
+
+    // Reset array element to its original value.
+    gsl_vector_set(x, parameter_index, x0);
+
+    gsl_vector_memcpy(workspace->r3, workspace->fp1);
+    gsl_vector_sub(workspace->r3, workspace->fm1);
+    gsl_vector_scale(workspace->r3, 0.5);
+
+    // double r3 = 0.5 * (fp1 - fm1);
+
+    gsl_vector_memcpy(workspace->r5, workspace->fph);
+    gsl_vector_sub(workspace->r5, workspace->fmh);
+    gsl_vector_scale(workspace->r5, 4.0 / 3.0);
+
+    gsl_vector_memcpy(workspace->r_aux, workspace->r3);
+    gsl_vector_scale(workspace->r_aux, 1.0 / 3.0);
+    gsl_vector_sub(workspace->r5, workspace->r_aux);
+
+    // double r5 = (4.0 / 3.0) * (fph - fmh) - (1.0 / 3.0) * r3;
+
+    gsl_vector_memcpy(result, workspace->r5);
+    gsl_vector_scale(result, 1.0 / h);
+
+    gsl_vector_memcpy(abserr, workspace->r5);
+    gsl_vector_sub(abserr, workspace->r3);
+    gsl_vector_scale(abserr, 1.0 / h);
+
+    for (int i = 0; i < (int)abserr->size; i++) {
+        gsl_vector_set(abserr, i, fabs(gsl_vector_get(abserr, i)));
+    }
+
+    // double e3 = (fabs (fp1) + fabs (fm1)) * GSL_DBL_EPSILON;
+    // double e5 = 2.0 * (fabs (fph) + fabs (fmh)) * GSL_DBL_EPSILON + e3;
+
+  /* The next term is due to finite precision in x+h = O (eps * x) */
+
+    // double dy = GSL_MAX (fabs (r3 / h), fabs (r5 / h)) *(fabs (x) / h) * GSL_DBL_EPSILON;
+
+  /* The truncation error in the r5 approximation itself is O(h^4).
+     However, for safety, we estimate the error from r5-r3, which is
+     O(h^2).  By scaling h we will minimise this estimated error, not
+     the actual truncation error in r5. */
+
+  // *result = r5 / h;
+  // *abserr_trunc = fabs ((r5 - r3) / h); /* Estimated truncation error O(h^2) */
+  // *abserr_round = fabs (e5 / h) + dy;   /* Rounding error (cancellations) */
+}
+
+static void
+fit_engine_check_deriv(struct fit_engine *fit) {
+    const int points_number = fit->run->mffun.n;
+    const int parameters_number = fit->run->mffun.p;
+    struct fdf_deriv_ws ws[1];
+
+    fprintf(stderr, "Checking derivatives for fit.\nnumber of points: %d, number of parameters: %d\n", points_number, parameters_number);
+
+    ws->fm1 = gsl_vector_alloc(points_number);
+    ws->fp1 = gsl_vector_alloc(points_number);
+    ws->fmh = gsl_vector_alloc(points_number);
+    ws->fph = gsl_vector_alloc(points_number);
+    ws->r3  = gsl_vector_alloc(points_number);
+    ws->r5  = gsl_vector_alloc(points_number);
+    ws->r_aux = gsl_vector_alloc(points_number);
+
+    gsl_matrix *num_jacob = gsl_matrix_alloc(points_number, parameters_number);
+    gsl_matrix *abserr_mat = gsl_matrix_alloc(points_number, parameters_number);
+    gsl_vector *x = gsl_vector_alloc(parameters_number);
+
+    for(int j = 0; j < parameters_number; j++) {
+        double seed = fit_engine_get_parameter_value(fit, &fit->parameters->values[j]);
+        gsl_vector_set(x, j, seed);
+    }
+
+    for(int j = 0; j < parameters_number; j++) {
+        const double seed = gsl_vector_get(x, j);
+        double delta = fabs(seed) / 100.0;
+        if (delta < 1e-8) delta = 1e-8;
+
+        gsl_vector_view jacob_row_view = gsl_matrix_column(num_jacob, j);
+        gsl_vector *df = &jacob_row_view.vector;
+
+        gsl_vector_view abserr_view = gsl_matrix_column(abserr_mat, j);
+        gsl_vector *abserr = &abserr_view.vector;
+
+        central_deriv(&fit->run->mffun, x, j, delta, ws, df, abserr);
+    }
+
+    gsl_matrix *com_jacob = gsl_matrix_alloc(points_number, parameters_number);
+    fit->run->mffun.df(x, fit, com_jacob);
+
+    for (int i = 0; i < points_number; i++) {
+        for (int j = 0; j < parameters_number; j++) {
+            double num = gsl_matrix_get(num_jacob, i, j);
+            double abserr = gsl_matrix_get(abserr_mat, i, j);
+            double com = gsl_matrix_get(com_jacob, i, j);
+            double err_min = fabs(num) * 1e-8;
+            if (abserr < err_min) abserr = err_min;
+            if (com > num + abserr || com < num - abserr) {
+                fprintf(stderr, "DERIV DIFFER %d PARAM: %d: NUM: %g +/- %g, COMPUTED: %g\n", i, j, num, abserr, com);
+            }
+        }
+    }
+
+    gsl_matrix_free(num_jacob);
+    gsl_matrix_free(com_jacob);
+    gsl_matrix_free(abserr_mat);
+    gsl_vector_free(x);
+    gsl_vector_free(ws->fmh);
+    gsl_vector_free(ws->fph);
+    gsl_vector_free(ws->fm1);
+    gsl_vector_free(ws->fp1);
+    gsl_vector_free(ws->r3);
+    gsl_vector_free(ws->r5);
+    gsl_vector_free(ws->r_aux);
+
+    fprintf(stderr, "done\n");
+    fflush(stderr);
+}
+#endif
+
 int
-fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
+fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_acq acq_policy)
 {
     struct fit_config *cfg = fit->config;
-    enum system_kind syskind = s->config.system;
+    enum system_kind syskind = s->acquisition->type;
 
-    fit->run->system_kind = syskind;
+    if (acq_policy == FIT_ENGINE_RESET_ACQ) {
+        fit->acquisition[0] = s->acquisition[0];
+    }
     fit->run->spectr = spectra_copy(s);
 
     if(fit->config->spectr_range.active)
@@ -278,10 +432,8 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s)
 
     fit->run->results = gsl_vector_alloc(fit->parameters->number);
 
-#ifdef DEBUG_REGRESS
-    if(syskind != SYSTEM_REFLECTOMETER) {
-        elliss_fit_test_deriv(fit);
-    }
+#ifdef DEBUG
+    fit_engine_check_deriv(fit);
 #endif
 
     return 0;
@@ -311,9 +463,11 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
 
     for(j = 0; j < fps->number; j++) {
         fit_param_t *fp = fps->values + j;
+
+        if (fp->id >= PID_ACQUISITION_PARAMETER && fp->id < PID_INVALID)
+            return 0;
+
         switch(fp->id) {
-        case PID_FIRSTMUL:
-            break;
         case PID_THICKNESS:
             if(fp->layer_nb == 0 || fp->layer_nb >= nb_med - 1) {
                 *error_msg = new_error_message(RECIPE_CHECK, "reference to thickness of layer %i", fp->layer_nb);
@@ -348,15 +502,9 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
 
 struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
-    fit_param_t fp[1];
-
     struct fit_parameters *fps = fit_parameters_new();
-
-    fp->id = PID_FIRSTMUL;
-    fit_parameters_add(fps, fp);
-
     stack_get_all_parameters(fit->stack, fps);
-
+    acquisition_get_all_parameters(fit->acquisition, fps);
     return fps;
 }
 
@@ -364,8 +512,8 @@ double
 fit_engine_get_parameter_value(const struct fit_engine *fit,
                                const fit_param_t *fp)
 {
-    if(fp->id == PID_FIRSTMUL) {
-        return fit->extra->rmult;
+    if(fp->id >= PID_ACQUISITION_PARAMETER) {
+        return acquisition_get_parameter(fit->acquisition, fp->id);
     } else {
         return stack_get_parameter_value(fit->stack, fp);
     }
@@ -438,7 +586,7 @@ void
 fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
                              struct spectrum *synth)
 {
-    enum system_kind syskind = ref->config.system;
+    enum system_kind syskind = ref->acquisition->type;
     size_t nb_med = fit->stack->nb;
     struct data_table *table = synth->table[0].table;
     int j, npt = spectra_points(ref);
@@ -447,7 +595,7 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 
     assert(spectra_points(ref) == spectra_points(synth));
 
-    synth->config = ref->config;
+    synth->acquisition[0] = ref->acquisition[0];
 
     ths = stack_get_ths_list(fit->stack);
 
@@ -462,18 +610,22 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
         case SYSTEM_REFLECTOMETER: {
             double r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda,
                                               NULL, NULL);
-            data_table_set(table, j, 1, fit->extra->rmult * r_raw);
+            double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
+            data_table_set(table, j, 1, rmult * r_raw);
             break;
         }
         case SYSTEM_ELLISS_AB:
         case SYSTEM_ELLISS_PSIDEL: {
             const enum se_type se_type = GET_SE_TYPE(syskind);
-            double phi0 = ref->config.aoi;
-            double anlz = ref->config.analyzer;
+            double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
+            double anlz = 0;
+            if (syskind == SYSTEM_ELLISS_AB) {
+                anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
+            }
             ell_ab_t ell;
 
             mult_layer_se_jacob(se_type, nb_med, ns, phi0,
-                                ths, lambda, anlz, ell, NULL, NULL);
+                                ths, lambda, anlz, ell, NULL, NULL, NULL);
 
             data_table_set(table, j, 1, ell->alpha);
             data_table_set(table, j, 2, ell->beta);
@@ -492,7 +644,7 @@ struct fit_engine *
 fit_engine_new()
 {
     struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
-    set_default_extra_param(fit->extra);
+    acquisition_set_default(fit->acquisition);
     fit->parameters = NULL;
     fit->stack = NULL;
     return fit;
@@ -534,12 +686,6 @@ fit_engine_free(struct fit_engine *fit)
 }
 
 void
-set_default_extra_param(struct extra_params *extra)
-{
-    extra->rmult = 1.0;
-}
-
-void
 fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 {
     str_t pname, value;
@@ -563,6 +709,12 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 
     str_free(value);
     str_free(pname);
+}
+
+void
+fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters *acquisition)
+{
+    fit->acquisition[0] = *acquisition;
 }
 
 void

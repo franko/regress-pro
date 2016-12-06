@@ -69,6 +69,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     param_listbox = new FXListBox(params_group, this, ID_PARAM_SELECT, FRAME_SUNKEN|LISTBOX_NORMAL|LAYOUT_FIX_WIDTH, 0, 0, 120, 0);
     param_listbox->setNumVisible(8);
 
+    acquisition_set_default(&known_acquisition);
     setup_parameters_list();
 
     FXMatrix *matrix = new FXMatrix(fpgroup, 2, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_SIDE_RIGHT);
@@ -118,7 +119,7 @@ void recipe_window::setup_parameters_list()
     if (param_list) {
         fit_parameters_free(param_list);
     }
-    param_list = listbox_populate_all_parameters(param_listbox, recipe->stack);
+    param_list = listbox_populate_all_parameters(param_listbox, recipe->stack, &known_acquisition);
     seed_dirty = true;
 }
 
@@ -518,4 +519,9 @@ long recipe_window::on_select_param(FXObject *, FXSelector sel, void *)
     /* Select in the listbox the given parameter. */
     listbox_select_parameter(param_listbox, fp_index);
     return 1;
+}
+
+void recipe_window::bind_new_acquisition(const struct acquisition_parameters *acquisition) {
+    known_acquisition = *acquisition;
+    setup_parameters_list();
 }

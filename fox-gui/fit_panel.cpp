@@ -81,6 +81,14 @@ void fit_panel::setup()
             new FXLabel(param_matrix, "");
         }
 
+        if(p->fp.id >= PID_ACQUISITION_PARAMETER && current_layer >= 0) {
+            label_text.format("Acquisition");
+            FXLabel *lab = new FXLabel(param_matrix, label_text);
+            lab->setFont(&regressProApp()->bold_font);
+            new FXLabel(param_matrix, "");
+            current_layer = -1;
+        }
+
         get_param_name(&p->fp, pname.str());
         FXString fxpname((const FXchar *) pname.cstr());
         FXCheckButton* bt = new FXCheckButton(param_matrix, fxpname, this, ID_PARAM_SELECT);

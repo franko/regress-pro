@@ -22,7 +22,7 @@ static int sellmeier_read(lexer_t *l, disp_t *d_gen);
 
 struct disp_class sellmeier_disp_class = {
     .disp_class_id       = DISP_SELLMEIER,
-    .full_name           = "sellmeier",
+    .full_name           = "Sellmeier",
     .short_name          = "sellmeier",
 
     .free                = disp_base_free,

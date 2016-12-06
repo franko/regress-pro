@@ -93,6 +93,8 @@ writer_quote_string(str_ptr quoted, const char *s)
             str_append_c(quoted, "\\\"", 0);
         } else if (s[i] == '\n') {
             str_append_c(quoted, "\\n", 0);
+        } else if (s[i] == '\\') {
+            str_append_c(quoted, "\\\\", 0);
         } else if (s[i] == '\r') {
         } else {
             str_append_char(quoted, s[i]);

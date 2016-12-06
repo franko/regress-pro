@@ -1,19 +1,16 @@
 
-PRODUCT_REGISTRATION = no
-ENABLE_DEBUG = no
 ENABLE_RELEASE = no
 
 CC = gcc
 CXX = gcc -std=c++14
-CFLAGS = -O3 -ffast-math -fomit-frame-pointer
-CXXFLAGS = -O3 -ffast-math -fomit-frame-pointer -fno-exceptions -fno-rtti
 
 DEFS += -DHAVE_INLINE
 
 ifeq ($(ENABLE_DEBUG),yes)
-  DEFS = -DDEBUG_MEM -DDEBUG_REGRESS
-endif
-
-ifeq ($(PRODUCT_REGISTRATION),yes)
-  DEFS += -DREGPRO_REGISTRATION
+  DEFS = -DDEBUG -DDEBUG_MEM
+  CFLAGS = -g -Wall
+  CXXFLAGS = -g -Wall
+else
+  CFLAGS = -O3 -ffast-math -fomit-frame-pointer
+  CXXFLAGS = -O3 -ffast-math -fomit-frame-pointer -fno-exceptions -fno-rtti
 endif

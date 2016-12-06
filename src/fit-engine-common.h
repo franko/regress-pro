@@ -10,7 +10,8 @@ __BEGIN_DECLS
 struct stack_cache {
     int is_valid;
     int nb_med;
-    int th_only;
+    short int th_only;
+    short int require_acquisition_jacob;
     cmpl *ns;
     struct deriv_info * deriv_info;
     cmpl *ns_full_spectr;

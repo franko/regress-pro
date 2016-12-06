@@ -83,7 +83,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
         const double lambda = spectr_data[0];
         const double r_meas = spectr_data[1];
         double r_raw, r_theory;
-        double rmult = fit->extra->rmult;
+        double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
 
         if(fit->run->cache.th_only) {
             ns = fit->run->cache.ns_full_spectr + j * nb_med;

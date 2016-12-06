@@ -5,6 +5,8 @@
 /* helper function */
 #include "elliss-get-jacob.h"
 
+static double deg_to_radians(double x) { return x * M_PI / 180.0; }
+
 int
 elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     gsl_matrix * jacob)
@@ -32,6 +34,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     for(sample = 0; sample < samples_number; sample++) {
         struct spectrum *spectrum = fit->spectra_list[sample];
         size_t npt = spectra_points(spectrum);
+        double jacob_acq_data[2 * SE_ACQ_PARAMETERS_NB(se_type)];
 
         /* STEP 2 : From the stack we retrive the thicknesses and RIs
         informations. */
@@ -40,14 +43,15 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
         stack_jacob.th = (jacob ? fit->jac_th    : NULL);
         stack_jacob.n  = (jacob ? fit->jac_n.ell : NULL);
+        double *jacob_acq = (jacob ? jacob_acq_data : NULL);
 
+        const double phi0 = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_AOI));
+        const double anlz = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_ANALYZER));
         for(j = 0; j < npt; j++, j_sample++) {
             float const * spectr_data = spectra_get_values(spectrum, j);
             const double lambda     = spectr_data[0];
             const double meas_alpha = spectr_data[1];
             const double meas_beta  = spectr_data[2];
-            const double phi0 = spectrum->config.aoi;
-            const double anlz = spectrum->config.analyzer;
             struct elliss_ab theory[1];
 
             actual.ns = fit->cache.ns;
@@ -57,7 +61,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
             mult_layer_se_jacob(se_type,
                                 nb_med, actual.ns, phi0, actual.ths, lambda,
-                                anlz, theory, stack_jacob.th, stack_jacob.n);
+                                anlz, theory, stack_jacob.th, stack_jacob.n, jacob_acq);
 
             if(f != NULL) {
                 gsl_vector_set(f, j_sample,       theory->alpha - meas_alpha);
@@ -83,7 +87,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     get_parameter_jacobian(fp, fit->stack_list[sample],
                                            ideriv, lambda,
                                            stack_jacob.th, stack_jacob.n,
-                                           jac);
+                                           jacob_acq, jac);
 
                     gsl_matrix_set(jacob, j_sample,       kp, jac->alpha);
                     gsl_matrix_set(jacob, j_sample + npt, kp, jac->beta);
@@ -100,7 +104,7 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     get_parameter_jacobian(fp, fit->stack_list[sample],
                                            ideriv, lambda,
                                            stack_jacob.th, stack_jacob.n,
-                                           jac);
+                                           jacob_acq, jac);
 
                     gsl_matrix_set(jacob, j_sample,       kp, jac->alpha);
                     gsl_matrix_set(jacob, j_sample + npt, kp, jac->beta);
