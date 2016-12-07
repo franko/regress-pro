@@ -536,8 +536,8 @@ sp_products(const cmpl R[2], double tanlz, double sp[3])
 static void
 sp_products_der(const cmpl R[2], const cmpl dR[2], double tanlz, cmpl dsp[3])
 {
-    dsp[0] = 2 * R[0] * dR[0]; /* derivative of |Rs|^2 */
-    dsp[1] = 2 * R[1] * dR[1]; /* derivative of |Rp|^2 */
+    dsp[0] = 2 * R[0] * conj(dR[0]); /* derivative of |Rs|^2 */
+    dsp[1] = 2 * R[1] * conj(dR[1]); /* derivative of |Rp|^2 */
     dsp[2] = R[0] * conj(dR[1]) + R[1] * conj(dR[0]); /* derivative of Re(Rs Rp*) */
 }
 
@@ -640,15 +640,18 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     }
 
     const int ORDER = 5;
+    const int HALF_ORDER = (ORDER - 1) / 2;
     for (int i = 0; i < ORDER; i++) {
-        const int qc_index = (i >= 2 ? i - 2 : 2 - i);
+        const int qc_index = (i >= HALF_ORDER ? i - HALF_ORDER : HALF_ORDER - i);
+        const int qc_sign = (i < HALF_ORDER ? -1 : 1);
         double sp_w[3], jacob_th_w[nblyr], dsp_daoi_w[3];
         cmpl jacob_n_w[nb];
 
-        const double lambda_w = lambda + gauss_quad_5_x[qc_index] * bandwidth / 2;
+        const double lambda_delta = gauss_quad_5_x[qc_index] * bandwidth / 2;
+        const double lambda_w = lambda + (qc_sign > 0 ? lambda_delta : - lambda_delta);
         mult_layer_sp_products_jacob(nb, nsin0, ns, ds, lambda_w, tanlz, sp_w, jacob_th_w, jacob_n_w, dsp_daoi_w);
 
-        const double weight = gauss_quad_5_w[qc_index];
+        const double weight = 0.5 * gauss_quad_5_w[qc_index];
         for (int k = 0; k < 3; k++) {
             sp[k] += weight * sp_w[k];
         }
