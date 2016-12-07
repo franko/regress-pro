@@ -101,9 +101,15 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
         /* STEP 3 : We call the ellipsometer kernel function */
 
-        mult_layer_se_jacob(se_type,
-                            nb_med, actual.ns, phi0, actual.ths, lambda,
-                            anlz, theory, wjacob.th, wjacob.n, jacob_acquisition);
+        if (fit->acquisition->bandwidth > 0.0) {
+            mult_layer_se_bandwidth_jacob(se_type,
+                                nb_med, actual.ns, phi0, actual.ths, lambda,
+                                anlz, fit->acquisition->bandwidth, theory, wjacob.th, wjacob.n, jacob_acquisition);
+        } else {
+            mult_layer_se_jacob(se_type,
+                                nb_med, actual.ns, phi0, actual.ths, lambda,
+                                anlz, theory, wjacob.th, wjacob.n, jacob_acquisition);
+        }
 
         if(f != NULL) {
             gsl_vector_set(f, j,       theory->alpha - meas_alpha);

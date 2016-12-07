@@ -63,6 +63,7 @@ acquisition_set_default(struct acquisition_parameters *acquisition)
 {
     acquisition->type = SYSTEM_REFLECTOMETER;
     acquisition->parameters.sr.rmult = 1.0;
+    acquisition->bandwidth = 0.0;
 }
 
 void
@@ -71,6 +72,7 @@ acquisition_set_default_rpe(struct acquisition_parameters *acquisition)
     acquisition->type = SYSTEM_ELLISS_AB;
     acquisition->parameters.rpe.aoi = 65.0;
     acquisition->parameters.rpe.analyzer = 25.0;
+    acquisition->bandwidth = 0.0;
 }
 
 
@@ -79,6 +81,7 @@ acquisition_set_default_se(struct acquisition_parameters *acquisition)
 {
     acquisition->type = SYSTEM_ELLISS_PSIDEL;
     acquisition->parameters.rpe.aoi = 65.0;
+    acquisition->bandwidth = 0.0;
 }
 
 void

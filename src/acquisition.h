@@ -59,6 +59,7 @@ struct acquisition_parameters {
         struct se_acquisition_parameters  se;
         struct sr_acquisition_parameters  sr;
     } parameters;
+    double bandwidth;
 };
 
 extern int      acquisition_apply_param(struct acquisition_parameters *acq, int param_id, double val);
