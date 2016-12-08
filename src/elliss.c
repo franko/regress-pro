@@ -530,7 +530,7 @@ sp_products(const cmpl R[2], double tanlz, double sp[3])
 {
     sp[0] = CSQABS(R[0]); /* |Rs|^2 */
     sp[1] = CSQABS(R[1]); /* |Rp|^2 */
-    sp[2] = creal(R[0] * conj(R[1])); /* 1/2 (Rs Rp* + Rs* Rp) = Re(Rs Rp*) */
+    sp[2] = creal(R[1] * conj(R[0])); /* Re(Rp Rs*) */
 }
 
 static void
@@ -538,7 +538,7 @@ sp_products_der(const cmpl R[2], const cmpl dR[2], double tanlz, cmpl dsp[3])
 {
     dsp[0] = 2 * R[0] * conj(dR[0]); /* derivative of |Rs|^2 */
     dsp[1] = 2 * R[1] * conj(dR[1]); /* derivative of |Rp|^2 */
-    dsp[2] = R[0] * conj(dR[1]) + R[1] * conj(dR[0]); /* derivative of Re(Rs Rp*) */
+    dsp[2] = R[1] * conj(dR[0]) + R[0] * conj(dR[1]); /* derivative of Re(Rp Rs*) */
 }
 
 void
@@ -677,17 +677,17 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
     if (type == SE_ALPHA_BETA) {
         const double tasq = tanlz * tanlz;
-        const cmpl abden = sp[0] + tasq * sp[1];
+        const cmpl abden = sp[1] + tasq * sp[0];
         const cmpl densq = sqr(abden);
 
-        e->alpha = (sp[0] - tasq * sp[1]) / abden;
+        e->alpha = (sp[1] - tasq * sp[0]) / abden;
         e->beta = (2 * sp[2] * tanlz) / abden;
 
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
                 const cmpl dRs2 = jacob_n_sum[3*j], dRp2 = jacob_n_sum[3*j+1], dRsRpcj = jacob_n_sum[3*j+2];
-                const cmpl d_alpha = 2 * tasq / densq * (sp[1] * dRs2 - sp[0] * dRp2);
-                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRs2 - sp[2] * tasq * dRp2 + dRsRpcj);
+                const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
+                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRp2 - sp[2] * tasq * dRs2 + dRsRpcj);
                 cmpl_vector_set(jacob_n, j,      d_alpha);
                 cmpl_vector_set(jacob_n, nb + j, d_beta );
             }
@@ -696,8 +696,8 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
                 const cmpl dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
-                const cmpl d_alpha = 2 * tasq / densq * (sp[1] * dRs2 - sp[0] * dRp2);
-                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRs2 - sp[2] * tasq * dRp2 + dRsRpcj);
+                const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
+                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRp2 - sp[2] * tasq * dRs2 + dRsRpcj);
                 gsl_vector_set(jacob_th, j,         creal(d_alpha));
                 gsl_vector_set(jacob_th, nblyr + j, creal(d_beta) );
             }
@@ -705,8 +705,8 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         if (jacob_acq) {
             const cmpl dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
-            const cmpl d_alpha = 2 * tasq / densq * (sp[1] * dRs2 - sp[0] * dRp2);
-            const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRs2 - sp[2] * tasq * dRp2 + dRsRpcj);
+            const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
+            const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRp2 - sp[2] * tasq * dRs2 + dRsRpcj);
             /* Derivatives with AOI. */
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = creal(d_alpha);
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = creal(d_beta);
@@ -714,10 +714,10 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tasq * secsqa / densq;
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[0] - tasq * sp[1]) * secsqa / densq;
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa / densq;
         }
     } else {
-        const double tpsi = sqrt(sp[0] / sp[1]);
+        const double tpsi = sqrt(sp[1] / sp[0]);
         e->alpha = tpsi;
         e->beta = sp[2] / tpsi;
 
