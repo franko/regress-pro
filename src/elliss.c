@@ -413,7 +413,6 @@ se_ab_der(cmpl R[], cmpl dR[], double tanlz, cmpl *dalpha, cmpl *dbeta)
     *dbeta = 2 * tanlz * z2 * isqden;
 }
 
-
 static void
 se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
 {
@@ -511,6 +510,16 @@ mult_layer_se_jacob(enum se_type type,
 
     if(jacob_th) {
         set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th, jacob_th);
+        /* DEBUG ONLY */
+        if (lambda > 750.9 && lambda < 751) {
+            const int j_layer = 0;
+            const cmpl drs = mlr_jacob_th[j_layer];
+            const cmpl drp = mlr_jacob_th[nblyr + j_layer];
+            const double dra = gsl_vector_get(jacob_th, j_layer);
+            const double drb = gsl_vector_get(jacob_th, nblyr + j_layer);
+            printf("WL: %g, TH: %g, dR(s): (%g, %g), dR(p): (%g, %g)", lambda, ds[j_layer], creal(drs), cimag(drs), creal(drp), cimag(drp));
+            printf(" alpha: %g, beta: %g, d(alpha): %g, d(beta): %g\n", e->alpha, e->beta, dra, drb);
+        }
     }
 
     if (jacob_acquisition) {
@@ -538,7 +547,7 @@ sp_products_der(const cmpl R[2], const cmpl dR[2], double tanlz, cmpl dsp[3])
 {
     dsp[0] = 2 * R[0] * conj(dR[0]); /* derivative of |Rs|^2 */
     dsp[1] = 2 * R[1] * conj(dR[1]); /* derivative of |Rp|^2 */
-    dsp[2] = R[1] * conj(dR[0]) + R[0] * conj(dR[1]); /* derivative of Re(Rp Rs*) */
+    dsp[2] = R[0] * conj(dR[1]) + R[1] * conj(dR[0]); /* derivative of Re(Rp Rs*) */
 }
 
 void
@@ -589,6 +598,18 @@ mult_layer_sp_products_jacob(const int nb, const cmpl nsin0, const cmpl ns[],
             for (int k = 0; k < 3; k++) {
                 jacob_th[3*j + k] = creal(dsp[k]);
             }
+        }
+
+        /* DEBUG ONLY */
+        if (lambda > 750.9 && lambda < 751) {
+            const int j_layer = 0;
+            const cmpl drs = mlr_jacob_th[j_layer];
+            const cmpl drp = mlr_jacob_th[nblyr + j_layer];
+            const double drssq = jacob_th[3*j_layer];
+            const double drpsq = jacob_th[3*j_layer + 1];
+            const double drprs = jacob_th[3*j_layer + 2];
+            printf("WL: %g, TH: %g, dR(s): (%g, %g), dR(p): (%g, %g)", lambda, ds[j_layer], creal(drs), cimag(drs), creal(drp), cimag(drp));
+            printf(" |Rs|^2: %g, |Rp|^2: %g, Re{Rp Rs*}: %g, d(|Rs|^2): %g, d(|Rp|^2): %g, d(Re{Rp Rs*}): %g\n", sp[0], sp[1], sp[2], drssq, drpsq, drprs);
         }
     }
 
@@ -717,9 +738,8 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa / densq;
         }
     } else {
-        const double tpsi = sqrt(sp[1] / sp[0]);
-        e->alpha = tpsi;
-        e->beta = sp[2] / tpsi;
+        e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
+        e->beta = sp[2] / sqrt(sp[0] * sp[1]); /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
 
         /* TO BE FINISHED */
     }
