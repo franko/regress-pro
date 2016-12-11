@@ -27,7 +27,7 @@ Known formulas for ellipsometry in RPE configuration (rotating polarizer, fixed 
 
 \begin{align}
     \alpha & = \frac{|R_p|^2 - \tan^2 A \, |R_s|^2}{|R_p|^2 + \tan^2 A \, |R_s|^2} \\
-    \beta & = \frac{(R_p R_s^\ast + R_p^\ast R_s) \tan A}{|R_p|^2 + \tan^2 A \, |R_s|^2}
+    \beta & = \frac{2 \operatorname{Re}\{R_p R_s^\ast\} \tan A}{|R_p|^2 + \tan^2 A \, |R_s|^2}
 \end{align}
 
 \section{Useful identities}
@@ -51,11 +51,11 @@ to obtain the derivative with $y$, the imaginary part of $z$:
 \end{equation}
 In the same spirit it follows:
 \begin{equation}
-    \frac{\partial \left( F G^\ast+F^\ast G \right)}{\partial x} = 2 \operatorname{Re}\left\{G \frac{\partial F}{\partial z}^\ast + F \frac{\partial G}{\partial z}^\ast\right\}
+    \frac{\partial \left( F G^\ast+G F^\ast \right)}{\partial x} = 2 \operatorname{Re}\left\{F \frac{\partial G}{\partial z}^\ast + G \frac{\partial F}{\partial z}^\ast\right\}
 \end{equation}
 and
 \begin{equation}
-    \frac{\partial \left( F G^\ast+F^\ast G \right)}{\partial y} = 2 \operatorname{Im}\left\{G \frac{\partial F}{\partial z}^\ast + F \frac{\partial G}{\partial z}^\ast\right\}
+    \frac{\partial \left( F G^\ast+G F^\ast\right)}{\partial y} = 2 \operatorname{Im}\left\{F \frac{\partial G}{\partial z}^\ast + G \frac{\partial F}{\partial z}^\ast\right\}
 \end{equation}
 
 The equation above can be used to obtain the derivative wrt the real and imaginary part of $n = n_r + i n_i$, the refractive index, of one of the medium.
@@ -70,13 +70,13 @@ Derivatives of SE $\alpha$ and $\beta$ with a generic parameter, called $x$ here
 \frac{\partial \alpha}{\partial x} = \frac{2 \tan^2 A}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \left( |R_s|^2 \frac{\partial |R_p|^2}{\partial x} - |R_p|^2 \frac{\partial |R_s|^2}{\partial x}\right)
 \end{equation}
 \begin{multline}
-\frac{\partial \beta}{\partial x} = \frac{2 \tan A}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \\ \left( - \operatorname{Re}\{R_p R_s^\ast\} \frac{\partial |R_p|^2}{\partial x} - \operatorname{Re}\{R_p R_s^\ast\} \tan^2 A \frac{\partial |R_s|^2}{\partial x} + \frac{\partial \operatorname{Re}\{R_p R_s^\ast\}}{\partial x}\right)
+\frac{\partial \beta}{\partial x} = - \frac{2 \tan A \operatorname{Re}\{R_p R_s^\ast\}}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \\ \left( \frac{\partial |R_p|^2}{\partial x} +  \tan^2 A \frac{\partial |R_s|^2}{\partial x}\right) + \frac{2 \tan A}{|R_p|^2 + \tan^2 A \, |R_s|^2} \frac{\partial \operatorname{Re}\{R_p R_s^\ast\}}{\partial x}
 \end{multline}
 
 Derivative with the analyzer's angle:
 
 \begin{align}
-\frac{\partial \alpha}{\partial A} & = - \frac{4 |R_s|^2 |R_p|^2 \tan^2 A}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \sec^2 A \\
+\frac{\partial \alpha}{\partial A} & = - \frac{4 |R_s|^2 |R_p|^2 \tan A}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \sec^2 A \\
 \frac{\partial \beta}{\partial A} & = \frac{2 \operatorname{Re}\{R_p R_s^\ast\} \left(|R_p|^2 - \tan^2 A \, |R_s|^2\right)}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \sec^2 A
 \end{align}
 
