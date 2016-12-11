@@ -511,7 +511,7 @@ mult_layer_se_jacob(enum se_type type,
     if(jacob_th) {
         set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th, jacob_th);
         /* DEBUG ONLY */
-        if (lambda > 750.9 && lambda < 751) {
+        if (lambda > 671.0 && lambda < 671.1) {
             const int j_layer = 0;
             const cmpl drs = mlr_jacob_th[j_layer];
             const cmpl drp = mlr_jacob_th[nblyr + j_layer];
@@ -601,7 +601,7 @@ mult_layer_sp_products_jacob(const int nb, const cmpl nsin0, const cmpl ns[],
         }
 
         /* DEBUG ONLY */
-        if (lambda > 750.9 && lambda < 751) {
+        if (lambda > 671.0 && lambda < 671.1) {
             const int j_layer = 0;
             const cmpl drs = mlr_jacob_th[j_layer];
             const cmpl drp = mlr_jacob_th[nblyr + j_layer];
@@ -670,7 +670,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         const double lambda_delta = gauss_quad_5_x[qc_index] * bandwidth / 2;
         const double lambda_w = lambda + (qc_sign > 0 ? lambda_delta : - lambda_delta);
-        mult_layer_sp_products_jacob(nb, nsin0, ns, ds, lambda_w, tanlz, sp_w, jacob_th_w, jacob_n_w, dsp_daoi_w);
+        mult_layer_sp_products_jacob(nb, nsin0, ns, ds, lambda_w, tanlz, sp_w, jacob_th ? jacob_th_w : 0, jacob_n ? jacob_n_w : 0, jacob_acq ? dsp_daoi_w : 0);
 
         const double weight = 0.5 * gauss_quad_5_w[qc_index];
         for (int k = 0; k < 3; k++) {
@@ -708,7 +708,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             for(int j = 0; j < nb; j++) {
                 const cmpl dRs2 = jacob_n_sum[3*j], dRp2 = jacob_n_sum[3*j+1], dRsRpcj = jacob_n_sum[3*j+2];
                 const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRp2 - sp[2] * tasq * dRs2 + dRsRpcj);
+                const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
                 cmpl_vector_set(jacob_n, j,      d_alpha);
                 cmpl_vector_set(jacob_n, nb + j, d_beta );
             }
@@ -718,7 +718,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             for(int j = 0; j < nblyr; j++) {
                 const cmpl dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
                 const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-                const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRp2 - sp[2] * tasq * dRs2 + dRsRpcj);
+                const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
                 gsl_vector_set(jacob_th, j,         creal(d_alpha));
                 gsl_vector_set(jacob_th, nblyr + j, creal(d_beta) );
             }
@@ -727,14 +727,14 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
         if (jacob_acq) {
             const cmpl dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
             const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-            const cmpl d_beta = 2 * tanlz / densq * (- sp[2] * dRp2 - sp[2] * tasq * dRs2 + dRsRpcj);
+            const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
             /* Derivatives with AOI. */
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = creal(d_alpha);
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = creal(d_beta);
 
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tasq * secsqa / densq;
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tanlz * secsqa / densq;
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa / densq;
         }
     } else {
