@@ -643,13 +643,13 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     double sp[3] = {0.0, 0.0, 0.0};
 
     if (jacob_th) {
-        for (int j = 0; j < nblyr; j++) {
+        for (int j = 0; j < 3 * nblyr; j++) {
             jacob_th_sum[j] = 0.0;
         }
     }
 
     if (jacob_n) {
-        for (int j = 0; j < nb; j++) {
+        for (int j = 0; j < 3 * nb; j++) {
             jacob_n_sum[j] = 0.0;
         }
     }
