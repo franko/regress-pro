@@ -698,8 +698,8 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
     if (type == SE_ALPHA_BETA) {
         const double tasq = tanlz * tanlz;
-        const cmpl abden = sp[1] + tasq * sp[0];
-        const cmpl densq = sqr(abden);
+        const double abden = sp[1] + tasq * sp[0];
+        const double densq = sqr(abden);
 
         e->alpha = (sp[1] - tasq * sp[0]) / abden;
         e->beta = (2 * sp[2] * tanlz) / abden;
@@ -716,21 +716,21 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
-                const cmpl dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
-                const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-                const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
-                gsl_vector_set(jacob_th, j,         creal(d_alpha));
-                gsl_vector_set(jacob_th, nblyr + j, creal(d_beta) );
+                const double dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
+                const double d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
+                const double d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
+                gsl_vector_set(jacob_th, j,         d_alpha);
+                gsl_vector_set(jacob_th, nblyr + j, d_beta );
             }
         }
 
         if (jacob_acq) {
-            const cmpl dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
-            const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-            const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
+            const double dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
+            const double d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
+            const double d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
             /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = creal(d_alpha);
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = creal(d_beta);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = d_alpha;
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = d_beta;
 
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
