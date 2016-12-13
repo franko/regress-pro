@@ -665,8 +665,8 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     for (int i = 0; i < ORDER; i++) {
         const int qc_index = (i >= HALF_ORDER ? i - HALF_ORDER : HALF_ORDER - i);
         const int qc_sign = (i < HALF_ORDER ? -1 : 1);
-        double sp_w[3], jacob_th_w[nblyr], dsp_daoi_w[3];
-        cmpl jacob_n_w[nb];
+        double sp_w[3], jacob_th_w[3 * nblyr], dsp_daoi_w[3];
+        cmpl jacob_n_w[3 * nb];
 
         const double lambda_delta = gauss_quad_5_x[qc_index] * bandwidth / 2;
         const double lambda_w = lambda + (qc_sign > 0 ? lambda_delta : - lambda_delta);
