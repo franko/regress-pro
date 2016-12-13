@@ -584,7 +584,10 @@ mult_layer_sp_products_jacob(const int nb, const cmpl nsin0, const cmpl ns[],
                 cmpl dsp[3];
                 sp_products_der(R, dR, tanlz, dsp);
                 for (int k = 0; k < 3; k++) {
-                    jacob_n[3*j + k] = dsp[k];
+                    /* There is a quirk here. We take the conjugate because
+                       in the code based on rho the formula take the conjugate
+                       of the Rp Rs expression we use here. */
+                    jacob_n[3*j + k] = conj(dsp[k]);
                 }
             }
         }
