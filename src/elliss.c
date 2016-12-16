@@ -510,16 +510,6 @@ mult_layer_se_jacob(enum se_type type,
 
     if(jacob_th) {
         set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th, jacob_th);
-        /* DEBUG ONLY */
-        if (lambda > 671.0 && lambda < 671.1) {
-            const int j_layer = 0;
-            const cmpl drs = mlr_jacob_th[j_layer];
-            const cmpl drp = mlr_jacob_th[nblyr + j_layer];
-            const double dra = gsl_vector_get(jacob_th, j_layer);
-            const double drb = gsl_vector_get(jacob_th, nblyr + j_layer);
-            printf("WL: %g, TH: %g, dR(s): (%g, %g), dR(p): (%g, %g)", lambda, ds[j_layer], creal(drs), cimag(drs), creal(drp), cimag(drp));
-            printf(" alpha: %g, beta: %g, d(alpha): %g, d(beta): %g\n", e->alpha, e->beta, dra, drb);
-        }
     }
 
     if (jacob_acquisition) {
@@ -601,18 +591,6 @@ mult_layer_sp_products_jacob(const int nb, const cmpl nsin0, const cmpl ns[],
             for (int k = 0; k < 3; k++) {
                 jacob_th[3*j + k] = creal(dsp[k]);
             }
-        }
-
-        /* DEBUG ONLY */
-        if (lambda > 671.0 && lambda < 671.1) {
-            const int j_layer = 0;
-            const cmpl drs = mlr_jacob_th[j_layer];
-            const cmpl drp = mlr_jacob_th[nblyr + j_layer];
-            const double drssq = jacob_th[3*j_layer];
-            const double drpsq = jacob_th[3*j_layer + 1];
-            const double drprs = jacob_th[3*j_layer + 2];
-            printf("WL: %g, TH: %g, dR(s): (%g, %g), dR(p): (%g, %g)", lambda, ds[j_layer], creal(drs), cimag(drs), creal(drp), cimag(drp));
-            printf(" |Rs|^2: %g, |Rp|^2: %g, Re{Rp Rs*}: %g, d(|Rs|^2): %g, d(|Rp|^2): %g, d(Re{Rp Rs*}): %g\n", sp[0], sp[1], sp[2], drssq, drpsq, drprs);
         }
     }
 
@@ -741,9 +719,40 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa / densq;
         }
     } else {
-        e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
-        e->beta = sp[2] / sqrt(sp[0] * sp[1]); /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
+        const double tpsi = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
+        const double icden = 1.0 / sqrt(sp[0] * sp[1]);
+        const double cos_delta = sp[2] * icden; /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
+        e->alpha = tpsi;
+        e->beta = cos_delta;
 
-        /* TO BE FINISHED */
+        if (jacob_n) {
+            for(int j = 0; j < nb; j++) {
+                const cmpl dRs2 = jacob_n_sum[3*j], dRp2 = jacob_n_sum[3*j+1], dRsRpcj = jacob_n_sum[3*j+2];
+                const cmpl d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
+                const cmpl d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
+                cmpl_vector_set(jacob_n, j,      d_alpha);
+                cmpl_vector_set(jacob_n, nb + j, d_beta );
+            }
+        }
+
+        if (jacob_th) {
+            for(int j = 0; j < nblyr; j++) {
+                const double dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
+                const double d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
+                const double d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
+                gsl_vector_set(jacob_th, j,         d_alpha);
+                gsl_vector_set(jacob_th, nblyr + j, d_beta );
+            }
+        }
+
+        if (jacob_acq) {
+            const double dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
+            const double d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
+            const double d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
+
+            /* Derivatives with AOI. */
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = d_alpha;
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = d_beta;
+        }
     }
 }
