@@ -16,6 +16,7 @@ enum params_id {
     PID_FIRSTMUL = PID_ACQUISITION_PARAMETER,
     PID_AOI,
     PID_ANALYZER,
+    PID_BANDWIDTH,
     PID_INVALID,
 };
 

@@ -6,6 +6,9 @@
 double *
 acquisition_parameter_pointer(struct acquisition_parameters *acquisition, int parameter_id)
 {
+    if (parameter_id == PID_BANDWIDTH) {
+        return &acquisition->bandwidth;
+    }
     if (acquisition->type == SYSTEM_REFLECTOMETER) {
         if (parameter_id == PID_FIRSTMUL) {
             return &acquisition->parameters.sr.rmult;
@@ -56,6 +59,8 @@ acquisition_get_all_parameters(const struct acquisition_parameters *acquisition,
         fp->id = PID_AOI;
         fit_parameters_add(fps, fp);
     }
+    fp->id = PID_BANDWIDTH;
+    fit_parameters_add(fps, fp);
 }
 
 void
@@ -92,6 +97,8 @@ acquisition_parameter_to_string(str_t name, int parameter_id) {
         str_copy_c(name, "AOI");
     } else if (parameter_id == PID_ANALYZER) {
         str_copy_c(name, "A");
+    } else if (parameter_id == PID_BANDWIDTH) {
+        str_copy_c(name, "bandwidth");
     } else {
         str_copy_c(name, "###");
     }
@@ -106,6 +113,8 @@ acquisition_parameter_name(int param_id)
         return "analyzer";
     } else if (param_id == PID_FIRSTMUL) {
         return "rmult";
+    } else if (param_id == PID_BANDWIDTH) {
+        return "bandwidth";
     }
     return NULL;
 }

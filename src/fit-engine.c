@@ -624,8 +624,11 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
             }
             ell_ab_t ell;
 
-            mult_layer_se_jacob(se_type, nb_med, ns, phi0,
-                                ths, lambda, anlz, ell, NULL, NULL, NULL);
+            if (fit->acquisition->bandwidth > 0.0) {
+                mult_layer_se_bandwidth_jacob(se_type, nb_med, ns, phi0, ths, lambda, anlz, fit->acquisition->bandwidth, ell, NULL, NULL, NULL);
+            } else {
+                mult_layer_se_jacob(se_type, nb_med, ns, phi0, ths, lambda, anlz, ell, NULL, NULL, NULL);
+            }
 
             data_table_set(table, j, 1, ell->alpha);
             data_table_set(table, j, 2, ell->beta);
