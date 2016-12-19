@@ -17,6 +17,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+#include <string.h>
+
 #include "elliss.h"
 
 static double deg_to_radians(double x) { return x * M_PI / 180.0; }
@@ -533,73 +535,20 @@ sp_products(const cmpl R[2], double tanlz, double sp[3])
 }
 
 static void
-sp_products_der(const cmpl R[2], const cmpl dR[2], double tanlz, cmpl dsp[3])
+sp_products_diff(const cmpl R[2], const cmpl dR[2], double tanlz, cmpl dsp[3])
 {
     dsp[0] = 2 * R[0] * conj(dR[0]); /* derivative of |Rs|^2 */
     dsp[1] = 2 * R[1] * conj(dR[1]); /* derivative of |Rp|^2 */
     dsp[2] = R[0] * conj(dR[1]) + R[1] * conj(dR[0]); /* derivative of Re(Rp Rs*) */
 }
 
-void
-mult_layer_sp_products_jacob(const int nb, const cmpl nsin0, const cmpl ns[],
-                    const double ds[], const double lambda,
-                    const double tanlz, double sp[3],
-                    double *jacob_th, cmpl *jacob_n, double *dsp_daoi)
+static void
+sp_products_diff_real(const cmpl R[2], const cmpl dR[2], double tanlz, double dsp[3])
 {
-    const int nblyr = nb - 2;
-    cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
-    cmpl R[2], dRdaoi[2];
-
-    if(jacob_th && jacob_n) {
-        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
-    } else if (jacob_th || dsp_daoi) {
-        mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th);
-    } else if (jacob_th) {
-        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th);
-    } else {
-        mult_layer_refl(nb, ns, nsin0, ds, lambda, R);
-    }
-
-    sp_products(R, tanlz, sp);
-
-    if(jacob_n) {
-        for(int j = 0; j < nb; j++) {
-            if (j == 0) {
-                /* we set the derivative respect to the RI of the ambient to 0.0 */
-                for (int k = 0; k < 3; k++) {
-                    jacob_n[3*j + k] = 0.0;
-                }
-            } else {
-                const cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
-                cmpl dsp[3];
-                sp_products_der(R, dR, tanlz, dsp);
-                for (int k = 0; k < 3; k++) {
-                    /* There is a quirk here. We take the conjugate because
-                       in the code based on rho the formula take the conjugate
-                       of the Rp Rs expression we use here. */
-                    jacob_n[3*j + k] = conj(dsp[k]);
-                }
-            }
-        }
-    }
-
-    if(jacob_th) {
-        for(int j = 0; j < nblyr; j++) {
-            cmpl dsp[3];
-            cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
-            sp_products_der(R, dR, tanlz, dsp);
-            for (int k = 0; k < 3; k++) {
-                jacob_th[3*j + k] = creal(dsp[k]);
-            }
-        }
-    }
-
-    if (dsp_daoi) {
-        cmpl dsp[3];
-        sp_products_der(R, dRdaoi, tanlz, dsp);
-        for (int k = 0; k < 3; k++) {
-            dsp_daoi[k] = deg_to_radians(creal(dsp[k]));
-        }
+    cmpl dsp_complex[3];
+    sp_products_diff(R, dR, tanlz, dsp_complex);
+    for (int k = 0; k < 3; k++) {
+        dsp[k] = creal(dsp_complex[k]);
     }
 }
 
@@ -620,38 +569,35 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     const cmpl nsin0 = ns[0] * csin((cmpl) phi0);
     double jacob_th_sum[3 * nblyr];
     cmpl jacob_n_sum[3 * nb];
-    double dsp_daoi[3];
-    double sp[3] = {0.0, 0.0, 0.0};
+    double dsp_daoi[3] = {0.0};
+    double sp[3] = {0.0};
 
-    if (jacob_th) {
-        for (int j = 0; j < 3 * nblyr; j++) {
-            jacob_th_sum[j] = 0.0;
-        }
-    }
-
-    if (jacob_n) {
-        for (int j = 0; j < 3 * nb; j++) {
-            jacob_n_sum[j] = 0.0;
-        }
-    }
-
-    if (jacob_acq) {
-        for (int k = 0; k < 3; k++) {
-            dsp_daoi[k] = 0.0;
-        }
-    }
+    memset(jacob_th_sum, 0, 3 * nblyr * sizeof(double));
+    memset(jacob_n_sum, 0, 3 * nb * sizeof(cmpl));
 
     const int ORDER = 5;
     const int HALF_ORDER = (ORDER - 1) / 2;
     for (int i = 0; i < ORDER; i++) {
         const int qc_index = (i >= HALF_ORDER ? i - HALF_ORDER : HALF_ORDER - i);
         const int qc_sign = (i < HALF_ORDER ? -1 : 1);
-        double sp_w[3], jacob_th_w[3 * nblyr], dsp_daoi_w[3];
-        cmpl jacob_n_w[3 * nb];
-
         const double lambda_delta = gauss_quad_5_x[qc_index] * bandwidth / 2;
         const double lambda_w = lambda + (qc_sign > 0 ? lambda_delta : - lambda_delta);
-        mult_layer_sp_products_jacob(nb, nsin0, ns, ds, lambda_w, tanlz, sp_w, jacob_th ? jacob_th_w : 0, jacob_n ? jacob_n_w : 0, jacob_acq ? dsp_daoi_w : 0);
+        cmpl mlr_jacob_th[2 * nblyr], mlr_jacob_n[2 * nb];
+        cmpl R[2], dRdaoi[2];
+
+        if(jacob_th && jacob_n) {
+            mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda_w, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
+        } else if (jacob_th || jacob_acq) {
+            mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda_w, R, dRdaoi, mlr_jacob_th);
+        } else if (jacob_th) {
+            mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda_w, R, mlr_jacob_th);
+        } else {
+            mult_layer_refl(nb, ns, nsin0, ds, lambda_w, R);
+        }
+
+        /* Compute into sp_w the Rp Rs products for the adjusted wavelength. */
+        double sp_w[3];
+        sp_products(R, tanlz, sp_w);
 
         const double weight = 0.5 * gauss_quad_5_w[qc_index];
         for (int k = 0; k < 3; k++) {
@@ -659,20 +605,37 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
         }
 
         if (jacob_th) {
-            for (int j = 0; j < 3 * nblyr; j++) {
-                jacob_th_sum[j] += weight * jacob_th_w[j];
+            for (int j = 0; j < nblyr; j++) {
+                const cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
+                double dsp[3];
+                sp_products_diff_real(R, dR, tanlz, dsp);
+                for (int k = 0; k < 3; k++) {
+                    jacob_th_sum[3*j + k] += weight * dsp[k];
+                }
             }
         }
 
         if (jacob_n) {
-            for (int j = 0; j < 3 * nb; j++) {
-                jacob_n_sum[j] += weight * jacob_n_w[j];
+            for (int j = 0; j < nb; j++) {
+                const cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
+                cmpl dsp[3];
+                sp_products_diff(R, dR, tanlz, dsp);
+                /* There is a quirk here. We take the conjugate because
+                   in the old code that differentiate based on the formula for
+                   rho the derivatives are the conjugate of what is taken from
+                   the Rp Rs expression we use here.
+                   So we take the conjugate to align with the old code. */
+                for (int k = 0; k < 3; k++) {
+                    jacob_th_sum[3*j + k] += weight * conj(dsp[k]);
+                }
             }
         }
 
         if (jacob_acq) {
+            double dsp[3];
+            sp_products_diff_real(R, dRdaoi, tanlz, dsp);
             for (int k = 0; k < 3; k++) {
-                dsp_daoi[k] += weight * dsp_daoi_w[k];
+                dsp_daoi[k] += weight * deg_to_radians(dsp[k]);
             }
         }
     }
