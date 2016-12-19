@@ -567,13 +567,13 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     const int nb = _nb, nblyr = nb - 2;
     const double tanlz = tan(anlz);
     const cmpl nsin0 = ns[0] * csin((cmpl) phi0);
-    double jacob_th_sum[3 * nblyr];
-    cmpl jacob_n_sum[3 * nb];
-    double dsp_daoi[3] = {0.0};
+    double sp_jacob_th[3 * nblyr];
+    cmpl sp_jacob_n[3 * nb];
+    double sp_jacob_acq[3] = {0.0};
     double sp[3] = {0.0};
 
-    memset(jacob_th_sum, 0, 3 * nblyr * sizeof(double));
-    memset(jacob_n_sum, 0, 3 * nb * sizeof(cmpl));
+    memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
+    memset(sp_jacob_n, 0, 3 * nb * sizeof(cmpl));
 
     const int ORDER = 5;
     const int HALF_ORDER = (ORDER - 1) / 2;
@@ -610,7 +610,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
                 double dsp[3];
                 sp_products_diff_real(R, dR, tanlz, dsp);
                 for (int k = 0; k < 3; k++) {
-                    jacob_th_sum[3*j + k] += weight * dsp[k];
+                    sp_jacob_th[3*j + k] += weight * dsp[k];
                 }
             }
         }
@@ -626,7 +626,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
                    the Rp Rs expression we use here.
                    So we take the conjugate to align with the old code. */
                 for (int k = 0; k < 3; k++) {
-                    jacob_th_sum[3*j + k] += weight * conj(dsp[k]);
+                    sp_jacob_th[3*j + k] += weight * conj(dsp[k]);
                 }
             }
         }
@@ -635,7 +635,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             double dsp[3];
             sp_products_diff_real(R, dRdaoi, tanlz, dsp);
             for (int k = 0; k < 3; k++) {
-                dsp_daoi[k] += weight * deg_to_radians(dsp[k]);
+                sp_jacob_acq[k] += weight * deg_to_radians(dsp[k]);
             }
         }
     }
@@ -650,7 +650,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
-                const cmpl dRs2 = jacob_n_sum[3*j], dRp2 = jacob_n_sum[3*j+1], dRsRpcj = jacob_n_sum[3*j+2];
+                const cmpl dRs2 = sp_jacob_n[3*j], dRp2 = sp_jacob_n[3*j+1], dRsRpcj = sp_jacob_n[3*j+2];
                 const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
                 const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
                 cmpl_vector_set(jacob_n, j,      d_alpha);
@@ -660,7 +660,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
-                const double dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
+                const double dRs2 = sp_jacob_th[3*j], dRp2 = sp_jacob_th[3*j+1], dRsRpcj = sp_jacob_th[3*j+2];
                 const double d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
                 const double d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
                 gsl_vector_set(jacob_th, j,         d_alpha);
@@ -669,7 +669,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
         }
 
         if (jacob_acq) {
-            const double dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
+            const double dRs2 = sp_jacob_acq[0], dRp2 = sp_jacob_acq[1], dRsRpcj = sp_jacob_acq[2];
             const double d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
             const double d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
             /* Derivatives with AOI. */
@@ -690,7 +690,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
-                const cmpl dRs2 = jacob_n_sum[3*j], dRp2 = jacob_n_sum[3*j+1], dRsRpcj = jacob_n_sum[3*j+2];
+                const cmpl dRs2 = sp_jacob_n[3*j], dRp2 = sp_jacob_n[3*j+1], dRsRpcj = sp_jacob_n[3*j+2];
                 const cmpl d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
                 const cmpl d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
                 cmpl_vector_set(jacob_n, j,      d_alpha);
@@ -700,7 +700,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
 
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
-                const double dRs2 = jacob_th_sum[3*j], dRp2 = jacob_th_sum[3*j+1], dRsRpcj = jacob_th_sum[3*j+2];
+                const double dRs2 = sp_jacob_th[3*j], dRp2 = sp_jacob_th[3*j+1], dRsRpcj = sp_jacob_th[3*j+2];
                 const double d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
                 const double d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
                 gsl_vector_set(jacob_th, j,         d_alpha);
@@ -709,7 +709,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
         }
 
         if (jacob_acq) {
-            const double dRs2 = dsp_daoi[0], dRp2 = dsp_daoi[1], dRsRpcj = dsp_daoi[2];
+            const double dRs2 = sp_jacob_acq[0], dRp2 = sp_jacob_acq[1], dRsRpcj = sp_jacob_acq[2];
             const double d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
             const double d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
 
