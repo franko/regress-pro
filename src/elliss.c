@@ -552,6 +552,24 @@ sp_products_diff_real(const cmpl R[2], const cmpl dR[2], double tanlz, double ds
     }
 }
 
+static void
+se_ab_diff_from_sp(const double sp[3], const cmpl dsp[3], const double tanlz, cmpl dab[2]) {
+    const double tasq = tanlz * tanlz;
+    const double abden = sp[1] + tasq * sp[0];
+    const cmpl drs2 = dsp[0], drp2 = dsp[1], drprs = dsp[2];
+    dab[0] = 2 * tasq / sqr(abden) * (sp[0] * drp2 - sp[1] * drs2);
+    dab[1] = 2 * tanlz / abden * (drprs - sp[2] * (drp2 + tasq * drs2) / abden);
+}
+
+static void
+se_ab_diff_from_sp_real(const double sp[3], const double dsp[3], const double tanlz, double dab[2]) {
+    const double tasq = tanlz * tanlz;
+    const double abden = sp[1] + tasq * sp[0];
+    const double drs2 = dsp[0], drp2 = dsp[1], drprs = dsp[2];
+    dab[0] = 2 * tasq / sqr(abden) * (sp[0] * drp2 - sp[1] * drs2);
+    dab[1] = 2 * tanlz / abden * (drprs - sp[2] * (drp2 + tasq * drs2) / abden);
+}
+
 /* Legendre-Gauss quadrature abscissae and coefficients. From:
    http://pomax.github.io/bezierinfo/legendre-gauss.html */
 static double gauss_quad_5_x[5] = {0.0,                0.5384693101056831, 0.9061798459386640};
@@ -643,43 +661,40 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     if (type == SE_ALPHA_BETA) {
         const double tasq = tanlz * tanlz;
         const double abden = sp[1] + tasq * sp[0];
-        const double densq = sqr(abden);
 
         e->alpha = (sp[1] - tasq * sp[0]) / abden;
         e->beta = (2 * sp[2] * tanlz) / abden;
 
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
-                const cmpl dRs2 = sp_jacob_n[3*j], dRp2 = sp_jacob_n[3*j+1], dRsRpcj = sp_jacob_n[3*j+2];
-                const cmpl d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-                const cmpl d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
-                cmpl_vector_set(jacob_n, j,      d_alpha);
-                cmpl_vector_set(jacob_n, nb + j, d_beta );
+                cmpl dab[2];
+                se_ab_diff_from_sp(sp, sp_jacob_n + 3 * j, tanlz, dab);
+                cmpl_vector_set(jacob_n, j,      dab[0]);
+                cmpl_vector_set(jacob_n, nb + j, dab[1]);
             }
         }
 
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
-                const double dRs2 = sp_jacob_th[3*j], dRp2 = sp_jacob_th[3*j+1], dRsRpcj = sp_jacob_th[3*j+2];
-                const double d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-                const double d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
-                gsl_vector_set(jacob_th, j,         d_alpha);
-                gsl_vector_set(jacob_th, nblyr + j, d_beta );
+                double dab[2];
+                se_ab_diff_from_sp_real(sp, sp_jacob_th + 3 * j, tanlz, dab);
+                gsl_vector_set(jacob_th, j,         dab[0]);
+                gsl_vector_set(jacob_th, nblyr + j, dab[1]);
             }
         }
 
         if (jacob_acq) {
-            const double dRs2 = sp_jacob_acq[0], dRp2 = sp_jacob_acq[1], dRsRpcj = sp_jacob_acq[2];
-            const double d_alpha = 2 * tasq / densq * (sp[0] * dRp2 - sp[1] * dRs2);
-            const double d_beta = 2 * tanlz / abden * (dRsRpcj - sp[2] * (dRp2 + tasq * dRs2) / abden);
+            double dab[2];
+            se_ab_diff_from_sp_real(sp, sp_jacob_acq, tanlz, dab);
             /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = d_alpha;
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = d_beta;
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dab[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dab[1];
 
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tanlz * secsqa / densq;
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa / densq;
+            const double iden = 1 / sqr(abden);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tanlz * secsqa * iden;
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden;
         }
     } else {
         const double tpsi = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
