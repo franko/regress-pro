@@ -570,6 +570,24 @@ se_ab_diff_from_sp_real(const double sp[3], const double dsp[3], const double ta
     dab[1] = 2 * tanlz / abden * (drprs - sp[2] * (drp2 + tasq * drs2) / abden);
 }
 
+static void
+se_psidel_diff_from_sp(const double sp[3], const cmpl dsp[3], cmpl dpsidel[2]) {
+    const double tan_psi = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
+    const double cos_delta = sp[2] / sqrt(sp[0] * sp[1]); /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
+    const cmpl drs2 = dsp[0], drp2 = dsp[1], drprs = dsp[2];
+    dpsidel[0] = tan_psi / 2.0 * (drp2 / sp[1] - drs2 / sp[0]) ;
+    dpsidel[1] = cos_delta / 2.0 * (- drp2 / sp[1] - drs2 / sp[0] + 2.0 / sp[2] * drprs);
+}
+
+static void
+se_psidel_diff_from_sp_real(const double sp[3], const double dsp[3], double dpsidel[2]) {
+    const double tan_psi = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
+    const double cos_delta = sp[2] / sqrt(sp[0] * sp[1]); /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
+    const double drs2 = dsp[0], drp2 = dsp[1], drprs = dsp[2];
+    dpsidel[0] = tan_psi / 2.0 * (drp2 / sp[1] - drs2 / sp[0]) ;
+    dpsidel[1] = cos_delta / 2.0 * (- drp2 / sp[1] - drs2 / sp[0] + 2.0 / sp[2] * drprs);
+}
+
 /* Legendre-Gauss quadrature abscissae and coefficients. From:
    http://pomax.github.io/bezierinfo/legendre-gauss.html */
 static double gauss_quad_5_x[5] = {0.0,                0.5384693101056831, 0.9061798459386640};
@@ -697,40 +715,34 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden;
         }
     } else {
-        const double tpsi = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
-        const double icden = 1.0 / sqrt(sp[0] * sp[1]);
-        const double cos_delta = sp[2] * icden; /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
-        e->alpha = tpsi;
-        e->beta = cos_delta;
+        e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
+        e->beta = sp[2] / sqrt(sp[0] * sp[1]); /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
 
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
-                const cmpl dRs2 = sp_jacob_n[3*j], dRp2 = sp_jacob_n[3*j+1], dRsRpcj = sp_jacob_n[3*j+2];
-                const cmpl d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
-                const cmpl d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
-                cmpl_vector_set(jacob_n, j,      d_alpha);
-                cmpl_vector_set(jacob_n, nb + j, d_beta );
+                cmpl dpsidel[2];
+                se_psidel_diff_from_sp(sp, sp_jacob_n + 3 * j, dpsidel);
+                cmpl_vector_set(jacob_n, j,      dpsidel[0]);
+                cmpl_vector_set(jacob_n, nb + j, dpsidel[1]);
             }
         }
 
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
-                const double dRs2 = sp_jacob_th[3*j], dRp2 = sp_jacob_th[3*j+1], dRsRpcj = sp_jacob_th[3*j+2];
-                const double d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
-                const double d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
-                gsl_vector_set(jacob_th, j,         d_alpha);
-                gsl_vector_set(jacob_th, nblyr + j, d_beta );
+                double dpsidel[2];
+                se_psidel_diff_from_sp_real(sp, sp_jacob_th + 3 * j, dpsidel);
+                gsl_vector_set(jacob_th, j,         dpsidel[0]);
+                gsl_vector_set(jacob_th, nblyr + j, dpsidel[1]);
             }
         }
 
         if (jacob_acq) {
-            const double dRs2 = sp_jacob_acq[0], dRp2 = sp_jacob_acq[1], dRsRpcj = sp_jacob_acq[2];
-            const double d_alpha = tpsi / 2.0 * (dRp2 / sp[1] - dRs2 / sp[0]) ;
-            const double d_beta = cos_delta / 2.0 * (- dRp2 / sp[1] - dRs2 / sp[0] + 2.0 / sp[2] * dRsRpcj);
+            double dpsidel[2];
+            se_psidel_diff_from_sp_real(sp, sp_jacob_acq, dpsidel);
 
             /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = d_alpha;
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = d_beta;
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dpsidel[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dpsidel[1];
         }
     }
 }
