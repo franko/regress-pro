@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "elliss.h"
+#include "gauss-legendre-quad.h"
 
 static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
@@ -588,11 +589,6 @@ se_psidel_diff_from_sp_real(const double sp[3], const double dsp[3], double dpsi
     dpsidel[1] = cos_delta / 2.0 * (- drp2 / sp[1] - drs2 / sp[0] + 2.0 / sp[2] * drprs);
 }
 
-/* Legendre-Gauss quadrature abscissae and coefficients. From:
-   http://pomax.github.io/bezierinfo/legendre-gauss.html */
-static double gauss_quad_5_x[5] = {0.0,                0.5384693101056831, 0.9061798459386640};
-static double gauss_quad_5_w[5] = {0.5688888888888889, 0.4786286704993665, 0.2369268850561891};
-
 void
 mult_layer_se_bandwidth_jacob(enum se_type type,
                     size_t _nb, const cmpl ns[], double phi0,
@@ -611,13 +607,11 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
     memset(sp_jacob_n, 0, 3 * nb * sizeof(cmpl));
 
-    const int ORDER = 5;
-    const int HALF_ORDER = (ORDER - 1) / 2;
-    for (int i = 0; i < ORDER; i++) {
-        const int qc_index = (i >= HALF_ORDER ? i - HALF_ORDER : HALF_ORDER - i);
-        const int qc_sign = (i < HALF_ORDER ? -1 : 1);
-        const double lambda_delta = gauss_quad_5_x[qc_index] * bandwidth / 2;
-        const double lambda_w = lambda + (qc_sign > 0 ? lambda_delta : - lambda_delta);
+    const struct gauss_quad_info *quad_rule = gauss_rule(GAUSS_LEGENDRE_RULE_7);
+    const int HALF_ORDER = (quad_rule->n - 1) / 2;
+    for (int i = -HALF_ORDER; i <= HALF_ORDER; i++) {
+        const double rule_abscissa = gauss_rule_abscissa(quad_rule, i);
+        const double lambda_w = lambda + rule_abscissa * bandwidth / 2.0;
         cmpl mlr_jacob_th[2 * nblyr], mlr_jacob_n[2 * nb];
         cmpl R[2], dRdaoi[2];
 
@@ -635,7 +629,7 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
         double sp_w[3];
         sp_products(R, tanlz, sp_w);
 
-        const double weight = 0.5 * gauss_quad_5_w[qc_index];
+        const double weight = 0.5 * gauss_rule_weigth(quad_rule, i);
         for (int k = 0; k < 3; k++) {
             sp[k] += weight * sp_w[k];
         }

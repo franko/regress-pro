@@ -16,6 +16,7 @@ ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	fit-timestamp.c lmfit-simple.c fit-params.c fit-engine.c refl-kernel.c \
 	refl-fit.c elliss-fit.c number-parse.c refl-utils.c \
 	acquisition.c \
+	gauss-legendre-quad.c \
 	spectra.c elliss.c \
 	elliss-multifit.c multi-fit-engine.c grid-search.c lmfit-multi.c \
 	refl-multifit.c disp-fit-engine.c \
