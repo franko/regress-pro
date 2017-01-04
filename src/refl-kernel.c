@@ -170,12 +170,11 @@ mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
     return R;
 }
 
-double
-mult_layer_refl_ni(size_t _nb, const cmpl ns[], const double ds[],
+static double
+mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
                    double lambda,
                    gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
 {
-    int nb = _nb;
     cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
     size_t k;
     cmpl r;
@@ -209,12 +208,11 @@ mult_layer_refl_ni(size_t _nb, const cmpl ns[], const double ds[],
     return CSQABS(r);
 }
 
-double
-mult_layer_refl_ni_bandwidth(size_t _nb, const cmpl ns[], const double ds[],
+static double
+mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
                              double lambda, const double bandwidth,
                              gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
 {
-    int nb = _nb;
     cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
     double rsq = 0.0;
 
@@ -259,4 +257,15 @@ mult_layer_refl_ni_bandwidth(size_t _nb, const cmpl ns[], const double ds[],
     }
 
     return rsq;
+}
+
+double
+mult_layer_refl_sr(size_t nb, const cmpl ns[], const double ds[],
+                   double lambda, const struct acquisition_parameters *acquisition,
+                   gsl_vector *jacob_th, gsl_vector *jacob_n)
+{
+    if (acquisition->bandwidth > 0.0) {
+        return mult_layer_refl_ni_bandwidth(nb, ns, ds, lambda, acquisition->bandwidth, jacob_th, jacob_n);
+    }
+    return mult_layer_refl_ni(nb, ns, ds, lambda, jacob_th, jacob_n);
 }

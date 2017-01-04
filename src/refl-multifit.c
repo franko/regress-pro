@@ -56,10 +56,9 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
             actual.ns = fit->cache.ns;
             stack_get_ns_list(fit->stack_list[sample], actual.ns, lambda);
 
-            /* STEP 3 : We call the procedure mult_layer_refl_ni */
-
-            r_raw = mult_layer_refl_ni(nb_med, actual.ns, actual.ths, lambda,
-                                       r_th_jacob, r_n_jacob);
+            /* STEP 3 : We call the procedure to compute the reflectivity. */
+            r_raw = mult_layer_refl_sr(nb_med, actual.ns, actual.ths, lambda,
+                                       &fit->acquisitions[sample], r_th_jacob, r_n_jacob);
 
             r_theory = rmult * r_raw;
 

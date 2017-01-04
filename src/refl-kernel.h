@@ -8,16 +8,10 @@
 
 #include <gsl/gsl_vector.h>
 
-
 /* reflectivity for normal incidence with multi-layer film */
-double mult_layer_refl_ni(size_t nb /*nb of mediums */,
-                          const cmpl ns[], const double ds[],
-                          double lambda,
-                          gsl_vector *rjacob_th, gsl_vector *rjacob_n);
-
 extern double
-mult_layer_refl_ni_bandwidth(size_t _nb, const cmpl ns[], const double ds[],
-                             double lambda, const double bandwidth,
-                             gsl_vector *r_jacob_th, gsl_vector *r_jacob_n);
+mult_layer_refl_sr(size_t nb, const cmpl ns[], const double ds[],
+                   double lambda, const struct acquisition_parameters *acquisition,
+                   gsl_vector *jacob_th, gsl_vector *jacob_n);
 
 #endif

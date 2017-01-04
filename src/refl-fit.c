@@ -78,12 +78,11 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     r_th_jacob = (jacob ? fit->run->jac_th : NULL);
     r_n_jacob  = (jacob ? fit->run->jac_n.refl : NULL);
 
+    const double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
     for(j = 0; j < spectra_points(s); j++) {
         float const * spectr_data = spectra_get_values(s, j);
         const double lambda = spectr_data[0];
         const double r_meas = spectr_data[1];
-        double r_raw, r_theory;
-        double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
 
         if(fit->run->cache.th_only) {
             ns = fit->run->cache.ns_full_spectr + j * nb_med;
@@ -92,18 +91,10 @@ refl_fit_fdf(const gsl_vector *x, void *params,
             stack_get_ns_list(fit->stack, ns, lambda);
         }
 
-        /* STEP 3 : We call the procedure mult_layer_refl_ni */
+        /* STEP 3 : We call the procedure to compute the reflectivity. */
+        const double r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, r_th_jacob, r_n_jacob);
 
-        if (fit->acquisition->bandwidth > 0.0) {
-            r_raw = mult_layer_refl_ni_bandwidth(nb_med, ns, ths, lambda,
-                                       fit->acquisition->bandwidth,
-                                       r_th_jacob, r_n_jacob);
-        } else {
-            r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda,
-                                       r_th_jacob, r_n_jacob);
-        }
-
-        r_theory = rmult * r_raw;
+        const double r_theory = rmult * r_raw;
 
         if(f != NULL) {
             gsl_vector_set(f, j, r_theory - r_meas);
