@@ -47,7 +47,7 @@ get_parameter_jacob_r(fit_param_t const *fp, stack_t const *stack,
         result = rmult * (dnr * drdn.re + dni * drdn.im);
         break;
     default:
-        assert(0);
+        result = 0.0;
     }
 
     return result;
@@ -94,8 +94,14 @@ refl_fit_fdf(const gsl_vector *x, void *params,
 
         /* STEP 3 : We call the procedure mult_layer_refl_ni */
 
-        r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda,
-                                   r_th_jacob, r_n_jacob);
+        if (fit->acquisition->bandwidth > 0.0) {
+            r_raw = mult_layer_refl_ni_bandwidth(nb_med, ns, ths, lambda,
+                                       fit->acquisition->bandwidth,
+                                       r_th_jacob, r_n_jacob);
+        } else {
+            r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda,
+                                       r_th_jacob, r_n_jacob);
+        }
 
         r_theory = rmult * r_raw;
 

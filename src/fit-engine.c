@@ -608,8 +608,12 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 
         switch(syskind) {
         case SYSTEM_REFLECTOMETER: {
-            double r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda,
-                                              NULL, NULL);
+            double r_raw;
+            if (fit->acquisition->bandwidth > 0.0) {
+                r_raw = mult_layer_refl_ni_bandwidth(nb_med, ns, ths, lambda, fit->acquisition->bandwidth, NULL, NULL);
+            } else {
+                r_raw = mult_layer_refl_ni(nb_med, ns, ths, lambda, NULL, NULL);
+            }
             double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
             data_table_set(table, j, 1, rmult * r_raw);
             break;

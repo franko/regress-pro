@@ -1,6 +1,7 @@
 #include <assert.h>
 
 #include "refl-kernel.h"
+#include "gauss-legendre-quad.h"
 
 static inline cmpl
 csqr(cmpl x)
@@ -206,4 +207,56 @@ mult_layer_refl_ni(size_t _nb, const cmpl ns[], const double ds[],
         }
 
     return CSQABS(r);
+}
+
+double
+mult_layer_refl_ni_bandwidth(size_t _nb, const cmpl ns[], const double ds[],
+                             double lambda, const double bandwidth,
+                             gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
+{
+    int nb = _nb;
+    cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
+    double rsq = 0.0;
+
+    const struct gauss_quad_info *quad_rule = gauss_rule(GAUSS_LEGENDRE_RULE_7);
+    const int HALF_ORDER = (quad_rule->n - 1) / 2;
+    for (int i = -HALF_ORDER; i <= HALF_ORDER; i++) {
+        const double rule_abscissa = gauss_rule_abscissa(quad_rule, i);
+        const double lambda_w = lambda + rule_abscissa * bandwidth / 2.0;
+        cmpl r;
+
+        if(r_jacob_th && r_jacob_n) {
+            r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda_w, mlr_jacob_th, mlr_jacob_n);
+        } else if(r_jacob_th) {
+            r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda_w, mlr_jacob_th);
+        } else {
+            r = mult_layer_refl_ni_nojacob(nb, ns, ds, lambda_w);
+        }
+
+        const double weight = 0.5 * gauss_rule_weigth(quad_rule, i);
+        rsq += weight * CSQABS(r);
+
+        if(r_jacob_th) {
+            for(int k = 0; k < nb-2; k++) {
+                const cmpl dr = mlr_jacob_th[k];
+                const double drsq = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
+                const double j_value = (i > -HALF_ORDER ? gsl_vector_get(r_jacob_th, k) + weight * drsq : weight * drsq);
+                gsl_vector_set(r_jacob_th, k, j_value);
+            }
+        }
+
+        if(r_jacob_n) {
+            for(int k = 0; k < nb; k++) {
+                const cmpl dr = mlr_jacob_n[k];
+                const double drsqr = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
+                const double drsqi = 2 * (cimag(r)*creal(dr) - creal(r)*cimag(dr));
+                const double j_value_r = (i > -HALF_ORDER ? gsl_vector_get(r_jacob_n, k) + weight * drsqr : weight * drsqr);
+                const double j_value_i = (i > -HALF_ORDER ? gsl_vector_get(r_jacob_n, nb + k) + weight * drsqi : weight * drsqi);
+                gsl_vector_set(r_jacob_n, k, j_value_r);
+                gsl_vector_set(r_jacob_n, nb + k, j_value_i);
+            }
+        }
+    }
+
+    return rsq;
 }
