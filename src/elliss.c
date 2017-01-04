@@ -473,14 +473,14 @@ set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], 
 
 }
 
-void
+static void
 mult_layer_se_jacob(enum se_type type,
-                    size_t _nb, const cmpl ns[], double phi0,
+                    int nb, const cmpl ns[], double phi0,
                     const double ds[], double lambda,
                     double anlz, ell_ab_t e,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition)
 {
-    const int nb = _nb, nblyr = nb - 2;
+    const int nblyr = nb - 2;
     cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
     double tanlz = tan(anlz);
     cmpl R[2], dRdaoi[2], nsin0;
@@ -589,14 +589,14 @@ se_psidel_diff_from_sp_real(const double sp[3], const double dsp[3], double dpsi
     dpsidel[1] = cos_delta / 2.0 * (- drp2 / sp[1] - drs2 / sp[0] + 2.0 / sp[2] * drprs);
 }
 
-void
+static void
 mult_layer_se_bandwidth_jacob(enum se_type type,
-                    size_t _nb, const cmpl ns[], double phi0,
+                    int nb, const cmpl ns[], double phi0,
                     const double ds[], double lambda,
                     double anlz, const double bandwidth, ell_ab_t e,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acq)
 {
-    const int nb = _nb, nblyr = nb - 2;
+    const int nblyr = nb - 2;
     const double tanlz = tan(anlz);
     const cmpl nsin0 = ns[0] * csin((cmpl) phi0);
     double sp_jacob_th[3 * nblyr];
@@ -738,5 +738,21 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dpsidel[0];
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dpsidel[1];
         }
+    }
+}
+
+void
+mult_layer_refl_se(enum se_type se_type,
+                   size_t nb, const cmpl ns[],
+                   const double ds[], double lambda,
+                   const struct acquisition_parameters *acquisition, ell_ab_t e,
+                   gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition)
+{
+    const double phi0 = deg_to_radians(acquisition_get_se_aoi(acquisition));
+    const double anlz = deg_to_radians(acquisition_get_se_analyzer(acquisition));
+    if (acquisition->bandwidth > 0.0) {
+        mult_layer_se_bandwidth_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, acquisition->bandwidth, e, jacob_th, jacob_n, jacob_acquisition);
+    } else {
+        mult_layer_se_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, e, jacob_th, jacob_n, jacob_acquisition);
     }
 }

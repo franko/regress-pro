@@ -25,6 +25,7 @@
 
 #include "common.h"
 #include "cmpl.h"
+#include "acquisition.h"
 #include "ellipsometry-decls.h"
 
 enum se_type {
@@ -48,18 +49,10 @@ typedef struct elliss_ab  ell_ab_t[1];
 typedef struct elliss_ab *ell_ab_ptr;
 
 extern void
-mult_layer_se_jacob(enum se_type type,
-                    size_t nb, const cmpl ns[], double phi0,
-                    const double ds[], double lambda,
-                    double anlz, ell_ab_t e,
-                    gsl_vector *jacob_th, cmpl_vector *jacob_n,
-                    double *jacob_acquisition);
-
-extern void
-mult_layer_se_bandwidth_jacob(enum se_type type,
-                    size_t _nb, const cmpl ns[], double phi0,
-                    const double ds[], double lambda,
-                    double anlz, const double bandwidth, ell_ab_t e,
-                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition);
+mult_layer_refl_se(enum se_type se_type,
+                   size_t nb, const cmpl ns[],
+                   const double ds[], double lambda,
+                   const struct acquisition_parameters *acquisition, ell_ab_t e,
+                   gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition);
 
 #endif

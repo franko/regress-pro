@@ -5,8 +5,6 @@
 /* helper function */
 #include "elliss-get-jacob.h"
 
-static double deg_to_radians(double x) { return x * M_PI / 180.0; }
-
 void
 get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
                        struct deriv_info *ideriv, double lambda,
@@ -83,8 +81,6 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     wjacob.n  = (jacob && !fit->run->cache.th_only ? fit->run->jac_n.ell : NULL);
     double *jacob_acquisition = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : NULL);
 
-    const double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
-    const double anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
     for(int j = 0; j < npt; j++) {
         float const * spectr_data = spectra_get_values(s, j);
         const double lambda     = spectr_data[0];
@@ -101,15 +97,8 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
         /* STEP 3 : We call the ellipsometer kernel function */
 
-        if (fit->acquisition->bandwidth > 0.0) {
-            mult_layer_se_bandwidth_jacob(se_type,
-                                nb_med, actual.ns, phi0, actual.ths, lambda,
-                                anlz, fit->acquisition->bandwidth, theory, wjacob.th, wjacob.n, jacob_acquisition);
-        } else {
-            mult_layer_se_jacob(se_type,
-                                nb_med, actual.ns, phi0, actual.ths, lambda,
-                                anlz, theory, wjacob.th, wjacob.n, jacob_acquisition);
-        }
+        mult_layer_refl_se(se_type, nb_med, actual.ns, actual.ths, lambda,
+            fit->acquisition, theory, wjacob.th, wjacob.n, jacob_acquisition);
 
         if(f != NULL) {
             gsl_vector_set(f, j,       theory->alpha - meas_alpha);

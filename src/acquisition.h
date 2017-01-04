@@ -70,6 +70,8 @@ extern void     acquisition_set_default(struct acquisition_parameters *acq);
 extern void     acquisition_set_default_rpe(struct acquisition_parameters *acq);
 extern void     acquisition_set_default_se(struct acquisition_parameters *acq);
 extern void     acquisition_parameter_to_string(str_t name, int param_id);
+extern double   acquisition_get_se_aoi(const struct acquisition_parameters *acquisition);
+extern double   acquisition_get_se_analyzer(const struct acquisition_parameters *acquisition);
 
 extern const char * acquisition_parameter_name(int param_id);
 

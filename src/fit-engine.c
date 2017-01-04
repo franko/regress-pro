@@ -33,8 +33,6 @@ static void build_fit_engine_cache(struct fit_engine *f);
 
 static void dispose_fit_engine_cache(struct fit_run *run);
 
-static double deg_to_radians(double x) { return x * M_PI / 180.0; }
-
 void
 build_stack_cache(struct stack_cache *cache, stack_t *stack,
                   struct spectrum *spectr, int th_only_optimize, int require_acquisition_jacob)
@@ -621,18 +619,9 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
         case SYSTEM_ELLISS_AB:
         case SYSTEM_ELLISS_PSIDEL: {
             const enum se_type se_type = GET_SE_TYPE(syskind);
-            double phi0 = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_AOI));
-            double anlz = 0;
-            if (syskind == SYSTEM_ELLISS_AB) {
-                anlz = deg_to_radians(acquisition_get_parameter(fit->acquisition, PID_ANALYZER));
-            }
             ell_ab_t ell;
 
-            if (fit->acquisition->bandwidth > 0.0) {
-                mult_layer_se_bandwidth_jacob(se_type, nb_med, ns, phi0, ths, lambda, anlz, fit->acquisition->bandwidth, ell, NULL, NULL, NULL);
-            } else {
-                mult_layer_se_jacob(se_type, nb_med, ns, phi0, ths, lambda, anlz, ell, NULL, NULL, NULL);
-            }
+            mult_layer_refl_se(se_type, nb_med, ns, ths, lambda, fit->acquisition, ell, NULL, NULL, NULL);
 
             data_table_set(table, j, 1, ell->alpha);
             data_table_set(table, j, 2, ell->beta);

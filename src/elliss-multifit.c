@@ -5,8 +5,6 @@
 /* helper function */
 #include "elliss-get-jacob.h"
 
-static double deg_to_radians(double x) { return x * M_PI / 180.0; }
-
 int
 elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
                     gsl_matrix * jacob)
@@ -45,8 +43,6 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         stack_jacob.n  = (jacob ? fit->jac_n.ell : NULL);
         double *jacob_acq = (jacob ? jacob_acq_data : NULL);
 
-        const double phi0 = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_AOI));
-        const double anlz = deg_to_radians(acquisition_get_parameter(&fit->acquisitions[sample], PID_ANALYZER));
         for(j = 0; j < npt; j++, j_sample++) {
             float const * spectr_data = spectra_get_values(spectrum, j);
             const double lambda     = spectr_data[0];
@@ -59,9 +55,10 @@ elliss_multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
             /* STEP 3 : We call the ellipsometer kernel function */
 
-            mult_layer_se_jacob(se_type,
-                                nb_med, actual.ns, phi0, actual.ths, lambda,
-                                anlz, theory, stack_jacob.th, stack_jacob.n, jacob_acq);
+            mult_layer_refl_se(se_type,
+                               nb_med, actual.ns, actual.ths, lambda,
+                               &fit->acquisitions[sample], theory,
+                               stack_jacob.th, stack_jacob.n, jacob_acq);
 
             if(f != NULL) {
                 gsl_vector_set(f, j_sample,       theory->alpha - meas_alpha);

@@ -27,6 +27,26 @@ acquisition_parameter_pointer(struct acquisition_parameters *acquisition, int pa
     return NULL;
 }
 
+double
+acquisition_get_se_aoi(const struct acquisition_parameters *acquisition)
+{
+    if (acquisition->type == SYSTEM_ELLISS_AB) {
+        return acquisition->parameters.rpe.aoi;
+    } else if (acquisition->type == SYSTEM_ELLISS_PSIDEL) {
+        return acquisition->parameters.se.aoi;
+    }
+    return 0.0;
+}
+
+double
+acquisition_get_se_analyzer(const struct acquisition_parameters *acquisition)
+{
+    if (acquisition->type == SYSTEM_ELLISS_AB) {
+        return acquisition->parameters.rpe.analyzer;
+    }
+    return 0.0;
+}
+
 int
 acquisition_apply_param(struct acquisition_parameters *acquisition, int param_id, double val)
 {
