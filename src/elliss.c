@@ -311,48 +311,6 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
     }
 }
 
-#if 0
-static void
-multlayer_refl_na(int nb, const cmpl ns[], cmpl nsin0,
-                  const double ds[], double lambda, cmpl R[],
-                  double numap)
-{
-    const int ndiv = 16;
-    double phi0 = asin(creal(nsin0 / ns[0]));  // should be real
-    double dphi = asin(numap);
-    double xr[3];
-    int j;
-
-    R[0] = R[1] = 0.0i;
-
-    xr[2] = -1.0;
-    for(j = -ndiv/2 + 1; j <= ndiv/2; j++) {
-        double dxr;
-        int k, klim;
-
-        xr[0] = xr[2];
-        xr[2] = sin(2 * j * M_PI_2 / ndiv);
-        xr[1] = (xr[0] + xr[2]) / 2;
-
-        dxr = xr[2] - xr[0];
-
-        klim = (j == ndiv/2 ? 2 : 3);
-
-        for(k = 1; k < klim; k++) {
-            const int sc[3] = {1, 4, 2};
-            cmpl nsin0x = ns[0] * sin(phi0 + dphi * xr[k]);
-            double rf = sqrt(1 - xr[k] * xr[k]);
-            cmpl Rx[2];
-
-            mult_layer_refl(nb, ns, nsin0x, ds, lambda, Rx);
-
-            R[0] += rf * sc[k] * dxr * Rx[0] / (6 * M_PI_2);
-            R[1] += rf * sc[k] * dxr * Rx[1] / (6 * M_PI_2);
-        }
-    }
-}
-#endif
-
 /* NB: In this case we are treating a Psi-Delta spectrum and
    the fields named alpha and beta corresponds actually to
    tan(psi) and cos(delta), respectively. */
