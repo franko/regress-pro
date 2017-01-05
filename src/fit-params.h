@@ -17,6 +17,7 @@ enum params_id {
     PID_AOI,
     PID_ANALYZER,
     PID_BANDWIDTH,
+    PID_NUMAP,
     PID_INVALID,
 };
 

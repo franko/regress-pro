@@ -699,6 +699,158 @@ mult_layer_se_bandwidth_jacob(enum se_type type,
     }
 }
 
+static void
+mult_layer_se_numap_jacob(enum se_type type,
+                    int nb, const cmpl ns[], double phi0,
+                    const double ds[], double lambda,
+                    double anlz, const double numap, ell_ab_t e,
+                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acq)
+{
+    const int nblyr = nb - 2;
+    const double tanlz = tan(anlz);
+    double sp_jacob_th[3 * nblyr];
+    cmpl sp_jacob_n[3 * nb];
+    double sp_jacob_acq[3] = {0.0};
+    double sp[3] = {0.0};
+
+    memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
+    memset(sp_jacob_n, 0, 3 * nb * sizeof(cmpl));
+
+    const struct gauss_quad_info *quad_rule = gauss_rule(GAUSS_LEGENDRE_RULE_3);
+    const int HALF_ORDER = (quad_rule->n - 1) / 2;
+    const double delta_phi0 = asin(numap);
+    for (int i = -HALF_ORDER; i <= HALF_ORDER; i++) {
+        const double rule_abscissa = gauss_rule_abscissa(quad_rule, i);
+        const cmpl nsin0_w = ns[0] * csin((cmpl) (phi0 + rule_abscissa * delta_phi0));
+        cmpl mlr_jacob_th[2 * nblyr], mlr_jacob_n[2 * nb];
+        cmpl R[2], dRdaoi[2];
+
+        if(jacob_th && jacob_n) {
+            mult_layer_refl_jacob(nb, ns, nsin0_w, ds, lambda, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
+        } else if (jacob_th || jacob_acq) {
+            mult_layer_refl_jacob_th_aoi(nb, ns, nsin0_w, ds, lambda, R, dRdaoi, mlr_jacob_th);
+        } else if (jacob_th) {
+            mult_layer_refl_jacob_th(nb, ns, nsin0_w, ds, lambda, R, mlr_jacob_th);
+        } else {
+            mult_layer_refl(nb, ns, nsin0_w, ds, lambda, R);
+        }
+
+        /* Compute into sp_w the Rp Rs products. */
+        double sp_w[3];
+        sp_products(R, tanlz, sp_w);
+
+        const double weight = 0.5 * gauss_rule_weigth(quad_rule, i);
+        for (int k = 0; k < 3; k++) {
+            sp[k] += weight * sp_w[k];
+        }
+
+        if (jacob_th) {
+            for (int j = 0; j < nblyr; j++) {
+                const cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
+                double dsp[3];
+                sp_products_diff_real(R, dR, tanlz, dsp);
+                for (int k = 0; k < 3; k++) {
+                    sp_jacob_th[3*j + k] += weight * dsp[k];
+                }
+            }
+        }
+
+        if (jacob_n) {
+            for (int j = 0; j < nb; j++) {
+                const cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
+                cmpl dsp[3];
+                sp_products_diff(R, dR, tanlz, dsp);
+                /* There is a quirk here. We take the conjugate because
+                   in the old code that differentiate based on the formula for
+                   rho the derivatives are the conjugate of what is taken from
+                   the Rp Rs expression we use here.
+                   So we take the conjugate to align with the old code. */
+                for (int k = 0; k < 3; k++) {
+                    sp_jacob_th[3*j + k] += weight * conj(dsp[k]);
+                }
+            }
+        }
+
+        if (jacob_acq) {
+            double dsp[3];
+            sp_products_diff_real(R, dRdaoi, tanlz, dsp);
+            for (int k = 0; k < 3; k++) {
+                sp_jacob_acq[k] += weight * deg_to_radians(dsp[k]);
+            }
+        }
+    }
+
+    if (type == SE_ALPHA_BETA) {
+        const double tasq = tanlz * tanlz;
+        const double abden = sp[1] + tasq * sp[0];
+
+        e->alpha = (sp[1] - tasq * sp[0]) / abden;
+        e->beta = (2 * sp[2] * tanlz) / abden;
+
+        if (jacob_n) {
+            for(int j = 0; j < nb; j++) {
+                cmpl dab[2];
+                se_ab_diff_from_sp(sp, sp_jacob_n + 3 * j, tanlz, dab);
+                cmpl_vector_set(jacob_n, j,      dab[0]);
+                cmpl_vector_set(jacob_n, nb + j, dab[1]);
+            }
+        }
+
+        if (jacob_th) {
+            for(int j = 0; j < nblyr; j++) {
+                double dab[2];
+                se_ab_diff_from_sp_real(sp, sp_jacob_th + 3 * j, tanlz, dab);
+                gsl_vector_set(jacob_th, j,         dab[0]);
+                gsl_vector_set(jacob_th, nblyr + j, dab[1]);
+            }
+        }
+
+        if (jacob_acq) {
+            double dab[2];
+            se_ab_diff_from_sp_real(sp, sp_jacob_acq, tanlz, dab);
+            /* Derivatives with AOI. */
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dab[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dab[1];
+
+            /* Derivatives with Analyzer angle (A). */
+            const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
+            const double iden = 1 / sqr(abden);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tanlz * secsqa * iden;
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden;
+        }
+    } else {
+        e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
+        e->beta = sp[2] / sqrt(sp[0] * sp[1]); /* cos(delta) = Re(Rp Rs*) / (|Rs| |Rp|) */
+
+        if (jacob_n) {
+            for(int j = 0; j < nb; j++) {
+                cmpl dpsidel[2];
+                se_psidel_diff_from_sp(sp, sp_jacob_n + 3 * j, dpsidel);
+                cmpl_vector_set(jacob_n, j,      dpsidel[0]);
+                cmpl_vector_set(jacob_n, nb + j, dpsidel[1]);
+            }
+        }
+
+        if (jacob_th) {
+            for(int j = 0; j < nblyr; j++) {
+                double dpsidel[2];
+                se_psidel_diff_from_sp_real(sp, sp_jacob_th + 3 * j, dpsidel);
+                gsl_vector_set(jacob_th, j,         dpsidel[0]);
+                gsl_vector_set(jacob_th, nblyr + j, dpsidel[1]);
+            }
+        }
+
+        if (jacob_acq) {
+            double dpsidel[2];
+            se_psidel_diff_from_sp_real(sp, sp_jacob_acq, dpsidel);
+
+            /* Derivatives with AOI. */
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dpsidel[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dpsidel[1];
+        }
+    }
+}
+
 void
 mult_layer_refl_se(enum se_type se_type,
                    size_t nb, const cmpl ns[],
@@ -710,6 +862,8 @@ mult_layer_refl_se(enum se_type se_type,
     const double anlz = deg_to_radians(acquisition_get_se_analyzer(acquisition));
     if (acquisition->bandwidth > 0.0) {
         mult_layer_se_bandwidth_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, acquisition->bandwidth, e, jacob_th, jacob_n, jacob_acquisition);
+    } else if (acquisition->numap > 0.0) {
+        mult_layer_se_numap_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, acquisition->numap, e, jacob_th, jacob_n, jacob_acquisition);
     } else {
         mult_layer_se_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, e, jacob_th, jacob_n, jacob_acquisition);
     }

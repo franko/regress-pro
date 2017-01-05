@@ -54,12 +54,13 @@ struct sr_acquisition_parameters {
 
 struct acquisition_parameters {
     enum system_kind type;
+    double bandwidth;
+    double numap;
     union {
         struct rpe_acquisition_parameters rpe;
         struct se_acquisition_parameters  se;
         struct sr_acquisition_parameters  sr;
     } parameters;
-    double bandwidth;
 };
 
 extern void     acquisition_set_zero(struct acquisition_parameters *acq);

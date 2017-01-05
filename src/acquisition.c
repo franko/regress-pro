@@ -7,6 +7,7 @@ void
 acquisition_set_zero(struct acquisition_parameters *acq)
 {
     acq->type = SYSTEM_UNDEFINED;
+    acq->numap = 0.0;
     acq->bandwidth = 0.0;
 }
 
@@ -15,6 +16,9 @@ acquisition_parameter_pointer(struct acquisition_parameters *acquisition, int pa
 {
     if (parameter_id == PID_BANDWIDTH) {
         return &acquisition->bandwidth;
+    }
+    if (parameter_id == PID_NUMAP) {
+        return &acquisition->numap;
     }
     if (acquisition->type == SYSTEM_REFLECTOMETER) {
         if (parameter_id == PID_FIRSTMUL) {
@@ -82,8 +86,12 @@ acquisition_get_all_parameters(const struct acquisition_parameters *acquisition,
         fit_parameters_add(fps, fp);
         fp->id = PID_ANALYZER;
         fit_parameters_add(fps, fp);
+        fp->id = PID_NUMAP;
+        fit_parameters_add(fps, fp);
     } else if (acquisition->type == SYSTEM_ELLISS_PSIDEL) {
         fp->id = PID_AOI;
+        fit_parameters_add(fps, fp);
+        fp->id = PID_NUMAP;
         fit_parameters_add(fps, fp);
     }
     fp->id = PID_BANDWIDTH;
@@ -95,6 +103,7 @@ acquisition_set_default(struct acquisition_parameters *acquisition)
 {
     acquisition->type = SYSTEM_REFLECTOMETER;
     acquisition->parameters.sr.rmult = 1.0;
+    acquisition->numap = 0.0;
     acquisition->bandwidth = 0.0;
 }
 
@@ -124,6 +133,8 @@ acquisition_parameter_to_string(str_t name, int parameter_id) {
         str_copy_c(name, "A");
     } else if (parameter_id == PID_BANDWIDTH) {
         str_copy_c(name, "bandwidth");
+    } else if (parameter_id == PID_NUMAP) {
+        str_copy_c(name, "NA");
     } else {
         str_copy_c(name, "###");
     }
@@ -140,6 +151,8 @@ acquisition_parameter_name(int param_id)
         return "rmult";
     } else if (param_id == PID_BANDWIDTH) {
         return "bandwidth";
+    } else if (param_id == PID_NUMAP) {
+        return "numap";
     }
     return NULL;
 }
