@@ -108,8 +108,8 @@ load_refl_data(const char *filename, str_ptr *error_msg) {
     str_init(ln, 64);
 
     s = emalloc(sizeof(struct spectrum));
+    acquisition_set_zero(s->acquisition);
     s->acquisition->type = SYSTEM_REFLECTOMETER;
-    s->acquisition->bandwidth = 0.0;
     s->acquisition->parameters.sr.rmult = 1.0;
 
     str_getline(ln, f);
@@ -222,8 +222,8 @@ load_filmetrics_spectrum(const char *filename, str_ptr *error_msg) {
     }
 
     s = emalloc(sizeof(struct spectrum));
+    acquisition_set_zero(s->acquisition);
     s->acquisition->type = SYSTEM_REFLECTOMETER;
-    s->acquisition->bandwidth = 0.0;
     s->acquisition->parameters.sr.rmult = 1.0;
 
     str_init(ln, 64);

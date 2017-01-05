@@ -33,8 +33,7 @@ load_ellips_spectrum(const char *filename, str_ptr *error_msg) {
     s = emalloc(sizeof(struct spectrum));
 
     struct acquisition_parameters *acquisition = s->acquisition;
-
-    acquisition->type = SYSTEM_UNDEFINED;
+    acquisition_set_zero(acquisition);
 
     str_getline(ln, f);
     if(strstr(CSTR(ln), "SE ALPHA BETA")) {
@@ -133,8 +132,8 @@ load_vase_spectrum(const char *filename, str_ptr *error_msg)
 
     s = emalloc(sizeof(struct spectrum));
     struct acquisition_parameters *acquisition = s->acquisition;
+    acquisition_set_zero(acquisition);
     acquisition->type   = (VASE_CONVERT_TO_ALPHA_BETA ? SYSTEM_ELLISS_AB : SYSTEM_ELLISS_PSIDEL);
-    acquisition->bandwidth = 0.0;
     double tana;
     double *aoi_ptr;
     if (VASE_CONVERT_TO_ALPHA_BETA) {

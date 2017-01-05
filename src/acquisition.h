@@ -62,6 +62,7 @@ struct acquisition_parameters {
     double bandwidth;
 };
 
+extern void     acquisition_set_zero(struct acquisition_parameters *acq);
 extern int      acquisition_apply_param(struct acquisition_parameters *acq, int param_id, double val);
 extern void     acquisition_get_all_parameters(const struct acquisition_parameters *acq, struct fit_parameters *fps);
 extern double   acquisition_get_parameter(const struct acquisition_parameters *acq, int param_id);

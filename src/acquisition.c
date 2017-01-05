@@ -3,6 +3,13 @@
 #include "acquisition.h"
 #include "fit-params.h"
 
+void
+acquisition_set_zero(struct acquisition_parameters *acq)
+{
+    acq->type = SYSTEM_UNDEFINED;
+    acq->bandwidth = 0.0;
+}
+
 double *
 acquisition_parameter_pointer(struct acquisition_parameters *acquisition, int parameter_id)
 {
@@ -97,7 +104,6 @@ acquisition_set_default_rpe(struct acquisition_parameters *acquisition)
     acquisition->type = SYSTEM_ELLISS_AB;
     acquisition->parameters.rpe.aoi = 65.0;
     acquisition->parameters.rpe.analyzer = 25.0;
-    acquisition->bandwidth = 0.0;
 }
 
 
@@ -106,7 +112,6 @@ acquisition_set_default_se(struct acquisition_parameters *acquisition)
 {
     acquisition->type = SYSTEM_ELLISS_PSIDEL;
     acquisition->parameters.rpe.aoi = 65.0;
-    acquisition->bandwidth = 0.0;
 }
 
 void
