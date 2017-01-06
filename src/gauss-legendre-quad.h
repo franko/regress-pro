@@ -13,5 +13,6 @@ extern double gauss_rule_weigth(const struct gauss_quad_info *rule, int i);
 #define GAUSS_LEGENDRE_RULE_3 0
 #define GAUSS_LEGENDRE_RULE_5 1
 #define GAUSS_LEGENDRE_RULE_7 2
+#define UNIT_RULE 3
 
 #endif
