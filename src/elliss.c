@@ -567,11 +567,9 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
 
     const struct gauss_quad_info *quad_rule_bw = (acquisition->bandwidth > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_7) : gauss_rule(UNIT_RULE));
     const struct gauss_quad_info *quad_rule_na = (acquisition->numap > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_3) : gauss_rule(UNIT_RULE));
-    const int HALF_ORDER_BW = (quad_rule_bw->n - 1) / 2;
-    const int HALF_ORDER_NA = (quad_rule_na->n - 1) / 2;
     const double delta_phi0 = asin(acquisition->numap);
-    for (int ibw = -HALF_ORDER_BW; ibw <= HALF_ORDER_BW; ibw++) {
-        for (int ina = -HALF_ORDER_NA; ina <= HALF_ORDER_NA; ina++) {
+    for (int ibw = -quad_rule_bw->n; ibw <= quad_rule_bw->n; ibw++) {
+        for (int ina = -quad_rule_na->n; ina <= quad_rule_na->n; ina++) {
             const double rule_abscissa_bw = gauss_rule_abscissa(quad_rule_bw, ibw);
             const double rule_abscissa_na = gauss_rule_abscissa(quad_rule_na, ina);
             const double lambda_bw = lambda + rule_abscissa_bw * acquisition->bandwidth / 2.0;
