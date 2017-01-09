@@ -618,7 +618,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
                        the Rp Rs expression we use here.
                        So we take the conjugate to align with the old code. */
                     for (int k = 0; k < 3; k++) {
-                        sp_jacob_th[3*j + k] += weight * conj(dsp[k]);
+                        sp_jacob_n[3*j + k] += weight * conj(dsp[k]);
                     }
                 }
             }
