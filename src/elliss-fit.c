@@ -42,6 +42,10 @@ get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
         result->alpha = jacob_acquisition[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)];
         result->beta  = jacob_acquisition[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)];
         break;
+    case PID_NUMAP:
+        result->alpha = jacob_acquisition[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)];
+        result->beta  = jacob_acquisition[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)];
+        break;
     default:
         result->alpha = 0.0;
         result->beta = 0.0;

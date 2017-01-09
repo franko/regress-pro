@@ -33,12 +33,12 @@ enum se_type {
     SE_PSI_DEL,
 };
 
-enum { SE_AOI = 0, SE_ANALYZER = 1 };
+enum { SE_NUMAP = 0, SE_AOI = 1, SE_ANALYZER = 2 };
 enum { SE_ALPHA = 0, SE_BETA = 1 };
 enum { SE_TANPSI = 0, SE_COSDEL = 1 };
 
-#define SE_ACQ_INDEX(channel, pid) (2 * (pid) + (channel))
-#define SE_ACQ_PARAMETERS_NB(se) ((se) == SE_ALPHA_BETA ? 2 : 1)
+#define SE_ACQ_INDEX(channel, pid) (3 * (pid) + (channel))
+#define SE_ACQ_PARAMETERS_NB(se) ((se) == SE_ALPHA_BETA ? 3 : 2)
 
 struct elliss_ab {
     double alpha;

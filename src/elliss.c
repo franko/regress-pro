@@ -343,8 +343,8 @@ se_psidel_der_acquisition(cmpl R[], cmpl dR[], double *jac)
     const double iden = sqrt(irhosq);
 
     /* Derivatives with AOI. */
-    jac[SE_ACQ_INDEX(SE_TANPSI, SE_AOI)] = creal(iden * conj(rho) * drho);
-    jac[SE_ACQ_INDEX(SE_COSDEL, SE_AOI)] = creal(iden * (1 - conj(rho) / rho) * drho / 2.0);
+    jac[SE_ACQ_INDEX(SE_TANPSI, SE_AOI)] = deg_to_radians(creal(iden * conj(rho) * drho));
+    jac[SE_ACQ_INDEX(SE_COSDEL, SE_AOI)] = deg_to_radians(creal(iden * (1 - conj(rho) / rho) * drho / 2.0));
 }
 
 static void
@@ -389,13 +389,13 @@ se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
     const cmpl z2 = conj(tasq - rho*rho) * drho;
 
     /* Derivatives with AOI. */
-    jac[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = creal(4 * tasq * z1 * isqden);
-    jac[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = creal(2 * tanlz * z2 * isqden);
+    jac[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = deg_to_radians(creal(4 * tasq * z1 * isqden));
+    jac[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = deg_to_radians(creal(2 * tanlz * z2 * isqden));
 
     /* Derivatives with Analyzer angle (A). */
     const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
-    jac[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * tanlz * sqtpsi * isqden * secsqa;
-    jac[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * creal(rho) * (sqtpsi - tasq) * isqden * secsqa;
+    jac[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = deg_to_radians(- 4 * tanlz * sqtpsi * isqden * secsqa);
+    jac[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = deg_to_radians(2 * creal(rho) * (sqtpsi - tasq) * isqden * secsqa);
 }
 
 static void
@@ -479,9 +479,6 @@ mult_layer_se_jacob(enum se_type type,
         } else {
             se_psidel_der_acquisition(R, dRdaoi, jacob_acquisition);
         }
-        for (int i = 0; i < 2 * SE_ACQ_PARAMETERS_NB(type); i++) {
-            jacob_acquisition[i] = deg_to_radians(jacob_acquisition[i]);
-        }
     }
 }
 
@@ -559,7 +556,8 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
     const double tanlz = tan(anlz);
     double sp_jacob_th[3 * nblyr];
     cmpl sp_jacob_n[3 * nb];
-    double sp_jacob_acq[3] = {0.0};
+    double sp_diff_aoi[3] = {0.0};
+    double sp_diff_numap[3] = {0.0};
     double sp[3] = {0.0};
 
     memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
@@ -568,6 +566,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
     const struct gauss_quad_info *quad_rule_bw = (acquisition->bandwidth > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_7) : gauss_rule(UNIT_RULE));
     const struct gauss_quad_info *quad_rule_na = (acquisition->numap > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_3) : gauss_rule(UNIT_RULE));
     const double delta_phi0 = asin(acquisition->numap);
+    const double icosdphi = 1.0 / cos(delta_phi0);
     for (int ibw = -quad_rule_bw->n; ibw <= quad_rule_bw->n; ibw++) {
         for (int ina = -quad_rule_na->n; ina <= quad_rule_na->n; ina++) {
             const double rule_abscissa_bw = gauss_rule_abscissa(quad_rule_bw, ibw);
@@ -627,7 +626,9 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
                 double dsp[3];
                 sp_products_diff_real(R, dRdaoi, tanlz, dsp);
                 for (int k = 0; k < 3; k++) {
-                    sp_jacob_acq[k] += weight * deg_to_radians(dsp[k]);
+                    sp_diff_aoi[k] += weight * deg_to_radians(dsp[k]);
+                    /* Since NA = sin(delta_phi0) to obtain the derivative with NA we need to multiply the derivative with delta_phi0 by 1 / cos(delta_phi0). */
+                    sp_diff_numap[k] += icosdphi * weight * rule_abscissa_na * dsp[k];
                 }
             }
         }
@@ -659,17 +660,22 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         }
 
         if (jacob_acq) {
-            double dab[2];
-            se_ab_diff_from_sp_real(sp, sp_jacob_acq, tanlz, dab);
+            double dab_aoi[2];
+            se_ab_diff_from_sp_real(sp, sp_diff_aoi, tanlz, dab_aoi);
             /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dab[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dab[1];
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dab_aoi[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dab_aoi[1];
 
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
             const double iden = 1 / sqr(abden);
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = - 4 * sp[0] * sp[1] * tanlz * secsqa * iden;
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = 2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden;
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = deg_to_radians(- 4 * sp[0] * sp[1] * tanlz * secsqa * iden);
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = deg_to_radians(2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden);
+
+            double dab_numap[2];
+            se_ab_diff_from_sp_real(sp, sp_diff_numap, tanlz, dab_numap);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)] = dab_numap[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)] = dab_numap[1];
         }
     } else {
         e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
@@ -694,12 +700,17 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         }
 
         if (jacob_acq) {
-            double dpsidel[2];
-            se_psidel_diff_from_sp_real(sp, sp_jacob_acq, dpsidel);
+            double dpsidel_aoi[2];
+            se_psidel_diff_from_sp_real(sp, sp_diff_aoi, dpsidel_aoi);
 
             /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dpsidel[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dpsidel[1];
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dpsidel_aoi[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dpsidel_aoi[1];
+
+            double dpsidel_numap[2];
+            se_psidel_diff_from_sp_real(sp, sp_diff_numap, dpsidel_numap);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)] = dpsidel_numap[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)] = dpsidel_numap[1];
         }
     }
 }
