@@ -558,6 +558,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
     cmpl sp_jacob_n[3 * nb];
     double sp_diff_aoi[3] = {0.0};
     double sp_diff_numap[3] = {0.0};
+    double sp_diff_bandwidth[3] = {0.0};
     double sp[3] = {0.0};
 
     memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
@@ -595,17 +596,6 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
                 sp[k] += weight * sp_w[k];
             }
 
-            if (jacob_th) {
-                for (int j = 0; j < nblyr; j++) {
-                    const cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
-                    double dsp[3];
-                    sp_products_diff_real(R, dR, tanlz, dsp);
-                    for (int k = 0; k < 3; k++) {
-                        sp_jacob_th[3*j + k] += weight * dsp[k];
-                    }
-                }
-            }
-
             if (jacob_n) {
                 for (int j = 0; j < nb; j++) {
                     const cmpl dR[2] = {mlr_jacob_n[j], mlr_jacob_n[nb+j]};
@@ -622,13 +612,37 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
                 }
             }
 
+            /* We store the derivatives with thickness for each layer. These are
+               required to compute the derivatives with lambda to calculate, in turn,
+               the derivative with the bandwidth. */
+            double dspdt[nblyr * 3];
+            if (jacob_th || jacob_acq) {
+                for (int j = 0; j < nblyr; j++) {
+                    const cmpl dR[2] = {mlr_jacob_th[j], mlr_jacob_th[nblyr+j]};
+                    sp_products_diff_real(R, dR, tanlz, dspdt + 3*j);
+                    for (int k = 0; k < 3; k++) {
+                        sp_jacob_th[3*j + k] += weight * dspdt[3*j + k];
+                    }
+                }
+            }
+
             if (jacob_acq) {
                 double dsp[3];
                 sp_products_diff_real(R, dRdaoi, tanlz, dsp);
+
                 for (int k = 0; k < 3; k++) {
                     sp_diff_aoi[k] += weight * deg_to_radians(dsp[k]);
                     /* Since NA = sin(delta_phi0) to obtain the derivative with NA we need to multiply the derivative with delta_phi0 by 1 / cos(delta_phi0). */
                     sp_diff_numap[k] += icosdphi * weight * rule_abscissa_na * dsp[k];
+
+                    /* Compute first the derivative of each Rp Rs product wrt to
+                       lambda (the wavelength). Done using the derivatives with
+                       the films' thicknesses. */
+                    double dpdlambda = 0.0;
+                    for (int j = 0; j < nblyr; j++) {
+                        dpdlambda += - dspdt[3*j + k] * ds[j] / lambda_bw;
+                    }
+                    sp_diff_bandwidth[k] += weight * rule_abscissa_bw * dpdlambda / 2.0;
                 }
             }
         }
@@ -676,6 +690,11 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             se_ab_diff_from_sp_real(sp, sp_diff_numap, tanlz, dab_numap);
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)] = dab_numap[0];
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)] = dab_numap[1];
+
+            double dab_bandwidth[2];
+            se_ab_diff_from_sp_real(sp, sp_diff_bandwidth, tanlz, dab_bandwidth);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_BANDWIDTH)] = dab_bandwidth[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_BANDWIDTH)] = dab_bandwidth[1];
         }
     } else {
         e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
@@ -711,6 +730,11 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             se_psidel_diff_from_sp_real(sp, sp_diff_numap, dpsidel_numap);
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)] = dpsidel_numap[0];
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)] = dpsidel_numap[1];
+
+            double dpsidel_bandwidth[2];
+            se_psidel_diff_from_sp_real(sp, sp_diff_bandwidth, dpsidel_bandwidth);
+            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_BANDWIDTH)] = dpsidel_bandwidth[0];
+            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_BANDWIDTH)] = dpsidel_bandwidth[1];
         }
     }
 }

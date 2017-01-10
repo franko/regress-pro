@@ -20,6 +20,7 @@ get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
     switch(fp->id) {
         double dnr, dni;
     case PID_THICKNESS:
+
         result->alpha = gsl_vector_get(stack_jacob_th, layer - 1);
         result->beta  = gsl_vector_get(stack_jacob_th, nb_lyr + layer - 1);
         break;
@@ -45,6 +46,10 @@ get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
     case PID_NUMAP:
         result->alpha = jacob_acquisition[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)];
         result->beta  = jacob_acquisition[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)];
+        break;
+    case PID_BANDWIDTH:
+        result->alpha = jacob_acquisition[SE_ACQ_INDEX(SE_ALPHA, SE_BANDWIDTH)];
+        result->beta  = jacob_acquisition[SE_ACQ_INDEX(SE_BETA , SE_BANDWIDTH)];
         break;
     default:
         result->alpha = 0.0;
