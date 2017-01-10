@@ -216,9 +216,16 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
     cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
     double rsq = 0.0;
 
+    if(r_jacob_th) {
+        gsl_vector_set_zero(r_jacob_th);
+    }
+
+    if(r_jacob_n) {
+        gsl_vector_set_zero(r_jacob_n);
+    }
+
     const struct gauss_quad_info *quad_rule = gauss_rule(GAUSS_LEGENDRE_RULE_7);
-    const int HALF_ORDER = (quad_rule->n - 1) / 2;
-    for (int i = -HALF_ORDER; i <= HALF_ORDER; i++) {
+    for (int i = -quad_rule->n; i <= quad_rule->n; i++) {
         const double rule_abscissa = gauss_rule_abscissa(quad_rule, i);
         const double lambda_w = lambda + rule_abscissa * bandwidth / 2.0;
         cmpl r;
@@ -238,8 +245,8 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
             for(int k = 0; k < nb-2; k++) {
                 const cmpl dr = mlr_jacob_th[k];
                 const double drsq = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
-                const double j_value = (i > -HALF_ORDER ? gsl_vector_get(r_jacob_th, k) + weight * drsq : weight * drsq);
-                gsl_vector_set(r_jacob_th, k, j_value);
+                const double jv = gsl_vector_get(r_jacob_th, k) + weight * drsq;
+                gsl_vector_set(r_jacob_th, k, jv);
             }
         }
 
@@ -248,10 +255,10 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
                 const cmpl dr = mlr_jacob_n[k];
                 const double drsqr = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
                 const double drsqi = 2 * (cimag(r)*creal(dr) - creal(r)*cimag(dr));
-                const double j_value_r = (i > -HALF_ORDER ? gsl_vector_get(r_jacob_n, k) + weight * drsqr : weight * drsqr);
-                const double j_value_i = (i > -HALF_ORDER ? gsl_vector_get(r_jacob_n, nb + k) + weight * drsqi : weight * drsqi);
-                gsl_vector_set(r_jacob_n, k, j_value_r);
-                gsl_vector_set(r_jacob_n, nb + k, j_value_i);
+                const double jvr = gsl_vector_get(r_jacob_n, k) + weight * drsqr;
+                const double jvi = gsl_vector_get(r_jacob_n, nb + k) + weight * drsqi;
+                gsl_vector_set(r_jacob_n, k, jvr);
+                gsl_vector_set(r_jacob_n, nb + k, jvi);
             }
         }
     }
