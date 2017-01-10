@@ -545,6 +545,22 @@ se_psidel_diff_from_sp_real(const double sp[3], const double dsp[3], double dpsi
 }
 
 static void
+se_ab_set_jacob_acquisition_from_sp(const double sp[3], const double sp_diff[3], double *jacob_acq, int se_parameter, const double tanlz) {
+    double dab[2];
+    se_ab_diff_from_sp_real(sp, sp_diff, tanlz, dab);
+    jacob_acq[SE_ACQ_INDEX(SE_ALPHA, se_parameter)] = dab[0];
+    jacob_acq[SE_ACQ_INDEX(SE_BETA , se_parameter)] = dab[1];
+}
+
+static void
+se_psidel_set_jacob_acquisition_from_sp(const double sp[3], const double sp_diff[3], double *jacob_acq, int se_parameter) {
+    double dpsidel[2];
+    se_psidel_diff_from_sp_real(sp, sp_diff, dpsidel);
+    jacob_acq[SE_ACQ_INDEX(SE_ALPHA, se_parameter)] = dpsidel[0];
+    jacob_acq[SE_ACQ_INDEX(SE_BETA , se_parameter)] = dpsidel[1];
+}
+
+static void
 mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lambda,
                     const struct acquisition_parameters *acquisition, ell_ab_t e,
                     gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acq)
@@ -674,27 +690,15 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         }
 
         if (jacob_acq) {
-            double dab_aoi[2];
-            se_ab_diff_from_sp_real(sp, sp_diff_aoi, tanlz, dab_aoi);
-            /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dab_aoi[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dab_aoi[1];
+            se_ab_set_jacob_acquisition_from_sp(sp, sp_diff_aoi,       jacob_acq, SE_AOI,       tanlz);
+            se_ab_set_jacob_acquisition_from_sp(sp, sp_diff_numap,     jacob_acq, SE_NUMAP,     tanlz);
+            se_ab_set_jacob_acquisition_from_sp(sp, sp_diff_bandwidth, jacob_acq, SE_BANDWIDTH, tanlz);
 
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
             const double iden = 1 / sqr(abden);
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = deg_to_radians(- 4 * sp[0] * sp[1] * tanlz * secsqa * iden);
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = deg_to_radians(2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden);
-
-            double dab_numap[2];
-            se_ab_diff_from_sp_real(sp, sp_diff_numap, tanlz, dab_numap);
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)] = dab_numap[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)] = dab_numap[1];
-
-            double dab_bandwidth[2];
-            se_ab_diff_from_sp_real(sp, sp_diff_bandwidth, tanlz, dab_bandwidth);
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_BANDWIDTH)] = dab_bandwidth[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_BANDWIDTH)] = dab_bandwidth[1];
         }
     } else {
         e->alpha = sqrt(sp[1] / sp[0]); /* tan(psi) = SQRT(|Rp|^2/|Rs|^2) */
@@ -719,22 +723,9 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         }
 
         if (jacob_acq) {
-            double dpsidel_aoi[2];
-            se_psidel_diff_from_sp_real(sp, sp_diff_aoi, dpsidel_aoi);
-
-            /* Derivatives with AOI. */
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_AOI)] = dpsidel_aoi[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)] = dpsidel_aoi[1];
-
-            double dpsidel_numap[2];
-            se_psidel_diff_from_sp_real(sp, sp_diff_numap, dpsidel_numap);
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_NUMAP)] = dpsidel_numap[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_NUMAP)] = dpsidel_numap[1];
-
-            double dpsidel_bandwidth[2];
-            se_psidel_diff_from_sp_real(sp, sp_diff_bandwidth, dpsidel_bandwidth);
-            jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_BANDWIDTH)] = dpsidel_bandwidth[0];
-            jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_BANDWIDTH)] = dpsidel_bandwidth[1];
+            se_psidel_set_jacob_acquisition_from_sp(sp, sp_diff_aoi,       jacob_acq, SE_AOI);
+            se_psidel_set_jacob_acquisition_from_sp(sp, sp_diff_numap,     jacob_acq, SE_NUMAP);
+            se_psidel_set_jacob_acquisition_from_sp(sp, sp_diff_bandwidth, jacob_acq, SE_BANDWIDTH);
         }
     }
 }
