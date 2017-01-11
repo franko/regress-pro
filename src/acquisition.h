@@ -4,26 +4,6 @@
 #include "defs.h"
 #include "str.h"
 
-#if 0
-struct meas_acquisition;
-
-struct meas_acquisition_class {
-    int id;
-
-    const char *full_name;
-    const char *short_name;
-
-    int      (*parameters_number)(const struct meas_acquisition *a);
-    int      (*apply_param)      (struct meas_acquisition *a, const fit_param_t *fp, double val);
-    double * (*map_param)        (struct meas_acquisition *a, int index);
-    double   (*get_param_value)  (const struct meas_acquisition *a, const fit_param_t *fp);
-};
-
-struct meas_acquisition {
-    struct meas_acquisition_class klass;
-};
-#endif
-
 __BEGIN_DECLS
 
 struct fit_parameters;
