@@ -40,8 +40,6 @@ enum fit_engine_acq {
 };
 
 struct fit_run {
-    enum system_kind acquisition_type;
-
     struct spectrum *spectr;
 
     gsl_multifit_function_fdf mffun;

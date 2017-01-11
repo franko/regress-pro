@@ -31,7 +31,7 @@
 
 static void build_fit_engine_cache(struct fit_engine *f);
 
-static void dispose_fit_engine_cache(struct fit_run *run);
+static void dispose_fit_engine_cache(struct fit_engine *f);
 
 void
 build_stack_cache(struct stack_cache *cache, stack_t *stack,
@@ -126,23 +126,23 @@ build_fit_engine_cache(struct fit_engine *f)
 }
 
 void
-dispose_fit_engine_cache(struct fit_run *run)
+dispose_fit_engine_cache(struct fit_engine *f)
 {
-    gsl_vector_free(run->jac_th);
+    gsl_vector_free(f->run->jac_th);
 
-    switch(run->acquisition_type) {
+    switch(f->acquisition->type) {
     case SYSTEM_REFLECTOMETER:
-        gsl_vector_free(run->jac_n.refl);
+        gsl_vector_free(f->run->jac_n.refl);
         break;
     case SYSTEM_ELLISS_AB:
     case SYSTEM_ELLISS_PSIDEL:
-        cmpl_vector_free(run->jac_n.ell);
+        cmpl_vector_free(f->run->jac_n.ell);
     default:
         /* */
         ;
     }
 
-    dispose_stack_cache(&run->cache);
+    dispose_stack_cache(&f->run->cache);
 }
 
 int
@@ -440,7 +440,7 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_a
 void
 fit_engine_disable(struct fit_engine *fit)
 {
-    dispose_fit_engine_cache(fit->run);
+    dispose_fit_engine_cache(fit);
     spectra_free(fit->run->spectr);
     gsl_vector_free(fit->run->results);
 }
