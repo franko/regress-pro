@@ -17,7 +17,7 @@ double
 get_parameter_jacob_r(fit_param_t const *fp, stack_t const *stack,
                       struct deriv_info *ideriv, double lambda,
                       gsl_vector *stack_jacob_th,
-                      gsl_vector *stack_jacob_n,
+                      gsl_vector *stack_jacob_n, double jacob_acq[1],
                       double rmult, double r_raw)
 {
     double result;
@@ -46,6 +46,9 @@ get_parameter_jacob_r(fit_param_t const *fp, stack_t const *stack,
 
         result = rmult * (dnr * drdn.re + dni * drdn.im);
         break;
+    case PID_BANDWIDTH:
+        result = jacob_acq[0];
+        break;
     default:
         result = 0.0;
     }
@@ -62,6 +65,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     size_t nb_med = fit->stack->nb;
     gsl_vector *r_th_jacob, *r_n_jacob;
     double const * ths;
+    double jacob_acq[1]; /* BANDWIDTH is the only acquisition parameter. */
     cmpl * ns;
     size_t j;
 
@@ -92,7 +96,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
         }
 
         /* STEP 3 : We call the procedure to compute the reflectivity. */
-        const double r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, r_th_jacob, r_n_jacob);
+        const double r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, r_th_jacob, r_n_jacob, jacob_acq);
 
         const double r_theory = rmult * r_raw;
 
@@ -115,7 +119,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
                 double pjac;
 
                 pjac = get_parameter_jacob_r(fp, fit->stack, ideriv, lambda,
-                                             r_th_jacob, r_n_jacob,
+                                             r_th_jacob, r_n_jacob, jacob_acq,
                                              rmult, r_raw);
 
                 gsl_matrix_set(jacob, j, kp, pjac);

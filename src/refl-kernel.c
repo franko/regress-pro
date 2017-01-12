@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <string.h>
 
 #include "refl-kernel.h"
 #include "gauss-legendre-quad.h"
@@ -179,8 +179,6 @@ mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
     size_t k;
     cmpl r;
 
-    assert(nb >= 2);
-
     if(r_jacob_th && r_jacob_n) {
         r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda, mlr_jacob_th, mlr_jacob_n);
     } else if(r_jacob_th) {
@@ -211,10 +209,13 @@ mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
 static double
 mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
                              double lambda, const double bandwidth,
-                             gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
+                             gsl_vector *r_jacob_th, gsl_vector *r_jacob_n, double *jacob_acq)
 {
     cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
+    double rsq_jacob_th[nb - 2];
     double rsq = 0.0;
+
+    memset(rsq_jacob_th, 0, (nb - 2) * sizeof(double));
 
     if(r_jacob_th) {
         gsl_vector_set_zero(r_jacob_th);
@@ -222,6 +223,10 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
 
     if(r_jacob_n) {
         gsl_vector_set_zero(r_jacob_n);
+    }
+
+    if (jacob_acq) {
+        jacob_acq[0] = 0.0;
     }
 
     const struct gauss_quad_info *quad_rule = gauss_rule(GAUSS_LEGENDRE_RULE_7);
@@ -241,15 +246,6 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
         const double weight = 0.5 * gauss_rule_weigth(quad_rule, i);
         rsq += weight * CSQABS(r);
 
-        if(r_jacob_th) {
-            for(int k = 0; k < nb-2; k++) {
-                const cmpl dr = mlr_jacob_th[k];
-                const double drsq = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
-                const double jv = gsl_vector_get(r_jacob_th, k) + weight * drsq;
-                gsl_vector_set(r_jacob_th, k, jv);
-            }
-        }
-
         if(r_jacob_n) {
             for(int k = 0; k < nb; k++) {
                 const cmpl dr = mlr_jacob_n[k];
@@ -261,6 +257,32 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
                 gsl_vector_set(r_jacob_n, nb + k, jvi);
             }
         }
+
+        double drsqdt[nb - 2];
+        if(r_jacob_th || jacob_acq) {
+            for(int k = 0; k < nb - 2; k++) {
+                const cmpl dr = mlr_jacob_th[k];
+                drsqdt[k] = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
+                rsq_jacob_th[k] += weight * drsqdt[k];
+            }
+        }
+
+        if (jacob_acq) {
+            /* Compute first the derivative of each Rp Rs product wrt to
+               lambda (the wavelength). Done using the derivatives with
+               the films' thicknesses. */
+            double dpdlambda = 0.0;
+            for (int k = 0; k < nb - 2; k++) {
+                dpdlambda += - drsqdt[k] * ds[k] / lambda_w;
+            }
+            jacob_acq[0] += weight * rule_abscissa * dpdlambda / 2.0;
+        }
+    }
+
+    if (r_jacob_th) {
+        for (int k = 0; k < nb - 2; k++) {
+            gsl_vector_set(r_jacob_th, k, rsq_jacob_th[k]);
+        }
     }
 
     return rsq;
@@ -269,10 +291,10 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
 double
 mult_layer_refl_sr(size_t nb, const cmpl ns[], const double ds[],
                    double lambda, const struct acquisition_parameters *acquisition,
-                   gsl_vector *jacob_th, gsl_vector *jacob_n)
+                   gsl_vector *jacob_th, gsl_vector *jacob_n, double *jacob_acq)
 {
-    if (acquisition->bandwidth > 0.0) {
-        return mult_layer_refl_ni_bandwidth(nb, ns, ds, lambda, acquisition->bandwidth, jacob_th, jacob_n);
+    if (acquisition->bandwidth > 0.0 || jacob_acq) {
+        return mult_layer_refl_ni_bandwidth(nb, ns, ds, lambda, acquisition->bandwidth, jacob_th, jacob_n, jacob_acq);
     }
     return mult_layer_refl_ni(nb, ns, ds, lambda, jacob_th, jacob_n);
 }

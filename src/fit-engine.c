@@ -606,7 +606,7 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 
         switch(syskind) {
         case SYSTEM_REFLECTOMETER: {
-            double r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, NULL, NULL);
+            double r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, NULL, NULL, NULL);
             double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
             data_table_set(table, j, 1, rmult * r_raw);
             break;

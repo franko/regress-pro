@@ -25,6 +25,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
         cmpl * ns;
     } actual;
     gsl_vector *r_th_jacob, *r_n_jacob;
+    double jacob_acq[1]; /* BANDWIDTH is the only acquisition parameter. */
     size_t sample;
     size_t j, j_sample;
 
@@ -58,7 +59,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
 
             /* STEP 3 : We call the procedure to compute the reflectivity. */
             r_raw = mult_layer_refl_sr(nb_med, actual.ns, actual.ths, lambda,
-                                       &fit->acquisitions[sample], r_th_jacob, r_n_jacob);
+                                       &fit->acquisitions[sample], r_th_jacob, r_n_jacob, jacob_acq);
 
             r_theory = rmult * r_raw;
 
@@ -83,7 +84,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
 
                     pjac = get_parameter_jacob_r(fp, fit->stack_list[sample],
                                                  ideriv, lambda,
-                                                 r_th_jacob, r_n_jacob,
+                                                 r_th_jacob, r_n_jacob, jacob_acq,
                                                  rmult, r_raw);
 
                     gsl_matrix_set(jacob, j_sample, kp, pjac);
@@ -99,7 +100,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
 
                     pjac = get_parameter_jacob_r(fp, fit->stack_list[sample],
                                                  ideriv, lambda,
-                                                 r_th_jacob, r_n_jacob,
+                                                 r_th_jacob, r_n_jacob, jacob_acq,
                                                  rmult, r_raw);
 
                     gsl_matrix_set(jacob, j_sample, kp, pjac);
