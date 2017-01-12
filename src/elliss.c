@@ -737,7 +737,7 @@ mult_layer_refl_se(enum se_type se_type,
                    const struct acquisition_parameters *acquisition, ell_ab_t e,
                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition)
 {
-    if (acquisition->bandwidth > 0.0 || acquisition->numap > 0.0) {
+    if (acquisition->bandwidth > 0.0 || acquisition->numap > 0.0 || jacob_acquisition) {
         mult_layer_se_integ_jacob(nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acquisition);
     } else {
         const double phi0 = deg_to_radians(acquisition_get_se_aoi(acquisition));
