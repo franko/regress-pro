@@ -17,39 +17,6 @@ static int  mengine_apply_param_priv(struct multi_fit_engine *fit,
                                      const fit_param_t *fp,
                                      double val, int sample);
 
-static void build_multi_fit_engine_cache(struct multi_fit_engine *f);
-
-static void dispose_multi_fit_engine_cache(struct multi_fit_engine *f);
-
-void
-build_multi_fit_engine_cache(struct multi_fit_engine *f)
-{
-    const int RI_IS_VARIABLE = 0;
-    int nbmed = f->stack_list[0]->nb;
-    int nblyr = nbmed - 2;
-    size_t dmultipl = (f->system_kind == SYSTEM_REFLECTOMETER ? 1 : 2);
-
-    /* We have just one cache for the fit engine.
-       A cache for each sample is not needed because we assume that
-       the RI are not fixed and so we don't do presampling of n values */
-    build_stack_cache(& f->cache, f->stack_list[0],
-                      f->spectra_list[0], RI_IS_VARIABLE, 1);
-
-    f->jac_th = gsl_vector_alloc(dmultipl * nblyr);
-
-    switch(f->system_kind) {
-    case SYSTEM_REFLECTOMETER:
-        f->jac_n.refl = gsl_vector_alloc(2 * nbmed);
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        f->jac_n.ell = cmpl_vector_alloc(2 * nbmed);
-    default:
-        /* */
-        ;
-    }
-}
-
 int
 multi_fit_engine_prepare(struct multi_fit_engine *fit)
 {
@@ -78,8 +45,6 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
                              fit->config.spectr_range.min,
                              fit->config.spectr_range.max);
     }
-
-    build_multi_fit_engine_cache(fit);
 
     switch(fit->system_kind) {
         int k, npt;
@@ -128,34 +93,8 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
 }
 
 void
-dispose_multi_fit_engine_cache(struct multi_fit_engine *f)
-{
-    gsl_vector_free(f->jac_th);
-
-    switch(f->system_kind) {
-    case SYSTEM_REFLECTOMETER:
-        gsl_vector_free(f->jac_n.refl);
-        f->jac_n.refl = NULL;
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        cmpl_vector_free(f->jac_n.ell);
-        f->jac_n.ell = NULL;
-    default:
-        /* */
-        ;
-    }
-
-    f->jac_th = NULL;
-
-    dispose_stack_cache(& f->cache);
-}
-
-void
 multi_fit_engine_disable(struct multi_fit_engine *fit)
 {
-    dispose_multi_fit_engine_cache(fit);
-
     gsl_vector_free(fit->results);
     fit->results = NULL;
 

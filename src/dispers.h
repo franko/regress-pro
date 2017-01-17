@@ -52,8 +52,9 @@ struct disp_class {
 };
 
 struct deriv_info {
-    int is_valid;
-    cmpl_vector *val;
+    short int is_valid;
+    short int parameters_number;
+    cmpl *data;
 };
 
 struct disp_info {

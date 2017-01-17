@@ -41,18 +41,10 @@ enum fit_engine_acq {
 
 struct fit_run {
     struct spectrum *spectr;
-
     gsl_multifit_function_fdf mffun;
-
     gsl_vector *results;
-
-    struct stack_cache cache;
-
-    gsl_vector *jac_th;
-    union {
-        gsl_vector *refl;
-        cmpl_vector *ell;
-    } jac_n;
+    int th_only;
+    int require_acquisition_jacob;
 };
 
 struct fit_engine {
@@ -107,13 +99,6 @@ extern void fit_engine_apply_parameters(struct fit_engine *fit,
 extern void fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wavelength_start, double *wavelength_end);
 extern void fit_engine_update_disp_info(struct fit_engine *fit);
 extern void fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src);
-
-extern void build_stack_cache(struct stack_cache *cache,
-                              stack_t *stack,
-                              struct spectrum *spectr,
-                              int th_only_optimize, int require_acquisition_jacob);
-
-extern void dispose_stack_cache(struct stack_cache *cache);
 
 extern void fit_engine_generate_spectrum(struct fit_engine *fit,
         struct spectrum *ref,

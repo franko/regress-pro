@@ -108,11 +108,12 @@ get_model_param_deriv(const disp_t *disp, struct deriv_info *deriv_info,
     assert(disp->dclass != NULL);
 
     if(! deriv_info->is_valid) {
-        disp->dclass->n_value_deriv(disp, lambda, deriv_info->val);
+        cmpl_vector deriv_vector = {deriv_info->parameters_number, deriv_info->data, 0};
+        disp->dclass->n_value_deriv(disp, lambda, &deriv_vector);
         deriv_info->is_valid = 1;
     }
 
-    val = cmpl_vector_get(deriv_info->val, fp->param_nb);
+    val = deriv_info->data[fp->param_nb];
 
     *dnr = creal(val);
     *dni = cimag(val);

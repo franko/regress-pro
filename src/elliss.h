@@ -53,6 +53,6 @@ mult_layer_refl_se(enum se_type se_type,
                    size_t nb, const cmpl ns[],
                    const double ds[], double lambda,
                    const struct acquisition_parameters *acquisition, ell_ab_t e,
-                   gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition);
+                   double *jacob_th, cmpl *jacob_n, double *jacob_acq);
 
 #endif

@@ -29,120 +29,11 @@
 #include "minsampling.h"
 #include "fit-timestamp.h"
 
-static void build_fit_engine_cache(struct fit_engine *f);
-
-static void dispose_fit_engine_cache(struct fit_engine *f);
-
-void
-build_stack_cache(struct stack_cache *cache, stack_t *stack,
-                  struct spectrum *spectr, int th_only_optimize, int require_acquisition_jacob)
+static void
+detect_fit_optimization(struct fit_engine *f)
 {
-    size_t nb_med = stack->nb;
-    size_t j;
-
-    cache->nb_med = nb_med;
-    cache->ns  = emalloc(nb_med * sizeof(cmpl));
-
-    cache->deriv_info = emalloc(nb_med * sizeof(struct deriv_info));
-
-    for(j = 0; j < nb_med; j++) {
-        struct deriv_info *di = cache->deriv_info + j;
-        size_t tpnb = disp_get_number_of_params(stack->disp[j]);
-
-        di->is_valid = 0;
-        di->val = (tpnb == 0 ? NULL : cmpl_vector_alloc(tpnb));
-    }
-
-    cache->th_only = th_only_optimize;
-    cache->require_acquisition_jacob = require_acquisition_jacob;
-
-    if(th_only_optimize) {
-        int k, npt = spectra_points(spectr);
-        cmpl *ns;
-
-        cache->ns_full_spectr = emalloc(nb_med * npt * sizeof(cmpl));
-
-        for(k = 0, ns = cache->ns_full_spectr; k < npt; ns += nb_med, k++) {
-            double lambda = get_lambda_by_index(spectr, k);
-            stack_get_ns_list(stack, ns, lambda);
-        }
-    } else {
-        cache->ns_full_spectr = NULL;
-    }
-
-    cache->is_valid = 1;
-}
-
-void
-dispose_stack_cache(struct stack_cache *cache)
-{
-    int j, nb_med = cache->nb_med;
-
-    if(! cache->is_valid) {
-        return;
-    }
-
-    free(cache->ns);
-
-    for(j = 0; j < nb_med; j++) {
-        struct deriv_info *di = & cache->deriv_info[j];
-        if(di->val) {
-            cmpl_vector_free(di->val);
-        }
-    }
-    free(cache->deriv_info);
-
-    if(cache->ns_full_spectr) {
-        free(cache->ns_full_spectr);
-    }
-
-    cache->is_valid = 0;
-}
-
-void
-build_fit_engine_cache(struct fit_engine *f)
-{
-    size_t dmultipl = (f->acquisition->type == SYSTEM_REFLECTOMETER ? 1 : 2);
-    int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
-    int require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
-    size_t nb = f->stack->nb;
-    int nblyr = nb - 2;
-
-    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, require_acquisition_jacob);
-
-    f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
-
-    switch(f->acquisition->type) {
-    case SYSTEM_REFLECTOMETER:
-        f->run->jac_n.refl = gsl_vector_alloc(2 * nb);
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        f->run->jac_n.ell = cmpl_vector_alloc(2 * nb);
-    default:
-        /* */
-        ;
-    }
-}
-
-void
-dispose_fit_engine_cache(struct fit_engine *f)
-{
-    gsl_vector_free(f->run->jac_th);
-
-    switch(f->acquisition->type) {
-    case SYSTEM_REFLECTOMETER:
-        gsl_vector_free(f->run->jac_n.refl);
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        cmpl_vector_free(f->run->jac_n.ell);
-    default:
-        /* */
-        ;
-    }
-
-    dispose_stack_cache(&f->run->cache);
+    f->run->th_only = fit_parameters_are_RI_fixed(f->parameters);
+    f->run->require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
 }
 
 int
@@ -400,7 +291,7 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_a
         }
     }
 
-    build_fit_engine_cache(fit);
+    detect_fit_optimization(fit);
 
     switch(syskind) {
     case SYSTEM_REFLECTOMETER:
@@ -440,7 +331,6 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_a
 void
 fit_engine_disable(struct fit_engine *fit)
 {
-    dispose_fit_engine_cache(fit);
     spectra_free(fit->run->spectr);
     gsl_vector_free(fit->run->results);
 }

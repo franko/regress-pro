@@ -20,11 +20,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
     struct multi_fit_engine *fit = params;
     size_t nb_med = fit->stack_list[0]->nb;
     size_t samples_number = fit->samples_number;
-    struct {
-        double const * ths;
-        cmpl * ns;
-    } actual;
-    gsl_vector *r_th_jacob, *r_n_jacob;
+    double jacob_th_data[nb_med - 2], jacob_n_data[2 * nb_med];
     double jacob_acq[1]; /* BANDWIDTH is the only acquisition parameter. */
     size_t sample;
     size_t j, j_sample;
@@ -37,14 +33,31 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
     j_sample = 0;
     for(sample = 0; sample < samples_number; sample++) {
         struct spectrum *spectrum = fit->spectra_list[sample];
+        struct stack *stack_sample = fit->stack_list[sample];
 
         /* STEP 2 : From the stack we retrive the thicknesses and RIs
         informations. */
 
-        actual.ths = stack_get_ths_list(fit->stack_list[sample]);
+        const double *ths = stack_get_ths_list(fit->stack_list[sample]);
 
-        r_th_jacob = (jacob ? fit->jac_th : NULL);
-        r_n_jacob  = (jacob ? fit->jac_n.refl : NULL);
+        double *jacob_th = (jacob ? jacob_th_data : NULL);
+        double *jacob_n  = (jacob ? jacob_n_data  : NULL);
+
+        int parameters_number_sum = 0;
+        for(int i = 0; i < nb_med; i++) {
+            parameters_number_sum += disp_get_number_of_params(stack_sample->disp[i]);
+        }
+
+        struct deriv_info ideriv[nb_med];
+        cmpl ideriv_data[parameters_number_sum];
+        int data_offset = 0;
+        for(int i = 0; i < nb_med; i++) {
+            int parameters_number = disp_get_number_of_params(stack_sample->disp[i]);
+            ideriv[i].is_valid = 0;
+            ideriv[i].data = ideriv_data + data_offset;
+            ideriv[i].parameters_number = parameters_number;
+            data_offset += parameters_number;
+        }
 
         for(j = 0; j < spectra_points(spectrum); j++, j_sample++) {
             float const * spectr_data = spectra_get_values(spectrum, j);
@@ -54,12 +67,12 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
             double rmult = acquisition_get_parameter(&fit->acquisitions[sample], PID_FIRSTMUL);
             const size_t nb_priv_params = fit->private_parameters->number;
 
-            actual.ns = fit->cache.ns;
-            stack_get_ns_list(fit->stack_list[sample], actual.ns, lambda);
+            cmpl ns[nb_med];
+            stack_get_ns_list(fit->stack_list[sample], ns, lambda);
 
             /* STEP 3 : We call the procedure to compute the reflectivity. */
-            r_raw = mult_layer_refl_sr(nb_med, actual.ns, actual.ths, lambda,
-                                       &fit->acquisitions[sample], r_th_jacob, r_n_jacob, jacob_acq);
+            r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda,
+                                       &fit->acquisitions[sample], jacob_th, jacob_n, jacob_acq);
 
             r_theory = rmult * r_raw;
 
@@ -68,39 +81,36 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
             }
 
             if(jacob) {
-                size_t kp, ikp, ic;
-                size_t nb_params =					\
-                                                    fit->common_parameters->number + \
-                                                    fit->private_parameters->number * samples_number;
-                struct deriv_info * ideriv = fit->cache.deriv_info;
+                int nb_params = fit->common_parameters->number + fit->private_parameters->number * samples_number;
 
-                for(ic = 0; ic < nb_med; ic++) {
+                for (int ic = 0; ic < nb_med; ic++) {
                     ideriv[ic].is_valid = 0;
                 }
 
-                for(kp = 0; kp < fit->common_parameters->number; kp++) {
+                int kp;
+                for (kp = 0; kp < fit->common_parameters->number; kp++) {
                     fit_param_t *fp = fit->common_parameters->values + kp;
                     double pjac;
 
                     pjac = get_parameter_jacob_r(fp, fit->stack_list[sample],
                                                  ideriv, lambda,
-                                                 r_th_jacob, r_n_jacob, jacob_acq,
+                                                 jacob_th, jacob_n, jacob_acq,
                                                  rmult, r_raw);
 
                     gsl_matrix_set(jacob, j_sample, kp, pjac);
                 }
 
-                for(ikp = 0; ikp < nb_priv_params * sample; kp++, ikp++) {
+                for(int ikp = 0; ikp < nb_priv_params * sample; kp++, ikp++) {
                     gsl_matrix_set(jacob, j_sample, kp, 0.0);
                 }
 
-                for(ikp = 0; ikp < nb_priv_params; kp++, ikp++) {
+                for(int ikp = 0; ikp < nb_priv_params; kp++, ikp++) {
                     fit_param_t *fp = fit->private_parameters->values + ikp;
                     double pjac;
 
                     pjac = get_parameter_jacob_r(fp, fit->stack_list[sample],
                                                  ideriv, lambda,
-                                                 r_th_jacob, r_n_jacob, jacob_acq,
+                                                 jacob_th, jacob_n, jacob_acq,
                                                  rmult, r_raw);
 
                     gsl_matrix_set(jacob, j_sample, kp, pjac);

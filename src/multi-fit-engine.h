@@ -33,14 +33,6 @@ struct multi_fit_engine {
 
     gsl_vector *results;
     gsl_vector *chisq;
-
-    struct stack_cache cache;
-
-    gsl_vector *jac_th;
-    union {
-        gsl_vector *refl;
-        cmpl_vector *ell;
-    } jac_n;
 };
 
 extern struct multi_fit_engine * \

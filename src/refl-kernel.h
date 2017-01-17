@@ -12,6 +12,6 @@
 extern double
 mult_layer_refl_sr(size_t nb, const cmpl ns[], const double ds[],
                    double lambda, const struct acquisition_parameters *acquisition,
-                   gsl_vector *jacob_th, gsl_vector *jacob_n, double *jacob_acq);
+                   double *jacob_th, double *jacob_n, double *jacob_acq);
 
 #endif
