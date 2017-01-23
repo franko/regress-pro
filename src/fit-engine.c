@@ -41,7 +41,6 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
     size_t j;
 
     cache->nb_med = nb_med;
-    cache->ns  = emalloc(nb_med * sizeof(cmpl));
 
     cache->deriv_info = emalloc(nb_med * sizeof(struct deriv_info));
 
@@ -82,8 +81,6 @@ dispose_stack_cache(struct stack_cache *cache)
         return;
     }
 
-    free(cache->ns);
-
     for(j = 0; j < nb_med; j++) {
         struct deriv_info *di = & cache->deriv_info[j];
         if(di->val) {
@@ -102,46 +99,14 @@ dispose_stack_cache(struct stack_cache *cache)
 void
 build_fit_engine_cache(struct fit_engine *f)
 {
-    size_t dmultipl = (f->acquisition->type == SYSTEM_REFLECTOMETER ? 1 : 2);
     int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
     int require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
-    size_t nb = f->stack->nb;
-    int nblyr = nb - 2;
-
     build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, require_acquisition_jacob);
-
-    f->run->jac_th = gsl_vector_alloc(dmultipl * nblyr);
-
-    switch(f->acquisition->type) {
-    case SYSTEM_REFLECTOMETER:
-        f->run->jac_n.refl = gsl_vector_alloc(2 * nb);
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        f->run->jac_n.ell = cmpl_vector_alloc(2 * nb);
-    default:
-        /* */
-        ;
-    }
 }
 
 void
 dispose_fit_engine_cache(struct fit_engine *f)
 {
-    gsl_vector_free(f->run->jac_th);
-
-    switch(f->acquisition->type) {
-    case SYSTEM_REFLECTOMETER:
-        gsl_vector_free(f->run->jac_n.refl);
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        cmpl_vector_free(f->run->jac_n.ell);
-    default:
-        /* */
-        ;
-    }
-
     dispose_stack_cache(&f->run->cache);
 }
 
@@ -778,4 +743,13 @@ fit_config_read(lexer_t *l, struct fit_config *config)
     return 0;
 config_exit:
     return 1;
+}
+
+void
+fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]) {
+    const int nb_med = fit->stack->nb;
+    const cmpl *ns_cached = fit->run->cache.ns_full_spectr + j * nb_med;
+    for (int k = 0; k < nb_med; k++) {
+        ns[k] = ns_cached[k];
+    }
 }

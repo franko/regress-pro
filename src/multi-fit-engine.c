@@ -34,20 +34,6 @@ build_multi_fit_engine_cache(struct multi_fit_engine *f)
        the RI are not fixed and so we don't do presampling of n values */
     build_stack_cache(& f->cache, f->stack_list[0],
                       f->spectra_list[0], RI_IS_VARIABLE, 1);
-
-    f->jac_th = gsl_vector_alloc(dmultipl * nblyr);
-
-    switch(f->system_kind) {
-    case SYSTEM_REFLECTOMETER:
-        f->jac_n.refl = gsl_vector_alloc(2 * nbmed);
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        f->jac_n.ell = cmpl_vector_alloc(2 * nbmed);
-    default:
-        /* */
-        ;
-    }
 }
 
 int
@@ -130,24 +116,6 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
 void
 dispose_multi_fit_engine_cache(struct multi_fit_engine *f)
 {
-    gsl_vector_free(f->jac_th);
-
-    switch(f->system_kind) {
-    case SYSTEM_REFLECTOMETER:
-        gsl_vector_free(f->jac_n.refl);
-        f->jac_n.refl = NULL;
-        break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
-        cmpl_vector_free(f->jac_n.ell);
-        f->jac_n.ell = NULL;
-    default:
-        /* */
-        ;
-    }
-
-    f->jac_th = NULL;
-
     dispose_stack_cache(& f->cache);
 }
 

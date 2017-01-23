@@ -399,7 +399,7 @@ se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
 }
 
 static void
-set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl *mlr_jacob, gsl_vector *jacob)
+set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl mlr_jacob[], double jacob[])
 {
     for(int j = 0; j < n; j++) {
         cmpl d_alpha, d_beta;
@@ -409,13 +409,13 @@ set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], con
         } else {
             se_psidel_der(R, dR, &d_alpha, &d_beta);
         }
-        gsl_vector_set(jacob, j    , creal(d_alpha));
-        gsl_vector_set(jacob, n + j, creal(d_beta));
+        jacob[j    ] = creal(d_alpha);
+        jacob[n + j] = creal(d_beta);
     }
 }
 
 static void
-set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl *mlr_jacob, cmpl_vector *jacob)
+set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl mlr_jacob[], cmpl jacob[])
 {
     for(int j = 0; j < n; j++) {
         cmpl d_alpha, d_beta;
@@ -425,8 +425,8 @@ set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], 
         } else {
             se_psidel_der(R, dR, &d_alpha, &d_beta);
         }
-        cmpl_vector_set(jacob, j    , d_alpha);
-        cmpl_vector_set(jacob, n + j, d_beta);
+        jacob[j    ] = d_alpha;
+        jacob[n + j] = d_beta;
     }
 
 }
@@ -436,7 +436,7 @@ mult_layer_se_jacob(enum se_type type,
                     int nb, const cmpl ns[], double phi0,
                     const double ds[], double lambda,
                     double anlz, ell_ab_t e,
-                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition)
+                    double *jacob_th, cmpl *jacob_n, double *jacob_acquisition)
 {
     const int nblyr = nb - 2;
     cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
@@ -563,7 +563,7 @@ se_psidel_set_jacob_acquisition_from_sp(const double sp[3], const double sp_diff
 static void
 mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lambda,
                     const struct acquisition_parameters *acquisition, ell_ab_t e,
-                    gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acq)
+                    double *jacob_th, cmpl *jacob_n, double *jacob_acq)
 {
     const double phi0 = deg_to_radians(acquisition_get_se_aoi(acquisition));
     const double anlz = deg_to_radians(acquisition_get_se_analyzer(acquisition));
@@ -675,8 +675,8 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             for(int j = 0; j < nb; j++) {
                 cmpl dab[2];
                 se_ab_diff_from_sp(sp, sp_jacob_n + 3 * j, tanlz, dab);
-                cmpl_vector_set(jacob_n, j,      dab[0]);
-                cmpl_vector_set(jacob_n, nb + j, dab[1]);
+                jacob_n[     j] = dab[0];
+                jacob_n[nb + j] = dab[1];
             }
         }
 
@@ -684,8 +684,8 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             for(int j = 0; j < nblyr; j++) {
                 double dab[2];
                 se_ab_diff_from_sp_real(sp, sp_jacob_th + 3 * j, tanlz, dab);
-                gsl_vector_set(jacob_th, j,         dab[0]);
-                gsl_vector_set(jacob_th, nblyr + j, dab[1]);
+                jacob_th[        j] = dab[0];
+                jacob_th[nblyr + j] = dab[1];
             }
         }
 
@@ -708,8 +708,8 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             for(int j = 0; j < nb; j++) {
                 cmpl dpsidel[2];
                 se_psidel_diff_from_sp(sp, sp_jacob_n + 3 * j, dpsidel);
-                cmpl_vector_set(jacob_n, j,      dpsidel[0]);
-                cmpl_vector_set(jacob_n, nb + j, dpsidel[1]);
+                jacob_n[     j] = dpsidel[0];
+                jacob_n[nb + j] = dpsidel[1];
             }
         }
 
@@ -717,8 +717,8 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             for(int j = 0; j < nblyr; j++) {
                 double dpsidel[2];
                 se_psidel_diff_from_sp_real(sp, sp_jacob_th + 3 * j, dpsidel);
-                gsl_vector_set(jacob_th, j,         dpsidel[0]);
-                gsl_vector_set(jacob_th, nblyr + j, dpsidel[1]);
+                jacob_th[        j] = dpsidel[0];
+                jacob_th[nblyr + j] = dpsidel[1];
             }
         }
 
@@ -735,13 +735,13 @@ mult_layer_refl_se(enum se_type se_type,
                    size_t nb, const cmpl ns[],
                    const double ds[], double lambda,
                    const struct acquisition_parameters *acquisition, ell_ab_t e,
-                   gsl_vector *jacob_th, cmpl_vector *jacob_n, double *jacob_acquisition)
+                   double *jacob_th, cmpl *jacob_n, double *jacob_acq)
 {
-    if (acquisition->bandwidth > 0.0 || acquisition->numap > 0.0 || jacob_acquisition) {
-        mult_layer_se_integ_jacob(nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acquisition);
+    if (acquisition->bandwidth > 0.0 || acquisition->numap > 0.0 || jacob_acq) {
+        mult_layer_se_integ_jacob(nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acq);
     } else {
         const double phi0 = deg_to_radians(acquisition_get_se_aoi(acquisition));
         const double anlz = deg_to_radians(acquisition_get_se_analyzer(acquisition));
-        mult_layer_se_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, e, jacob_th, jacob_n, jacob_acquisition);
+        mult_layer_se_jacob(se_type, nb, ns, phi0, ds, lambda, anlz, e, jacob_th, jacob_n, jacob_acq);
     }
 }

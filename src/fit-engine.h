@@ -41,18 +41,9 @@ enum fit_engine_acq {
 
 struct fit_run {
     struct spectrum *spectr;
-
     gsl_multifit_function_fdf mffun;
-
     gsl_vector *results;
-
     struct stack_cache cache;
-
-    gsl_vector *jac_th;
-    union {
-        gsl_vector *refl;
-        cmpl_vector *ell;
-    } jac_n;
 };
 
 struct fit_engine {
@@ -114,6 +105,8 @@ extern void build_stack_cache(struct stack_cache *cache,
                               int th_only_optimize, int require_acquisition_jacob);
 
 extern void dispose_stack_cache(struct stack_cache *cache);
+
+extern void fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]);
 
 extern void fit_engine_generate_spectrum(struct fit_engine *fit,
         struct spectrum *ref,

@@ -173,34 +173,30 @@ mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
 static double
 mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
                    double lambda,
-                   gsl_vector *r_jacob_th, gsl_vector *r_jacob_n)
+                   double *jacob_th, double *jacob_n)
 {
     cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
-    size_t k;
     cmpl r;
 
-    if(r_jacob_th && r_jacob_n) {
+    if(jacob_th && jacob_n) {
         r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda, mlr_jacob_th, mlr_jacob_n);
-    } else if(r_jacob_th) {
+    } else if(jacob_th) {
         r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda, mlr_jacob_th);
     } else {
         r = mult_layer_refl_ni_nojacob(nb, ns, ds, lambda);
     }
 
-    if(r_jacob_th)
-        for(k = 0; k < (size_t) nb-2; k++) {
+    if(jacob_th)
+        for(int k = 0; k < nb-2; k++) {
             cmpl dr = mlr_jacob_th[k];
-            double drsq = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
-            gsl_vector_set(r_jacob_th, k, drsq);
+            jacob_th[k] = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
         }
 
-    if(r_jacob_n)
-        for(k = 0; k < (size_t) nb; k++) {
+    if(jacob_n)
+        for(int k = 0; k < nb; k++) {
             cmpl dr = mlr_jacob_n[k];
-            double drsqr = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
-            double drsqi = 2 * (cimag(r)*creal(dr) - creal(r)*cimag(dr));
-            gsl_vector_set(r_jacob_n, k, drsqr);
-            gsl_vector_set(r_jacob_n, nb + k, drsqi);
+            jacob_n[k     ] = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
+            jacob_n[nb + k] = 2 * (cimag(r)*creal(dr) - creal(r)*cimag(dr));
         }
 
     return CSQABS(r);
@@ -209,7 +205,7 @@ mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
 static double
 mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
                              double lambda, const double bandwidth,
-                             gsl_vector *r_jacob_th, gsl_vector *r_jacob_n, double *jacob_acq)
+                             double *jacob_th, double *jacob_n, double *jacob_acq)
 {
     cmpl mlr_jacob_th[nb], mlr_jacob_n[nb];
     double rsq_jacob_th[nb - 2];
@@ -217,12 +213,8 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
 
     memset(rsq_jacob_th, 0, (nb - 2) * sizeof(double));
 
-    if(r_jacob_th) {
-        gsl_vector_set_zero(r_jacob_th);
-    }
-
-    if(r_jacob_n) {
-        gsl_vector_set_zero(r_jacob_n);
+    if(jacob_n) {
+        memset(jacob_n, 0, 2 * nb * sizeof(double));
     }
 
     if (jacob_acq) {
@@ -235,9 +227,9 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
         const double lambda_w = lambda + rule_abscissa * bandwidth / 2.0;
         cmpl r;
 
-        if(r_jacob_th && r_jacob_n) {
+        if(jacob_th && jacob_n) {
             r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda_w, mlr_jacob_th, mlr_jacob_n);
-        } else if(r_jacob_th) {
+        } else if(jacob_th) {
             r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda_w, mlr_jacob_th);
         } else {
             r = mult_layer_refl_ni_nojacob(nb, ns, ds, lambda_w);
@@ -246,20 +238,18 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
         const double weight = 0.5 * gauss_rule_weigth(quad_rule, i);
         rsq += weight * CSQABS(r);
 
-        if(r_jacob_n) {
+        if(jacob_n) {
             for(int k = 0; k < nb; k++) {
                 const cmpl dr = mlr_jacob_n[k];
                 const double drsqr = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
                 const double drsqi = 2 * (cimag(r)*creal(dr) - creal(r)*cimag(dr));
-                const double jvr = gsl_vector_get(r_jacob_n, k) + weight * drsqr;
-                const double jvi = gsl_vector_get(r_jacob_n, nb + k) + weight * drsqi;
-                gsl_vector_set(r_jacob_n, k, jvr);
-                gsl_vector_set(r_jacob_n, nb + k, jvi);
+                jacob_n[k     ] += weight * drsqr;
+                jacob_n[nb + k] += weight * drsqi;
             }
         }
 
         double drsqdt[nb - 2];
-        if(r_jacob_th || jacob_acq) {
+        if(jacob_th || jacob_acq) {
             for(int k = 0; k < nb - 2; k++) {
                 const cmpl dr = mlr_jacob_th[k];
                 drsqdt[k] = 2 * (creal(r)*creal(dr) + cimag(r)*cimag(dr));
@@ -279,9 +269,9 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
         }
     }
 
-    if (r_jacob_th) {
+    if (jacob_th) {
         for (int k = 0; k < nb - 2; k++) {
-            gsl_vector_set(r_jacob_th, k, rsq_jacob_th[k]);
+            jacob_th[k] = rsq_jacob_th[k];
         }
     }
 
@@ -291,7 +281,7 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
 double
 mult_layer_refl_sr(size_t nb, const cmpl ns[], const double ds[],
                    double lambda, const struct acquisition_parameters *acquisition,
-                   gsl_vector *jacob_th, gsl_vector *jacob_n, double *jacob_acq)
+                   double *jacob_th, double *jacob_n, double *jacob_acq)
 {
     if (acquisition->bandwidth > 0.0 || jacob_acq) {
         return mult_layer_refl_ni_bandwidth(nb, ns, ds, lambda, acquisition->bandwidth, jacob_th, jacob_n, jacob_acq);
