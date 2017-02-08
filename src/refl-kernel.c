@@ -284,7 +284,20 @@ mult_layer_refl_sr(int nb, const cmpl ns[], const double ds[],
     } else {
         r_raw = mult_layer_refl_ni(nb, ns, ds, lambda, jacob_th, jacob_n);
     }
-    result[0] = r_raw * acquisition->parameters.sr.rmult;
+    const double rmult = acquisition->parameters.sr.rmult;
+    result[0] = r_raw * rmult;
+
+    if (jacob_th) {
+        for (int j = 0; j < nb - 2; j++) {
+            jacob_th[j] *= rmult;
+        }
+    }
+
+    if (jacob_n) {
+        for (int j = 0; j < nb; j++) {
+            jacob_n[j] *= rmult;
+        }
+    }
 
     if (jacob_acq) {
         jacob_acq[SR_RMULT] = r_raw;
