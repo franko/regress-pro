@@ -20,7 +20,8 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
     struct multi_fit_engine *fit = params;
     size_t nb_med = fit->stack_list[0]->nb;
     size_t samples_number = fit->samples_number;
-    double jacob_th_data[nb_med - 2], jacob_n_data[2 * nb_med];
+    double jacob_th_data[nb_med - 2];
+    cmpl jacob_n_data[2 * nb_med];
     double jacob_acq[1]; /* BANDWIDTH is the only acquisition parameter. */
     size_t sample;
     size_t j, j_sample;
@@ -41,24 +42,21 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
         const double *ths = stack_get_ths_list(fit->stack_list[sample]);
 
         double *jacob_th = (jacob ? jacob_th_data : NULL);
-        double *jacob_n  = (jacob ? jacob_n_data  : NULL);
+        cmpl   *jacob_n  = (jacob ? jacob_n_data  : NULL);
 
         for(j = 0; j < spectra_points(spectrum); j++, j_sample++) {
             float const * spectr_data = spectra_get_values(spectrum, j);
             const double lambda = spectr_data[0];
             const double r_meas = spectr_data[1];
-            double r_raw, r_theory;
-            double rmult = acquisition_get_parameter(&fit->acquisitions[sample], PID_FIRSTMUL);
             const size_t nb_priv_params = fit->private_parameters->number;
 
             cmpl ns[nb_med];
             stack_get_ns_list(fit->stack_list[sample], ns, lambda);
 
             /* STEP 3 : We call the procedure to compute the reflectivity. */
-            r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda,
-                                       &fit->acquisitions[sample], jacob_th, jacob_n, jacob_acq);
-
-            r_theory = rmult * r_raw;
+            double r_theory;
+            mult_layer_refl_sr(nb_med, ns, ths, lambda,
+                                       &fit->acquisitions[sample], &r_theory, jacob_th, jacob_n, jacob_acq);
 
             if(f != NULL) {
                 gsl_vector_set(f, j_sample, r_theory - r_meas);
@@ -79,8 +77,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
 
                     pjac = get_parameter_jacob_r(fp, fit->stack_list[sample],
                                                  ideriv, lambda,
-                                                 jacob_th, jacob_n, jacob_acq,
-                                                 rmult, r_raw);
+                                                 jacob_th, jacob_n, jacob_acq);
 
                     gsl_matrix_set(jacob, j_sample, kp, pjac);
                 }
@@ -95,8 +92,7 @@ refl_multifit_fdf(const gsl_vector *x, void *params,
 
                     pjac = get_parameter_jacob_r(fp, fit->stack_list[sample],
                                                  ideriv, lambda,
-                                                 jacob_th, jacob_n, jacob_acq,
-                                                 rmult, r_raw);
+                                                 jacob_th, jacob_n, jacob_acq);
 
                     gsl_matrix_set(jacob, j_sample, kp, pjac);
                 }

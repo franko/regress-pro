@@ -16,34 +16,29 @@
 double
 get_parameter_jacob_r(fit_param_t const *fp, stack_t const *stack,
                       struct deriv_info *ideriv, double lambda,
-                      double jacob_th[], double jacob_n[], double jacob_acq[1],
-                      double rmult, double r_raw)
+                      double jacob_th[], cmpl jacob_n[], double jacob_acq[1])
 {
     double result;
     int lyr = fp->layer_nb;
 
     switch(fp->id) {
-        double drdth;
         double dnr, dni;
 
-    case PID_FIRSTMUL:
-        result = r_raw;
-        break;
     case PID_THICKNESS:
-        drdth = jacob_th[lyr - 1];
-        result = rmult * drdth;
+        result = jacob_th[lyr - 1];
         break;
     case PID_LAYER_N:
         get_model_param_deriv(stack->disp[lyr], &ideriv[lyr],
                               fp, lambda, &dnr, &dni);
 
-        const double drdn_re = jacob_n[lyr];
-        const double drdn_im = jacob_n[stack->nb + lyr];
-
-        result = rmult * (dnr * drdn_re + dni * drdn_im);
+        const double drdn = jacob_n[lyr];
+        result = creal(drdn) * dnr - cimag(drdn) * dni;
         break;
     case PID_BANDWIDTH:
-        result = jacob_acq[0];
+        result = jacob_acq[SR_BANDWIDTH];
+        break;
+    case PID_FIRSTMUL:
+        result = jacob_acq[SR_RMULT];
         break;
     default:
         result = 0.0;
@@ -59,8 +54,9 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     struct fit_engine *fit = params;
     struct spectrum *s = fit->run->spectr;
     size_t nb_med = fit->stack->nb;
-    double jacob_th_data[nb_med - 2], jacob_n_data[2 * nb_med];
-    double jacob_acq_data[1]; /* BANDWIDTH is the only acquisition parameter. */
+    double jacob_th_data[nb_med - 2];
+    cmpl jacob_n_data[nb_med];
+    double jacob_acq_data[SR_ACQ_PARAMETERS_NB];
 
     /* STEP 1 : We apply the actual values of the fit parameters
                 to the stack. */
@@ -73,10 +69,9 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     const double *ths = stack_get_ths_list(fit->stack);
 
     double *jacob_th  = (jacob ? jacob_th_data : NULL);
-    double *jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_data  : NULL);
+    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_data  : NULL);
     double *jacob_acq = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : NULL);
 
-    const double rmult = acquisition_get_parameter(fit->acquisition, PID_FIRSTMUL);
     for(int j = 0; j < spectra_points(s); j++) {
         float const * spectr_data = spectra_get_values(s, j);
         const double lambda = spectr_data[0];
@@ -90,9 +85,8 @@ refl_fit_fdf(const gsl_vector *x, void *params,
         }
 
         /* STEP 3 : We call the procedure to compute the reflectivity. */
-        const double r_raw = mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, jacob_th, jacob_n, jacob_acq);
-
-        const double r_theory = rmult * r_raw;
+        double r_theory;
+        mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, &r_theory, jacob_th, jacob_n, jacob_acq);
 
         if(f != NULL) {
             gsl_vector_set(f, j, r_theory - r_meas);
@@ -112,8 +106,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
                 double pjac;
 
                 pjac = get_parameter_jacob_r(fp, fit->stack, ideriv, lambda,
-                                             jacob_th, jacob_n, jacob_acq,
-                                             rmult, r_raw);
+                                             jacob_th, jacob_n, jacob_acq);
 
                 gsl_matrix_set(jacob, j, kp, pjac);
             }
