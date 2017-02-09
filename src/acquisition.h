@@ -8,6 +8,7 @@ __BEGIN_DECLS
 
 struct fit_parameters;
 
+// TODO: rename below AB to RPE. Optionally rename ELLISS and REFLECTOMETER to SE / SR.
 enum system_kind {
     SYSTEM_UNDEFINED = 0,
     SYSTEM_REFLECTOMETER,
@@ -15,6 +16,9 @@ enum system_kind {
     SYSTEM_ELLISS_PSIDEL,
     SYSTEM_EXCEED_VALUE
 };
+
+#define SYSTEM_CHANNELS_NUMBER(k) ((k) == SYSTEM_UNDEFINED ? 0 : ((k) == SYSTEM_REFLECTOMETER ? 1 : 2))
+#define SYSTEM_ACQUISITION_PARAMS_NUMBER(k) ((k) == SYSTEM_UNDEFINED ? 0 : ((k) == SYSTEM_REFLECTOMETER ? SR_ACQ_PARAMETERS_NB : ((k) == SYSTEM_ELLISS_AB ? 3 : 2)))
 
 /* Ellipsometry parameters: */
 struct rpe_acquisition_parameters {

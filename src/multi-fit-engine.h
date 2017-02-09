@@ -14,9 +14,8 @@
 
 __BEGIN_DECLS
 
-struct multi_fit_engine {
-    enum system_kind system_kind;
 
+struct multi_fit_engine {
     int samples_number;
     struct stack **stack_list;
     struct spectrum **spectra_list;

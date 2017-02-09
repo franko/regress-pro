@@ -18,8 +18,8 @@ ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	acquisition.c \
 	gauss-legendre-quad.c \
 	spectra.c elliss.c \
-	elliss-multifit.c multi-fit-engine.c grid-search.c lmfit-multi.c \
-	refl-multifit.c disp-fit-engine.c \
+	multi-fit-engine.c grid-search.c lmfit-multi.c \
+	disp-fit-engine.c \
 	vector_print.c fit_result.c writer.c lexer.c lmfit_result.c
 EFIT_LIB = libefit.a
 
