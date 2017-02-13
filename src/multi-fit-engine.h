@@ -58,6 +58,10 @@ extern void multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
 extern double multi_fit_engine_get_parameter_value(const struct multi_fit_engine *fit, const fit_param_t *fp);
 extern double multi_fit_engine_get_seed_value(const struct multi_fit_engine *fit, const fit_param_t *fp, const seed_t *s);
 
+#ifdef DEBUG
+extern void multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_common, struct seeds *seeds_priv);
+#endif
+
 __END_DECLS
 
 #endif

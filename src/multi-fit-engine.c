@@ -562,3 +562,173 @@ multi_fit_engine_get_seed_value(const struct multi_fit_engine *fit, const fit_pa
     }
     return s->seed;
 }
+
+#ifdef DEBUG
+
+
+struct fdf_deriv_ws {
+    gsl_vector *fmh, *fph;
+    gsl_vector *fm1, *fp1;
+    gsl_vector *r3, *r5, *r_aux;
+};
+
+static void
+central_deriv(const gsl_multifit_function_fdf *f, gsl_vector *x, int parameter_index, double h,
+              struct fdf_deriv_ws *workspace, gsl_vector *result, gsl_vector *abserr)
+{
+  /* Compute the derivative using the 5-point rule (x-h, x-h/2, x,
+     x+h/2, x+h). Note that the central point is not used.
+
+     Compute the error using the difference between the 5-point and
+     the 3-point rule (x-h,x,x+h). Again the central point is not
+     used. */
+
+    const double x0 = gsl_vector_get(x, parameter_index);
+
+    gsl_vector_set(x, parameter_index, x0 - h);
+    f->f(x, f->params, workspace->fm1);
+
+    gsl_vector_set(x, parameter_index, x0 + h);
+    f->f(x, f->params, workspace->fp1);
+
+    gsl_vector_set(x, parameter_index, x0 - h / 2);
+    f->f(x, f->params, workspace->fmh);
+
+    gsl_vector_set(x, parameter_index, x0 + h / 2);
+    f->f(x, f->params, workspace->fph);
+
+    // Reset array element to its original value.
+    gsl_vector_set(x, parameter_index, x0);
+
+    gsl_vector_memcpy(workspace->r3, workspace->fp1);
+    gsl_vector_sub(workspace->r3, workspace->fm1);
+    gsl_vector_scale(workspace->r3, 0.5);
+
+    // double r3 = 0.5 * (fp1 - fm1);
+
+    gsl_vector_memcpy(workspace->r5, workspace->fph);
+    gsl_vector_sub(workspace->r5, workspace->fmh);
+    gsl_vector_scale(workspace->r5, 4.0 / 3.0);
+
+    gsl_vector_memcpy(workspace->r_aux, workspace->r3);
+    gsl_vector_scale(workspace->r_aux, 1.0 / 3.0);
+    gsl_vector_sub(workspace->r5, workspace->r_aux);
+
+    // double r5 = (4.0 / 3.0) * (fph - fmh) - (1.0 / 3.0) * r3;
+
+    gsl_vector_memcpy(result, workspace->r5);
+    gsl_vector_scale(result, 1.0 / h);
+
+    gsl_vector_memcpy(abserr, workspace->r5);
+    gsl_vector_sub(abserr, workspace->r3);
+    gsl_vector_scale(abserr, 1.0 / h);
+
+    for (int i = 0; i < (int)abserr->size; i++) {
+        gsl_vector_set(abserr, i, fabs(gsl_vector_get(abserr, i)));
+    }
+
+    // double e3 = (fabs (fp1) + fabs (fm1)) * GSL_DBL_EPSILON;
+    // double e5 = 2.0 * (fabs (fph) + fabs (fmh)) * GSL_DBL_EPSILON + e3;
+
+  /* The next term is due to finite precision in x+h = O (eps * x) */
+
+    // double dy = GSL_MAX (fabs (r3 / h), fabs (r5 / h)) *(fabs (x) / h) * GSL_DBL_EPSILON;
+
+  /* The truncation error in the r5 approximation itself is O(h^4).
+     However, for safety, we estimate the error from r5-r3, which is
+     O(h^2).  By scaling h we will minimise this estimated error, not
+     the actual truncation error in r5. */
+
+  // *result = r5 / h;
+  // *abserr_trunc = fabs ((r5 - r3) / h); /* Estimated truncation error O(h^2) */
+  // *abserr_round = fabs (e5 / h) + dy;   /* Rounding error (cancellations) */
+}
+
+void
+multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_common, struct seeds *seeds_priv) {
+    const int points_number = fit->mffun.n;
+    const int parameters_number = fit->mffun.p;
+    struct fdf_deriv_ws ws[1];
+
+    fprintf(stderr, "Checking derivatives for multi-sample fit.\nnumber of points: %d, number of parameters: %d\n", points_number, parameters_number);
+
+    ws->fm1 = gsl_vector_alloc(points_number);
+    ws->fp1 = gsl_vector_alloc(points_number);
+    ws->fmh = gsl_vector_alloc(points_number);
+    ws->fph = gsl_vector_alloc(points_number);
+    ws->r3  = gsl_vector_alloc(points_number);
+    ws->r5  = gsl_vector_alloc(points_number);
+    ws->r_aux = gsl_vector_alloc(points_number);
+
+    gsl_matrix *num_jacob = gsl_matrix_alloc(points_number, parameters_number);
+    gsl_matrix *abserr_mat = gsl_matrix_alloc(points_number, parameters_number);
+    gsl_vector *x = gsl_vector_alloc(parameters_number);
+
+    int k;
+    for(k = 0; k < seeds_common->number; k++) {
+        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->values[k], &seeds_common->values[k]));
+    }
+
+    for(int ks = 0; ks < seeds_priv->number; ks++, k++) {
+        gsl_vector_set(x, k, seeds_priv->values[ks].seed);
+    }
+#if 0
+    int j;
+    for(j = 0; j < fit->common_parameters->number; j++) {
+        double seed = multi_fit_engine_get_parameter_value(fit, &fit->common_parameters->values[j]);
+        gsl_vector_set(x, j, seed);
+    }
+
+    for (int sample = 0; sample < fit->samples_number; sample++) {
+        for(int k = 0; k < fit->private_parameters->number; k++, j++) {
+            double seed = multi_fit_engine_get_parameter_value(fit, &fit->private_parameters->values[k]);
+            gsl_vector_set(x, j, seed);
+        }
+    }
+#endif
+    for(int j = 0; j < parameters_number; j++) {
+        const double seed = gsl_vector_get(x, j);
+        double delta = fabs(seed) / 100.0;
+        if (delta < 1e-8) delta = 1e-8;
+
+        gsl_vector_view jacob_row_view = gsl_matrix_column(num_jacob, j);
+        gsl_vector *df = &jacob_row_view.vector;
+
+        gsl_vector_view abserr_view = gsl_matrix_column(abserr_mat, j);
+        gsl_vector *abserr = &abserr_view.vector;
+
+        central_deriv(&fit->mffun, x, j, delta, ws, df, abserr);
+    }
+
+    gsl_matrix *com_jacob = gsl_matrix_alloc(points_number, parameters_number);
+    fit->mffun.df(x, fit, com_jacob);
+
+    for (int i = 0; i < points_number; i++) {
+        for (int j = 0; j < parameters_number; j++) {
+            double num = gsl_matrix_get(num_jacob, i, j);
+            double abserr = gsl_matrix_get(abserr_mat, i, j);
+            double com = gsl_matrix_get(com_jacob, i, j);
+            double err_min = fabs(num) * 1e-8;
+            if (abserr < err_min) abserr = err_min;
+            if (com > num + abserr || com < num - abserr) {
+                fprintf(stderr, "DERIV DIFFER %d PARAM: %d: NUM: %g +/- %g, COMPUTED: %g\n", i, j, num, abserr, com);
+            }
+        }
+    }
+
+    gsl_matrix_free(num_jacob);
+    gsl_matrix_free(com_jacob);
+    gsl_matrix_free(abserr_mat);
+    gsl_vector_free(x);
+    gsl_vector_free(ws->fmh);
+    gsl_vector_free(ws->fph);
+    gsl_vector_free(ws->fm1);
+    gsl_vector_free(ws->fp1);
+    gsl_vector_free(ws->r3);
+    gsl_vector_free(ws->r5);
+    gsl_vector_free(ws->r_aux);
+
+    fprintf(stderr, "done\n");
+    fflush(stderr);
+}
+#endif
