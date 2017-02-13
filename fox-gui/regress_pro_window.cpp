@@ -368,13 +368,12 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 
     struct seeds *iseeds = seed_list_new();
 
-    double *iseed_values = new double[iparams->number];
+    double iseed_values[iparams->number];
     for (int i = 0; i < samples_number; i++) {
         int error_col;
         bool ok = dataset->get_values(i, iparams, iseed_values, error_col);
         if (!ok) {
             FXMessageBox::information(this, MBOX_OK, "Multiple Fit error", "Missing required parameter in dataset.");
-            delete [] iseed_values;
             seed_list_free(iseeds);
             multi_fit_engine_disable(fit);
             free_spectra_list(samples_number, fit->spectra_list);
@@ -385,7 +384,6 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
             seed_list_add_simple(iseeds, iseed_values[j]);
         }
     }
-    delete [] iseed_values;
 
     Str fit_error_msgs;
     ProgressInfo progress(this->getApp(), this);
