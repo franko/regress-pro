@@ -178,16 +178,6 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
                 for (int q = 0; q < channels_number; q++) {
                     gsl_vector_set(f, jpt + q, result[q] - spectr_data[q + 1]);
                 }
-                if (lambda < 194) {
-                    if (sample == 0) {
-                        printf("wavelength: %g\n", lambda);
-                    }
-                    printf("sample: %d", sample);
-                    for (int q = 0; q < channels_number; q++) {
-                        printf(" f[%d(%d)]= (%12.6g : %12.6g)", j, q, result[q], spectr_data[q + 1]);
-                    }
-                    printf("\n");
-                }
             }
 
             if(jacob) {
@@ -198,10 +188,6 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
 
                 for(int ic = 0; ic < nb_med; ic++) {
                     ideriv[ic].is_valid = 0;
-                }
-
-                if (lambda < 194) {
-                    printf("JACOB (common) sample: %d\n", sample);
                 }
 
                 int kp;
@@ -215,23 +201,12 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
                     for (int q = 0; q < channels_number; q++) {
                         gsl_matrix_set(jacob, jpt + q, kp, fp_jacob[q]);
                     }
-
-                    if (lambda < 194) {
-                        for (int q = 0; q < channels_number; q++) {
-                            printf(" JACOB[%d(%d), %d] = %12.6g", j, q, kp, fp_jacob[q]);
-                        }
-                        printf("\n");
-                    }
                 }
 
                 for(int ikp = 0; ikp < nb_priv_params * sample; ikp++, kp++) {
                     for (int q = 0; q < channels_number; q++) {
                         gsl_matrix_set(jacob, jpt + q, kp, 0.0);
                     }
-                }
-
-                if (lambda < 194) {
-                    printf("JACOB (priv) sample: %d\n", sample);
                 }
 
                 for(int ikp = 0; ikp < nb_priv_params; kp++, ikp++) {
@@ -243,13 +218,6 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
 
                     for (int q = 0; q < channels_number; q++) {
                         gsl_matrix_set(jacob, jpt + q, kp, fp_jacob[q]);
-                    }
-
-                    if (lambda < 194) {
-                        for (int q = 0; q < channels_number; q++) {
-                            printf(" JACOB[%d(%d), %d] = %12.6g", j, q, kp, fp_jacob[q]);
-                        }
-                        printf("\n");
                     }
                 }
 
@@ -695,20 +663,7 @@ multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_c
     for(int ks = 0; ks < seeds_priv->number; ks++, k++) {
         gsl_vector_set(x, k, seeds_priv->values[ks].seed);
     }
-#if 0
-    int j;
-    for(j = 0; j < fit->common_parameters->number; j++) {
-        double seed = multi_fit_engine_get_parameter_value(fit, &fit->common_parameters->values[j]);
-        gsl_vector_set(x, j, seed);
-    }
 
-    for (int sample = 0; sample < fit->samples_number; sample++) {
-        for(int k = 0; k < fit->private_parameters->number; k++, j++) {
-            double seed = multi_fit_engine_get_parameter_value(fit, &fit->private_parameters->values[k]);
-            gsl_vector_set(x, j, seed);
-        }
-    }
-#endif
     for(int j = 0; j < parameters_number; j++) {
         const double seed = gsl_vector_get(x, j);
         double delta = fabs(seed) / 100.0;
