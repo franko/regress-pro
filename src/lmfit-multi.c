@@ -23,7 +23,7 @@ lmfit_multi(struct multi_fit_engine *fit,
     struct fit_config *cfg = &fit->config;
     int status, stop_request = 0;
     gsl_vector *x;
-    int iter, nb_common, nb_priv, nb_samples, k, ks, j_sample;
+    int iter, nb_common, nb_priv, nb_samples, k, ks;
 
     nb_samples = fit->samples_number;
     nb_common  = fit->common_parameters->number;
@@ -51,19 +51,7 @@ lmfit_multi(struct multi_fit_engine *fit,
                         cfg->epsabs, cfg->epsrel,
                         & iter, hfun, hdata, & stop_request);
 
-    j_sample = 0;
-    for(k = 0; k < fit->samples_number; k++) {
-        struct spectrum *spectrum = fit->spectra_list[k];
-        double chisq = 0;
-        int j, np = spectra_points(spectrum);
-
-        for(j = 0; j < np; j++, j_sample++) {
-            double fres = gsl_vector_get(s->f, j_sample);
-            chisq += fres * fres;
-        }
-
-        gsl_vector_set(fit->chisq, k, 1.0e6 * chisq / np);
-    }
+    multi_fit_engine_compute_chisq(fit, s->f);
 
     if(error_msg) {
         switch(status) {

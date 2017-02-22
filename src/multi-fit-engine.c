@@ -563,6 +563,29 @@ multi_fit_engine_get_seed_value(const struct multi_fit_engine *fit, const fit_pa
     return s->seed;
 }
 
+void
+multi_fit_engine_compute_chisq(struct multi_fit_engine *fit, const gsl_vector *f) {
+    const int samples_number = fit->samples_number;
+    int sample_offset = 0;
+    for(int sample = 0; sample < samples_number; sample++) {
+        struct spectrum *spectrum = fit->spectra_list[sample];
+        double chisq = 0;
+        const int npt = spectra_points(spectrum);
+        const enum system_kind sys_kind = spectrum->acquisition->type;
+        const int channels_number = SYSTEM_CHANNELS_NUMBER(sys_kind);
+
+        for(int j = 0, jpt = sample_offset; j < npt; j++, jpt += channels_number) {
+            for (int q = 0; q < channels_number; q++) {
+                double residual = gsl_vector_get(f, jpt + q);
+                chisq += residual * residual;
+            }
+        }
+        gsl_vector_set(fit->chisq, sample, 1.0e6 * chisq / (npt * channels_number));
+
+        sample_offset += channels_number * npt;
+    }
+}
+
 #ifdef DEBUG
 
 
