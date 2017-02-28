@@ -1,0 +1,404 @@
+
+/* plot.h
+ *
+ * Copyright (C) 2009-2011 Francesco Abbate
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+#ifndef AGGPLOT_PLOT_H
+#define AGGPLOT_PLOT_H
+
+#include <new>
+
+#include "utils.h"
+#include "list.h"
+#include "strpp.h"
+#include "canvas.h"
+#include "units.h"
+#include "rect.h"
+#include "canvas_svg.h"
+#include "trans.h"
+#include "text.h"
+#include "sg_element.h"
+#include "plot_axis.h"
+
+#include "agg_array.h"
+#include "agg_bounding_rect.h"
+#include "agg_vcgen_markers_term.h"
+#include "agg_conv_transform.h"
+#include "agg_color_rgba.h"
+#include "agg_path_storage.h"
+#include "agg_array.h"
+#include "agg_conv_stroke.h"
+#include "agg_conv_dash.h"
+#include "agg_gsv_text.h"
+
+template <class Canvas>
+class canvas_adapter : public virtual_canvas {
+public:
+    canvas_adapter(Canvas* c) : m_canvas(c) {}
+
+    virtual void draw(sg_object& vs, agg::rgba8 c) {
+        m_canvas->draw(vs, c);
+    }
+
+    virtual void draw_outline_noaa(sg_object& vs, agg::rgba8 c) {
+        m_canvas->draw_outline_noaa(vs, c);
+    }
+
+    virtual void clip_box(const agg::rect_base<int>& clip) {
+        m_canvas->clip_box(clip);
+    }
+
+    virtual void reset_clipping() {
+        m_canvas->reset_clipping();
+    }
+
+private:
+    Canvas* m_canvas;
+};
+
+struct plot_layout {
+    struct point {
+        point(double _x, double _y): x(_x), y(_y) {}
+        point() {}
+        double x, y;
+    };
+
+    void set_plot_active_area(double sx, double sy, double tx, double ty)
+    {
+        plot_active_area.sx = sx;
+        plot_active_area.sy = sy;
+        plot_active_area.tx = tx;
+        plot_active_area.ty = ty;
+    }
+
+    static void set_area_undefined(agg::trans_affine& m) {
+        m.sx = -1.0;
+    }
+
+    static bool is_area_defined(const agg::trans_affine& m)
+    {
+        return (m.sx > 0.0);
+    }
+
+    point title_pos;
+    double title_font_size;
+
+    agg::trans_affine legend_area[4];
+    agg::trans_affine plot_area;
+    agg::trans_affine plot_active_area;
+};
+
+struct plot_render_info {
+    agg::trans_affine active_area;
+};
+
+namespace graphics {
+
+class plot {
+
+    static const unsigned max_layers = 8;
+
+    enum {
+        axis_label_prop_space = 20,
+        axis_title_prop_space = 30,
+        canvas_margin_prop_space = 15,
+        canvas_margin_fixed_space = 4,
+    };
+
+protected:
+    typedef sg_element item;
+
+    class item_list : public agg::pod_bvector<item>
+    {
+    public:
+        item_list(): agg::pod_bvector<item>() { }
+
+        const opt_rect<double>& bounding_box() const {
+            return m_bbox;
+        }
+
+        void set_bounding_box(const agg::rect_base<double>& r) {
+            m_bbox.set(r);
+        }
+
+        void clear_bounding_box() {
+            m_bbox.clear();
+        }
+
+    private:
+        opt_rect<double> m_bbox;
+    };
+
+public:
+    typedef list<item> iterator;
+    typedef virtual_canvas canvas_type;
+
+    enum placement_e { right = 0, left = 1, bottom = 2, top = 3 };
+
+    plot(bool use_units = true) :
+        m_clip_flag(true), m_need_redraw(true), m_sync_mode(true),
+        m_x_axis(x_axis, use_units), m_y_axis(y_axis, use_units)
+    {
+        m_layers.add(&m_root_layer);
+        compute_user_trans();
+        for (unsigned k = 0; k < 4; k++)
+            m_legend[k] = 0;
+    };
+
+    virtual ~plot()
+    {
+        for (unsigned k = 0; k < m_layers.size(); k++)
+        {
+            item_list *layer = m_layers[k];
+            layer_dispose_elements(layer);
+            if (k > 0)
+                delete layer;
+        }
+    };
+
+    str& title() {
+        return m_title;
+    }
+    str& x_axis_title() {
+        return m_x_axis.title;
+    }
+    str& y_axis_title() {
+        return m_y_axis.title;
+    }
+
+    void add_legend(plot* p, placement_e where) {
+        m_legend[where] = p;
+    }
+    plot* get_legend(placement_e where) {
+        return m_legend[where];
+    }
+
+    axis& get_axis(axis_e axis_dir)
+    {
+        return (axis_dir == x_axis ? m_x_axis : m_y_axis);
+    }
+
+    const axis& get_axis(axis_e axis_dir) const
+    {
+        return (axis_dir == x_axis ? m_x_axis : m_y_axis);
+    }
+
+    void set_axis_labels_angle(axis_e axis, double angle);
+
+    double get_axis_labels_angle(axis_e axis_dir) const
+    {
+        return get_axis(axis_dir).labels_angle();
+    }
+
+    void set_units(bool use_units);
+
+    bool use_units() const {
+        return m_x_axis.active;
+    };
+
+    void update_units();
+    void set_limits(const agg::rect_d& r);
+    void unset_limits();
+
+    void set_xaxis_comp_labels(ptr_list<factor_labels>* labels)
+    {
+        m_x_axis.set_comp_labels(labels);
+    }
+
+    virtual void add(const sg_element& el);
+    virtual void before_draw() { }
+
+    void get_bounding_rect(agg::rect_base<double>& bb)
+    {
+        before_draw();
+
+        if (m_rect.is_defined())
+            bb = m_rect.rect();
+        else
+            bb = agg::rect_base<double>(0.0, 0.0, 0.0, 0.0);
+    }
+
+    template <class Canvas>
+    void draw(Canvas& canvas, const agg::trans_affine& m, plot_render_info* inf)
+    {
+        canvas_adapter<Canvas> vc(&canvas);
+        agg::rect_i clip = rect_of_slot_matrix<int>(m);
+        plot_layout layout = compute_plot_layout(m);
+        draw_virtual_canvas(vc, layout, &clip);
+        if (inf)
+            inf->active_area = layout.plot_active_area;
+    }
+
+    template <class Canvas>
+    void draw(Canvas& canvas, const agg::rect_i& r, plot_render_info* inf)
+    {
+        canvas_adapter<Canvas> vc(&canvas);
+        agg::trans_affine mtx = affine_matrix(r);
+        plot_layout layout = compute_plot_layout(mtx);
+        draw_virtual_canvas(vc, layout, &r);
+        if (inf)
+            inf->active_area = layout.plot_active_area;
+    }
+
+    virtual bool push_layer();
+    virtual bool pop_layer();
+    virtual void clear_current_layer();
+
+    int current_layer_index();
+
+    bool clip_is_active() const {
+        return m_clip_flag;
+    };
+    void set_clip_mode(bool flag) {
+        m_clip_flag = flag;
+    };
+
+    bool need_redraw() const {
+        return m_need_redraw;
+    };
+
+    void sync_mode(bool req_mode) {
+        m_sync_mode = req_mode;
+    };
+    bool sync_mode() const {
+        return m_sync_mode;
+    };
+
+    void pad_mode(bool req)
+    {
+        axis& ax = m_x_axis;
+        if (req != ax.pad_units)
+        {
+            ax.pad_units = req;
+            m_need_redraw = true;
+            compute_user_trans();
+        }
+    };
+
+    bool pad_mode() const {
+        return m_x_axis.pad_units;
+    }
+
+    bool enable_label_format(axis_e dir, const char* fmt)
+    {
+        if (!fmt)
+        {
+            get_axis(dir).clear_label_format();
+            return true;
+        }
+
+        units::format_e tag = units::parse_label_format(fmt);
+        if (tag == units::format_invalid)
+            return false;
+        get_axis(dir).set_label_format(tag, fmt);
+        return true;
+    }
+
+    void enable_categories(axis_e dir) {
+        get_axis(dir).use_categories = true;
+    }
+
+    void disable_categories(axis_e dir)
+    {
+        axis& ax = get_axis(dir);
+        ax.use_categories = false;
+        ax.categories.clear();
+    }
+
+    void add_category_entry(axis_e dir, double v, const char* text)
+    {
+        axis& ax = get_axis(dir);
+        ax.categories.add_item(v, text);
+    }
+
+protected:
+    void draw_virtual_canvas(canvas_type& canvas, plot_layout& layout, const agg::rect_i* r);
+    void draw_simple(canvas_type& canvas, plot_layout& layout, const agg::rect_i* r);
+
+    void draw_grid(const axis_e dir, const units& u,
+                   const agg::trans_affine& user_mtx,
+                   agg::path_storage& ln);
+
+    void draw_elements(canvas_type &canvas, const plot_layout& layout);
+
+    void draw_element(item& c, canvas_type &canvas, const agg::trans_affine& m) {
+        c.draw(canvas, m);
+    }
+
+    void draw_axis(canvas_type& can, plot_layout& layout, const agg::rect_i* clip = 0);
+
+    void draw_legends(canvas_type& canvas, const plot_layout& layout);
+
+    plot_layout compute_plot_layout(const agg::trans_affine& canvas_mtx, bool do_legends = true);
+
+    // return the matrix that map from plot coordinates to screen
+    // coordinates
+    agg::trans_affine get_model_matrix(const plot_layout& layout);
+
+    void clip_plot_area(canvas_type& canvas, const agg::trans_affine& canvas_mtx);
+
+    void compute_user_trans();
+
+    bool fit_inside(sg_object *obj) const;
+
+    void layer_dispose_elements (item_list* layer);
+
+    unsigned nb_layers() const {
+        return m_layers.size();
+    }
+    item_list* get_layer(unsigned j) {
+        return m_layers[j];
+    }
+
+    item_list* current_layer() {
+        return m_layers[m_layers.size() - 1];
+    };
+
+    item_list* parent_layer()
+    {
+        unsigned n = m_layers.size();
+        return (n > 1 ? m_layers[n-2] : 0);
+    }
+
+    agg::trans_affine m_trans;
+
+    bool m_clip_flag;
+
+    bool m_need_redraw;
+    opt_rect<double> m_rect;
+
+    // keep trace of the region where changes happened since
+    // the last pushlayer or clear
+    opt_rect<double> m_changes_accu;
+    opt_rect<double> m_changes_pending;
+
+private:
+    item_list m_root_layer;
+    agg::pod_auto_vector<item_list*, max_layers> m_layers;
+
+    str m_title;
+
+    bool m_sync_mode;
+
+    axis m_x_axis, m_y_axis;
+    plot* m_legend[4];
+};
+
+} /* namespace graphics */
+
+#endif
