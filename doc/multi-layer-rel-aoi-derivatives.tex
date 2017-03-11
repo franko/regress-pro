@@ -1,0 +1,83 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\newcommand\pder[2]{\frac{\partial #1}{\partial #2}}
+
+\title{Notes on Ellipsometry}
+\author{Francesco}
+\date{December 2016}
+
+\begin{document}
+\section{Preliminaries}
+\begin{equation}
+    R_{i,i+1} = \frac{r_{i,i+1}+R_{i+1,i+2} \exp \beta_{i+1}}{1+r_{i,i+1} R_{i+1,i+2} \exp\beta_{i+1}}
+\end{equation}
+with
+\begin{equation*}
+    \beta_i = -2 i \frac{2 \pi}{\lambda} n_i \cos \theta_i t_i
+\end{equation*}
+to simplify we define:
+\begin{align*}
+    R_i & \equiv R_{i,i+1} \\
+    r_i & \equiv r_{i,i+1} \\
+    \rho_i & \equiv \exp \beta_i
+\end{align*}
+so that we can write the equation like:
+\begin{equation}
+    R_i = \frac{r_i + R_{i+1} \exp \beta_{i+1}}{1 + r_i R_{i+1} \exp\beta_{i+1}} = \frac{r_i + R_{i+1} \rho_{i+1}}{1 + r_i R_{i+1} \rho_{i+1}}
+\end{equation}
+\section{$R_i$ derivatives}
+$R_i$ can be seen as a function of $r_i$, $R_{i+1}$ and $\rho_{i+1}$ and its partial derivatives are:
+\begin{align}
+    \pder{R_i}{r_i} & = \frac{1 - R_{i+1}^2 \rho_{i+1}^2}{D_i^2} \\
+    \pder{R_i}{\rho_{i+1}} & = \frac{R_{i+1}\left(1 - r_i^2\right)}{D_i^2} \\
+    \pder{R_i}{R_{i+1}} & = \frac{\left(1 - r_i^2\right) \rho_{i+1}}{D_i^2}
+\end{align}
+where $D_i$ is the denominator if the equation for $R_i$:
+\begin{equation}
+    D_i \equiv 1 + r_i R_{i+1} \rho_{i+1}
+\end{equation}
+Now we call $\theta_0$ the Angle Of Incidence (AOI) so that we can write:
+\begin{equation}
+    \pder{R_i}{\theta_0} = \pder{R_i}{r_i} \pder{r_i}{\theta_0} + \pder{R_i}{\rho_{i+1}} \frac{\partial \rho_{i+1}}{\partial \theta_0} + \pder{R_i}{R_{i+1}} \pder{R_{i+1}}{\theta_0}
+\end{equation}
+\section{Derivatives with $\theta_0$}
+Preliminary result:
+\begin{equation}
+    \pder{\cos \theta_i}{\theta_0} = - \frac{n_0^2 \sin \theta_0 \cos \theta_0}{n_i^2 \cos \theta_i}
+\end{equation}
+because
+\begin{equation*}
+    \cos \theta_i = \sqrt{1 - \sin^2 \theta_i} = \sqrt{1 - \frac{n_0^2 \sin^2 \theta_0}{n_i^2}}
+\end{equation*}
+using the Snell's law:
+\begin{equation*}
+    n_i \sin \theta_i = n_0 \sin \theta_0 \qquad \forall i
+\end{equation*}
+it follows
+\begin{equation}
+    \pder{\beta_i}{\theta_0} = 2 i \frac{2 \pi}{\lambda} \frac{n_0^2 \sin \theta_0 \cos \theta_0}{n_i \cos \theta_i} t_i
+\end{equation}
+and
+\begin{equation}
+    \pder{\rho_i}{\theta_0} = \rho_i \pder{\beta_i}{\theta_0} \qquad \textrm{because} \qquad \rho_i = \exp \beta_i
+\end{equation}
+\section{Derivatives of Fresnel's coefficients $r_i$}
+\begin{equation}
+    ( r_i )_s \equiv ( r_{i,i+1} )_s = \frac{n_{i} \cos \theta_{i} - n_{i+1} \cos \theta_{i+1}}{n_{i} \cos \theta_{i} + n_{i+1} \cos \theta_{i+1}}
+\end{equation}
+it follows:
+\begin{equation}
+    \pder{( r_i )_s}{\theta_0} = \frac{2 n_0^2 \sin \theta_0 \cos \theta_0}{\left(n_{i} \cos \theta_{i} + n_{i+1} \cos \theta_{i+1}\right)^2} \left( \frac{n_{i} \cos \theta_{i}}{n_{i+1} \cos \theta_{i+1}} - \frac{n_{i+1} \cos \theta_{i+1}}{n_{i} \cos \theta_{i}}\right)
+\end{equation}
+obtained using $\pder{\cos \theta_i}{\theta_0}$. For the $p$ polarization:
+\begin{equation}
+    ( r_i )_p \equiv ( r_{i,i+1} )_p = \frac{n_{i+1} \cos \theta_{i} - n_{i} \cos \theta_{i+1}}{n_{i+1} \cos \theta_{i} + n_{i} \cos \theta_{i+1}}
+\end{equation}
+\begin{equation}
+    \pder{( r_i )_p}{\theta_0} = \frac{2 n_0^2 \sin \theta_0 \cos \theta_0}{\left(n_{i+1} \cos \theta_{i} + n_{i} \cos \theta_{i+1}\right)^2} \left( \frac{n_{i} \cos \theta_{i}}{n_{i+1} \cos \theta_{i+1}} - \frac{n_{i+1} \cos \theta_{i+1}}{n_{i} \cos \theta_{i}}\right)
+\end{equation}
+and we note that the derivatives for the $s$ and $p$ expressions are the same expect for the denominator.
+
+To finish for $\pder{R_{i+1}}{\theta_0}$ we use the fact that just above the substrate $R_N = r_N$ where $N \leftrightarrow N+1$ is the interface between the first film and the substrate. Then $\pder{R_{i}}{\theta_0}$ is calculated by recursion from $\pder{R_{i+1}}{\theta_0}$ using the total derivative formula given before.
+\end{document}
