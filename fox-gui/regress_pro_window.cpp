@@ -385,7 +385,9 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
         }
     }
 
+#ifdef DEBUG
     multi_fit_engine_check_deriv(fit, recipe->seeds_list, iseeds);
+#endif
 
     Str fit_error_msgs;
     ProgressInfo progress(this->getApp(), this);
