@@ -31,7 +31,7 @@ get_parameter_jacob_r(fit_param_t const *fp, stack_t const *stack,
         get_model_param_deriv(stack->disp[lyr], &ideriv[lyr],
                               fp, lambda, &dnr, &dni);
 
-        const double drdn = jacob_n[lyr];
+        const cmpl drdn = jacob_n[lyr];
         result = creal(drdn) * dnr - cimag(drdn) * dni;
         break;
     case PID_BANDWIDTH:
