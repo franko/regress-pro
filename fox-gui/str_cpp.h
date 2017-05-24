@@ -1,6 +1,8 @@
 #ifndef STR_CPP_H
 #define STR_CPP_H
 
+#include <cstring>
+
 #include "str.h"
 
 class str : public _str {
