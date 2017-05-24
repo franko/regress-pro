@@ -134,6 +134,10 @@ public:
     virtual void create();
     virtual ~regress_pro_window();
 
+    str_ptr load_spectrum(const char *filename);
+    str_ptr load_recipe(const char *filename);
+    str_ptr run_fit_command();
+
 private:
     bool check_spectrum(const char *context);
     void set_stack_result(stack_t *s);
