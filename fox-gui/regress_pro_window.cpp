@@ -531,6 +531,7 @@ prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config 
 }
 
 str_ptr regress_pro_window::run_fit_command() {
+    fprintf(stderr, "Running fit...\n");
     str_ptr error_msg;
     fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
     if (!fit) {
@@ -538,6 +539,7 @@ str_ptr regress_pro_window::run_fit_command() {
     }
     run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
+    fprintf(stderr, "done.\n");
     return nullptr;
 }
 

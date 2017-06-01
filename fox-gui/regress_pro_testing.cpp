@@ -25,6 +25,7 @@
 #include "lexer.h"
 
 int execute_script(const char *script_filename, testing_app& app) {
+    fprintf(stderr, "Using script: \"%s\"\n", script_filename);
     str script_text;
     str_loadfile(script_filename, &script_text);
     lexer_t *lex = lexer_new(script_text.text());
@@ -33,8 +34,14 @@ int execute_script(const char *script_filename, testing_app& app) {
         if (lexer_ident(lex)) break;
         command = CSTR(lex->store);
 
-        if (lexer_string(lex)) break;
-        argument = CSTR(lex->store);
+        int has_argument = (lexer_string(lex) == 0);
+        if (has_argument) {
+            argument = CSTR(lex->store);
+        } else {
+            argument = "";
+        }
+
+        fprintf(stderr, "command: %s \"%s\"\n", command.text(), argument.text());
 
         str_ptr error_msg = app.execute(command, argument);
         if (error_msg) {
