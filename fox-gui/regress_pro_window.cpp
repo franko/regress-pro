@@ -467,27 +467,29 @@ regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& 
     m_fit_window->set_fit_result(result);
 }
 
+void regress_pro_window::set_fit_status(const char *text) {
+    statusbar->getStatusLine()->setNormalText(text);
+}
+
+void regress_pro_window::set_result_text(const char *text) {
+    resulttext->setText(text);
+    resulttext->setModified(TRUE);
+}
+
 void
-regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
+regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum, recipe_fit_target& target)
 {
     Str analysis;
-
     fit_engine_prepare(fit, fspectrum, FIT_ENGINE_RESET_ACQ);
 
-    ProgressInfo progress(this->getApp(), this);
+    progress_callback callback = target.get_progress_callback();
 
     lmfit_result result;
     lmfit_grid(fit, fseeds, &result, analysis.str(),
                LMFIT_GET_RESULTING_STACK,
-               process_foxgui_events, & progress);
+               callback.fn, callback.data);
 
-    progress.hide();
-
-    if (result.gsl_status != GSL_SUCCESS) {
-        statusbar->getStatusLine()->setNormalText(lmfit_result_error_string(&result));
-    } else {
-        statusbar->getStatusLine()->setNormalText("Fit Successfull.");
-    }
+    target.notify_end(result);
 
     FXString fitresult, row;
 
@@ -508,10 +510,8 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append("\n");
     fitresult.append(analysis.cstr());
 
-    resulttext->setText(fitresult);
-    resulttext->setModified(TRUE);
+    target.set_fit_results(fit, result, fitresult.text());
 
-    update_interactive_fit(fit, result);
     fit_engine_disable(fit);
 }
 
@@ -530,16 +530,34 @@ prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config 
     return fit;
 }
 
+recipe_fit_target::recipe_fit_target(regress_pro_window *win)
+: m_window(win), m_progress(win->getApp(), win) {
+}
+
+progress_callback recipe_fit_target::get_progress_callback() {
+    return progress_callback {process_foxgui_events, (void *) &m_progress};
+}
+
+void recipe_fit_target::notify_end(lmfit_result& result) {
+    m_progress.hide();
+    const char *text = (result.gsl_status == GSL_SUCCESS ? "Fit Successfull." : lmfit_result_error_string(&result));
+    m_window->set_fit_status(text);
+}
+
+void recipe_fit_target::set_fit_results(fit_engine *fit, const lmfit_result& result, const char *text) {
+    m_window->set_result_text(text);
+    m_window->update_interactive_fit(fit, result);
+}
+
 str_ptr regress_pro_window::run_fit_command() {
-    fprintf(stderr, "Running fit...\n");
     str_ptr error_msg;
     fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
     if (!fit) {
         return error_msg;
     }
-    run_fit(fit, recipe->seeds_list, this->spectrum);
+    recipe_fit_target target(this);
+    run_fit(fit, recipe->seeds_list, this->spectrum, target);
     fit_engine_free(fit);
-    fprintf(stderr, "done.\n");
     return nullptr;
 }
 

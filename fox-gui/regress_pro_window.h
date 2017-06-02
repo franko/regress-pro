@@ -31,6 +31,7 @@
 #include "fit_recipe.h"
 #include "fit_window.h"
 #include "filmstack_window.h"
+#include "lmfit.h"
 
 class recipe_window;
 class dataset_window;
@@ -43,6 +44,27 @@ struct window_result_target : fit_result_target {
     void bind(filmstack_window *w) { window = w; }
     virtual void notify_change() { window->update_values(); }
     filmstack_window *window;
+};
+
+struct progress_callback {
+    gui_hook_func_t fn;
+    void *data;
+};
+
+class regress_pro_window;
+
+class recipe_fit_target {
+public:
+    recipe_fit_target(regress_pro_window *win);
+
+    progress_callback get_progress_callback();
+
+    void notify_end(lmfit_result& result);
+    void set_fit_results(fit_engine *fit, const lmfit_result& result, const char *text);
+
+private:
+    regress_pro_window *m_window;
+    ProgressInfo m_progress;
 };
 
 class regress_pro_window : public FXMainWindow {
@@ -138,12 +160,15 @@ public:
     str_ptr load_recipe(const char *filename);
     str_ptr run_fit_command();
 
+    void update_interactive_fit(fit_engine *fit, const lmfit_result& result);
+    void set_fit_status(const char *text);
+    void set_result_text(const char *text);
+
 private:
     bool check_spectrum(const char *context);
     void set_stack_result(stack_t *s);
-    void update_interactive_fit(fit_engine *fit, const lmfit_result& result);
     void set_spectrum(struct spectrum *s);
-    void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
+    void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum, recipe_fit_target& target);
     void save_recipe_as(const FXString& filename);
 
     interactive_fit *m_interactive_fit;
