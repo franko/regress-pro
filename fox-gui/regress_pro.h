@@ -10,6 +10,9 @@ public:
     regress_pro();
     virtual ~regress_pro();
 
+    void setScriptMode(bool mode) { m_script_mode = mode; }
+    bool scriptMode() const { return m_script_mode; }
+
     FXGIFIcon appicon;
     FXFont small_font;
     FXFont bold_font;
@@ -19,6 +22,9 @@ public:
     FXColor blue_web, blue_highlight, red_warning, black;
     FXIcon *delete_icon, *add_icon, *broom_icon;
     FXString spectra_dir, recipe_dir, disp_dir;
+
+private:
+    bool m_script_mode;
 };
 
 #endif

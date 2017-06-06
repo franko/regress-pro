@@ -43,6 +43,7 @@ int main(int argc,char *argv[])
 
     app.create();
     if (script) {
+        app.setScriptMode(true);
         testing_app testing(window);
         execute_script(script, testing);
         return 0;

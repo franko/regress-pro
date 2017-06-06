@@ -27,7 +27,8 @@ regress_pro::regress_pro() :
     lit_font(this, LITERATE_FONT_NAME, 10, FXFont::Normal, FXFont::Straight),
     monospace_font(this, SCRIPT_FONT_NAME, 9),
     big_web_font(this, BIG_UI_FONT_NAME, 14, FXFont::Bold, FXFont::Straight),
-    blue_web(FXRGB(100,114,161)), blue_highlight(FXRGB(3,12,180)), red_warning(FXRGB(180,5,10)), black(FXRGB(0,0,0))
+    blue_web(FXRGB(100,114,161)), blue_highlight(FXRGB(3,12,180)), red_warning(FXRGB(180,5,10)), black(FXRGB(0,0,0)),
+    m_script_mode(false)
 {
     delete_icon = new FXGIFIcon(this, delete_gif);
     add_icon = new FXGIFIcon(this, new_gif);
