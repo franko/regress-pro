@@ -14,15 +14,20 @@ public:
     }
 
     unsigned vertex(double* x, double* y) {
-        if(m_index >= spectra_points(m_spectrum)) {
-            return agg::path_cmd_stop;
+        bool line_start = (m_index == 0);
+        const int points_number = spectra_points(m_spectrum);
+        while (m_index < points_number) {
+            const float *val = spectra_get_values(m_spectrum, m_index);
+            float px = val[0], py = val[1 + m_comp];
+            m_index ++;
+            if (isfinite(px) && isfinite(py)) {
+                *x = double(px);
+                *y = double(py);
+                return (line_start ? agg::path_cmd_move_to : agg::path_cmd_line_to);
+            }
+            line_start = true;
         }
-
-        const float *val = spectra_get_values(m_spectrum, m_index);
-        *x = double(val[0]);
-        *y = double(val[1 + m_comp]);
-
-        return (m_index++ == 0 ? agg::path_cmd_move_to : agg::path_cmd_line_to);
+        return agg::path_cmd_stop;
     }
 
 private:
