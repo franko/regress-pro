@@ -143,7 +143,7 @@ private:
     void set_stack_result(stack_t *s);
     void update_interactive_fit(fit_engine *fit, const lmfit_result& result);
     void set_spectrum(struct spectrum *s);
-    void run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
+    FXString run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum);
     void save_recipe_as(const FXString& filename);
 
     interactive_fit *m_interactive_fit;
