@@ -467,7 +467,7 @@ regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& 
     m_fit_window->set_fit_result(result);
 }
 
-void
+FXString
 regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
 {
     Str analysis;
@@ -511,11 +511,10 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append("\n");
     fitresult.append(analysis.cstr());
 
-    resulttext->setText(fitresult);
-    resulttext->setModified(TRUE);
-
     update_interactive_fit(fit, result);
     fit_engine_disable(fit);
+
+    return fitresult;
 }
 
 fit_engine *
@@ -540,9 +539,15 @@ str_ptr regress_pro_window::run_fit_command() {
     if (!fit) {
         return error_msg;
     }
-    run_fit(fit, recipe->seeds_list, this->spectrum);
+    FXString fit_result = run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
-    fprintf(stderr, "done.\n");
+
+    if (regressProApp()->scriptMode()) {
+        fputs(fit_result.text(), stdout);
+    } else {
+        resulttext->setText(fit_result);
+        resulttext->setModified(TRUE);
+    }
     return nullptr;
 }
 
