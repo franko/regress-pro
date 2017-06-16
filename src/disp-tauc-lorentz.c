@@ -88,7 +88,8 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
     double er_sum = fb->n_inf, ei_sum = 0;
     double E = TL_EV_NM / lambda;
 
-    const double Eg = fb->eg;
+    /* If Eg is negative use zero instead. A negative Eg is not meaningful. */
+    const double Eg = (fb->eg >= 0 ? fb->eg : 0.0);
     for(k = 0; k < nb; k++) {
         const struct fb_osc *osc = fb->osc + k;
         double A, E0, C;
