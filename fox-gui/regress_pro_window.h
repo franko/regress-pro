@@ -138,6 +138,8 @@ public:
     str_ptr load_recipe(const char *filename);
     str_ptr run_fit_command();
 
+    bool scriptMode() const { return regressProApp()->scriptMode(); }
+
 private:
     bool check_spectrum(const char *context);
     void set_stack_result(stack_t *s);
