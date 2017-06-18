@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <pthread.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_blas.h>
@@ -7,6 +8,84 @@
 #include "grid-search.h"
 #include "stack.h"
 #include "fit_result.h"
+
+static void *thr_grid_search_func(void *arg);
+
+pthread_mutex_t seed_lock[1]   = {PTHREAD_MUTEX_INITIALIZER};
+pthread_mutex_t result_lock[1] = {PTHREAD_MUTEX_INITIALIZER};
+
+pthread_cond_t seed_cond[1] = {PTHREAD_COND_INITIALIZER};
+
+enum {
+    SEED_PREPARE_AVAIL,
+    SEED_PREPARE_WAIT,
+    SEED_PREPARE_END
+};
+
+struct {
+    int status;
+    gsl_vector *x;    
+} seed_prepare;
+
+struct {
+    double chisq;
+    gsl_vector *x;
+} grid_result;
+
+struct thr_grid_search_data {
+    struct fit_engine *fit;
+    struct spectrum *spectrum;
+};
+
+void *thr_grid_search_func(void *arg) {
+    struct thr_grid_search_data *data = (struct thr_grid_search_data *) arg;
+    struct fit_engine *fit = data->fit;
+
+    fit_engine_prepare(fit, data->spectrum, FIT_ENGINE_KEEP_ACQ);
+
+    gsl_multifit_function_fdf *f = &fit->run->mffun;
+    gsl_vector *x = gsl_vector_alloc(f->n);
+
+    /* We choose Levenberg-Marquardt algorithm, scaled version*/
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
+
+    while (1) {
+        pthread_mutex_lock(seed_lock);
+        while (seed_prepare.status == SEED_PREPARE_WAIT) {
+            pthread_cond_wait(seed_cond, seed_lock);
+        }
+        if (seed_prepare.status == SEED_PREPARE_END) {
+            pthread_mutex_unlock(seed_lock);
+            break;
+        }
+        gsl_vector_memcpy(x, seed_prepare.x);
+        seed_prepare.status == SEED_PREPARE_WAIT;
+        pthread_mutex_unlock(seed_lock);
+
+        const int search_max_iters = 3;
+
+        gsl_multifit_fdfsolver_set(s, f, x);
+
+        for(j = 0; j < search_max_iters; j++) {
+            status = gsl_multifit_fdfsolver_iterate(s);
+            if(status != 0) {
+                break;
+            }
+        }
+
+        const double chi = gsl_blas_dnrm2(s->f);
+        const double chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+
+        pthread_mutex_lock(result_lock);
+        if (grid_result.chisq < 0 || chisq < grid_result.chisq) {
+            grid_result.chisq = chisq;
+            gsl_vector_memcpy(grid_result.x, &x_view.vector);
+        }
+        pthread_mutex_unlock(result_lock);
+    }
+    pthread_exit(NULL);
+}
 
 int
 lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
@@ -35,7 +114,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     assert(fit->parameters->number == seeds->number);
 
     x     = gsl_vector_alloc(nb);
-    xbest = gsl_vector_alloc(nb);
+    // xbest = gsl_vector_alloc(nb);
 
     if(preserve_init_stack) {
         initial_stack = stack_copy(fit->stack);
@@ -72,6 +151,20 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         (*hfun)(hdata, 0.0, "Running grid search...");
     }
 
+    seed_prepare.status = SEED_PREPARE_WAIT;
+    seed_prepare.x = gsl_vector_alloc(nb);
+
+    struct thr_grid_search_data thr_data[threads_number];
+    pthread_t thr[threads_number];
+    for (int i = 0; i < threads_number; i++) {
+        struct thr_grid_search_data *data = &thr_data[i];
+        data->fit = fit_engine_clone(fit);
+        data->spectrum = fit->run->spectr;
+        pthread_create(&thr[i], NULL, thr_grid_search_func, data);
+    }
+
+
+#if 0
     /* We choose Levenberg-Marquardt algorithm, scaled version*/
     T = gsl_multifit_fdfsolver_lmsder;
     s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
@@ -97,6 +190,13 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
             chisq_best = chisq;
             gsl_vector_memcpy(xbest, x);
         }
+#endif
+    result->interrupted = 0;
+    result->chisq_threshold = cfg->chisq_threshold;
+    for(j_grid_pts = 0; ; j_grid_pts++) {
+
+        pthread_mutex_lock(seed_lock);
+        pthread_cond_signal(seed_cond);
 
         if(chisq < cfg->chisq_threshold) {
             break;

@@ -615,6 +615,21 @@ fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_c
     fit->stack = stack_copy(stack);
 }
 
+struct fit_engine *
+fit_engine_clone(struct fit_engine *src_fit)
+{
+    struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
+    fit->acquisition[0] = src_fit->acquisition[0];
+    fit->config[0] = src_fit->config[0];
+    fit->parameters = src_fit->parameters;
+    if (src_fit->stack) {
+        fit->stack = stack_copy(src_fit->stack);
+    } else {
+        fit->stack = NULL;
+    }
+    return fit;
+}
+
 void
 fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack)
 {
