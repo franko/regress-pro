@@ -36,6 +36,11 @@ int main(int argc,char *argv[])
     // Open display
     app.init(argc, argv);
 
+    if (argc >= 2 && strcmp(argv[1], "-v") == 0) {
+        printf("regress-pro version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+        exit(0);
+    }
+
     const char *script = read_script_options(argc, argv);
     new FXToolTip(&app);
     // Main window

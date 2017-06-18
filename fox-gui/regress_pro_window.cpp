@@ -475,7 +475,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fit_engine_prepare(fit, fspectrum, FIT_ENGINE_RESET_ACQ);
 
     lmfit_result result;
-    if (regressProApp()->scriptMode()) {
+    if (scriptMode()) {
         lmfit_grid(fit, fseeds, &result, analysis.str(),
                    LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
     } else {
@@ -533,7 +533,6 @@ prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config 
 }
 
 str_ptr regress_pro_window::run_fit_command() {
-    fprintf(stderr, "Running fit...\n");
     str_ptr error_msg;
     fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
     if (!fit) {
@@ -542,7 +541,7 @@ str_ptr regress_pro_window::run_fit_command() {
     FXString fit_result = run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
 
-    if (regressProApp()->scriptMode()) {
+    if (scriptMode()) {
         fputs(fit_result.text(), stdout);
     } else {
         resulttext->setText(fit_result);
