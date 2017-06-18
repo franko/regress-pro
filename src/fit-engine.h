@@ -62,6 +62,9 @@ struct seeds;
 
 extern struct fit_engine *fit_engine_new();
 
+/* Create a clone of the film stack by copying the film stack. */
+extern struct fit_engine *fit_engine_clone(struct fit_engine *fit);
+
 /* Bind the fit_engine to the given film stack, config and fit parameters.
    It makes internally a copy of the stack and of the config.
    It holds only a reference to the fit parameters and this latter can be
