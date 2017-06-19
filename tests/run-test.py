@@ -52,7 +52,7 @@ for dirpath, dirnames, filenames in os.walk(test_dir):
             else:
                 led, msg = "*", "\x1B[31mfail\x1B[0m"
                 log = open("tests/log/%s.output.diff" % test_name, "w")
-                log.write("*** reference ***\n%s\n" % out_ref)
+                log.write("*** expected output ***\n%s\n" % out_ref)
                 log.write("*** test program ***\n%s\n" % out_tst)
                 log.close()
 
