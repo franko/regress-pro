@@ -35,6 +35,10 @@ for dirpath, dirnames, filenames in os.walk(test_dir):
                 out_tst = subprocess.check_output([regpro_exec, "--script", fullname], stderr= devnull)
             except subprocess.CalledProcessError:
                 run_error, run_msg = True, "fail to run"
+
+            # On windows replace \r\n with \n in the program output.
+            out_tst = re.sub(r'(\r+)\n', "\n", out_tst)
+
             out_ref = None
             try:
                 out_ref = open("tests/expect/%s.txt" % test_name).read()
