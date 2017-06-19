@@ -236,6 +236,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
                 gsl_vector_memcpy(seed_prepare.x, x);
                 pthread_mutex_unlock(seed_lock);
                 pthread_cond_signal(seed_cond);
+                break;
             } else {
                 pthread_mutex_unlock(seed_lock);
             }
@@ -277,6 +278,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
             seed_prepare.status = SEED_PREPARE_END;
             pthread_mutex_unlock(seed_lock);
             pthread_cond_signal(seed_cond);
+            break;
         } else {
             pthread_mutex_unlock(seed_lock);
         }
