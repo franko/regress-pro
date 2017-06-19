@@ -25,14 +25,17 @@ enum {
 struct thr_eval_data {
     struct fit_engine *fit;
 
-    int seed_status;
     gsl_vector *x_seed;
     pthread_mutex_t seed_lock[1];
     pthread_cond_t seed_cond[1];
 
-    double chisq_best;
+    float chisq_best;
+    float chisq_threshold;
     gsl_vector *x_best;
     pthread_mutex_t result_lock[1];
+
+    short int seed_status;
+    short int solution_found;
 };
 
 static int get_thread_core_number() {
@@ -60,12 +63,14 @@ void *thr_eval_func(void *arg) {
 
     while (1) {
         pthread_mutex_lock(data->seed_lock);
-        while (data->seed_status == SEED_PREPARE_WAIT) {
-            pthread_cond_wait(data->seed_cond, data->seed_lock);
-        }
         if (data->seed_status == SEED_PREPARE_END) {
+            fprintf(stderr, "thread: %p abandon\n", fit);
+            fflush(stderr);
             pthread_mutex_unlock(data->seed_lock);
             break;
+        }
+        while (data->seed_status == SEED_PREPARE_WAIT) {
+            pthread_cond_wait(data->seed_cond, data->seed_lock);
         }
         gsl_vector_memcpy(x, data->x_seed);
         data->seed_status = SEED_PREPARE_WAIT;
@@ -95,13 +100,27 @@ void *thr_eval_func(void *arg) {
         pthread_mutex_lock(data->result_lock);
         fprintf(stderr, "thread: %p chisq: %g\n", fit, chisq);
         fflush(stderr);
+        int solution_found = 0;
         if (data->chisq_best < 0 || chisq < data->chisq_best) {
             fprintf(stderr, "thread: %p got best result: %g\n", fit, chisq);
             fflush(stderr);
             data->chisq_best = chisq;
             gsl_vector_memcpy(data->x_best, x);
+            if (chisq < data->chisq_threshold) {
+                solution_found = 1;
+            }
         }
         pthread_mutex_unlock(data->result_lock);
+
+        if (solution_found) {
+            fprintf(stderr, "thread: %p found solution\n", fit);
+            fflush(stderr);
+            data->solution_found = 1;
+            pthread_mutex_lock(data->seed_lock);
+            data->seed_status = SEED_PREPARE_END;
+            pthread_mutex_unlock(data->seed_lock);
+            break;
+        }
     }
 
     fprintf(stderr, "thread: %p terminate\n", fit);
@@ -176,8 +195,9 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     struct thr_eval_data thr_data = {
         fit,
-        SEED_PREPARE_WAIT, x, {PTHREAD_MUTEX_INITIALIZER}, {PTHREAD_COND_INITIALIZER},
-        -1.0, x_best, {PTHREAD_MUTEX_INITIALIZER}
+        x, {PTHREAD_MUTEX_INITIALIZER}, {PTHREAD_COND_INITIALIZER},
+        -1.0, cfg->chisq_threshold, x_best, {PTHREAD_MUTEX_INITIALIZER},
+        SEED_PREPARE_WAIT, 0
     };
 
     const int threads_number = get_thread_core_number();
@@ -189,9 +209,15 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     result->interrupted = 0;
     result->chisq_threshold = cfg->chisq_threshold;
+    int solution_found = 0;
     for(j_grid_pts = 0; ; j_grid_pts++) {
         while (1) {
             pthread_mutex_lock(thr_data.seed_lock);
+            if (thr_data.seed_status == SEED_PREPARE_END) {
+                solution_found = 1;
+                pthread_mutex_unlock(thr_data.seed_lock);
+                break;
+            }
             if (thr_data.seed_status == SEED_PREPARE_WAIT) {
                 thr_data.seed_status = SEED_PREPARE_AVAIL;
                 gsl_vector_memcpy(thr_data.x_seed, x);
@@ -201,6 +227,10 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
             } else {
                 pthread_mutex_unlock(thr_data.seed_lock);
             }
+        }
+
+        if (solution_found) {
+            break;
         }
 
         if(hfun) {
@@ -228,23 +258,22 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         }
     }
 
-    /* Case of grid search exhausted or stop request. */
-//    if(j < 0 || stop_request) {
-        gsl_vector_memcpy(x, thr_data.x_best);
-        const double chisq = thr_data.chisq_best;
-//    }
-
-    while (1) {
-        pthread_mutex_lock(thr_data.seed_lock);
-        if (thr_data.seed_status == SEED_PREPARE_WAIT) {
-            thr_data.seed_status = SEED_PREPARE_END;
-            pthread_mutex_unlock(thr_data.seed_lock);
-            pthread_cond_signal(thr_data.seed_cond);
-            break;
-        } else {
-            pthread_mutex_unlock(thr_data.seed_lock);
+    if (!solution_found) {
+        while (1) {
+            pthread_mutex_lock(thr_data.seed_lock);
+            if (thr_data.seed_status == SEED_PREPARE_WAIT) {
+                thr_data.seed_status = SEED_PREPARE_END;
+                pthread_mutex_unlock(thr_data.seed_lock);
+                pthread_cond_signal(thr_data.seed_cond);
+                break;
+            } else {
+                pthread_mutex_unlock(thr_data.seed_lock);
+            }
         }
     }
+
+    gsl_vector_memcpy(x, thr_data.x_best);
+    const double chisq = thr_data.chisq_best;
 
     for (int i = 0; i < threads_number; i++) {
         pthread_join(thr[i], NULL);
