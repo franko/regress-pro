@@ -5,6 +5,8 @@ include makesystem
 GSL_LIBS = $(shell pkg-config --libs gsl)
 GSL_INCLUDES = $(shell pkg-config --cflags gsl)
 
+CFLAGS += -pthread
+
 INCLUDES += $(GSL_INCLUDES)
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)

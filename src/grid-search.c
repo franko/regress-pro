@@ -1,8 +1,13 @@
 #include <assert.h>
-#include <pthread.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
 #include <gsl/gsl_blas.h>
+#include <pthread.h>
+#ifndef WIN32
+#include <unistd.h>
+#else
+#include <windows.h>
+#endif
 
 #include "lmfit.h"
 #include "grid-search.h"
@@ -30,12 +35,22 @@ struct {
 struct {
     double chisq;
     gsl_vector *x;
-} grid_result;
+} thr_fit_result;
 
 struct thr_grid_search_data {
     struct fit_engine *fit;
     struct spectrum *spectrum;
 };
+
+static int get_thread_core_number() {
+#ifdef WIN32
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    return sysinfo.dwNumberOfProcessors;
+#else
+    return sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+}
 
 void *thr_grid_search_func(void *arg) {
     struct thr_grid_search_data *data = (struct thr_grid_search_data *) arg;
@@ -44,7 +59,7 @@ void *thr_grid_search_func(void *arg) {
     fit_engine_prepare(fit, data->spectrum, FIT_ENGINE_KEEP_ACQ);
 
     gsl_multifit_function_fdf *f = &fit->run->mffun;
-    gsl_vector *x = gsl_vector_alloc(f->n);
+    gsl_vector *x = gsl_vector_alloc(f->p);
 
     /* We choose Levenberg-Marquardt algorithm, scaled version*/
     const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
@@ -60,15 +75,22 @@ void *thr_grid_search_func(void *arg) {
             break;
         }
         gsl_vector_memcpy(x, seed_prepare.x);
-        seed_prepare.status == SEED_PREPARE_WAIT;
+        seed_prepare.status = SEED_PREPARE_WAIT;
         pthread_mutex_unlock(seed_lock);
+
+        fprintf(stderr, "thread: %p seed:", arg);
+        for (int k = 0; k < (int) x->size; k++) {
+            fprintf(stderr, " %g", gsl_vector_get(x, k));
+        }
+        fprintf(stderr, "\n");
+        fflush(stderr);
 
         const int search_max_iters = 3;
 
         gsl_multifit_fdfsolver_set(s, f, x);
 
-        for(j = 0; j < search_max_iters; j++) {
-            status = gsl_multifit_fdfsolver_iterate(s);
+        for(int j = 0; j < search_max_iters; j++) {
+            int status = gsl_multifit_fdfsolver_iterate(s);
             if(status != 0) {
                 break;
             }
@@ -78,13 +100,26 @@ void *thr_grid_search_func(void *arg) {
         const double chisq = 1.0E6 * pow(chi, 2.0) / f->n;
 
         pthread_mutex_lock(result_lock);
-        if (grid_result.chisq < 0 || chisq < grid_result.chisq) {
-            grid_result.chisq = chisq;
-            gsl_vector_memcpy(grid_result.x, &x_view.vector);
+        fprintf(stderr, "thread: %p chisq: %g\n", arg, chisq);
+        fflush(stderr);
+        if (thr_fit_result.chisq < 0 || chisq < thr_fit_result.chisq) {
+            fprintf(stderr, "thread: %p got best result: %g\n", arg, chisq);
+            fflush(stderr);
+            thr_fit_result.chisq = chisq;
+            gsl_vector_memcpy(thr_fit_result.x, x);
         }
         pthread_mutex_unlock(result_lock);
     }
+
+    fprintf(stderr, "thread: %p terminate\n", arg);
+    fflush(stderr);
+
+    gsl_vector_free(x);
+    gsl_multifit_fdfsolver_free(s);
+    fit_engine_disable(fit);
+
     pthread_exit(NULL);
+    return NULL;
 }
 
 int
@@ -92,21 +127,16 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     int preserve_init_stack, struct fit_result *result,
     gui_hook_func_t hfun, void *hdata)
 {
-    const gsl_multifit_fdfsolver_type *T;
-    gsl_multifit_fdfsolver *s;
-    gsl_multifit_function_fdf *f;
     struct fit_config *cfg = fit->config;
     int nb, j, iter, nb_grid_pts, j_grid_pts;
     gsl_vector *x, *xbest;
     double *xarr;
-    double chisq, chi, chisq_best = -1.0;
+    double chisq, chi;
     int status, stop_request = 0;
     stack_t *initial_stack;
     seed_t *vseed;
 
     assert(fit->run);
-
-    f = &fit->run->mffun;
 
     vseed = seeds->values;
     nb    = fit->parameters->number;
@@ -114,7 +144,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     assert(fit->parameters->number == seeds->number);
 
     x     = gsl_vector_alloc(nb);
-    // xbest = gsl_vector_alloc(nb);
+    xbest = gsl_vector_alloc(nb);
 
     if(preserve_init_stack) {
         initial_stack = stack_copy(fit->stack);
@@ -152,8 +182,12 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     }
 
     seed_prepare.status = SEED_PREPARE_WAIT;
-    seed_prepare.x = gsl_vector_alloc(nb);
+    seed_prepare.x = x;
 
+    thr_fit_result.chisq = -1.0;
+    thr_fit_result.x = xbest;
+
+    const int threads_number = get_thread_core_number();
     struct thr_grid_search_data thr_data[threads_number];
     pthread_t thr[threads_number];
     for (int i = 0; i < threads_number; i++) {
@@ -195,11 +229,16 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     result->chisq_threshold = cfg->chisq_threshold;
     for(j_grid_pts = 0; ; j_grid_pts++) {
 
-        pthread_mutex_lock(seed_lock);
-        pthread_cond_signal(seed_cond);
-
-        if(chisq < cfg->chisq_threshold) {
-            break;
+        while (1) {
+            pthread_mutex_lock(seed_lock);
+            if (seed_prepare.status == SEED_PREPARE_WAIT) {
+                seed_prepare.status = SEED_PREPARE_AVAIL;
+                gsl_vector_memcpy(seed_prepare.x, x);
+                pthread_mutex_unlock(seed_lock);
+                pthread_cond_signal(seed_cond);
+            } else {
+                pthread_mutex_unlock(seed_lock);
+            }
         }
 
         if(hfun) {
@@ -227,9 +266,26 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     }
 
     /* Case of grid search exhausted or stop request. */
-    if(j < 0 || stop_request) {
-        gsl_vector_memcpy(x, xbest);
-        chisq = chisq_best;
+//    if(j < 0 || stop_request) {
+        gsl_vector_memcpy(x, thr_fit_result.x);
+        chisq = thr_fit_result.chisq;
+//    }
+
+    while (1) {
+        pthread_mutex_lock(seed_lock);
+        if (seed_prepare.status == SEED_PREPARE_WAIT) {
+            seed_prepare.status = SEED_PREPARE_END;
+            pthread_mutex_unlock(seed_lock);
+            pthread_cond_signal(seed_cond);
+        } else {
+            pthread_mutex_unlock(seed_lock);
+        }
+    }
+
+    for (int i = 0; i < threads_number; i++) {
+        struct thr_grid_search_data *data = &thr_data[i];
+        pthread_join(thr[i], NULL);
+        fit_engine_free(data->fit);
     }
 
     result->gsearch_chisq = chisq;
@@ -238,6 +294,10 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     result->interrupted = stop_request;
 
     if(stop_request == 0) {
+        gsl_multifit_function_fdf *f = &fit->run->mffun;
+        const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+        gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
+
         status = lmfit_iter(x, f, s, cfg->nb_max_iters,
                             cfg->epsabs, cfg->epsrel,
                             & iter, hfun, hdata, & stop_request);
@@ -246,6 +306,8 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
         result->status = status;
         result->iter = iter;
+
+        gsl_multifit_fdfsolver_free(s);
     }
 
     if(preserve_init_stack) {
@@ -264,11 +326,8 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     gsl_vector_free(xbest);
     gsl_vector_free(pstep);
 
-    gsl_multifit_fdfsolver_free(s);
-
     return status;
 }
-
 
 int
 lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
