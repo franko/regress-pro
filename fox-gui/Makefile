@@ -24,7 +24,7 @@ else
   GSL_INCLUDES =
 endif
 
-LIBS += $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++
+LIBS += $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++ -pthread
 
 ifeq ($(HOST_SYS),Windows)
   LIBS += -mwindows
