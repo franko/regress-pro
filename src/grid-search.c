@@ -48,6 +48,36 @@ static int get_thread_core_number() {
 #endif
 }
 
+void grid_point_set(int dim, const int modulo[], const double x0[], const double dx[], const int index, double x[]) {
+    int q = index;
+    for (int k = dim - 1; k >= 0; k--) {
+        int r = q % modulo[k];
+        q = (q - r) / modulo[k];
+        x[k] = x0[k] + r * dx[k];
+    }
+}
+
+/* Return non-zero if there is an overflow. */
+int grid_point_increment(int dim, const int modulo[], const double x0[], const double dx[], double x[]) {
+    for (int k = dim - 1; k >= 0; k--) {
+        x[k] += dx[k];
+        if (x[k] > x0[k] + modulo[k] * dx[k] - dx[k] / 2) {
+            x[k] = x0[k];
+            continue;
+        }
+        return 0;
+    }
+    return 1;
+}
+
+int grid_point_count(int dim, const int modulo[], const double x0[], const double dx[]) {
+    int n = modulo[0];
+    for (int k = 1; k < dim; k++) {
+        n *= modulo[k];
+    }
+    return n;
+}
+
 void *thr_eval_func(void *arg) {
     struct thr_eval_data *data = (struct thr_eval_data *) arg;
     struct fit_engine *fit = fit_engine_clone(data->fit);
@@ -141,53 +171,50 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     gui_hook_func_t hfun, void *hdata)
 {
     struct fit_config *cfg = fit->config;
-    int nb, iter, nb_grid_pts, j_grid_pts;
+    int iter, nb_grid_pts, j_grid_pts;
     gsl_vector *x, *x_best;
-    double *xarr;
     int status, stop_request = 0;
     stack_t *initial_stack;
-    seed_t *vseed;
+    const int dim = fit->parameters->number;
+    const seed_t *vseed = seeds->values;
 
     assert(fit->run);
-
-    vseed = seeds->values;
-    nb    = fit->parameters->number;
-
     assert(fit->parameters->number == seeds->number);
 
-    x     = gsl_vector_alloc(nb);
-    x_best = gsl_vector_alloc(nb);
+    x      = gsl_vector_alloc(dim);
+    x_best = gsl_vector_alloc(dim);
 
     if(preserve_init_stack) {
         initial_stack = stack_copy(fit->stack);
     }
 
-    xarr = x->data;
+    /* We store in x_best the central coordinates of the grid. */
+    for(int j = 0; j < dim; j++) {
+        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
+        gsl_vector_set(x_best, j, xc);
+    }
 
-    gsl_vector *pstep = gsl_vector_alloc(nb);
-    for(int j = 0; j < nb; j++) {
-        xarr[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
-        gsl_vector_set(x_best, j, xarr[j]);
+    int modulo[dim];
+    double x0[dim], dx[dim];
+
+    for(int j = 0; j < dim; j++) {
+        const double x_center = gsl_vector_get(x_best, j);
         if(vseed[j].type == SEED_RANGE) {
-            xarr[j] -= vseed[j].delta;
+            const fit_param_t fp = fit->parameters->values[j];
+            const double delta = vseed[j].delta;
+            x0[j] = x_center - delta;
+            dx[j] = fit_engine_estimate_param_grid_step(fit, x_best, &fp, delta);
+            modulo[j] = (int) (2 * delta / dx[j]) + 1;
+        } else {
+            x0[j] = x_center;
+            dx[j] = 1.0;
+            modulo[j] = 1;
         }
     }
 
-    for(int j = 0; j < nb; j++) {
-        if(vseed[j].type != SEED_RANGE) continue;
-        fit_param_t fp = fit->parameters->values[j];
-        double delta = vseed[j].delta;
-        double es = fit_engine_estimate_param_grid_step(fit, x_best, &fp, delta);
-        gsl_vector_set(pstep, j, es);
-    }
+    grid_point_set(dim, modulo, x0, dx, 0, x->data);
 
-    nb_grid_pts = 1;
-    for(int j = nb-1; j >= 0; j--) {
-        if(vseed[j].type == SEED_RANGE) {
-            seed_t *cs = &vseed[j];
-            nb_grid_pts *= 2 * cs->delta / gsl_vector_get(pstep, j) + 1;
-        }
-    }
+    nb_grid_pts = grid_point_count(dim, modulo, x0, dx);
 
     if(hfun) {
         (*hfun)(hdata, 0.0, "Running grid search...");
@@ -241,19 +268,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
             }
         }
 
-        int j;
-        for(j = nb-1; j >= 0; j--) {
-            if(vseed[j].type == SEED_RANGE) {
-                xarr[j] += gsl_vector_get(pstep, j);
-                if(xarr[j] > vseed[j].seed + vseed[j].delta) {
-                    xarr[j] = vseed[j].seed - vseed[j].delta;
-                    continue;
-                }
-                break;
-            }
-        }
-
-        if(j < 0) {
+        if (grid_point_increment(dim, modulo, x0, dx, x->data)) {
             break;
         }
     }
@@ -315,7 +330,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     gsl_vector_free(x);
     gsl_vector_free(x_best);
-    gsl_vector_free(pstep);
 
     return status;
 }
