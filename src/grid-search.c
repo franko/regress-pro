@@ -216,10 +216,11 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     struct thr_eval_data thr_data[threads_number];
     int index = 0;
     const int index_range = nb_grid_pts / threads_number;
+    const int rem = nb_grid_pts % threads_number;
     for (int i = 0; i < threads_number; i++, index += index_range) {
         thr_data[i].shared = &shared_data;
         thr_data[i].start_index = index;
-        thr_data[i].index_count = (i < threads_number - 1 ? index_range : nb_grid_pts - index);
+        thr_data[i].index_count = (i < rem ? index_range + 1 : index_range);
         pthread_create(&thr[i], NULL, thr_eval_func, &thr_data[i]);
     }
 
