@@ -22,20 +22,23 @@ enum {
     SEED_PREPARE_END
 };
 
-struct thr_eval_data {
+struct thr_shared_data {
     struct fit_engine *fit;
-
-    gsl_vector *x_seed;
-    pthread_mutex_t seed_lock[1];
-    pthread_cond_t seed_cond[1];
-
+    pthread_mutex_t lock[1];
     float chisq_best;
     float chisq_threshold;
     gsl_vector *x_best;
-    pthread_mutex_t result_lock[1];
+    int solution_found;
 
-    short int seed_status;
-    short int solution_found;
+    const int dim;
+    int *modulo;
+    double *x0, *dx;
+};
+
+struct thr_eval_data {
+    struct thr_shared_data *shared;
+    int start_index;
+    int index_count;
 };
 
 static int get_thread_core_number() {
@@ -51,23 +54,21 @@ static int get_thread_core_number() {
 void grid_point_set(int dim, const int modulo[], const double x0[], const double dx[], const int index, double x[]) {
     int q = index;
     for (int k = dim - 1; k >= 0; k--) {
-        int r = q % modulo[k];
+        const int r = q % modulo[k];
         q = (q - r) / modulo[k];
         x[k] = x0[k] + r * dx[k];
     }
 }
 
-/* Return non-zero if there is an overflow. */
-int grid_point_increment(int dim, const int modulo[], const double x0[], const double dx[], double x[]) {
+void grid_point_increment(int dim, const int modulo[], const double x0[], const double dx[], double x[]) {
     for (int k = dim - 1; k >= 0; k--) {
         x[k] += dx[k];
         if (x[k] > x0[k] + modulo[k] * dx[k] - dx[k] / 2) {
             x[k] = x0[k];
             continue;
         }
-        return 0;
+        break;
     }
-    return 1;
 }
 
 int grid_point_count(int dim, const int modulo[], const double x0[], const double dx[]) {
@@ -80,9 +81,10 @@ int grid_point_count(int dim, const int modulo[], const double x0[], const doubl
 
 void *thr_eval_func(void *arg) {
     struct thr_eval_data *data = (struct thr_eval_data *) arg;
-    struct fit_engine *fit = fit_engine_clone(data->fit);
+    struct thr_shared_data *shared = data->shared;
+    struct fit_engine *fit = fit_engine_clone(shared->fit);
 
-    fit_engine_prepare(fit, data->fit->run->spectr, FIT_ENGINE_KEEP_ACQ);
+    fit_engine_prepare(fit, shared->fit->run->spectr, FIT_ENGINE_KEEP_ACQ);
 
     gsl_multifit_function_fdf *f = &fit->run->mffun;
     gsl_vector *x = gsl_vector_alloc(f->p);
@@ -91,22 +93,10 @@ void *thr_eval_func(void *arg) {
     const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
     gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
-    while (1) {
-        pthread_mutex_lock(data->seed_lock);
-        if (data->seed_status == SEED_PREPARE_END) {
-            fprintf(stderr, "thread: %p abandon\n", fit);
-            fflush(stderr);
-            pthread_mutex_unlock(data->seed_lock);
-            break;
-        }
-        while (data->seed_status == SEED_PREPARE_WAIT) {
-            pthread_cond_wait(data->seed_cond, data->seed_lock);
-        }
-        gsl_vector_memcpy(x, data->x_seed);
-        data->seed_status = SEED_PREPARE_WAIT;
-        pthread_mutex_unlock(data->seed_lock);
+    grid_point_set(shared->dim, shared->modulo, shared->x0, shared->dx, data->start_index, x->data);
 
-        fprintf(stderr, "thread: %p seed:", fit);
+    for (int index_count = 0; index_count < data->index_count; index_count++) {
+        fprintf(stderr, "thread: %p seed:", data);
         for (int k = 0; k < (int) x->size; k++) {
             fprintf(stderr, " %g", gsl_vector_get(x, k));
         }
@@ -127,33 +117,28 @@ void *thr_eval_func(void *arg) {
         const double chi = gsl_blas_dnrm2(s->f);
         const double chisq = 1.0E6 * pow(chi, 2.0) / f->n;
 
-        pthread_mutex_lock(data->result_lock);
-        fprintf(stderr, "thread: %p chisq: %g\n", fit, chisq);
+        pthread_mutex_lock(shared->lock);
+        fprintf(stderr, "thread: %p chisq: %g\n", data, chisq);
         fflush(stderr);
-        int solution_found = 0;
-        if (data->chisq_best < 0 || chisq < data->chisq_best) {
-            fprintf(stderr, "thread: %p got best result: %g\n", fit, chisq);
+        if (shared->chisq_best < 0 || chisq < shared->chisq_best) {
+            fprintf(stderr, "thread: %p got best result: %g\n", data, chisq);
             fflush(stderr);
-            data->chisq_best = chisq;
-            gsl_vector_memcpy(data->x_best, x);
-            if (chisq < data->chisq_threshold) {
-                solution_found = 1;
+            shared->chisq_best = chisq;
+            gsl_vector_memcpy(shared->x_best, x);
+            if (chisq < shared->chisq_threshold) {
+                shared->solution_found = 1;
             }
         }
-        pthread_mutex_unlock(data->result_lock);
-
-        if (solution_found) {
-            fprintf(stderr, "thread: %p found solution\n", fit);
-            fflush(stderr);
-            data->solution_found = 1;
-            pthread_mutex_lock(data->seed_lock);
-            data->seed_status = SEED_PREPARE_END;
-            pthread_mutex_unlock(data->seed_lock);
+        if (shared->solution_found) {
+            pthread_mutex_unlock(shared->lock);
             break;
         }
+        pthread_mutex_unlock(shared->lock);
+
+        grid_point_increment(shared->dim, shared->modulo, shared->x0, shared->dx, x->data);
     }
 
-    fprintf(stderr, "thread: %p terminate\n", fit);
+    fprintf(stderr, "thread: %p terminate\n", data);
     fflush(stderr);
 
     gsl_vector_free(x);
@@ -171,7 +156,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     gui_hook_func_t hfun, void *hdata)
 {
     struct fit_config *cfg = fit->config;
-    int iter, nb_grid_pts, j_grid_pts;
     gsl_vector *x, *x_best;
     int status, stop_request = 0;
     stack_t *initial_stack;
@@ -214,28 +198,35 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     grid_point_set(dim, modulo, x0, dx, 0, x->data);
 
-    nb_grid_pts = grid_point_count(dim, modulo, x0, dx);
+    const int nb_grid_pts = grid_point_count(dim, modulo, x0, dx);
 
     if(hfun) {
         (*hfun)(hdata, 0.0, "Running grid search...");
     }
 
-    struct thr_eval_data thr_data = {
+    struct thr_shared_data shared_data = {
         fit,
-        x, {PTHREAD_MUTEX_INITIALIZER}, {PTHREAD_COND_INITIALIZER},
-        -1.0, cfg->chisq_threshold, x_best, {PTHREAD_MUTEX_INITIALIZER},
-        SEED_PREPARE_WAIT, 0
+        {PTHREAD_MUTEX_INITIALIZER},
+        -1.0, cfg->chisq_threshold, x_best,
+        0, dim, modulo, x0, dx
     };
 
     const int threads_number = get_thread_core_number();
     fprintf(stderr, "thread number %d\n", threads_number);
     pthread_t thr[threads_number];
-    for (int i = 0; i < threads_number; i++) {
-        pthread_create(&thr[i], NULL, thr_eval_func, &thr_data);
+    struct thr_eval_data thr_data[threads_number];
+    int index = 0;
+    const int index_range = nb_grid_pts / threads_number;
+    for (int i = 0; i < threads_number; i++, index += index_range) {
+        thr_data[i].shared = &shared_data;
+        thr_data[i].start_index = index;
+        thr_data[i].index_count = (i < threads_number - 1 ? index_range : nb_grid_pts - index);
+        pthread_create(&thr[i], NULL, thr_eval_func, &thr_data[i]);
     }
 
     result->interrupted = 0;
     result->chisq_threshold = cfg->chisq_threshold;
+#if 0
     int solution_found = 0;
     for(j_grid_pts = 0; ; j_grid_pts++) {
         while (1) {
@@ -272,23 +263,14 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
             break;
         }
     }
+#endif
 
-    if (!solution_found) {
-        while (1) {
-            pthread_mutex_lock(thr_data.seed_lock);
-            if (thr_data.seed_status == SEED_PREPARE_WAIT) {
-                thr_data.seed_status = SEED_PREPARE_END;
-                pthread_mutex_unlock(thr_data.seed_lock);
-                pthread_cond_signal(thr_data.seed_cond);
-                break;
-            } else {
-                pthread_mutex_unlock(thr_data.seed_lock);
-            }
-        }
+    for (int i = 0; i < threads_number; i++) {
+        pthread_join(thr[i], NULL);
     }
 
-    gsl_vector_memcpy(x, thr_data.x_best);
-    const double chisq = thr_data.chisq_best;
+    gsl_vector_memcpy(x, shared_data.x_best);
+    const double chisq = shared_data.chisq_best;
 
     for (int i = 0; i < threads_number; i++) {
         pthread_join(thr[i], NULL);
@@ -304,6 +286,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
         gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
+        int iter;
         status = lmfit_iter(x, f, s, cfg->nb_max_iters,
             cfg->epsabs, cfg->epsrel,
             &iter, hfun, hdata, &stop_request);
