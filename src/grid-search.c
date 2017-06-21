@@ -28,7 +28,9 @@ struct thr_shared_data {
     float chisq_best;
     float chisq_threshold;
     gsl_vector *x_best;
-    int solution_found;
+    int seed_counter;
+    short int solution_found;
+    short int stop_request;
 
     const int dim;
     int *modulo;
@@ -118,6 +120,7 @@ void *thr_eval_func(void *arg) {
         const double chisq = 1.0E6 * pow(chi, 2.0) / f->n;
 
         pthread_mutex_lock(shared->lock);
+        shared->seed_counter++;
         fprintf(stderr, "thread: %p chisq: %g\n", data, chisq);
         fflush(stderr);
         if (shared->chisq_best < 0 || chisq < shared->chisq_best) {
@@ -129,7 +132,7 @@ void *thr_eval_func(void *arg) {
                 shared->solution_found = 1;
             }
         }
-        if (shared->solution_found) {
+        if (shared->solution_found || shared->stop_request) {
             pthread_mutex_unlock(shared->lock);
             break;
         }
@@ -208,7 +211,8 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         fit,
         {PTHREAD_MUTEX_INITIALIZER},
         -1.0, cfg->chisq_threshold, x_best,
-        0, dim, modulo, x0, dx
+        0, 0, 0,
+        dim, modulo, x0, dx
     };
 
     const int threads_number = get_thread_core_number();
@@ -264,6 +268,16 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         }
     }
 #endif
+
+    while (!shared_data.stop_request && !shared_data.solution_found) {
+        Sleep(100);
+        pthread_mutex_lock(shared_data.lock);
+        if(hfun) {
+            float xf = shared_data.seed_counter / (float)nb_grid_pts;
+            shared_data.stop_request = (*hfun)(hdata, xf, NULL);
+            pthread_mutex_unlock(shared_data.lock);
+        }
+    }
 
     for (int i = 0; i < threads_number; i++) {
         pthread_join(thr[i], NULL);
