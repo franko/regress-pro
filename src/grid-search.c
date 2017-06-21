@@ -43,15 +43,25 @@ struct thr_eval_data {
     int index_count;
 };
 
-static int get_thread_core_number() {
 #ifdef WIN32
+static int get_thread_core_number() {
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     return sysinfo.dwNumberOfProcessors;
-#else
-    return sysconf(_SC_NPROCESSORS_ONLN);
-#endif
 }
+
+static inline void msleep(int ms) {
+    Sleep(ms);
+}
+#else
+static int get_thread_core_number() {
+    return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
+static inline void msleep(int ms) {
+    usleep(ms * 1000);
+}
+#endif
 
 void grid_point_set(int dim, const int modulo[], const double x0[], const double dx[], const int index, double x[]) {
     int q = index;
@@ -217,13 +227,17 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     result->chisq_threshold = cfg->chisq_threshold;
 
     while (!shared_data.stop_request && !shared_data.solution_found) {
-        Sleep(100);
+        msleep(50);
         pthread_mutex_lock(shared_data.lock);
+        if (shared_data.seed_counter >= nb_grid_pts) {
+            pthread_mutex_unlock(shared_data.lock);
+            break;
+        }
         if(hfun) {
             float xf = shared_data.seed_counter / (float)nb_grid_pts;
             shared_data.stop_request = (*hfun)(hdata, xf, NULL);
-            pthread_mutex_unlock(shared_data.lock);
         }
+        pthread_mutex_unlock(shared_data.lock);
     }
 
     for (int i = 0; i < threads_number; i++) {
