@@ -98,13 +98,6 @@ void *thr_eval_func(void *arg) {
     grid_point_set(shared->dim, shared->modulo, shared->x0, shared->dx, data->start_index, x->data);
 
     for (int index_count = 0; index_count < data->index_count; index_count++) {
-        fprintf(stderr, "thread: %p seed:", data);
-        for (int k = 0; k < (int) x->size; k++) {
-            fprintf(stderr, " %g", gsl_vector_get(x, k));
-        }
-        fprintf(stderr, "\n");
-        fflush(stderr);
-
         const int search_max_iters = 3;
 
         gsl_multifit_fdfsolver_set(s, f, x);
@@ -121,11 +114,7 @@ void *thr_eval_func(void *arg) {
 
         pthread_mutex_lock(shared->lock);
         shared->seed_counter++;
-        fprintf(stderr, "thread: %p chisq: %g\n", data, chisq);
-        fflush(stderr);
         if (shared->chisq_best < 0 || chisq < shared->chisq_best) {
-            fprintf(stderr, "thread: %p got best result: %g\n", data, chisq);
-            fflush(stderr);
             shared->chisq_best = chisq;
             gsl_vector_memcpy(shared->x_best, x);
             if (chisq < shared->chisq_threshold) {
@@ -140,9 +129,6 @@ void *thr_eval_func(void *arg) {
 
         grid_point_increment(shared->dim, shared->modulo, shared->x0, shared->dx, x->data);
     }
-
-    fprintf(stderr, "thread: %p terminate\n", data);
-    fflush(stderr);
 
     gsl_vector_free(x);
     gsl_multifit_fdfsolver_free(s);
@@ -216,7 +202,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     };
 
     const int threads_number = get_thread_core_number();
-    fprintf(stderr, "thread number %d\n", threads_number);
     pthread_t thr[threads_number];
     struct thr_eval_data thr_data[threads_number];
     int index = 0;
@@ -230,44 +215,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
 
     result->interrupted = 0;
     result->chisq_threshold = cfg->chisq_threshold;
-#if 0
-    int solution_found = 0;
-    for(j_grid_pts = 0; ; j_grid_pts++) {
-        while (1) {
-            pthread_mutex_lock(thr_data.seed_lock);
-            if (thr_data.seed_status == SEED_PREPARE_END) {
-                solution_found = 1;
-                pthread_mutex_unlock(thr_data.seed_lock);
-                break;
-            }
-            if (thr_data.seed_status == SEED_PREPARE_WAIT) {
-                thr_data.seed_status = SEED_PREPARE_AVAIL;
-                gsl_vector_memcpy(thr_data.x_seed, x);
-                pthread_mutex_unlock(thr_data.seed_lock);
-                pthread_cond_signal(thr_data.seed_cond);
-                break;
-            } else {
-                pthread_mutex_unlock(thr_data.seed_lock);
-            }
-        }
-
-        if (solution_found) {
-            break;
-        }
-
-        if(hfun) {
-            float xf = j_grid_pts / (float)nb_grid_pts;
-            stop_request = (*hfun)(hdata, xf, NULL);
-            if(stop_request) {
-                break;
-            }
-        }
-
-        if (grid_point_increment(dim, modulo, x0, dx, x->data)) {
-            break;
-        }
-    }
-#endif
 
     while (!shared_data.stop_request && !shared_data.solution_found) {
         Sleep(100);
