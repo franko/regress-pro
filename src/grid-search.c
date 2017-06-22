@@ -155,7 +155,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     gui_hook_func_t hfun, void *hdata)
 {
     struct fit_config *cfg = fit->config;
-    gsl_vector *x, *x_best;
     int status, stop_request = 0;
     stack_t *initial_stack;
     const int dim = fit->parameters->number;
@@ -164,29 +163,28 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     assert(fit->run);
     assert(fit->parameters->number == seeds->number);
 
-    x      = gsl_vector_alloc(dim);
-    x_best = gsl_vector_alloc(dim);
+    gsl_vector *x = gsl_vector_alloc(dim);
 
     if(preserve_init_stack) {
         initial_stack = stack_copy(fit->stack);
     }
 
-    /* We store in x_best the central coordinates of the grid. */
+    /* We store in x the central coordinates of the grid. */
     for(int j = 0; j < dim; j++) {
         const double xc = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
-        gsl_vector_set(x_best, j, xc);
+        gsl_vector_set(x, j, xc);
     }
 
     int modulo[dim];
     double x0[dim], dx[dim];
 
     for(int j = 0; j < dim; j++) {
-        const double x_center = gsl_vector_get(x_best, j);
+        const double x_center = gsl_vector_get(x, j);
         if(vseed[j].type == SEED_RANGE) {
             const fit_param_t fp = fit->parameters->values[j];
             const double delta = vseed[j].delta;
             x0[j] = x_center - delta;
-            dx[j] = fit_engine_estimate_param_grid_step(fit, x_best, &fp, delta);
+            dx[j] = fit_engine_estimate_param_grid_step(fit, x, &fp, delta);
             modulo[j] = (int) (2 * delta / dx[j]) + 1;
         } else {
             x0[j] = x_center;
@@ -195,10 +193,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         }
     }
 
-    grid_point_set(dim, modulo, x0, dx, 0, x->data);
-
-    const int nb_grid_pts = grid_point_count(dim, modulo, x0, dx);
-
     if(hfun) {
         (*hfun)(hdata, 0.0, "Running grid search...");
     }
@@ -206,11 +200,12 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     struct thr_shared_data shared_data = {
         fit,
         {PTHREAD_MUTEX_INITIALIZER},
-        -1.0, cfg->chisq_threshold, x_best,
+        -1.0, cfg->chisq_threshold, x,
         0, 0, 0,
         dim, modulo, x0, dx
     };
 
+    const int nb_grid_pts = grid_point_count(dim, modulo, x0, dx);
     const int threads_number = get_thread_core_number();
     pthread_t thr[threads_number];
     struct thr_eval_data thr_data[threads_number];
@@ -245,12 +240,7 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
         pthread_join(thr[i], NULL);
     }
 
-    gsl_vector_memcpy(x, shared_data.x_best);
     const double chisq = shared_data.chisq_best;
-
-    for (int i = 0; i < threads_number; i++) {
-        pthread_join(thr[i], NULL);
-    }
 
     result->gsearch_chisq = chisq;
     result->chisq = chisq;
@@ -288,7 +278,6 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     gsl_vector_memcpy(fit->run->results, x);
 
     gsl_vector_free(x);
-    gsl_vector_free(x_best);
 
     return status;
 }
