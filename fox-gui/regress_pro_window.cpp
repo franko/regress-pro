@@ -221,6 +221,16 @@ regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
     main_recipe_window->bind_new_acquisition(spectrum->acquisition);
 }
 
+str_ptr regress_pro_window::load_spectrum(const char *filename) {
+    str_ptr error_msg;
+    struct spectrum *new_spectrum = load_gener_spectrum(filename, &error_msg);
+    if(new_spectrum == NULL) {
+        return error_msg;
+    }
+    set_spectrum(new_spectrum);
+    return nullptr;
+}
+
 long
 regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
 {
@@ -234,14 +244,10 @@ regress_pro_window::onCmdLoadSpectra(FXObject*,FXSelector,void *)
         FXString filename = open.getFilename();
         app->spectra_dir = open.getDirectory();
 
-        str_ptr error_msg;
-        struct spectrum *new_spectrum = load_gener_spectrum(filename.text(), &error_msg);
-
-        if(new_spectrum == NULL) {
+        str_ptr error_msg = load_spectrum(filename.text());
+        if(error_msg) {
             FXMessageBox::information(this, MBOX_OK, "Spectra loading", "%s.", CSTR(error_msg));
             free_error_message(error_msg);
-        } else {
-            set_spectrum(new_spectrum);
         }
         return 1;
     }
@@ -461,21 +467,24 @@ regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& 
     m_fit_window->set_fit_result(result);
 }
 
-void
+FXString
 regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
 {
     Str analysis;
 
     fit_engine_prepare(fit, fspectrum, FIT_ENGINE_RESET_ACQ);
 
-    ProgressInfo progress(this->getApp(), this);
-
     lmfit_result result;
-    lmfit_grid(fit, fseeds, &result, analysis.str(),
-               LMFIT_GET_RESULTING_STACK,
-               process_foxgui_events, & progress);
-
-    progress.hide();
+    if (scriptMode()) {
+        lmfit_grid(fit, fseeds, &result, analysis.str(),
+                   LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
+    } else {
+        ProgressInfo progress(this->getApp(), this);
+        lmfit_grid(fit, fseeds, &result, analysis.str(),
+                   LMFIT_GET_RESULTING_STACK,
+                   process_foxgui_events, & progress);
+        progress.hide();
+    }
 
     if (result.gsl_status != GSL_SUCCESS) {
         statusbar->getStatusLine()->setNormalText(lmfit_result_error_string(&result));
@@ -502,11 +511,10 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append("\n");
     fitresult.append(analysis.cstr());
 
-    resulttext->setText(fitresult);
-    resulttext->setModified(TRUE);
-
     update_interactive_fit(fit, result);
     fit_engine_disable(fit);
+
+    return fitresult;
 }
 
 fit_engine *
@@ -524,23 +532,38 @@ prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config 
     return fit;
 }
 
+str_ptr regress_pro_window::run_fit_command() {
+    str_ptr error_msg;
+    fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
+    if (!fit) {
+        return error_msg;
+    }
+    FXString fit_result = run_fit(fit, recipe->seeds_list, this->spectrum);
+    fit_engine_free(fit);
+
+    if (scriptMode()) {
+        fputs(fit_result.text(), stdout);
+    } else {
+        resulttext->setText(fit_result);
+        resulttext->setModified(TRUE);
+    }
+    return nullptr;
+}
+
 long
 regress_pro_window::onCmdRunFit(FXObject*,FXSelector,void *)
 {
     if(! check_spectrum("Fitting")) {
         return 0;
     }
-    str_ptr error_msg;
-    fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
-    if (!fit) {
+    m_fit_window->kill_focus();
+    getApp()->runWhileEvents();
+    str_ptr error_msg = run_fit_command();
+    if (error_msg) {
         FXMessageBox::error(this, MBOX_OK, "Fit running message", "%s.", CSTR(error_msg));
         free_error_message(error_msg);
         return 1;
     }
-    m_fit_window->kill_focus();
-    getApp()->runWhileEvents();
-    run_fit(fit, recipe->seeds_list, this->spectrum);
-    fit_engine_free(fit);
     getApp()->endWaitCursor();
     return 1;
 }
@@ -700,6 +723,39 @@ regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
     return 1;
 }
 
+str_ptr regress_pro_window::load_recipe(const char *filename) {
+    Str content;
+    if(str_loadfile(filename, content.str()) != 0) {
+        return new_error_message(LOADING_FILE_ERROR, "Cannot read file \"%s\".", filename);
+    }
+
+    lexer_t *l = lexer_new(content.cstr());
+    fit_recipe *new_recipe = fit_recipe::read(l);
+    if (!new_recipe) {
+        lexer_free(l);
+        return new_error_message(RECIPE_CHECK, "Invalid recipe file \"%s\".", filename);
+    }
+
+    dataset_table *dataset = my_dataset_window->dataset();
+    if (l->current.tk != TK_EOF) {
+        if (dataset->read_update(l)) {
+            lexer_free(l);
+            return new_error_message(RECIPE_CHECK, "Invalid dataset section in recipe file \"%s\".", filename);
+        }
+    }
+    lexer_free(l);
+    recipeFilename = filename;
+    m_title_dirty = true;
+    fit_recipe *old_recipe = recipe;
+    recipe = new_recipe;
+    main_recipe_window->bind_new_fit_recipe(recipe);
+    main_filmstack_window->bind_new_filmstack(recipe->stack, false);
+    set_stack_result(stack_copy(recipe->stack));
+    m_result_stack_match = true;
+    delete old_recipe;
+    return nullptr;
+}
+
 long
 regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
 {
@@ -712,40 +768,14 @@ regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
     if(open.execute()) {
         FXString filename = open.getFilename();
         app->recipe_dir = open.getDirectory();
-        Str content;
-
-        if(str_loadfile(filename.text(), content.str()) != 0) {
-            FXMessageBox::error(this, MBOX_OK, "Recipe load", "Cannot read file \"%s\".", filename.text());
+        str_ptr error_msg = load_recipe(filename.text());
+        if (error_msg) {
+            FXMessageBox::error(this, MBOX_OK, "Recipe load", CSTR(error_msg));
+            free_error_message(error_msg);
             return 1;
         }
-
-        lexer_t *l = lexer_new(content.cstr());
-        fit_recipe *new_recipe = fit_recipe::read(l);
-        if (!new_recipe) {
-            FXMessageBox::error(this, MBOX_OK, "Recipe load", "Invalid recipe file \"%s\".", filename.text());
-            lexer_free(l);
-            return 1;
-        }
-
         dataset_table *dataset = my_dataset_window->dataset();
-        if (l->current.tk != TK_EOF) {
-            if (dataset->read_update(l)) {
-                FXMessageBox::error(this, MBOX_OK, "Recipe load", "Invalid dataset section in recipe file \"%s\".", filename.text());
-                lexer_free(l);
-                return 1;
-            }
-        }
-        lexer_free(l);
-        recipeFilename = filename;
-        m_title_dirty = true;
-        fit_recipe *old_recipe = recipe;
-        recipe = new_recipe;
-        main_recipe_window->bind_new_fit_recipe(recipe);
-        main_filmstack_window->bind_new_filmstack(recipe->stack, false);
-        set_stack_result(stack_copy(recipe->stack));
-        m_result_stack_match = true;
         dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
-        delete old_recipe;
     }
     return 1;
 }

@@ -1,0 +1,3 @@
+load-spectrum "tests/spectres/Z-NIT-WF24-P01.dat"
+load-recipe "tests/recipes/nitride-th-grid.rcp"
+fit

@@ -27,12 +27,16 @@ endif
 LIBS += $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++ -pthread
 
 ifeq ($(HOST_SYS),Windows)
-  LIBS += -mwindows
+  ifneq ($(ENABLE_DEBUG),yes)
+    LIBS += -mwindows
+  endif
 endif
 
 INCLUDES += $(FOX_INCLUDES) $(GSL_INCLUDES) $(AGG_INCLUDES) -I$(SOURCE_DIR)
 
 CXXCOMPILE = $(CXX) $(CXXFLAGS) $(DEFS) $(INCLUDES)
+
+TESTING_SRC_FILES = testing_app.cpp regress_pro_testing.cpp
 
 SRC_FILES = disp-lookup-components.cpp \
 	dispers_sampling_optim.cpp ProgressInfo.cpp spectrum_plot.cpp disp_fit_window.cpp regress_pro_window.cpp \
@@ -43,7 +47,9 @@ SRC_FILES = disp-lookup-components.cpp \
 	fit_params_utils.cpp multi_sample_recipe.cpp recipe_window.cpp \
 	fit_recipe.cpp dispers_edit_window.cpp dispers_ui_utils.cpp \
 	filelist_table.cpp dataset_table.cpp \
-	dataset_window.cpp batch_window.cpp regress_pro.cpp main.cpp
+	dataset_window.cpp batch_window.cpp regress_pro.cpp \
+	$(TESTING_SRC_FILES) \
+	main.cpp
 PRG = regress$(EXE)
 
 OBJ_FILES := $(SRC_FILES:%.cpp=%.o)
