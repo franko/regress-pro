@@ -345,12 +345,14 @@ fit_engine_check_deriv(struct fit_engine *fit) {
 #endif
 
 int
-fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_acq acq_policy)
+fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_engine_flags)
 {
+    const int acq_policy = FIT_OPTIONS_ACQUISITION(fit_engine_flags);
+    const int enable_subsampling = FIT_OPTIONS_SUBSAMPLING(fit_engine_flags);
     struct fit_config *cfg = fit->config;
     enum system_kind syskind = s->acquisition->type;
 
-    if (acq_policy == FIT_ENGINE_RESET_ACQ) {
+    if (acq_policy == FIT_RESET_ACQUISITION) {
         fit->acquisition[0] = s->acquisition[0];
     }
     fit->run->spectr = spectra_copy(s);
@@ -359,10 +361,8 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, enum fit_engine_a
         spectr_cut_range(fit->run->spectr,
                          cfg->spectr_range.min, cfg->spectr_range.max);
 
-    if(cfg->subsampling) {
-        if(syskind == SYSTEM_ELLISS_AB || syskind == SYSTEM_ELLISS_PSIDEL) {
-            elliss_sample_minimize(fit->run->spectr, 0.05);
-        }
+    if(cfg->subsampling && enable_subsampling) {
+        elliss_sample_minimize(fit->run->spectr, 0.05);
     }
 
     build_fit_engine_cache(fit);

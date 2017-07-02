@@ -65,7 +65,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         if (!s) {
             return 1;
         }
-        fit_engine_prepare(fit, s, FIT_ENGINE_RESET_ACQ);
+        fit_engine_prepare(fit, s, FIT_RESET_ACQUISITION);
         lmfit_result fresult;
         lmfit_grid(fit, recipe->seeds_list, &fresult, NULL, LMFIT_PRESERVE_STACK,
                    window_process_events, this);

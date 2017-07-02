@@ -96,7 +96,7 @@ void *thr_eval_func(void *arg) {
     struct thr_shared_data *shared = data->shared;
     struct fit_engine *fit = fit_engine_clone(shared->fit);
 
-    fit_engine_prepare(fit, shared->fit->run->spectr, FIT_ENGINE_KEEP_ACQ);
+    fit_engine_prepare(fit, shared->fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
     gsl_multifit_function_fdf *f = &fit->run->mffun;
     gsl_vector *x = gsl_vector_alloc(f->p);

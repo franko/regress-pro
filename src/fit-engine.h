@@ -34,9 +34,16 @@
 
 __BEGIN_DECLS
 
+#define FIT_OPTIONS_ACQUISITION(n) ((n) & ((1 << 8) - 1))
+#define FIT_OPTIONS_SUBSAMPLING(n) ((n) >> 8)
+
 enum fit_engine_acq {
-  FIT_ENGINE_KEEP_ACQ,
-  FIT_ENGINE_RESET_ACQ,
+  FIT_KEEP_ACQUISITION  = 0,
+  FIT_RESET_ACQUISITION = 1,
+};
+
+enum fit_engine_subsamplig {
+  FIT_ENABLE_SUBSAMPLING  = 1 << 8,
 };
 
 struct fit_run {
@@ -77,8 +84,7 @@ extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 
 extern void fit_engine_free(struct fit_engine *fit);
 
-extern int  fit_engine_prepare(struct fit_engine *f,
-                               struct spectrum *s, enum fit_engine_acq acq_policy);
+extern int  fit_engine_prepare(struct fit_engine *f, struct spectrum *s, const int fit_engine_flags);
 
 extern void fit_engine_disable(struct fit_engine *f);
 
