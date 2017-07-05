@@ -567,7 +567,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
 {
     const double phi0 = deg_to_radians(acquisition_get_se_aoi(acquisition));
     const double anlz = deg_to_radians(acquisition_get_se_analyzer(acquisition));
-    const int se_type = (acquisition->type == SYSTEM_ELLISS_AB ? SE_ALPHA_BETA : SE_PSI_DEL);
+    const int se_type = SE_TYPE(acquisition->type);
     const int nblyr = nb - 2;
     const double tanlz = tan(anlz);
     double sp_jacob_th[3 * nblyr];

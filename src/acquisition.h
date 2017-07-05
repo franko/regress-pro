@@ -10,20 +10,21 @@ struct fit_parameters;
 
 // TODO: rename below AB to RPE. Optionally rename ELLISS and REFLECTOMETER to SE / SR.
 enum system_kind {
-    SYSTEM_UNDEFINED = 0,
-    SYSTEM_REFLECTOMETER,
-    SYSTEM_ELLISS_AB,
-    SYSTEM_ELLISS_PSIDEL,
-    SYSTEM_EXCEED_VALUE
+    SYSTEM_UNDEF = 0,
+    SYSTEM_SR,             /* Spectroscopic Reflectometry. */
+    SYSTEM_SE_RPE,         /* Spectroscopic Ellipsometry, RPE. */
+    SYSTEM_SE_RAE,         /* Spectroscopic Ellipsometry, RPE. */
+    SYSTEM_SE,             /* Spectroscopic Ellipsometry, generic. */
+    SYSTEM_INVALID
 };
 
-#define SYSTEM_CHANNELS_NUMBER(k) ((k) == SYSTEM_UNDEFINED ? 0 : ((k) == SYSTEM_REFLECTOMETER ? 1 : 2))
-#define SYSTEM_ACQUISITION_PARAMS_NUMBER(k) ((k) == SYSTEM_UNDEFINED ? 0 : ((k) == SYSTEM_REFLECTOMETER ? SR_ACQ_PARAMETERS_NB : ((k) == SYSTEM_ELLISS_AB ? 3 : 2)))
+#define SYSTEM_CHANNELS_NUMBER(k) ((k) == SYSTEM_UNDEF ? 0 : ((k) == SYSTEM_SR ? 1 : 2))
+#define SYSTEM_ACQUISITION_PARAMS_NUMBER(k) ((k) == SYSTEM_UNDEF ? 0 : ((k) == SYSTEM_SR ? SR_ACQ_PARAMETERS_NB : ((k) == SYSTEM_SE ? 2 : 3)))
 
 /* Ellipsometry parameters: */
 struct rpe_acquisition_parameters {
     double aoi; /* Angle in degrees. */
-    double analyzer;  /* Angle in degrees. */
+    double analyzer;  /* Angle in degrees. For RAE it will be the polarizer angle. */
 };
 
 /* Ellipsometry parameters: */
