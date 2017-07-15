@@ -6,6 +6,12 @@ import subprocess
 test_dir = "tests"
 regpro_exec = "./fox-gui/regress"
 
+eps_abs, eps_rel = 1e-16, 1e-5
+
+def float_approx_equal(a, b):
+    delta = abs(a - b)
+    return delta <= eps_abs or delta <= max(abs(a), abs(b)) * eps_rel
+
 def parse_fit_output(text):
     if not re.match(r'Recipe (\S+) :\s*$', text[0]): return None
     results = []
@@ -24,7 +30,8 @@ def check_results_eq(results_a, results_b):
     for tpa, tpb in zip(results_a, results_b):
         name_a, value_a = tpa
         name_b, value_b = tpb
-        if name_a != name_b or value_a != value_b: return False
+        if name_a != name_b or not float_approx_equal(value_a, value_b):
+            return False
     return True
 
 if not os.path.isdir("tests/log"):
