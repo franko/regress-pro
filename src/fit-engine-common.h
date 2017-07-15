@@ -12,7 +12,7 @@ struct stack_cache {
     int nb_med;
     short int th_only;
     short int require_acquisition_jacob;
-    struct deriv_info * deriv_info;
+    // struct deriv_info * deriv_info;
     cmpl *ns_full_spectr;
 };
 

@@ -8,12 +8,11 @@ __BEGIN_DECLS
 
 struct fit_parameters;
 
-// TODO: rename below AB to RPE. Optionally rename ELLISS and REFLECTOMETER to SE / SR.
 enum system_kind {
     SYSTEM_UNDEF = 0,
     SYSTEM_SR,             /* Spectroscopic Reflectometry. */
     SYSTEM_SE_RPE,         /* Spectroscopic Ellipsometry, RPE. */
-    SYSTEM_SE_RAE,         /* Spectroscopic Ellipsometry, RPE. */
+    SYSTEM_SE_RAE,         /* Spectroscopic Ellipsometry, RAE. */
     SYSTEM_SE,             /* Spectroscopic Ellipsometry, generic. */
     SYSTEM_INVALID
 };

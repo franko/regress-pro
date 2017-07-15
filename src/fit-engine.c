@@ -42,6 +42,7 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
 
     cache->nb_med = nb_med;
 
+#if 0
     cache->deriv_info = emalloc(nb_med * sizeof(struct deriv_info));
 
     for(j = 0; j < nb_med; j++) {
@@ -51,6 +52,7 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
         di->is_valid = 0;
         di->val = (tpnb == 0 ? NULL : cmpl_vector_alloc(tpnb));
     }
+#endif
 
     cache->th_only = th_only_optimize;
     cache->require_acquisition_jacob = require_acquisition_jacob;
@@ -80,7 +82,7 @@ dispose_stack_cache(struct stack_cache *cache)
     if(! cache->is_valid) {
         return;
     }
-
+#if 0
     for(j = 0; j < nb_med; j++) {
         struct deriv_info *di = & cache->deriv_info[j];
         if(di->val) {
@@ -88,6 +90,7 @@ dispose_stack_cache(struct stack_cache *cache)
         }
     }
     free(cache->deriv_info);
+#endif
 
     if(cache->ns_full_spectr) {
         free(cache->ns_full_spectr);
@@ -99,28 +102,37 @@ dispose_stack_cache(struct stack_cache *cache)
 void
 build_fit_engine_cache(struct fit_engine *f)
 {
-    int RI_fixed = fit_parameters_are_RI_fixed(f->parameters);
+    assert(f->spectra_number >= 1);
+    int RI_fixed = (f->spectra_number == 1) && fit_parameters_are_RI_fixed(f->parameters);
     int require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
-    build_stack_cache(&f->run->cache, f->stack, f->run->spectr, RI_fixed, require_acquisition_jacob);
+    build_stack_cache(&f->cache, f->stack_list[0], f->spectra_list[0], RI_fixed, require_acquisition_jacob);
 }
 
 void
 dispose_fit_engine_cache(struct fit_engine *f)
 {
-    dispose_stack_cache(&f->run->cache);
+    dispose_stack_cache(&f->cache);
 }
 
 int
-fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp,
-                       double val)
+fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp, double val)
 {
-    int res = 0;
-    if (fp->id >= PID_ACQUISITION_PARAMETER) {
-        res = acquisition_apply_param(fit->acquisition, fp->id, val);
-    } else {
-        res = stack_apply_param(fit->stack, fp, val);
+    for (int i = 0; i < fit->spectra_number; i++) {
+        struct spectrum_item *sitem = &fit->spectra_list[i];
+        int res = 0;
+        if (scope_is_inside(fp, sitem->scope)) {
+            if (fp->id >= PID_ACQUISITION_PARAMETER) {
+                res = acquisition_apply_param(sitem->acquisition, fp->id, val);
+            } else {
+                const int sample = scope_sample(sitem->scope);
+                res = stack_apply_param(fit->stack_list[sample], fp, val);
+            }
+            if (res != 0) {
+                return res;
+            }
+        }
     }
-    return res;
+    return 0;
 }
 
 void
@@ -132,9 +144,8 @@ fit_engine_apply_parameters(struct fit_engine *fit,
 
     for(j = 0; j < fps->number; j++) {
         const fit_param_t *fp = fps->values + j;
-        double pval = gsl_vector_get(x, j);
-        int status;
-        status = fit_engine_apply_param(fit, fp, pval);
+        const double pval = gsl_vector_get(x, j);
+        int status = fit_engine_apply_param(fit, fp, pval);
         /* No error should never occurs here because the fit parameters
         are checked in advance. */
         assert(status == 0);
@@ -148,17 +159,35 @@ fit_engine_commit_parameters(struct fit_engine *fit, const gsl_vector *x)
     fit_engine_apply_parameters(fit, fps, x);
 }
 
-void
-fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wavelength_start, double *wavelength_end)
+static void
+spectrum_clip(const struct spectral_range *range, double *wlmin, double *wlmax)
 {
-    spectra_wavelength_range(fit->run->spectr, wavelength_start, wavelength_end);
-    if (fit->config->spectr_range.active) {
-        if (fit->config->spectr_range.min > *wavelength_start) {
-            *wavelength_start = fit->config->spectr_range.min;
+    if (range->active) {
+        if (range->min > *wlmin) {
+            *wlmin = range->min;
         }
-        if (fit->config->spectr_range.max < *wavelength_end) {
-            *wavelength_end   = fit->config->spectr_range.max;
+        if (range->max < *wlmax) {
+            *wlmax = range->max;
         }
+    }
+}
+
+static void
+spectrum_limits(const struct spectral_range *range, const struct spectrum *s, double *wlmin, double *wlmax)
+{
+    spectra_wavelength_range(s, wlmin, wlmax);
+    spectrum_clip(range, wlmin, wlmax);
+}
+
+void
+fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wlmin, double *wlmax)
+{
+    for (int i = 0; i < fit->spectra_number; i++) {
+        struct spectrum_item *sitem = &fit->spectra_list[i];
+        double wlmin_i, wlmax_i;
+        spectrum_limits(&fit->config->spectr_range, sitem->spectrum, &wlmin_i, &wlmax_i);
+        if (i == 0 || wlmin_i < wlmin) wlmin = wlmin_i;
+        if (i == 0 || wlmax_i > wlmax) wlmax = wlmax_i;
     }
 }
 
@@ -167,17 +196,20 @@ fit_engine_update_disp_info(struct fit_engine *fit)
 {
     double wavelength_start, wavelength_end;
     fit_engine_get_wavelength_limits(fit, &wavelength_start, &wavelength_end);
-    for (int i = 0; i < fit->stack->nb; i++) {
-        disp_t *d = fit->stack->disp[i];
-        for(size_t j = 0; j < fit->parameters->number; j++) {
-            const fit_param_t *fp = &fit->parameters->values[j];
-            if (fp->id == PID_LAYER_N && fp->layer_nb == i) {
-                disp_set_info_wavelength(d, wavelength_start, wavelength_end);
-                char buffer[128];
-                if (fit_timestamp(128, buffer) != 0) {
-                    disp_set_modifications_flag(d, buffer);
+    for (int k = 0; k < fit->samples_number; k++) {
+        stack_t *stack = fit->stack_list[k];
+        for (int i = 0; i < stack->nb; i++) {
+            disp_t *d = stack->disp[i];
+            for(size_t j = 0; j < fit->parameters->number; j++) {
+                const fit_param_t *fp = &fit->parameters->values[j];
+                if (fp->id == PID_LAYER_N && fp->layer_nb == i) {
+                    disp_set_info_wavelength(d, wavelength_start, wavelength_end);
+                    char buffer[128];
+                    if (fit_timestamp(128, buffer) != 0) {
+                        disp_set_modifications_flag(d, buffer);
+                    }
+                    break;
                 }
-                break;
             }
         }
     }
@@ -186,8 +218,12 @@ fit_engine_update_disp_info(struct fit_engine *fit)
 void
 fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src)
 {
-    for (int i = 0; i < dst->stack->nb; i++) {
-        disp_info_copy(dst->stack->disp[i]->info, src->stack->disp[i]->info);
+    for (int k = 0; k < fit->samples_number; k++) {
+        stack_t *dst_stack = dst->stack_list[k];
+        stack_t *src_stack = src->stack_list[k];
+        for (int i = 0; i < dst_stack->nb; i++) {
+            disp_info_copy(dst_stack->disp[i]->info, src_stack->disp[i]->info);
+        }
     }
 }
 
@@ -344,57 +380,293 @@ fit_engine_check_deriv(struct fit_engine *fit) {
 }
 #endif
 
+static void
+mult_layer_refl_sys(const enum system_kind sys_kind, size_t nb, const cmpl ns[],
+                   const double ds[], double lambda,
+                   const struct acquisition_parameters *acquisition, double result[],
+                   double *jacob_th, cmpl *jacob_n, double *jacob_acq)
+{
+    switch (sys_kind) {
+    case SYSTEM_SR:
+    {
+        mult_layer_refl_sr(nb, ns, ds, lambda, acquisition, result, jacob_th, jacob_n, jacob_acq);
+        break;
+    }
+    case SYSTEM_SE_RPE:
+    case SYSTEM_SE_RAE:
+    case SYSTEM_SE:
+    {
+        const enum se_type se_type = SE_TYPE(sys_kind);
+        ell_ab_t e;
+        mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acq);
+        result[0] = e->alpha;
+        result[1] = e->beta;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+static inline int se_acquisition_enum(int pid) {
+    switch(pid) {
+    case PID_AOI:       return SE_AOI;
+    case PID_ANALYZER:  return SE_ANALYZER;
+    case PID_POLARIZER: return SE_POLARIZER;
+    case PID_BANDWIDTH: return SE_BANDWIDTH;
+    case PID_NUMAP:     return SE_NUMAP;
+    }
+    return (-1);
+}
+
+
+static inline int sr_acquisition_enum(int pid) {
+    switch(pid) {
+    case PID_FIRSTMUL:  return SR_RMULT;
+    case PID_BANDWIDTH: return SR_BANDWIDTH;
+    }
+    return (-1);
+}
+
+static inline double select_acquisition_jacob(const enum system_kind sys_kind, const double jacob_acq[], const int channel, const int pid) {
+    if (sys_kind == SYSTEM_SE_RAE || sys_kind == SYSTEM_SE_RPE || sys_kind == SYSTEM_SE) {
+        const int index = se_acquisition_enum(pid);
+        return jacob_acq[SE_ACQ_INDEX(channel, index)];
+    } else if (sys_kind == SYSTEM_SR) {
+        const int index = sr_acquisition_enum(pid);
+        return jacob_acq[index];
+    }
+    return 0.0;
+}
+
+static void
+select_param_jacobian(const enum system_kind sys_kind, const int channels_number, const fit_param_t *fp, const stack_t *stack,
+                       struct deriv_info *ideriv, double lambda,
+                       double result[], double jacob_th[], cmpl jacob_n[], double jacob_acq[])
+{
+    const int nb_med = stack->nb, nb_lyr = nb_med - 2;
+    const int layer = fp->layer_nb;
+    double dnr, dni;
+
+    switch(fp->id) {
+    case PID_THICKNESS:
+        for (int q = 0; q < channels_number; q++) {
+            result[q] = jacob_th[q * nb_lyr + (layer - 1)];
+        }
+        break;
+    case PID_LAYER_N:
+        get_model_param_deriv(stack->disp[layer], &ideriv[layer], fp, lambda, &dnr, &dni);
+        for (int q = 0; q < channels_number; q++) {
+            const cmpl drdn = jacob_n[q * nb_med + layer];
+            result[q] = creal(drdn) * dnr - cimag(drdn) * dni;
+        }
+        break;
+    case PID_AOI:
+    case PID_ANALYZER:
+    case PID_NUMAP:
+    case PID_BANDWIDTH:
+    case PID_FIRSTMUL:
+    {
+        for (int q = 0; q < channels_number; q++) {
+            result[q] = select_acquisition_jacob(sys_kind, jacob_acq, q, fp->id);
+        }
+        break;
+    }
+    default:
+        memset(result, 0, channels_number * sizeof(double));
+    }
+}
+
+static int
+fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
+{
+    struct fit_engine *fit = params;
+    const int spectra_number = fit->spectra_number;
+
+    /* STEP 1 : We apply the actual values of the fit parameters
+                to the stack. */
+
+    fit_engine_commit_parameters(fit, x);
+
+    int spectrum_offset = 0;
+    for(int spectrum_no = 0; spectrum_no < spectra_number; spectrum_no++) {
+        struct spectrum_item *sitem = &fit->spectra_list[spectrum_no];
+        struct spectrum *spectrum = sitem->spectrum;
+        const int spectrum_scope = sitem->scope;
+        const int sample = scope_sample(spectrum_scope);
+        struct stack *stack_sample = fit->stack_list[sample];
+        const int nb_med = stack_sample->nb;
+        const int npt = spectra_points(spectrum);
+        const enum system_kind sys_kind = sitem->acquisition->type;
+        const int channels_number = SYSTEM_CHANNELS_NUMBER(sys_kind);
+        double jacob_th_data[channels_number * (nb_med - 2)];
+        cmpl jacob_n_data[channels_number * nb_med];
+        double jacob_acq_data[channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind)];
+
+        /* STEP 2 : From the stack we retrive the thicknesses and RIs
+        informations. */
+
+        const double *ths = stack_get_ths_list(stack_sample);
+
+        /* TODO: take into account the case of fixed RIs and when acquisition
+           parameters are not needed. */
+        double *jacob_th  = (jacob ? jacob_th_data  : NULL);
+        cmpl *  jacob_n   = (jacob ? jacob_n_data   : NULL);
+        double *jacob_acq = (jacob ? jacob_acq_data : NULL);
+
+        for(int j = 0, jpt = spectrum_offset; j < npt; j++, jpt += channels_number) {
+            float const * spectr_data = spectra_get_values(spectrum, j);
+            const double lambda = spectr_data[0];
+            double result[channels_number];
+
+            cmpl ns[nb_med];
+            stack_get_ns_list(stack_sample, ns, lambda);
+
+            /* STEP 3 : We call the function to compute the model values. */
+            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, &fit->acquisitions[sample], result, jacob_th, jacob_n, jacob_acq);
+
+            if(f != NULL) {
+                for (int q = 0; q < channels_number; q++) {
+                    gsl_vector_set(f, jpt + q, result[q] - spectr_data[q + 1]);
+                }
+            }
+
+            if(jacob) {
+                struct deriv_info ideriv[nb_med];
+
+                /* TODO: avoid allocating on the heap the ideriv vectors each time.*/
+                for(int i = 0; i < nb_med; i++) {
+                    ideriv[i].is_valid = 0;
+                    const int params_no = disp_get_number_of_params(stack_sample->disp[i]);
+                    /* Here params_no can be 0 but is still ok to call cmpl_vector_alloc. */
+                    ideriv[i].val = cmpl_vector_alloc(params_no);
+                }
+
+                for (int kp = 0; kp < (int) fit->parameters->number; k++) {
+                    if (scope_is_inside(fit->parameters->values[kp].scope, spectrum_scope)) {
+                        double fp_jacob[channels_number];
+                        select_param_jacobian(sys_kind, channels_number, fp, stack_sample, ideriv, lambda,
+                            fp_jacob, jacob_th, jacob_n, jacob_acq);
+                        for (int q = 0; q < channels_number; q++) {
+                            gsl_matrix_set(jacob, jpt + q, kp, fp_jacob[q]);
+                        }
+                    } else {
+                        for (int q = 0; q < channels_number; q++) {
+                            gsl_matrix_set(jacob, jpt + q, kp, 0.0);
+                        }
+                    }
+                }
+
+                for(int i = 0; i < nb_med; i++) {
+                    cmpl_vector_free(ideriv[i].val);
+                }
+            }
+        }
+
+        spectrum_offset += channels_number * npt;
+    }
+
+    return GSL_SUCCESS;
+}
+
+static int
+fit_f(const gsl_vector *x, void *params, gsl_vector *f)
+{
+    return fit_fdf(x, params, f, NULL);
+}
+
+static int
+fit_df(const gsl_vector *x, void *params, gsl_matrix *jacob)
+{
+    return fit_fdf(x, params, NULL, jacob);
+}
+
+static void
+set_capacity(struct fit_engine *f, const int capa) {
+    assert(capa >= f->spectra_number);
+    free(f->spectra_list);
+    f->spectra_capacity = capa * 3 / 2;
+    struct spectrum_item *new_list = emalloc(sizeof(struct spectrum_item) * f->spectra_capacity);
+    memcpy(new_list, f->spectra_list, sizeof(struct spectrum_item) * f->spectra_number);
+    f->spectra_list = new_list;
+}
+
+void
+fit_engine_clear_spectra(struct fit_engine *f) {
+    for (int i = 0; i < f->spectra_number; i++) {
+        spectra_free(f->spectra_list[i].spectrum);
+    }
+    f->spectra_number = 0;
+    set_capacity(f, 0);
+}
+
+void
+fit_engine_add_spectrum(struct fit_engine *f, const struct spectrum *s, const int spectrum_scope)
+{
+    if (f->spectra_number + 1 > f->spectra_capacity) {
+        set_capacity(f, f->spectra_number + 1);
+    }
+
+    const int sample = scope_sample(spectrum_scope);
+    assert(sample < f->stack_number);
+
+    struct spectrum_item *si = f->spectra_list[f->spectra_number];
+    si->spectrum = spectra_copy(s);
+    si->acquisition[0] = s->acquisition[0];
+    si->scope = spectrum_scope;
+
+    f->spectra_number++;
+}
+
+extern int  fit_engine_prepare(struct fit_engine *f, const struct spectrum *s, const int fit_engine_flags)
+{
+    fit_engine_clear_spectra(f);
+    fit_engine_add_spectrum(f, s, FIT_PARAM_SCOPE(1,1,1));
+    return fit_engine_prepare_final(f, fit_engine_flags);
+}
+
 int
-fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_engine_flags)
+fit_engine_prepare_final(struct fit_engine *fit, const int fit_engine_flags)
 {
     const int acq_policy = FIT_OPTIONS_ACQUISITION(fit_engine_flags);
     const int enable_subsampling = FIT_OPTIONS_SUBSAMPLING(fit_engine_flags);
-    struct fit_config *cfg = fit->config;
-    enum system_kind syskind = s->acquisition->type;
+    const struct fit_config *config = fit->config;
 
     if (acq_policy == FIT_RESET_ACQUISITION) {
-        fit->acquisition[0] = s->acquisition[0];
+        /* Copy all the spectra acquisitions info into the fit structure. */
+        for (int j = 0; j < fit->samples_number; j++) {
+            fit->acquisitions[j] = fit->spectra_list[j]->acquisition[0];
+        }
     }
-    fit->run->spectr = spectra_copy(s);
 
-    if(fit->config->spectr_range.active)
-        spectr_cut_range(fit->run->spectr,
-                         cfg->spectr_range.min, cfg->spectr_range.max);
-
-    if(cfg->subsampling && enable_subsampling) {
-        elliss_sample_minimize(fit->run->spectr, 0.05);
+    int points_number = 0;
+    if(config->spectr_range.active) {
+        for(int k = 0; k < fit->spectra_number; k++) {
+            const float wlmin = config.spectr_range.min, wlmax = config->spectr_range.max;
+            struct spectrum *spectrum = fit->spectra_list[k].spectrum;
+            spectr_cut_range(spectrum, wlmin, wlmax);
+            const int channels_number = SYSTEM_CHANNELS_NUMBER(spectrum->acquisition->type);
+            if(config->subsampling && enable_subsampling && channels_number == 2) {
+                elliss_sample_minimize(spectrum, 0.05); // FIXME: should work for any number of channels
+            }
+            points_number += channels_number * spectra_points(spectrum);
+        }
     }
 
     build_fit_engine_cache(fit);
 
-    switch(syskind) {
-    case SYSTEM_SR:
-        fit->run->mffun.f      = & refl_fit_f;
-        fit->run->mffun.df     = & refl_fit_df;
-        fit->run->mffun.fdf    = & refl_fit_fdf;
-        fit->run->mffun.n      = spectra_points(fit->run->spectr);
-        fit->run->mffun.p      = fit->parameters->number;
-        fit->run->mffun.params = fit;
-        break;
-    case SYSTEM_SE_RPE:
-    case SYSTEM_SE_RAE:
-    case SYSTEM_SE:
-        fit->run->mffun.f      = & elliss_fit_f;
-        fit->run->mffun.df     = & elliss_fit_df;
-        fit->run->mffun.fdf    = & elliss_fit_fdf;
-        fit->run->mffun.n      = 2 * spectra_points(fit->run->spectr);
-        fit->run->mffun.p      = fit->parameters->number;
-        fit->run->mffun.params = fit;
-        break;
-    default:
-        return 1;
+    fit->mffun.f      = &fit_f;
+    fit->mffun.df     = &fit_df;
+    fit->mffun.fdf    = &fit_fdf;
+    fit->mffun.n      = points_number;
+    fit->mffun.p      = fit->parameters->number;
+    fit->mffun.params = fit;
+
+    if(!cfg->threshold_given) {
+        cfg->chisq_threshold = 150; // FIXME
     }
 
-    if(! cfg->threshold_given) {
-        cfg->chisq_threshold = (syskind == SYSTEM_SR ? 150 : 3000);
-    }
-
-    fit->run->results = gsl_vector_alloc(fit->parameters->number);
+    fit->results = gsl_vector_alloc(fit->parameters->number);
 
 #ifdef DEBUG
     fit_engine_check_deriv(fit);
@@ -548,50 +820,34 @@ fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x,
 
 void
 fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
-                             struct spectrum *synth)
+                             int spectrum_no, struct spectrum *synth)
 {
     enum system_kind syskind = ref->acquisition->type;
-    size_t nb_med = fit->stack->nb;
+    const struct spectrum_item *sitem = &fit->spectra_list[spectrum_no];
+    const stack_t *stack = fit->stack_list[scope_sample(sitem->scope)];
+    const channels_number = SYSTEM_CHANNELS_NUMBER(syskind);
+    const size_t nb_med = stack->nb;
     struct data_table *table = synth->table[0].table;
-    int j, npt = spectra_points(ref);
+    const int npt = spectra_points(ref);
     cmpl *ns = emalloc(sizeof(cmpl) * nb_med);
-    double const * ths;
 
     assert(spectra_points(ref) == spectra_points(synth));
 
     synth->acquisition[0] = ref->acquisition[0];
 
-    ths = stack_get_ths_list(fit->stack);
+    const double *ths = stack_get_ths_list(stack);
 
-    for(j = 0; j < npt; j++) {
+    for(int j = 0; j < npt; j++) {
         double lambda = get_lambda_by_index(ref, j);
 
         data_table_set(table, j, 0, lambda);
 
-        stack_get_ns_list(fit->stack, ns, lambda);
+        stack_get_ns_list(stack, ns, lambda);
 
-        switch(syskind) {
-        case SYSTEM_SR: {
-            double r;
-            mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, &r, NULL, NULL, NULL);
-            data_table_set(table, j, 1, r);
-            break;
-        }
-        case SYSTEM_SE_RPE:
-        case SYSTEM_SE_RAE:
-        case SYSTEM_SE: {
-            const enum se_type se_type = SE_TYPE(syskind);
-            ell_ab_t ell;
-
-            mult_layer_refl_se(se_type, nb_med, ns, ths, lambda, fit->acquisition, ell, NULL, NULL, NULL);
-
-            data_table_set(table, j, 1, ell->alpha);
-            data_table_set(table, j, 2, ell->beta);
-            break;
-        }
-        default:
-            /* */
-            ;
+        double r[channels_number];
+        mult_layer_refl_sys(syskind, nb_med, ns, ths, lambda, sitem->acquisition, r, NULL, NULL, NULL);
+        for (int k = 0; k < channels_number; k++) {
+            data_table_set(table, j, k + 1, r[k]);
         }
     }
 

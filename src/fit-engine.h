@@ -38,29 +38,33 @@ __BEGIN_DECLS
 #define FIT_OPTIONS_SUBSAMPLING(n) ((n) >> 8)
 
 enum fit_engine_acq {
-  FIT_KEEP_ACQUISITION  = 0,
-  FIT_RESET_ACQUISITION = 1,
+    FIT_KEEP_ACQUISITION  = 0,
+    FIT_RESET_ACQUISITION = 1,
 };
 
 enum fit_engine_subsamplig {
-  FIT_ENABLE_SUBSAMPLING  = 1 << 8,
+    FIT_ENABLE_SUBSAMPLING  = 1 << 8,
 };
 
-struct fit_run {
-    struct spectrum *spectr;
-    gsl_multifit_function_fdf mffun;
-    gsl_vector *results;
-    struct stack_cache cache;
+struct spectrum_item {
+    struct spectrum *spectrum;
+    struct acquisition_parameters acquisition[1];
+    int scope;
 };
 
 struct fit_engine {
-    struct acquisition_parameters acquisition[1];
     struct fit_config config[1];
 
-    struct stack *stack;
+    int spectra_number, spectra_capacity;    
+    struct spectrum_item *spectra_list;
+
+    int samples_number; /* Equal to the number of film stacks. */
+    struct stack **stack_list;
     struct fit_parameters *parameters;
 
-    struct fit_run run[1];
+    gsl_multifit_function_fdf mffun;
+    gsl_vector *results;
+    struct stack_cache cache;
 };
 
 struct seeds;
@@ -82,7 +86,10 @@ extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 
 extern void fit_engine_free(struct fit_engine *fit);
 
-extern int  fit_engine_prepare(struct fit_engine *f, struct spectrum *s, const int fit_engine_flags);
+extern void fit_engine_clear_spectra(struct fit_engine *f);
+extern void fit_engine_add_spectrum(struct fit_engine *f, const struct spectrum *s, const int spectrum_scope);
+extern int  fit_engine_prepare(struct fit_engine *f, const struct spectrum *s, const int fit_engine_flags);
+extern int  fit_engine_prepare_final(struct fit_engine *f, const int fit_engine_flags);
 
 extern void fit_engine_disable(struct fit_engine *f);
 

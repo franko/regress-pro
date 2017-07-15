@@ -7,6 +7,11 @@
 #include "lexer.h"
 #include "dispers-classes.h"
 
+#define FIT_PARAM_SCOPE_ACQUISITION(s) ((s) & 0xff)
+#define FIT_PARAM_SCOPE_SAMPLE(s) (((s) >> 8) & 0xffff)
+#define FIT_PARAM_SCOPE_GROUP(s) ((s) >> 24)
+#define FIT_PARAM_SCOPE(g,s,a) (((g) << 24) | ((s) << 8) | (a))  
+
 __BEGIN_DECLS
 
 enum params_id {
@@ -51,6 +56,7 @@ typedef struct {
     int layer_nb;
     enum disp_type model_id;
     int param_nb;
+    unsigned int scope; 
 } fit_param_t;
 
 struct fit_parameters {

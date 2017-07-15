@@ -9,13 +9,10 @@
 void *
 emalloc(int n)
 {
-    void *p;
-
     assert(n >= 0);
+    void *p = malloc(n);
 
-    p = malloc(n);
-
-    if(p == NULL) {
+    if(n > 0 && p == NULL) {
         fprintf(stderr, "Couldn't allocate memory\n");
         fflush(stderr);
         exit(1);
@@ -27,13 +24,10 @@ emalloc(int n)
 void *
 erealloc(void *p, int n)
 {
-    void *newp;
-
     assert(n >= 0);
+    void *newp = realloc(p, n);
 
-    newp = realloc(p, n);
-
-    if(newp == NULL) {
+    if(n > 0 && newp == NULL) {
         fprintf(stderr, "Couldn't allocate memory\n");
         fflush(stderr);
         exit(1);
