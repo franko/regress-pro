@@ -1,0 +1,92 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\title{Notes on Ellipsometry}
+\author{Francesco}
+\date{December 2016}
+
+\begin{document}
+
+\section{Measured Parameters}
+Known formulas for ellipsometry in RPE configuration (rotating polarizer, fixed analyzer). The variable $A$ designate the analyzer's angle.
+
+\begin{align}
+    \alpha & = \frac{\tan^2 \Psi - \tan^2 A}{\tan^2 \Psi + \tan^2 A} \\
+    \beta & = \frac{2 \tan \Psi \cos \Delta \tan A}{\tan^2 \Psi + \tan^2 A}
+\end{align}
+
+\begin{equation}
+    \rho = \tan \Psi \, e^{i \Delta} = \frac{R_p}{R_s}
+\end{equation}
+
+\begin{align*}
+     \tan^2 \Psi & = \frac{|R_p|^2}{|R_s|^2} \\
+     \tan \Psi \cos \Delta & = \frac{\operatorname{Re}\{R_p R_s^\ast\}}{|R_s|^2} \\
+     \cos \Delta & = \frac{\operatorname{Re}\{R_p R_s^\ast\}}{|R_s| |R_p|} \\
+\end{align*}
+
+\begin{align}
+    \alpha & = \frac{|R_p|^2 - \tan^2 A \, |R_s|^2}{|R_p|^2 + \tan^2 A \, |R_s|^2} \\
+    \beta & = \frac{2 \operatorname{Re}\{R_p R_s^\ast\} \tan A}{|R_p|^2 + \tan^2 A \, |R_s|^2}
+\end{align}
+
+\section{Useful identities}
+
+Let $F(z) = U(z) + i V(z)$ be an analytic function. Let designate $z$ as $z = x + i y$. The derivative:
+\begin{equation*}
+    \frac{\partial |F|^2}{\partial x}
+\end{equation*}
+
+will be a real number. It will related to $\frac{\partial F}{\partial z}$ by the relation:
+\begin{equation}
+    \frac{\partial |F|^2}{\partial x} = 2 \operatorname{Re}\left\{F \frac{\partial F}{\partial z}^\ast\right\}
+\end{equation}
+the we use the relation:
+\begin{equation*}
+    \frac{\partial F}{\partial y} = i \frac{\partial F}{\partial z}
+\end{equation*}
+to obtain the derivative with $y$, the imaginary part of $z$:
+\begin{equation}
+    \frac{\partial |F|^2}{\partial y} = 2 \operatorname{Im}\left\{F \frac{\partial F}{\partial z}^\ast\right\}
+\end{equation}
+In the same spirit it follows:
+\begin{equation}
+    \frac{\partial \left( F G^\ast+G F^\ast \right)}{\partial x} = 2 \operatorname{Re}\left\{F \frac{\partial G}{\partial z}^\ast + G \frac{\partial F}{\partial z}^\ast\right\}
+\end{equation}
+and
+\begin{equation}
+    \frac{\partial \left( F G^\ast+G F^\ast\right)}{\partial y} = 2 \operatorname{Im}\left\{F \frac{\partial G}{\partial z}^\ast + G \frac{\partial F}{\partial z}^\ast\right\}
+\end{equation}
+
+The equation above can be used to obtain the derivative wrt the real and imaginary part of $n = n_r + i n_i$, the refractive index, of one of the medium.
+\begin{equation*}
+    \frac{\partial |R_s|^2}{\partial n_r} = 2 \operatorname{Re}\left\{R_s \frac{\partial R_s}{\partial n}^\ast\right\}
+\end{equation*}
+The same equation can be used to obtain the derivatives of $\rho$. The basis of the relation is the fact that $R_s$ and well as $R_p$ are analytical function of the $n$s of the mediums in the film stack.
+
+\section{SE alpha beta derivatives from $R_s R_p$ squares}
+Derivatives of SE $\alpha$ and $\beta$ with a generic parameter, called $x$ here. We consider $\alpha$ and $\beta$ as formal function of the quantities $|R_s|^2$, $|R_p|^2$ and $\operatorname{Re}\{R_p R_s^\ast\}$.
+\begin{equation}
+\frac{\partial \alpha}{\partial x} = \frac{2 \tan^2 A}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \left( |R_s|^2 \frac{\partial |R_p|^2}{\partial x} - |R_p|^2 \frac{\partial |R_s|^2}{\partial x}\right)
+\end{equation}
+\begin{multline}
+\frac{\partial \beta}{\partial x} = - \frac{2 \tan A \operatorname{Re}\{R_p R_s^\ast\}}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \\ \left( \frac{\partial |R_p|^2}{\partial x} +  \tan^2 A \frac{\partial |R_s|^2}{\partial x}\right) + \frac{2 \tan A}{|R_p|^2 + \tan^2 A \, |R_s|^2} \frac{\partial \operatorname{Re}\{R_p R_s^\ast\}}{\partial x}
+\end{multline}
+
+Derivative with the analyzer's angle:
+
+\begin{align}
+\frac{\partial \alpha}{\partial A} & = - \frac{4 |R_s|^2 |R_p|^2 \tan A}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \sec^2 A \\
+\frac{\partial \beta}{\partial A} & = \frac{2 \operatorname{Re}\{R_p R_s^\ast\} \left(|R_p|^2 - \tan^2 A \, |R_s|^2\right)}{\left( |R_p|^2 + \tan^2 A \, |R_s|^2 \right)^2} \sec^2 A
+\end{align}
+
+\section{Useful Derivative Expressions}
+\begin{equation*}
+    \frac{\partial}{\partial x} \left( \frac{x-y}{x+y}\right) = \frac{2 y}{(x+y)^2}
+\end{equation*}
+
+\begin{equation*}
+    \frac{\partial}{\partial y} \left( \frac{x-y}{x+y}\right) = - \frac{2 x}{(x+y)^2}
+\end{equation*}
+
+\end{document}
