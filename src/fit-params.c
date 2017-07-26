@@ -443,3 +443,20 @@ params_exit:
     fit_parameters_free(fps);
     return NULL;
 }
+
+int
+scope_is_inside(unsigned int a, unsigned int b)
+{
+    const int a_group = FIT_PARAM_SCOPE_GROUP(a);
+    const int b_group = FIT_PARAM_SCOPE_GROUP(b);
+    if (a_group == b_group || b_group == 0) {
+        const int a_sample = FIT_PARAM_SCOPE_SAMPLE(a);
+        const int b_sample = FIT_PARAM_SCOPE_SAMPLE(b);
+        if (a_sample == b_sample || b_sample == 0) {
+            const int a_acq = FIT_PARAM_SCOPE_ACQUISITION(a);
+            const int b_acq = FIT_PARAM_SCOPE_ACQUISITION(b);
+            return (a_acq == b_acq || b_acq == 0);
+        }
+    }
+    return 0;
+}

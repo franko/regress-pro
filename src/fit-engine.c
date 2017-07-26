@@ -120,7 +120,7 @@ fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp, double val
     for (int i = 0; i < fit->spectra_number; i++) {
         struct spectrum_item *sitem = &fit->spectra_list[i];
         int res = 0;
-        if (scope_is_inside(fp, sitem->scope)) {
+        if (scope_is_inside(fp->scope, sitem->scope)) {
             if (fp->id >= PID_ACQUISITION_PARAMETER) {
                 res = acquisition_apply_param(sitem->acquisition, fp->id, val);
             } else {
@@ -582,7 +582,7 @@ fit_df(const gsl_vector *x, void *params, gsl_matrix *jacob)
 }
 
 static void
-set_capacity(struct fit_engine *f, const int capa) {
+set_spectra_list_capacity(struct fit_engine *f, const int capa) {
     assert(capa >= f->spectra_number);
     free(f->spectra_list);
     f->spectra_capacity = capa * 3 / 2;
@@ -597,14 +597,14 @@ fit_engine_clear_spectra(struct fit_engine *f) {
         spectra_free(f->spectra_list[i].spectrum);
     }
     f->spectra_number = 0;
-    set_capacity(f, 0);
+    set_spectra_list_capacity(f, 0);
 }
 
 void
 fit_engine_add_spectrum(struct fit_engine *f, const struct spectrum *s, const int spectrum_scope)
 {
     if (f->spectra_number + 1 > f->spectra_capacity) {
-        set_capacity(f, f->spectra_number + 1);
+        set_spectra_list_capacity(f, f->spectra_number + 1);
     }
 
     const int sample = scope_sample(spectrum_scope);

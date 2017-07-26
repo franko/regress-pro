@@ -111,6 +111,14 @@ extern void     set_thick_param(fit_param_t *fp, int lyr);
 extern void     get_param_name(const fit_param_t *fp, str_t name);
 extern void     get_full_param_name(const fit_param_t *fp, str_t name);
 
+/* Returns true is scope "a" fall within scope "b". */
+extern int     scope_is_inside(unsigned int a, unsigned int b);
+
+/* Returns the sample associated to the given scope. */
+static inline int scope_sample(unsigned int scope) {
+    return FIT_PARAM_SCOPE_SAMPLE(scope);
+}
+
 __END_DECLS
 
 #endif
