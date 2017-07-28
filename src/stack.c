@@ -156,13 +156,14 @@ stack_free(stack_t *s)
 }
 
 void
-stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
+stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps, unsigned int scope)
 {
     int n_layers = stack->nb - 2;
     fit_param_t fp[1];
     int j;
 
     fp->id = PID_THICKNESS;
+    fp->scope = scope;
     for(j = 1; j < n_layers + 1; j++) {
         fp->layer_nb = j;
         fit_parameters_add(fps, fp);

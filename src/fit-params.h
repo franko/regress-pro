@@ -115,8 +115,28 @@ extern void     get_full_param_name(const fit_param_t *fp, str_t name);
 extern int     scope_is_inside(unsigned int a, unsigned int b);
 
 /* Returns the sample associated to the given scope. */
-static inline int scope_sample(unsigned int scope) {
-    return FIT_PARAM_SCOPE_SAMPLE(scope);
+static inline int scope_sample_any(unsigned int scope) {
+    const int n = FIT_PARAM_SCOPE_SAMPLE(scope);
+    return (n > 0 ? n - 1 : 0);
+}
+
+static inline int scope_sample_raw(unsigned int scope) {
+    return (int)FIT_PARAM_SCOPE_SAMPLE(scope) - 1;
+}
+
+/* Returns the acquisition associated to the given scope. */
+static inline int scope_acquisition_any(unsigned int scope) {
+    const int n = FIT_PARAM_SCOPE_ACQUISITION(scope);
+    return (n > 0 ? n - 1 : 0);
+}
+
+static inline int scope_acquisition_raw(unsigned int scope) {
+    return (int)FIT_PARAM_SCOPE_ACQUISITION(scope) - 1;
+}
+
+static inline int scope_set_acquisition(unsigned int scope, int acquisition) {
+    const unsigned int acq_mask = 0xff;
+    return (scope & ~acq_mask) | (acquisition & acq_mask);
 }
 
 __END_DECLS

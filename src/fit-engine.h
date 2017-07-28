@@ -57,6 +57,7 @@ struct fit_engine {
 
     int spectra_number, spectra_capacity;    
     struct spectrum_item *spectra_list;
+    int *spectra_groups;
 
     int samples_number; /* Equal to the number of film stacks. */
     struct stack **stack_list;

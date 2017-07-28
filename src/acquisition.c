@@ -84,9 +84,10 @@ acquisition_get_parameter(const struct acquisition_parameters *acquisition, int 
 }
 
 void
-acquisition_get_all_parameters(const struct acquisition_parameters *acquisition, struct fit_parameters *fps)
+acquisition_get_all_parameters(const struct acquisition_parameters *acquisition, struct fit_parameters *fps, unsigned int scope)
 {
     fit_param_t fp[1];
+    fp->scope = scope;
     if (acquisition->type == SYSTEM_SR) {
         fp->id = PID_FIRSTMUL;
         fit_parameters_add(fps, fp);

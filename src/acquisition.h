@@ -49,7 +49,7 @@ struct acquisition_parameters {
 
 extern void     acquisition_set_zero(struct acquisition_parameters *acq);
 extern int      acquisition_apply_param(struct acquisition_parameters *acq, int param_id, double val);
-extern void     acquisition_get_all_parameters(const struct acquisition_parameters *acq, struct fit_parameters *fps);
+extern void     acquisition_get_all_parameters(const struct acquisition_parameters *acq, struct fit_parameters *fps, unsigned int scope);
 extern double   acquisition_get_parameter(const struct acquisition_parameters *acq, int param_id);
 extern double * acquisition_parameter_pointer(struct acquisition_parameters *acq, int param_id);
 extern void     acquisition_set_default(struct acquisition_parameters *acq);

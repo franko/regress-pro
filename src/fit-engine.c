@@ -114,21 +114,25 @@ dispose_fit_engine_cache(struct fit_engine *f)
     dispose_stack_cache(&f->cache);
 }
 
+// ************************** DONE
 int
 fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp, double val)
 {
-    for (int i = 0; i < fit->spectra_number; i++) {
-        struct spectrum_item *sitem = &fit->spectra_list[i];
-        int res = 0;
-        if (scope_is_inside(fp->scope, sitem->scope)) {
-            if (fp->id >= PID_ACQUISITION_PARAMETER) {
-                res = acquisition_apply_param(sitem->acquisition, fp->id, val);
-            } else {
-                const int sample = scope_sample(sitem->scope);
-                res = stack_apply_param(fit->stack_list[sample], fp, val);
+    const int fp_acquisition = scope_acquisition_raw(fp->scope);
+    if (fp_acquisition >= 0) {
+        for (int i = 0; i < fit->spectra_number; i++) {
+            struct spectrum_item *sitem = &fit->spectra_list[i];
+            if (scope_is_inside(sitem->scope, fp->scope)) {
+                int res = acquisition_apply_param(sitem->acquisition, fp->id, val);
+                if (res != 0) return res;
             }
-            if (res != 0) {
-                return res;
+        }
+    } else {
+        for (int k = 0; k < fit->samples_number; k++) {
+            const int sample_scope = FIT_PARAM_SCOPE(fit->spectra_groups[k] + 1, k + 1, 0);
+            if (scope_is_inside(sample_scope, fp->scope)) {
+                int res = stack_apply_param(fit->stack_list[k], fp, val);
+                if (res != 0) return res;
             }
         }
     }
@@ -543,7 +547,7 @@ fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
                 }
 
                 for (int kp = 0; kp < (int) fit->parameters->number; k++) {
-                    if (scope_is_inside(fit->parameters->values[kp].scope, spectrum_scope)) {
+                    if (scope_is_inside(spectrum_scope, fit->parameters->values[kp].scope)) {
                         double fp_jacob[channels_number];
                         select_param_jacobian(sys_kind, channels_number, fp, stack_sample, ideriv, lambda,
                             fp_jacob, jacob_th, jacob_n, jacob_acq);
@@ -736,22 +740,40 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
     return 0;
 }
 
+// **************** DONE
 struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
     struct fit_parameters *fps = fit_parameters_new();
-    stack_get_all_parameters(fit->stack, fps);
-    acquisition_get_all_parameters(fit->acquisition, fps);
+    for (int i = 0; i < fit->samples_number; i++) {
+        /* Set the group to 1 (generic group) and the sample to i + 1 (add 1 because
+           0 means undefined sample). */
+        const unsigned int sample_scope = FIT_PARAM_SCOPE(1, i + 1, 0);
+        const struct stack *stack = fit->stack_list[i];
+        stack_get_all_parameters(stack, fps, sample_scope);
+    }
+    for (int i = 0; i < fit->spectra_number; i++) {
+        const struct spectrum_item *sitem = &fit->spectra_list[i];
+        acquisition_get_all_parameters(sitem->acquisition, fps, sitem->scope);
+    }
     return fps;
 }
 
+// **************** DONE
 double
-fit_engine_get_parameter_value(const struct fit_engine *fit,
-                               const fit_param_t *fp)
+fit_engine_get_parameter_value(const struct fit_engine *fit, const fit_param_t *fp)
 {
     if(fp->id >= PID_ACQUISITION_PARAMETER) {
-        return acquisition_get_parameter(fit->acquisition, fp->id);
+        const int spectrum_no = scope_acquisition_any(fp->scope);
+        if (spectrum_no < fit->spectra_number) {
+            const struct spectrum_item *sitem = &fit->spectra_list[spectrum_no];
+            return acquisition_get_parameter(sitem->acquisition, fp->id);
+        }
     } else {
-        return stack_get_parameter_value(fit->stack, fp);
+        const int sample_no = scope_sample_any(fp->scope);
+        if (sample_no < fit->samples_number) {
+            const struct stack *stack = fit->stack_list[samples_number];
+            return stack_get_parameter_value(stack, fp);
+        }
     }
     return 0.0;
 }
