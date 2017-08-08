@@ -44,8 +44,9 @@ struct disp_struct;
 extern struct disp_class lorentz_disp_class;
 
 extern struct disp_struct * disp_new_lorentz(const char *name, int oscillators_no, struct lorentz_osc *params);
-extern void disp_add_oscillator(struct disp_struct *d);
-extern void disp_delete_oscillator(struct disp_struct *d, int index);
+extern void disp_lorentz_add_oscillator(struct disp_struct *d);
+extern void disp_lorentz_delete_oscillator(struct disp_struct *d, int index);
+extern int disp_lorentz_oscillator_parameters_number(struct disp_struct *d);
 
 __END_DECLS
 

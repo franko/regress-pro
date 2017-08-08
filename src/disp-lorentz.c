@@ -41,7 +41,7 @@ static double lor_get_param_value(const struct disp_struct *d,
 static int lor_write(writer_t *w, const disp_t *_d);
 static int lor_read(lexer_t *l, disp_t *d);
 
-struct disp_class lor_disp_class = {
+struct disp_class lorentz_disp_class = {
     .disp_class_id       = DISP_LORENTZ,
     .full_name           = "Lorentz Oscillators",
     .short_name          = "lorentz",
@@ -70,8 +70,6 @@ static const char *lor_param_names[] = {"A", "En", "Br"};
 #define LOR_EN_OFFS 1
 #define LOR_BR_OFFS 2
 
-#define LOR_PARAM_NB(hn,pn) (LOR_NB_PARAMS * (hn) + (pn) + 1)
-
 void
 lor_free(disp_t *d)
 {
@@ -99,7 +97,7 @@ lor_copy(const disp_t *src)
 }
 
 void
-disp_add_oscillator(struct disp_struct *d)
+disp_lorentz_add_oscillator(struct disp_struct *d)
 {
     struct disp_lorentz *lor = &d->disp.lorentz;
     int n = lor->oscillators_number;
@@ -115,7 +113,7 @@ disp_add_oscillator(struct disp_struct *d)
 }
 
 void
-disp_delete_oscillator(struct disp_struct *d, int index)
+disp_lorentz_delete_oscillator(struct disp_struct *d, int index)
 {
     struct disp_lorentz *lor = &d->disp.lorentz;
     int n = lor->oscillators_number;
@@ -197,7 +195,12 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 int
 lor_fp_number(const disp_t *disp)
 {
-    return disp->disp.lorentz.oscillators_number * LOR_NB_PARAMS;
+    return disp->disp.lorentz.oscillators_number * LOR_NB_PARAMS + 1;
+}
+
+int disp_lorentz_oscillator_parameters_number(struct disp_struct *d)
+{
+    return LOR_NB_PARAMS;
 }
 
 double *
@@ -255,9 +258,11 @@ disp_t *
 disp_new_lorentz(const char *name, int oscillators_number, struct lorentz_osc *params)
 {
     disp_t *d = disp_new_with_name(DISP_LORENTZ, name);
-    d->disp.lorentz.oscillators_number = oscillators_number;
-    d->disp.lorentz.oscillators = emalloc(oscillators_number * sizeof(struct lorentz_osc));
-    memcpy(d->disp.lorentz.oscillators, params, oscillators_number * sizeof(struct lorentz_osc));
+    struct disp_lorentz *lor = &d->disp.lorentz;
+    lor->e_offset = 1.0;
+    lor->oscillators_number = oscillators_number;
+    lor->oscillators = emalloc(oscillators_number * sizeof(struct lorentz_osc));
+    memcpy(lor->oscillators, params, oscillators_number * sizeof(struct lorentz_osc));
     return d;
 }
 
@@ -265,7 +270,7 @@ int
 lor_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_lorentz *d = &_d->disp.lorentz;
-    writer_printf(w, "%d %g", d->oscillators_number, d->e_offset);
+    writer_printf(w, "%g %d", d->e_offset, d->oscillators_number);
     writer_newline(w);
     struct lorentz_osc *lor = d->oscillators;
     int i;
@@ -285,8 +290,8 @@ lor_read(lexer_t *l, disp_t *d_gen)
     struct disp_lorentz *d = &d_gen->disp.lorentz;
     d->oscillators = NULL;
     int n_osc;
-    if (lexer_integer(l, &n_osc)) return 1;
     if (lexer_number(l, &d->e_offset)) return 1;
+    if (lexer_integer(l, &n_osc)) return 1;
     d->oscillators_number = n_osc;
     d->oscillators = emalloc(n_osc * sizeof(struct lorentz_osc));
     struct lorentz_osc *lor = d->oscillators;

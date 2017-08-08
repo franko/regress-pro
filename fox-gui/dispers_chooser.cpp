@@ -64,6 +64,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
     combo->setNumVisible(8);
     combo->appendItem("- choose a model");
+    combo->appendItem("Lorentz");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Cauchy");
     combo->appendItem("Lookup");
@@ -77,7 +78,10 @@ disp_t *
 fx_newmodel_selector::get_dispersion()
 {
     FXString name = this->combo->getText();
-    if (name == "Harmonic Oscillator") {
+    if (name == "Lorentz") {
+        struct lorentz_osc param0 = {0.0, 6.5, 0.5};
+        return disp_new_lorentz("* Lorentz", 1, &param0);
+    } else if (name == "Harmonic Oscillator") {
         struct ho_params param0 = {0.0, 15.7, 0.0, 1.0 / 3.0, 0.0};
         return disp_new_ho("*HO", 1, &param0);
     } else if (name == "Cauchy") {
