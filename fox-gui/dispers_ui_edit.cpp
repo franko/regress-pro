@@ -248,10 +248,11 @@ void fx_disp_ho_window::setup_dialog()
     new FXLabel(matrix, "Nu");
     new FXLabel(matrix, "Phi");
 
+    const int osc_params_no = disp_ho_oscillator_parameters_number(disp);
     for (int i = 0; i < disp->disp.ho.nb_hos; i++) {
         FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
         if (disp->disp.ho.nb_hos == 1) { db->disable(); }
-        for (int j = 5*i; j < 5*(i+1); j++) {
+        for (int j = osc_params_no*i; j < osc_params_no*(i+1); j++) {
             create_textfield(matrix, this, ID_PARAM_0 + j);
         }
     }
@@ -264,7 +265,8 @@ void fx_disp_ho_window::add_dispersion_element()
     disp_add_ho(disp);
     FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
     db->create();
-    for (int j = 5*n; j < 5*(n+1); j++) {
+    const int osc_params_no = disp_ho_oscillator_parameters_number(disp);
+    for (int j = osc_params_no*n; j < osc_params_no*(n+1); j++) {
         FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j);
         tf->create();
     }
@@ -275,6 +277,54 @@ void fx_disp_ho_window::add_dispersion_element()
 void fx_disp_ho_window::delete_dispersion_element(int index)
 {
     disp_delete_ho(disp, index);
+    reload();
+}
+
+
+void fx_disp_lorentz_window::setup_dialog()
+{
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
+    new FXLabel(thf, "eps_inf");
+    create_textfield(thf, this, ID_PARAM_0);
+
+    matrix = new FXMatrix(vframe, 4, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    new FXLabel(matrix, "");
+    new FXLabel(matrix, "A");
+    new FXLabel(matrix, "En");
+    new FXLabel(matrix, "Br");
+
+    const int osc_params_no = disp_lorentz_oscillator_parameters_number(disp);
+    for (int i = 0; i < disp->disp.lorentz.oscillators_number; i++) {
+        FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
+        if (disp->disp.lorentz.oscillators_number == 1) { db->disable(); }
+        for (int j = osc_params_no*i; j < osc_params_no*(i+1); j++) {
+            create_textfield(matrix, this, ID_PARAM_0 + j + 1);
+        }
+    }
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+}
+
+void fx_disp_lorentz_window::add_dispersion_element()
+{
+    const int n = disp->disp.lorentz.oscillators_number;
+    disp_lorentz_add_oscillator(disp);
+    FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
+    db->create();
+    const int osc_params_no = disp_lorentz_oscillator_parameters_number(disp);
+    for (int j = osc_params_no*n; j < osc_params_no*(n+1); j++) {
+        FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j + 1);
+        tf->create();
+    }
+    matrix->childAtRowCol(1, 0)->enable();
+    vframe->recalc();
+}
+
+void fx_disp_lorentz_window::delete_dispersion_element(int index)
+{
+    disp_lorentz_delete_oscillator(disp, index);
     reload();
 }
 
@@ -387,6 +437,8 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
         dispwin = new fx_disp_fb_window(d, comp, opts);
     } else if (d->type == DISP_TAUC_LORENTZ) {
         dispwin = new fx_disp_fb_window(d, comp, opts);
+    } else if (d->type == DISP_LORENTZ) {
+        dispwin = new fx_disp_lorentz_window(d, comp, opts);
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
     }

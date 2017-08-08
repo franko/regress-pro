@@ -246,6 +246,11 @@ ho_fp_number(const disp_t *disp)
     return disp->disp.ho.nb_hos * HO_NB_PARAMS;
 }
 
+int disp_ho_oscillator_parameters_number(struct disp_struct *d)
+{
+    return HO_NB_PARAMS;
+}
+
 double *
 ho_map_param(disp_t *_d, int index)
 {

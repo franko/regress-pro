@@ -13,7 +13,9 @@ COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
 ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	disp-sample-table.c disp-lookup.c str.c dispers-library.c str-util.c \
-	batch.c error-messages.c cmpl.c minsampling.c dispers.c disp-fb.c disp-tauc-lorentz.c disp-ho.c \
+	batch.c error-messages.c cmpl.c minsampling.c dispers.c disp-fb.c disp-tauc-lorentz.c \
+	disp-ho.c \
+	disp-lorentz.c \
 	disp-bruggeman.c disp-cauchy.c disp-sellmeier.c dispers-classes.c stack.c lmfit.c \
 	fit-timestamp.c lmfit-simple.c fit-params.c fit-engine.c refl-kernel.c \
 	refl-fit.c elliss-fit.c number-parse.c refl-utils.c \

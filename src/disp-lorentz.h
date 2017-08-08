@@ -1,5 +1,5 @@
 
-/* disp-ho.h
+/* disp-lorentz.h
  *
  * Copyright (C) 2005-2011 Francesco Abbate
  *
@@ -18,37 +18,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DISP_HO_H
-#define DISP_HO_H
+#ifndef DISP_LORENTZ_H
+#define DISP_LORENTZ_H
 
 #include "defs.h"
 #include "dispers-classes.h"
 
 __BEGIN_DECLS
 
-struct ho_params {
-    double nosc;
+struct lorentz_osc {
+    double a;
     double en;
-    double eg;
-    double nu;
-    double phi;
+    double br;
 };
 
-struct disp_ho {
-    int nb_hos;
-    struct ho_params *params;
+struct disp_lorentz {
+    int oscillators_number;
+    double e_offset;
+    struct lorentz_osc *oscillators;
 };
 
 struct disp_struct;
 
-/* HO dispersion class */
-extern struct disp_class ho_disp_class;
+/* Lorentz dispersion class */
+extern struct disp_class lorentz_disp_class;
 
-extern struct disp_struct * disp_new_ho(const char *name, int nb_hos,
-                                        struct ho_params *params);
-extern void disp_add_ho(struct disp_struct *d);
-extern void disp_delete_ho(struct disp_struct *d, int index);
-extern int disp_ho_oscillator_parameters_number(struct disp_struct *d);
+extern struct disp_struct * disp_new_lorentz(const char *name, int oscillators_no, struct lorentz_osc *params);
+extern void disp_lorentz_add_oscillator(struct disp_struct *d);
+extern void disp_lorentz_delete_oscillator(struct disp_struct *d, int index);
+extern int disp_lorentz_oscillator_parameters_number(struct disp_struct *d);
 
 __END_DECLS
 

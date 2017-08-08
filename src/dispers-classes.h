@@ -17,6 +17,7 @@ enum disp_type {
     DISP_FB,
     DISP_TAUC_LORENTZ,
     DISP_SELLMEIER,
+    DISP_LORENTZ,
     DISP_END_OF_TABLE, /* Not a dispersion type */
 };
 
