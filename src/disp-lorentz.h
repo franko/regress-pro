@@ -32,8 +32,14 @@ struct lorentz_osc {
     double br;
 };
 
+enum {
+    LORENTZ_STYLE_ABE = 0,
+    LORENTZ_STYLE_AE2 = 1,
+};
+
 struct disp_lorentz {
-    int oscillators_number;
+    short int oscillators_number;
+    short int style;
     double e_offset;
     struct lorentz_osc *oscillators;
 };
@@ -43,10 +49,11 @@ struct disp_struct;
 /* Lorentz dispersion class */
 extern struct disp_class lorentz_disp_class;
 
-extern struct disp_struct * disp_new_lorentz(const char *name, int oscillators_no, struct lorentz_osc *params);
+extern struct disp_struct * disp_new_lorentz(const char *name, int style, int oscillators_no, struct lorentz_osc *params);
 extern void disp_lorentz_add_oscillator(struct disp_struct *d);
 extern void disp_lorentz_delete_oscillator(struct disp_struct *d, int index);
 extern int disp_lorentz_oscillator_parameters_number(struct disp_struct *d);
+extern void disp_lorentz_change_style(struct disp_struct *d, int new_style);
 
 __END_DECLS
 

@@ -86,6 +86,13 @@ private:
 };
 
 class fx_disp_lorentz_window : public fx_disp_window {
+    FXDECLARE(fx_disp_lorentz_window)
+protected:
+    fx_disp_lorentz_window() {};
+private:
+    fx_disp_lorentz_window(const fx_disp_lorentz_window&);
+    fx_disp_lorentz_window &operator=(const fx_disp_lorentz_window&);
+
 public:
     fx_disp_lorentz_window(disp_t *d, FXComposite *p, FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=DEFAULT_SPACING,FXint pr=DEFAULT_SPACING,FXint pt=DEFAULT_SPACING,FXint pb=DEFAULT_SPACING,FXint hs=DEFAULT_SPACING,FXint vs=DEFAULT_SPACING)
     : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs)
@@ -94,6 +101,13 @@ public:
     virtual void setup_dialog();
     virtual void add_dispersion_element();
     virtual void delete_dispersion_element(int index);
+
+    long on_cmd_coeff_form(FXObject *, FXSelector, void *);
+
+    enum {
+        ID_COEFF_FORM = fx_disp_window::ID_LAST,
+        ID_LAST
+    };
 private:
     FXMatrix *matrix;
     FXVerticalFrame *vframe;

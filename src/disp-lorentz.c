@@ -143,13 +143,15 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     cmpl hsum = 0.0;
     for(int k = 0; k < nb; k++) {
         const struct lorentz_osc *p = &lor->oscillators[k];
-        const cmpl hh = (p->a * p->br * p->en) / (SQR(p->en) - SQR(e) + I * p->br * e);
+        const double a = p->a, br = p->br, en = p->en;
+        const double hhnum = (lor->style == LORENTZ_STYLE_ABE ? a * br * en : a * SQR(en));
+        const cmpl hh = hhnum / (SQR(en) - SQR(e) + I * br * e);
 
         if(pd) {
             const int koffs = osc_offs + LOR_NB_PARAMS * k;
-            cmpl_vector_set(pd, koffs + LOR_A_OFFS,  hh / p->a);
-            cmpl_vector_set(pd, koffs + LOR_EN_OFFS, hh / p->en);
-            cmpl_vector_set(pd, koffs + LOR_BR_OFFS, hh / p->br);
+            cmpl_vector_set(pd, koffs + LOR_A_OFFS,  hh / a);
+            cmpl_vector_set(pd, koffs + LOR_EN_OFFS, hh / en);
+            cmpl_vector_set(pd, koffs + LOR_BR_OFFS, hh / br);
         }
 
         hsum += hh;
@@ -168,23 +170,34 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
     for(int k = 0; k < nb; k++) {
         const struct lorentz_osc *p = lor->oscillators + k;
+        const double br = p->br, en = p->en;
         const int koffs = osc_offs + k * LOR_NB_PARAMS;
 
         const int idx_a = koffs + LOR_A_OFFS;
         const cmpl y0_a = cmpl_vector_get(pd, idx_a);
         cmpl_vector_set(pd, idx_a, epsfact * y0_a);
 
-        const cmpl osc_den = SQR(p->en) - SQR(e) + I * p->br * e;
+        const cmpl osc_den = SQR(en) - SQR(e) + I * br * e;
 
         const int idx_en = koffs + LOR_EN_OFFS;
         const cmpl y0_en = cmpl_vector_get(pd, idx_en);
-        const cmpl num_en = SQR(p->en) + SQR(e) - I * p->br * e;
-        cmpl_vector_set(pd, idx_en, - epsfact * num_en / osc_den * y0_en);
+        if (lor->style == LORENTZ_STYLE_ABE) {
+            const cmpl num_en = - (SQR(en) + SQR(e) - I * br * e);
+            cmpl_vector_set(pd, idx_en, epsfact * num_en / osc_den * y0_en);
+        } else {
+            const cmpl num_en = 2 * (I * br * e - SQR(e));
+            cmpl_vector_set(pd, idx_en, epsfact * num_en / osc_den * y0_en);
+        }
 
         const int idx_br = koffs + LOR_BR_OFFS;
         const cmpl y0_br = cmpl_vector_get(pd, idx_br);
-        const cmpl num_br = SQR(p->en) - SQR(e);
-        cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
+        if (lor->style == LORENTZ_STYLE_ABE) {
+            const cmpl num_br = SQR(en) - SQR(e);
+            cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
+        } else {
+            const cmpl num_br = - I * br * e;
+            cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
+        }
     }
 
     return n;
@@ -253,10 +266,11 @@ lor_get_param_value(const disp_t *d, const fit_param_t *fp)
 }
 
 disp_t *
-disp_new_lorentz(const char *name, int oscillators_number, struct lorentz_osc *params)
+disp_new_lorentz(const char *name, int style, int oscillators_number, struct lorentz_osc *params)
 {
     disp_t *d = disp_new_with_name(DISP_LORENTZ, name);
     struct disp_lorentz *lor = &d->disp.lorentz;
+    lor->style = style;
     lor->e_offset = 1.0;
     lor->oscillators_number = oscillators_number;
     lor->oscillators = emalloc(oscillators_number * sizeof(struct lorentz_osc));
@@ -264,11 +278,30 @@ disp_new_lorentz(const char *name, int oscillators_number, struct lorentz_osc *p
     return d;
 }
 
+void
+disp_lorentz_change_style(disp_t *d, int new_style)
+{
+    struct disp_lorentz *lor = &d->disp.lorentz;
+    if (lor->style == new_style) return;
+    if (new_style == LORENTZ_STYLE_ABE) {
+        for (int k = 0; k < lor->oscillators_number; k++) {
+            struct lorentz_osc *p = &lor->oscillators[k];
+            p->a = p->a * p->en / p->br;
+        }
+    } else {
+        for (int k = 0; k < lor->oscillators_number; k++) {
+            struct lorentz_osc *p = &lor->oscillators[k];
+            p->a = p->a * p->br / p->en;
+        }
+    }
+    lor->style = new_style;
+}
+
 int
 lor_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_lorentz *d = &_d->disp.lorentz;
-    writer_printf(w, "%g %d", d->e_offset, d->oscillators_number);
+    writer_printf(w, "%d %g %d", (int)d->style, d->e_offset, d->oscillators_number);
     writer_newline(w);
     struct lorentz_osc *lor = d->oscillators;
     int i;
@@ -287,9 +320,11 @@ lor_read(lexer_t *l, disp_t *d_gen)
 {
     struct disp_lorentz *d = &d_gen->disp.lorentz;
     d->oscillators = NULL;
-    int n_osc;
+    int n_osc, style;
+    if (lexer_integer(l, &style)) return 1;
     if (lexer_number(l, &d->e_offset)) return 1;
     if (lexer_integer(l, &n_osc)) return 1;
+    d->style = style;
     d->oscillators_number = n_osc;
     d->oscillators = emalloc(n_osc * sizeof(struct lorentz_osc));
     struct lorentz_osc *lor = d->oscillators;

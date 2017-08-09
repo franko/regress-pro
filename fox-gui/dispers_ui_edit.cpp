@@ -280,11 +280,25 @@ void fx_disp_ho_window::delete_dispersion_element(int index)
     reload();
 }
 
+// Map
+FXDEFMAP(fx_disp_lorentz_window) fx_disp_lorentz_window_map[]= {
+    FXMAPFUNC(SEL_COMMAND, fx_disp_lorentz_window::ID_COEFF_FORM, fx_disp_lorentz_window::on_cmd_coeff_form),
+};
+
+FXIMPLEMENT(fx_disp_lorentz_window,fx_disp_window,fx_disp_lorentz_window_map,ARRAYNUMBER(fx_disp_lorentz_window_map));
 
 void fx_disp_lorentz_window::setup_dialog()
 {
     FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    FXHorizontalFrame *coeff_frame = new FXHorizontalFrame(vframe, LAYOUT_FILL_X);
+    new FXLabel(coeff_frame, "Parametrization");
+    FXListBox *coeff_box = new FXListBox(coeff_frame, this, ID_COEFF_FORM, LISTBOX_NORMAL|FRAME_SUNKEN);
+    coeff_box->setNumVisible(2);
+    coeff_box->appendItem("A Br En");
+    coeff_box->appendItem("A En^2");
+    coeff_box->setCurrentItem(this->disp->disp.lorentz.style);
 
     FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
     new FXLabel(thf, "eps_inf");
@@ -327,6 +341,20 @@ void fx_disp_lorentz_window::delete_dispersion_element(int index)
     disp_lorentz_delete_oscillator(disp, index);
     reload();
 }
+
+long fx_disp_lorentz_window::on_cmd_coeff_form(FXObject *, FXSelector, void *data)
+{
+    disp_lorentz_change_style(this->disp, (FXival) data);
+    const int pposc = disp_lorentz_oscillator_parameters_number(this->disp);
+    for (int i = 0; i < disp->disp.lorentz.oscillators_number; i++) {
+        for (int j = 0; j < pposc; j++) {
+            fx_numeric_field *tf = (fx_numeric_field *) matrix->childAtRowCol(i + 1, j + 1);
+            update_textfield(tf, this, pposc * i + j + 1);
+        }
+    }
+    return 1;
+}
+
 
 // Map
 FXDEFMAP(fx_disp_fb_window) fx_disp_fb_window_map[]= {
