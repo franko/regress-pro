@@ -301,7 +301,7 @@ void fx_disp_lorentz_window::setup_dialog()
     coeff_box->setCurrentItem(this->disp->disp.lorentz.style);
 
     FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
-    new FXLabel(thf, "eps_inf");
+    new FXLabel(thf, "Eps(inf)");
     create_textfield(thf, this, ID_PARAM_0);
 
     matrix = new FXMatrix(vframe, 4, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
