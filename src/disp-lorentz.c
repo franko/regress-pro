@@ -96,6 +96,10 @@ lor_copy(const disp_t *src)
     return res;
 }
 
+static int lor_parameters_number(const struct disp_lorentz *lor) {
+    return lor->oscillators_number * LOR_NB_PARAMS + 1;
+}
+
 void
 disp_lorentz_add_oscillator(struct disp_struct *d)
 {
@@ -131,26 +135,29 @@ lor_n_value(const disp_t *disp, double lam)
 cmpl
 lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
-    const struct disp_lorentz *m = & d->disp.lorentz;
-    const int nb = m->oscillators_number;
+    const struct disp_lorentz *lor = & d->disp.lorentz;
+    const int nb = lor->oscillators_number;
     const double e = LOR_EV_NM / lambda;
+    const int osc_offs = 1; /* Index offset in partial derivative for the oscillators. */
 
     cmpl hsum = 0.0;
     for(int k = 0; k < nb; k++) {
-        const struct lorentz_osc *p = &m->oscillators[k];
-        const cmpl hh = (p->a * p->br * p->en) / (SQR(p->en) - SQR(e) - I * p->br * e);
+        const struct lorentz_osc *p = &lor->oscillators[k];
+        const cmpl hh = (p->a * p->br * p->en) / (SQR(p->en) - SQR(e) + I * p->br * e);
 
         if(pd) {
-            cmpl_vector_set(pd, LOR_NB_PARAMS * k + LOR_A_OFFS,  hh / p->a);
-            cmpl_vector_set(pd, LOR_NB_PARAMS * k + LOR_EN_OFFS, hh / p->en);
-            cmpl_vector_set(pd, LOR_NB_PARAMS * k + LOR_BR_OFFS, hh / p->br);
+            const int koffs = osc_offs + LOR_NB_PARAMS * k;
+            cmpl_vector_set(pd, koffs + LOR_A_OFFS,  hh / p->a);
+            cmpl_vector_set(pd, koffs + LOR_EN_OFFS, hh / p->en);
+            cmpl_vector_set(pd, koffs + LOR_BR_OFFS, hh / p->br);
         }
 
         hsum += hh;
     }
 
-    cmpl n = csqrt(m->e_offset + hsum);
-    const cmpl epsfact = 1 / (2 * csqrt(1 + hsum));
+    const cmpl epsilon = lor->e_offset + hsum;
+    const cmpl epsfact = 1 / (2 * csqrt(epsilon));
+    cmpl n = csqrt(epsilon);
 
     const int chop_k = (cimag(n) > 0.0);
     if(chop_k) {
@@ -161,29 +168,32 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         return n;
     }
 
+    /* Derivative with e_offset. */
+    cmpl_vector_set(pd, 0, epsfact);
+
     for(int k = 0; k < nb; k++) {
-        const struct lorentz_osc *p = m->oscillators + k;
-        int koffs = k * LOR_NB_PARAMS;
+        const struct lorentz_osc *p = lor->oscillators + k;
+        const int koffs = osc_offs + k * LOR_NB_PARAMS;
 
         const int idx_a = koffs + LOR_A_OFFS;
         const cmpl y0_a = cmpl_vector_get(pd, idx_a);
         cmpl_vector_set(pd, idx_a, epsfact * y0_a);
 
-        const cmpl osc_den = SQR(p->en) - SQR(e) - I * p->br * e;
+        const cmpl osc_den = SQR(p->en) - SQR(e) + I * p->br * e;
 
         const int idx_en = koffs + LOR_EN_OFFS;
         const cmpl y0_en = cmpl_vector_get(pd, idx_en);
-        const cmpl num_en = SQR(p->en) + SQR(e) + I * p->br * e;
+        const cmpl num_en = SQR(p->en) + SQR(e) - I * p->br * e;
         cmpl_vector_set(pd, idx_en, - epsfact * num_en / osc_den * y0_en);
 
         const int idx_br = koffs + LOR_BR_OFFS;
         const cmpl y0_br = cmpl_vector_get(pd, idx_br);
         const cmpl num_br = SQR(p->en) - SQR(e);
-        cmpl_vector_set(pd, idx_en, epsfact * num_br / osc_den * y0_br);
+        cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
     }
 
     if(chop_k) {
-        for(int k = 0; k < nb * LOR_NB_PARAMS; k++) {
+        for(int k = 0; k < lor_parameters_number(lor); k++) {
             const cmpl y = cmpl_vector_get(pd, k);
             cmpl_vector_set(pd, k, creal(y) + I * 0.0);
         }
@@ -195,7 +205,7 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 int
 lor_fp_number(const disp_t *disp)
 {
-    return disp->disp.lorentz.oscillators_number * LOR_NB_PARAMS + 1;
+    return lor_parameters_number(&disp->disp.lorentz);
 }
 
 int disp_lorentz_oscillator_parameters_number(struct disp_struct *d)
@@ -207,7 +217,7 @@ double *
 lor_map_param(disp_t *_d, int index)
 {
     struct disp_lorentz *d = &_d->disp.lorentz;
-    if (index >= d->oscillators_number * LOR_NB_PARAMS + 1) {
+    if (index >= lor_parameters_number(d)) {
         return NULL;
     }
     if (index == 0) {
