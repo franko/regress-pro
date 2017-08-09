@@ -157,12 +157,7 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
     const cmpl epsilon = lor->e_offset + hsum;
     const cmpl epsfact = 1 / (2 * csqrt(epsilon));
-    cmpl n = csqrt(epsilon);
-
-    const int chop_k = (cimag(n) > 0.0);
-    if(chop_k) {
-        n = creal(n) + I * 0.0;
-    }
+    const cmpl n = csqrt(epsilon);
 
     if(pd == NULL) {
         return n;
@@ -190,13 +185,6 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const cmpl y0_br = cmpl_vector_get(pd, idx_br);
         const cmpl num_br = SQR(p->en) - SQR(e);
         cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
-    }
-
-    if(chop_k) {
-        for(int k = 0; k < lor_parameters_number(lor); k++) {
-            const cmpl y = cmpl_vector_get(pd, k);
-            cmpl_vector_set(pd, k, creal(y) + I * 0.0);
-        }
     }
 
     return n;
