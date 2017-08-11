@@ -38,14 +38,13 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
                   struct spectrum *spectr, int th_only_optimize, int require_acquisition_jacob)
 {
     size_t nb_med = stack->nb;
-    size_t j;
 
     cache->nb_med = nb_med;
 
 #if 0
     cache->deriv_info = emalloc(nb_med * sizeof(struct deriv_info));
 
-    for(j = 0; j < nb_med; j++) {
+    for(size_t j = 0; j < nb_med; j++) {
         struct deriv_info *di = cache->deriv_info + j;
         size_t tpnb = disp_get_number_of_params(stack->disp[j]);
 
@@ -77,13 +76,12 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
 void
 dispose_stack_cache(struct stack_cache *cache)
 {
-    int j, nb_med = cache->nb_med;
-
     if(! cache->is_valid) {
         return;
     }
 #if 0
-    for(j = 0; j < nb_med; j++) {
+    int nb_med = cache->nb_med;
+    for(int j = 0; j < nb_med; j++) {
         struct deriv_info *di = & cache->deriv_info[j];
         if(di->val) {
             cmpl_vector_free(di->val);
@@ -99,13 +97,15 @@ dispose_stack_cache(struct stack_cache *cache)
     cache->is_valid = 0;
 }
 
+// ********************** DONE
+// To be reviewed later. Build cache structure only for first spectrum.
 void
 build_fit_engine_cache(struct fit_engine *f)
 {
     assert(f->spectra_number >= 1);
     int RI_fixed = (f->spectra_number == 1) && fit_parameters_are_RI_fixed(f->parameters);
     int require_acquisition_jacob = fit_parameters_contains_acquisition_parameters(f->parameters);
-    build_stack_cache(&f->cache, f->stack_list[0], f->spectra_list[0], RI_fixed, require_acquisition_jacob);
+    build_stack_cache(&f->cache, f->stack_list[0], f->spectra_list[0].spectrum, RI_fixed, require_acquisition_jacob);
 }
 
 void
@@ -183,15 +183,17 @@ spectrum_limits(const struct spectral_range *range, const struct spectrum *s, do
     spectrum_clip(range, wlmin, wlmax);
 }
 
+// ************************ DONE
+// Set spectra limits to the largest limits of all spectra.
 void
 fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wlmin, double *wlmax)
 {
     for (int i = 0; i < fit->spectra_number; i++) {
-        struct spectrum_item *sitem = &fit->spectra_list[i];
+        const struct spectrum_item *sitem = &fit->spectra_list[i];
         double wlmin_i, wlmax_i;
         spectrum_limits(&fit->config->spectr_range, sitem->spectrum, &wlmin_i, &wlmax_i);
-        if (i == 0 || wlmin_i < wlmin) wlmin = wlmin_i;
-        if (i == 0 || wlmax_i > wlmax) wlmax = wlmax_i;
+        if (i == 0 || wlmin_i < *wlmin) *wlmin = wlmin_i;
+        if (i == 0 || wlmax_i > *wlmax) *wlmax = wlmax_i;
     }
 }
 
@@ -219,10 +221,13 @@ fit_engine_update_disp_info(struct fit_engine *fit)
     }
 }
 
+// **************************** DONE
+// Temporary solution. This function is only used by interactive fit.
 void
 fit_engine_copy_disp_info(struct fit_engine *dst, const struct fit_engine *src)
 {
-    for (int k = 0; k < fit->samples_number; k++) {
+    assert(src->samples_number == dst->samples_number);
+    for (int k = 0; k < src->samples_number; k++) {
         stack_t *dst_stack = dst->stack_list[k];
         stack_t *src_stack = src->stack_list[k];
         for (int i = 0; i < dst_stack->nb; i++) {
@@ -314,8 +319,8 @@ central_deriv(const gsl_multifit_function_fdf *f, gsl_vector *x, int parameter_i
 
 static void
 fit_engine_check_deriv(struct fit_engine *fit) {
-    const int points_number = fit->run->mffun.n;
-    const int parameters_number = fit->run->mffun.p;
+    const int points_number = fit->mffun.n;
+    const int parameters_number = fit->mffun.p;
     struct fdf_deriv_ws ws[1];
 
     fprintf(stderr, "Checking derivatives for fit.\nnumber of points: %d, number of parameters: %d\n", points_number, parameters_number);
@@ -348,11 +353,11 @@ fit_engine_check_deriv(struct fit_engine *fit) {
         gsl_vector_view abserr_view = gsl_matrix_column(abserr_mat, j);
         gsl_vector *abserr = &abserr_view.vector;
 
-        central_deriv(&fit->run->mffun, x, j, delta, ws, df, abserr);
+        central_deriv(&fit->mffun, x, j, delta, ws, df, abserr);
     }
 
     gsl_matrix *com_jacob = gsl_matrix_alloc(points_number, parameters_number);
-    fit->run->mffun.df(x, fit, com_jacob);
+    fit->mffun.df(x, fit, com_jacob);
 
     for (int i = 0; i < points_number; i++) {
         for (int j = 0; j < parameters_number; j++) {
@@ -481,6 +486,8 @@ select_param_jacobian(const enum system_kind sys_kind, const int channels_number
     }
 }
 
+// ***************************** DONE
+// To be improved the deriv_info stuff and optimizations for fixed RIs etc.
 static int
 fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
 {
@@ -497,7 +504,7 @@ fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
         struct spectrum_item *sitem = &fit->spectra_list[spectrum_no];
         struct spectrum *spectrum = sitem->spectrum;
         const int spectrum_scope = sitem->scope;
-        const int sample = scope_sample(spectrum_scope);
+        const int sample = scope_sample_raw(spectrum_scope);
         struct stack *stack_sample = fit->stack_list[sample];
         const int nb_med = stack_sample->nb;
         const int npt = spectra_points(spectrum);
@@ -506,6 +513,10 @@ fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
         double jacob_th_data[channels_number * (nb_med - 2)];
         cmpl jacob_n_data[channels_number * nb_med];
         double jacob_acq_data[channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind)];
+
+        /* Should never fail as spectrum_scope is always fully specified for each
+           spectrum_item */
+        assert(sample >= 0);
 
         /* STEP 2 : From the stack we retrive the thicknesses and RIs
         informations. */
@@ -527,7 +538,7 @@ fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
             stack_get_ns_list(stack_sample, ns, lambda);
 
             /* STEP 3 : We call the function to compute the model values. */
-            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, &fit->acquisitions[sample], result, jacob_th, jacob_n, jacob_acq);
+            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, sitem->acquisition, result, jacob_th, jacob_n, jacob_acq);
 
             if(f != NULL) {
                 for (int q = 0; q < channels_number; q++) {
@@ -546,8 +557,9 @@ fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
                     ideriv[i].val = cmpl_vector_alloc(params_no);
                 }
 
-                for (int kp = 0; kp < (int) fit->parameters->number; k++) {
-                    if (scope_is_inside(spectrum_scope, fit->parameters->values[kp].scope)) {
+                for (int kp = 0; kp < (int) fit->parameters->number; kp++) {
+                    const fit_param_t *fp = &fit->parameters->values[kp];
+                    if (scope_is_inside(spectrum_scope, fp->scope)) {
                         double fp_jacob[channels_number];
                         select_param_jacobian(sys_kind, channels_number, fp, stack_sample, ideriv, lambda,
                             fp_jacob, jacob_th, jacob_n, jacob_acq);
@@ -604,6 +616,7 @@ fit_engine_clear_spectra(struct fit_engine *f) {
     set_spectra_list_capacity(f, 0);
 }
 
+// ************************ DONE
 void
 fit_engine_add_spectrum(struct fit_engine *f, const struct spectrum *s, const int spectrum_scope)
 {
@@ -611,10 +624,11 @@ fit_engine_add_spectrum(struct fit_engine *f, const struct spectrum *s, const in
         set_spectra_list_capacity(f, f->spectra_number + 1);
     }
 
-    const int sample = scope_sample(spectrum_scope);
-    assert(sample < f->stack_number);
+    const int spectrum_no = scope_acquisition_raw(spectrum_scope);
+    const int sample = scope_sample_raw(spectrum_scope);
+    assert(sample < f->samples_number);
 
-    struct spectrum_item *si = f->spectra_list[f->spectra_number];
+    struct spectrum_item *si = &f->spectra_list[spectrum_no];
     si->spectrum = spectra_copy(s);
     si->acquisition[0] = s->acquisition[0];
     si->scope = spectrum_scope;

@@ -262,7 +262,7 @@ spectr_cut_range(struct spectrum *s, float inf, float sup)
 }
 
 struct spectrum *
-spectra_copy(struct spectrum *src) {
+spectra_copy(const struct spectrum *src) {
     struct spectrum *copy = emalloc(sizeof(struct spectrum));
     copy->acquisition[0] = src->acquisition[0];
     data_view_copy(copy->table, src->table);
@@ -300,7 +300,7 @@ spectra_get_values(struct spectrum const *s, int idx)
 }
 
 void
-spectra_wavelength_range(struct spectrum *s, double *wl_min, double *wl_max)
+spectra_wavelength_range(const struct spectrum *s, double *wl_min, double *wl_max)
 {
     int n = spectra_points(s);
     *wl_min = data_view_get(s->table, 0, 0);
