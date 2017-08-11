@@ -362,7 +362,9 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
                          cfg->spectr_range.min, cfg->spectr_range.max);
 
     if(cfg->subsampling && enable_subsampling) {
-        elliss_sample_minimize(fit->run->spectr, 0.05);
+        const int channels_no = (syskind == SYSTEM_REFLECTOMETER ? 1 : 2);
+        const int channel_start = 1;
+        table_sample_minimize(fit->run->spectr, 0.05, channel_start, channel_start + channels_no);
     }
 
     build_fit_engine_cache(fit);
