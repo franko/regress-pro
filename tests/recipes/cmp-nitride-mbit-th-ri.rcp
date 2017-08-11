@@ -219,7 +219,7 @@ stack 9
   fit-config
     threshold 100
     max-iterations 200
-    subsampling 0
+    subsampling 1
     wavelength-range 235 780
     epsilon 1e-007 1e-007
   fit-parameters 10
