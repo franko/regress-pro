@@ -70,15 +70,14 @@ static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
 #define HO_MULT_FACT 1.3788623090164978586499199863586
 
-   For the conversion from eV to nm the value of 1240 is used:
+   For the conversion from eV to nm the value EO_EV_NM defined below is used:
 
-   E(eV) = 1240 / lambda(nm)
-
-#define HO_EV_NM 1240.0
+   E(eV) = HO_EV_NM / lambda(nm)
 */
 
-#define HO_EV_NM 1240.0
+#define HO_EV_NM 1239.852
 
+// #define HO_MULT_FACT 1.37886
 #define HO_MULT_FACT 1.3788623090164978586499199863586
 #define HO_NB_PARAMS 5
 #define HO_NOSC_OFFS 0
