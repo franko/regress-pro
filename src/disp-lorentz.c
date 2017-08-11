@@ -63,7 +63,7 @@ struct disp_class lorentz_disp_class = {
 
 static const char *lor_param_names[] = {"A", "En", "Br"};
 
-#define LOR_EV_NM 1240.0
+#define LOR_EV_NM 1239.852
 
 #define LOR_NB_PARAMS 3
 #define LOR_A_OFFS  0
