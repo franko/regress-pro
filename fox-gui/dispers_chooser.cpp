@@ -64,14 +64,14 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
     combo->setNumVisible(8);
     combo->appendItem("- choose a model");
-    combo->appendItem("Lorentz");
     combo->appendItem("Harmonic Oscillator");
-    combo->appendItem("Cauchy");
-    combo->appendItem("Lookup");
-    combo->appendItem("Forouhi-Bloomer");
     combo->appendItem("Tauc-Lorentz");
+    combo->appendItem("Cauchy");
+    combo->appendItem("Lorentz");
+    combo->appendItem("Lookup");
     combo->appendItem("Bruggeman");
     combo->appendItem("Sellmeier");
+    combo->appendItem("Forouhi-Bloomer");
 }
 
 disp_t *
