@@ -10,7 +10,7 @@ stack 4
   library "silicon-1"
 fit-config
   max-iterations 30
-  subsampling 0
+  subsampling 1
   epsilon 1e-007 1e-007
 fit-parameters 1
   thickness 1
