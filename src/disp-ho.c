@@ -166,7 +166,8 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     const double ehm1 = m->eps_host - 1;
     const double alphah = 1 + m->nu_host * ehm1;
     const cmpl invden = 1 / (-m->nu_host * ehm1 + alphah * (1 - hnusum));
-    const cmpl eps = m->eps_inf + (ehm1 + alphah * hsum) * invden;
+    const cmpl epsnum = ehm1 + alphah * hsum;
+    const cmpl eps = m->eps_inf + epsnum * invden;
     cmpl n = csqrt(eps);
     const int chop_k = (cimag(n) > 0.0);
 
@@ -180,13 +181,13 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
     const cmpl epsfact = 1 / (2 * csqrt(eps));
 
+    const cmpl dndnuhc = epsfact * alphah * epsnum * SQR(invden);
     for (int k = 0; k < nb; k++) {
         const struct ho_params *p = m->params + k;
         const double nosc = p->nosc, en = p->en, nu = p->nu;
         const int koffs = k * HO_NB_PARAMS;
 
-        const cmpl depsdnu = alphah * (ehm1 + alphah * hsum) * SQR(invden) * hh[k];
-        cmpl_vector_set(pd, koffs + HO_NU_OFFS, epsfact * depsdnu);
+        cmpl_vector_set(pd, koffs + HO_NU_OFFS, dndnuhc * hh[k]);
 
         const cmpl dndh = alphah * (alphah * nu * hsum * invden + 1) * invden;
         const cmpl hhdndh = epsfact * dndh * hh[k];
