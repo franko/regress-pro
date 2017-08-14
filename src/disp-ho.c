@@ -162,7 +162,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const double nosc = p->nosc, en = p->en, eg = p->eg, nu = p->nu, phi = p->phi;
 
         invhhden[k] = 1 / (SQR(en) - SQR(e) + I * eg * e);
-        hh[k] = HO_MULT_FACT * nosc * cexp(- I * phi) * invhhden[k];
+        hh[k] = HO_MULT_FACT * nosc * (cos(phi) - I * sin(phi)) * invhhden[k];
 
         hsum += hh[k];
         hnusum += nu * hh[k];
