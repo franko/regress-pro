@@ -1,11 +1,11 @@
 Recipe tests/recipes/nitride-th-ri.rcp :
-       T1 : 1636.5
-     AL:0 : 3.58758
-     E0:0 : 8.41218
-      C:0 : 8.6526
-Residual Chisq/pt: 149.061
+       T1 : 1636.51
+     AL:0 : 3.58774
+     E0:0 : 8.41034
+      C:0 : 8.65373
+Residual Chisq/pt: 148.836
 
 Grid search best point: 1600 3.5 8.2 8.2
-With Chi Square: 257.753. Required threshold was: 3000.
+With Chi Square: 259.051. Required threshold was: 3000.
 
 Nb of iterations to converge: 9

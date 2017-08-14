@@ -1,17 +1,17 @@
 Recipe tests/recipes/cmp-nitride-mbit-th-ri.rcp :
-       T1 : 580.717
-       T2 : 1030.84
-       T3 : 315.779
-       T4 : 33.6235
-       T5 : 78.955
-       T6 : 269.079
-       T7 : 2896.47
-        P : 0.963631
-     AL:0 : 997.954
-       Eg : 7.97479
-Residual Chisq/pt: 16.9065
+       T1 : 580.772
+       T2 : 1030.45
+       T3 : 316.041
+       T4 : 33.8467
+       T5 : 78.8723
+       T6 : 269.099
+       T7 : 2896.38
+        P : 0.963998
+     AL:0 : 980.585
+       Eg : 7.96589
+Residual Chisq/pt: 16.9201
 
-Grid search best point: 600 800 390 30 100 300 2850 0.5 36.65 5.2352
-With Chi Square: 21.8136. Required threshold was: 100.
+Grid search best point: 600 1100 390 30 100 300 2700 0.5 36.65 5.2352
+With Chi Square: 56.0186. Required threshold was: 100.
 
-Nb of iterations to converge: 134
+Nb of iterations to converge: 140
