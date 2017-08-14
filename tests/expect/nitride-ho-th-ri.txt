@@ -1,0 +1,12 @@
+Recipe tests/recipes/nitride-ho-th-ri.rcp :
+       T1 : 1640.15
+   Nosc:0 : 213.68
+   Nosc:1 : 1.83898
+     Eg:1 : 3.45336
+    Phi:1 : -2.52276
+Residual Chisq/pt: 82.4702
+
+Grid search best point: 1600 220 1.9 3.5 -2.6
+With Chi Square: 82.4709. Required threshold was: 3000.
+
+Nb of iterations to converge: 8

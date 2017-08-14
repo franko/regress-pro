@@ -1,0 +1,28 @@
+stack 4
+  1600 105
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  ho "! Nitride HO"
+    range 192.769 978.426
+    2
+    220 13.8562 2.90047 0.333333 0
+    1.9 5.76994 3.5 0.333333 -2.6
+  library "sio2"
+  library "silicon-1"
+fit-config
+  max-iterations 30
+  subsampling 0
+  epsilon 1e-007 1e-007
+fit-parameters 5
+  thickness 1
+  n 1 ho 0
+  n 1 ho 5
+  n 1 ho 7
+  n 1 ho 9
+seed-list 5
+  undef
+  undef
+  undef
+  undef
+  undef
