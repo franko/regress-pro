@@ -35,6 +35,9 @@ struct ho_params {
 };
 
 struct disp_ho {
+    double eps_inf;
+    double eps_host;
+    double nu_host;
     int nb_hos;
     struct ho_params *params;
 };

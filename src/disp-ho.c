@@ -152,39 +152,35 @@ cmpl
 ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
     const struct disp_ho *m = & d->disp.ho;
-    int k, nb = m->nb_hos;
-    cmpl hsum, hnusum, den;
-    cmpl epsfact, n;
-    double e;
-    int chop_k;
+    const int nb = m->nb_hos;
+    const double e = HO_EV_NM / lambda;
 
-    e = HO_EV_NM / lambda;
-
-    hsum = 0.0, hnusum = 0.0;
-    for(k = 0; k < nb; k++) {
-        cmpl hh;
+    cmpl hsum = 0.0, hnusum = 0.0;
+    for (int k = 0; k < nb; k++) {
         const struct ho_params *p = m->params + k;
+        const double nosc = p->nosc, en = p->en, eg = p->eg, nu = p->nu, phi = p->phi;
 
-        hh = HO_MULT_FACT * p->nosc * cexp(- I * p->phi) / \
-             (SQR(p->en) - SQR(e) + I * p->eg * e);
+        const cmpl hh = HO_MULT_FACT * nosc * cexp(- I * phi) / (SQR(en) - SQR(e) + I * eg * e);
 
         if(pd) {
-            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_NOSC_OFFS, hh / p->nosc);
-            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_EN_OFFS, hh);
-            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_EG_OFFS, hh);
-            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_NU_OFFS, hh);
-            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_PHI_OFFS, - I * hh);
+            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_NOSC_OFFS, hh / nosc);
+            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_EN_OFFS,   hh);
+            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_EG_OFFS,   hh);
+            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_NU_OFFS,   hh);
+            cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_PHI_OFFS,  - I * hh);
         }
 
         hsum += hh;
-        hnusum += p->nu * hh;
+        hnusum += nu * hh;
     }
 
-    n = csqrt(1 + hsum/(1 - hnusum));
-    chop_k = (cimag(n) > 0.0);
-
-    den = 1 - hnusum;
-    epsfact = 1 / (2.0 * csqrt(1 + hsum / den));
+    const double ehm1 = m->eps_host - 1;
+    const double alphah = 1 + m->nu_host * ehm1;
+    const cmpl invden = 1 / (-m->nu_host * ehm1 + alphah * (1 - hnusum));
+    const cmpl eps = m->eps_inf + (ehm1 + alphah * hsum) * invden;
+    cmpl n = csqrt(eps);
+    const int chop_k = (cimag(n) > 0.0);
+    const cmpl epsfact = 1 / (2 * csqrt(eps));
 
     if(chop_k) {
         n = creal(n) + I * 0.0;
@@ -194,43 +190,39 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         return n;
     }
 
-    for(k = 0; k < nb; k++) {
+    for (int k = 0; k < nb; k++) {
         const struct ho_params *p = m->params + k;
-        int idx, koffs = k * HO_NB_PARAMS;
-        cmpl dndh, y, hhden;
+        const double en = p->en, eg = p->eg, nu = p->nu;
+        const int koffs = k * HO_NB_PARAMS;
 
-        idx = koffs + HO_NU_OFFS;
-        y = hsum / SQR(den) * cmpl_vector_get(pd, idx);
-        y *= epsfact;
-        cmpl_vector_set(pd, idx, y);
+        const int idx_nu = koffs + HO_NU_OFFS;
+        const cmpl y_nu = alphah * (ehm1 + alphah * hsum) * SQR(invden) * cmpl_vector_get(pd, idx_nu);
+        cmpl_vector_set(pd, idx_nu, epsfact * y_nu);
 
-        dndh = p->nu * hsum / SQR(den) + 1 / den;
+        const cmpl dndh = alphah * (alphah * nu * hsum * invden + 1) * invden;
 
-        idx = koffs + HO_NOSC_OFFS;
-        y = dndh * cmpl_vector_get(pd, idx);
-        y *= epsfact;
-        cmpl_vector_set(pd, idx, y);
+        const int idx_nosc = koffs + HO_NOSC_OFFS;
+        const cmpl y_nosc = dndh * cmpl_vector_get(pd, idx_nosc);
+        cmpl_vector_set(pd, idx_nosc, epsfact * y_nosc);
 
-        idx = koffs + HO_PHI_OFFS;
-        y = dndh * cmpl_vector_get(pd, idx);
-        y *= epsfact;
-        cmpl_vector_set(pd, idx, y);
+        const int idx_phi = koffs + HO_PHI_OFFS;
+        const cmpl y_phi = dndh * cmpl_vector_get(pd, idx_phi);
+        cmpl_vector_set(pd, idx_phi, epsfact * y_phi);
 
-        hhden = SQR(p->en) - SQR(e) + I * p->eg * e;
+        // TODO: to be saved in the previous look to avoid computing twice.
+        const cmpl invhhden = 1 / (SQR(en) - SQR(e) + I * eg * e);
 
-        idx = koffs + HO_EN_OFFS;
-        y = dndh * (- 2.0 * p->en / hhden) * cmpl_vector_get(pd, idx);
-        y *= epsfact;
-        cmpl_vector_set(pd, idx, y);
+        const int idx_en = koffs + HO_EN_OFFS;
+        const cmpl y_en = dndh * (- 2 * en * invhhden) * cmpl_vector_get(pd, idx_en);
+        cmpl_vector_set(pd, idx_en, epsfact * y_en);
 
-        idx = koffs + HO_EG_OFFS;
-        y = dndh * (- I * e / hhden) * cmpl_vector_get(pd, idx);
-        y *= epsfact;
-        cmpl_vector_set(pd, idx, y);
+        const int idx_eg = koffs + HO_EG_OFFS;
+        const cmpl y_eg = dndh * (- I * e  * invhhden) * cmpl_vector_get(pd, idx_eg);
+        cmpl_vector_set(pd, idx_eg, epsfact * y_eg);
     }
 
     if(chop_k) {
-        for(k = 0; k < nb * HO_NB_PARAMS; k++) {
+        for (int k = 0; k < nb * HO_NB_PARAMS; k++) {
             cmpl y = cmpl_vector_get(pd, k);
             cmpl_vector_set(pd, k, creal(y) + I * 0.0);
         }
@@ -294,14 +286,24 @@ ho_get_param_value(const disp_t *d, const fit_param_t *fp)
     return *pval;
 }
 
+static void
+set_default_eps_host(struct disp_ho *ho)
+{
+    ho->eps_inf = 1.0;
+    ho->eps_host = 1.0;
+    ho->nu_host = 0.0;
+}
+
 disp_t *
 disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
 {
     disp_t *d = disp_new_with_name(DISP_HO, name);
 
-    d->disp.ho.nb_hos = nb_hos;
-    d->disp.ho.params = emalloc(nb_hos * sizeof(struct ho_params));
-    memcpy(d->disp.ho.params, params, nb_hos * sizeof(struct ho_params));
+    struct disp_ho *ho = &d->disp.ho;
+    set_default_eps_host(ho);
+    ho->nb_hos = nb_hos;
+    ho->params = emalloc(nb_hos * sizeof(struct ho_params));
+    memcpy(ho->params, params, nb_hos * sizeof(struct ho_params));
 
     return d;
 }
@@ -331,6 +333,7 @@ ho_read(lexer_t *l, disp_t *d_gen)
     d->params = NULL;
     int n_osc;
     if (lexer_integer(l, &n_osc)) return 1;
+    set_default_eps_host(d);
     d->nb_hos = n_osc;
     d->params = emalloc(n_osc * sizeof(struct ho_params));
     struct ho_params *ho = d->params;
