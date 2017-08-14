@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "physical-constants.h"
 #include "dispers.h"
 #include "cmpl.h"
 
@@ -69,13 +70,7 @@ static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
    The definition above would give the following constant:
 
 #define HO_MULT_FACT 1.3788623090164978586499199863586
-
-   For the conversion from eV to nm the value EO_EV_NM defined below is used:
-
-   E(eV) = HO_EV_NM / lambda(nm)
 */
-
-#define HO_EV_NM 1239.852
 
 // #define HO_MULT_FACT 1.37886
 #define HO_MULT_FACT 1.3788623090164978586499199863586
@@ -153,7 +148,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
     const struct disp_ho *m = & d->disp.ho;
     const int nb = m->nb_hos;
-    const double e = HO_EV_NM / lambda;
+    const double e = EV_TO_NM / lambda;
     cmpl hh[nb], invhhden[nb];
 
     cmpl hsum = 0.0, hnusum = 0.0;

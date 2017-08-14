@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "physical-constants.h"
 #include "dispers.h"
 #include "cmpl.h"
 
@@ -62,8 +63,6 @@ struct disp_class lorentz_disp_class = {
 };
 
 static const char *lor_param_names[] = {"A", "En", "Br"};
-
-#define LOR_EV_NM 1239.852
 
 #define LOR_NB_PARAMS 3
 #define LOR_A_OFFS  0
@@ -137,7 +136,7 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 {
     const struct disp_lorentz *lor = & d->disp.lorentz;
     const int nb = lor->oscillators_number;
-    const double e = LOR_EV_NM / lambda;
+    const double e = EV_TO_NM / lambda;
     const int osc_offs = 1; /* Index offset in partial derivative for the oscillators. */
 
     cmpl hsum = 0.0;

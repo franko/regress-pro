@@ -24,6 +24,7 @@
 #include <gsl/gsl_deriv.h>
 
 #include "cmpl.h"
+#include "physical-constants.h"
 #include "dispers.h"
 #include "fit-params.h"
 #include "disp-fb-priv.h"
@@ -55,8 +56,6 @@ struct disp_class tauc_lorentz_disp_class = {
 
 static const char *tauc_lorentz_param_names[] = {"AL", "E0", "C"};
 
-#define TL_EV_NM 1240.0
-
 #define TL_NB_GLOBAL_PARAMS 2
 #define TL_NINF_OFFS 0
 #define TL_EG_OFFS 1
@@ -86,7 +85,7 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
     const struct disp_fb *fb = &d->disp.fb;
     int k, nb = fb->n;
     double er_sum = fb->n_inf, ei_sum = 0;
-    double E = TL_EV_NM / lambda;
+    double E = EV_TO_NM / lambda;
 
     /* If Eg is negative use zero instead. A negative Eg is not meaningful. */
     const double Eg = (fb->eg >= 0 ? fb->eg : 0.0);

@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include "physical-constants.h"
 #include "dispers.h"
 #include "cmpl.h"
 #include "disp-fb-priv.h"
@@ -45,8 +46,6 @@ struct disp_class fb_disp_class = {
 };
 
 static const char *fb_param_names[] = {"A", "B", "C"};
-
-#define FB_EV_NM 1240.0
 
 #define FB_NB_GLOBAL_PARAMS 2
 #define FB_NINF_OFFS 0
@@ -142,7 +141,7 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     const struct disp_fb *fb = &d->disp.fb;
     int k, nb = fb->n;
     double nsum = fb->n_inf, ksum = 0;
-    double E = FB_EV_NM / lambda;
+    double E = EV_TO_NM / lambda;
 
     const double Eg = fb->eg;
     cmpl dndeg = 0.0; /* Accumulate contribution to the derivative of complex n with Eg. */
