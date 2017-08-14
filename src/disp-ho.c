@@ -190,22 +190,18 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const double nosc = p->nosc, en = p->en, nu = p->nu;
         const int koffs = k * HO_NB_PARAMS;
 
-        const cmpl y_nu = alphah * (ehm1 + alphah * hsum) * SQR(invden) * hh[k];
-        cmpl_vector_set(pd, koffs + HO_NU_OFFS, epsfact * y_nu);
+        const cmpl depsdnu = alphah * (ehm1 + alphah * hsum) * SQR(invden) * hh[k];
+        cmpl_vector_set(pd, koffs + HO_NU_OFFS, epsfact * depsdnu);
 
         const cmpl dndh = alphah * (alphah * nu * hsum * invden + 1) * invden;
+        const cmpl hhdndh = epsfact * dndh * hh[k];
 
-        const cmpl y_nosc = dndh * hh[k] / nosc;
-        cmpl_vector_set(pd, koffs + HO_NOSC_OFFS, epsfact * y_nosc);
+        cmpl_vector_set(pd, koffs + HO_NOSC_OFFS, hhdndh / nosc);
+        cmpl_vector_set(pd, koffs + HO_PHI_OFFS, - I * hhdndh);
 
-        const cmpl y_phi = - I * dndh * hh[k];
-        cmpl_vector_set(pd, koffs + HO_PHI_OFFS, epsfact * y_phi);
-
-        const cmpl y_en = dndh * (- 2 * en * invhhden[k]) * hh[k];
-        cmpl_vector_set(pd, koffs + HO_EN_OFFS, epsfact * y_en);
-
-        const cmpl y_eg = dndh * (- I * e  * invhhden[k]) * hh[k];
-        cmpl_vector_set(pd, koffs + HO_EG_OFFS, epsfact * y_eg);
+        const cmpl depsde = hhdndh * invhhden[k];
+        cmpl_vector_set(pd, koffs + HO_EN_OFFS, - 2 * en * depsde);
+        cmpl_vector_set(pd, koffs + HO_EG_OFFS, - I * e * depsde);
     }
 
     if(chop_k) {
