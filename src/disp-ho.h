@@ -35,9 +35,7 @@ struct ho_params {
 };
 
 struct disp_ho {
-    double eps_inf;
-    double eps_host;
-    double nu_host;
+    double n_inf;
     int nb_hos;
     struct ho_params *params;
 };
@@ -52,6 +50,7 @@ extern struct disp_struct * disp_new_ho(const char *name, int nb_hos,
 extern void disp_add_ho(struct disp_struct *d);
 extern void disp_delete_ho(struct disp_struct *d, int index);
 extern int disp_ho_oscillator_parameters_number(struct disp_struct *d);
+extern int disp_ho_extra_parameters_number(struct disp_struct *d);
 
 __END_DECLS
 

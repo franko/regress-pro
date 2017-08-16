@@ -237,17 +237,14 @@ static fx_numeric_field *create_textfield(FXComposite *frame, fx_disp_window *ta
 
 void fx_disp_ho_window::setup_dialog()
 {
-    const int extra_params_no = 3;
+    const int extra_params_no = disp_ho_extra_parameters_number(disp);
     FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXHorizontalFrame *thf = new FXHorizontalFrame(vframe);
-    new FXLabel(thf, "Eps(inf)");
+    new FXLabel(thf, "NInf");
     create_textfield(thf, this, ID_PARAM_0);
     new FXLabel(thf, "Eps(host)");
-    create_textfield(thf, this, ID_PARAM_0 + 1);
-    new FXLabel(thf, "Nu(host)");
-    create_textfield(thf, this, ID_PARAM_0 + 2);
 
     matrix = new FXMatrix(vframe, 6, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
     new FXLabel(matrix, "");
@@ -270,7 +267,7 @@ void fx_disp_ho_window::setup_dialog()
 
 void fx_disp_ho_window::add_dispersion_element()
 {
-    const int extra_params_no = 3;
+    const int extra_params_no = disp_ho_extra_parameters_number(disp);
     const int n = disp->disp.ho.nb_hos;
     disp_add_ho(disp);
     FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);

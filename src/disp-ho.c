@@ -74,7 +74,7 @@ static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
 // #define HO_MULT_FACT 1.37886
 #define HO_MULT_FACT 1.3788623090164978586499199863586
-#define HO_EXTRA_PARAMS_NO 3
+#define HO_EXTRA_PARAMS_NO 1
 #define HO_NB_PARAMS 5
 #define HO_NOSC_OFFS 0
 #define HO_EN_OFFS   1
@@ -164,25 +164,16 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         hnusum += nu * hh[k];
     }
 
-    const double ehm1 = m->eps_host - 1;
-    const double alphah = 1 + m->nu_host * ehm1;
-    const cmpl invden = 1 / (-m->nu_host * ehm1 + alphah * (1 - hnusum));
-    const cmpl epsnum = ehm1 + alphah * hsum;
-    const cmpl eps = m->eps_inf + epsnum * invden;
-    cmpl n = csqrt(eps);
-    const int chop_k = (cimag(n) > 0.0);
+    const cmpl invden = 1 / (1 - hnusum);
+    const cmpl eps = SQR(m->n_inf) + hsum * invden;
+    const cmpl n_raw = csqrt(eps);
+    const int chop_k = (cimag(n_raw) > 0.0);
 
-    if(chop_k) {
-        n = creal(n) + I * 0.0;
-    }
+    if(pd == NULL) goto return_n;
 
-    if(pd == NULL) {
-        return n;
-    }
+    const cmpl epsfact = 1 / (2 * n_raw);
 
-    const cmpl epsfact = 1 / (2 * csqrt(eps));
-
-    const cmpl dndnuhc = epsfact * alphah * epsnum * SQR(invden);
+    const cmpl dndnuhc = epsfact * hsum * SQR(invden);
     for (int k = 0; k < nb; k++) {
         const struct ho_params *p = m->params + k;
         const double nosc = p->nosc, en = p->en, nu = p->nu;
@@ -190,7 +181,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
         cmpl_vector_set(pd, koffs + HO_NU_OFFS, dndnuhc * hh[k]);
 
-        const cmpl dndh = alphah * (alphah * nu * hsum * invden + 1) * invden;
+        const cmpl dndh = (nu * hsum * invden + 1) * invden;
         const cmpl hhdndh = epsfact * dndh * hh[k];
 
         cmpl_vector_set(pd, koffs + HO_NOSC_OFFS, hhdndh / nosc);
@@ -201,9 +192,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         cmpl_vector_set(pd, koffs + HO_EG_OFFS, - I * e * depsde);
     }
 
-    cmpl_vector_set(pd, 0, epsfact); /* Derivative with eps_inf. */
-    cmpl_vector_set(pd, 1, 0); /* Derivative with eps_host. TO BE DONE */
-    cmpl_vector_set(pd, 2, 0); /* Derivative with nu_host. TO BE DONE */
+    cmpl_vector_set(pd, 0, 2 * epsfact * m->n_inf); /* Derivative with n_inf. */
 
     if(chop_k) {
         for (int k = 0; k < nb * HO_NB_PARAMS + HO_EXTRA_PARAMS_NO; k++) {
@@ -211,8 +200,8 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             cmpl_vector_set(pd, k, creal(y) + I * 0.0);
         }
     }
-
-    return n;
+return_n:
+    return (chop_k ? creal(n_raw) : n_raw);
 }
 
 int
@@ -226,19 +215,19 @@ int disp_ho_oscillator_parameters_number(struct disp_struct *d)
     return HO_NB_PARAMS;
 }
 
+int disp_ho_extra_parameters_number(struct disp_struct *d)
+{
+    return HO_EXTRA_PARAMS_NO;
+}
+
 double *
 ho_map_param(disp_t *_d, int index)
 {
     struct disp_ho *d = &_d->disp.ho;
     const int osc_params_no = d->nb_hos * HO_NB_PARAMS;
     const int ho_index = index - HO_EXTRA_PARAMS_NO;
-    if (index < HO_EXTRA_PARAMS_NO) {
-        switch (index) {
-        case 0: return &d->eps_inf;
-        case 1: return &d->eps_host;
-        case 2: return &d->nu_host;
-        default: ;
-        }
+    if (index == 0) {
+        return &d->n_inf;
     } else if (ho_index < osc_params_no) {
         int no = ho_index / HO_NB_PARAMS;
         int np = ho_index % HO_NB_PARAMS;
@@ -257,23 +246,12 @@ ho_map_param(disp_t *_d, int index)
 void
 ho_encode_param(str_t param, const fit_param_t *fp)
 {
-    const int ho_index = fp->param_nb - HO_EXTRA_PARAMS_NO;
-    if (fp->param_nb < HO_EXTRA_PARAMS_NO) {
-        switch (fp->param_nb) {
-        case 0:
-            str_copy_c(param, "EpsInf");
-            break;
-        case 1:
-            str_copy_c(param, "Eps_host");
-            break;
-        case 2:
-            str_copy_c(param, "Nu_host");
-            break;
-        default: ;
-        }
+    if (fp->param_nb == 0) {
+        str_copy_c(param, "NInf");
     } else {
-        int onb = ho_index / HO_NB_PARAMS;
-        int pnb = ho_index % HO_NB_PARAMS;
+        const int ho_index = fp->param_nb - HO_EXTRA_PARAMS_NO;
+        const int onb = ho_index / HO_NB_PARAMS;
+        const int pnb = ho_index % HO_NB_PARAMS;
         str_printf(param, "%s:%i", ho_param_names[pnb], onb);
     }
 }
@@ -296,18 +274,10 @@ ho_get_param_value(const disp_t *d, const fit_param_t *fp)
     return *pval;
 }
 
-static void
-set_default_eps_host(struct disp_ho *ho)
-{
-    ho->eps_inf = 1.0;
-    ho->eps_host = 1.0;
-    ho->nu_host = 0.0;
-}
-
 static int
-eps_host_is_default(const struct disp_ho *ho)
+n_inf_is_default(const struct disp_ho *ho)
 {
-    return (ho->eps_inf == 1.0 && ho->eps_host == 1.0 && ho->nu_host == 0.0);
+    return (ho->n_inf == 1.0);
 }
 
 disp_t *
@@ -316,7 +286,7 @@ disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
     disp_t *d = disp_new_with_name(DISP_HO, name);
 
     struct disp_ho *ho = &d->disp.ho;
-    set_default_eps_host(ho);
+    ho->n_inf = 1.0;
     ho->nb_hos = nb_hos;
     ho->params = emalloc(nb_hos * sizeof(struct ho_params));
     memcpy(ho->params, params, nb_hos * sizeof(struct ho_params));
@@ -328,8 +298,8 @@ int
 ho_write(writer_t *w, const disp_t *_d)
 {
     const struct disp_ho *d = &_d->disp.ho;
-    if (!eps_host_is_default(d)) {
-        writer_printf(w, "extension %g %g %g", d->eps_inf, d->eps_host, d->nu_host);
+    if (!n_inf_is_default(d)) {
+        writer_printf(w, "n_inf %g", d->n_inf);
         writer_newline(w);
     }
     writer_printf(w, "%d", d->nb_hos);
@@ -351,12 +321,10 @@ ho_read(lexer_t *l, disp_t *d_gen)
 {
     struct disp_ho *d = &d_gen->disp.ho;
     d->params = NULL;
-    if (lexer_check_ident(l, "extension") == 0) {
-        if (lexer_number(l, &d->eps_inf)) return 1;
-        if (lexer_number(l, &d->eps_host)) return 1;
-        if (lexer_number(l, &d->nu_host)) return 1;
+    if (lexer_check_ident(l, "n_inf") == 0) {
+        if (lexer_number(l, &d->n_inf)) return 1;
     } else {
-        set_default_eps_host(d);
+        d->n_inf = 1.0;
     }
     int n_osc;
     if (lexer_integer(l, &n_osc)) return 1;
