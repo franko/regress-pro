@@ -8,5 +8,6 @@ debian_build
 fox-gui/gitversion.cpp
 fox-gui/regress
 tests/log
+build-*
 .deps
 
