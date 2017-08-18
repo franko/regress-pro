@@ -28,11 +28,13 @@ def parse_fit_output(text):
     return results
 
 def check_results_eq(results_a, results_b):
-    for tpa, tpb in zip(results_a, results_b):
+    mismatch = []
+    for i, (tpa, tpb) in enumerate(zip(results_a, results_b)):
         name_a, value_a = tpa
         name_b, value_b = tpb
-        if name_a != name_b or value_a != value_b: return False
-    return True
+        if name_a != name_b or value_a != value_b:
+            mismatch.append(i)
+    return (len(mismatch) == 0, mismatch)
 
 if not os.path.isdir("tests/log"):
     try:
@@ -74,15 +76,23 @@ for dirpath, dirnames, filenames in os.walk(test_dir):
             except IOError:
                 run_error, run_msg = True, "missing expect"
             led, msg = None, None
+            output_match, mismatch = False, None
+            if not run_error:
+                output_match, mismatch = check_results_eq(results_test, results_ref)
             if run_error:
                 led, msg = "*", "\x1B[31m%s\x1B[0m" % run_msg
-            elif results_test and results_ref and check_results_eq(results_test, results_ref):
+            elif results_test and results_ref and output_match:
                 led, msg = " ", "\x1B[32mpass\x1B[0m"
             else:
                 led, msg = "*", "\x1B[31mfail\x1B[0m"
                 log = open("tests/log/%s.output.diff" % test_name, "w")
                 log.write("*** expected output ***\n%s\n" % out_ref)
                 log.write("*** test program ***\n%s\n" % out_tst)
+                log.write("*** differences ***\n")
+                for i, index in enumerate(mismatch):
+                    log.write("difference %d\n" % (i+1))
+                    log.write("    ref  : parameter %s, value %g\n" % results_ref[index])
+                    log.write("    test : parameter %s, value %g\n" % results_test[index])
                 log.close()
 
             print("%s %-24s %s" % (led, test_name, msg))
