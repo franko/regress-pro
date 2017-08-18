@@ -29,17 +29,17 @@ def check_results_eq(results_a, results_b):
 
 if not os.path.isdir("tests/log"):
     try:
-        print "Creating directory tests/log..."
+        print("Creating directory tests/log...")
         os.mkdir("tests/log")
     except:
-        print "Error creating directory tests/log."
+        print("Error creating directory tests/log.")
         sys.exit(1)
 
 try:
     subprocess.check_call([regpro_exec, "-v"])
 except:
-    print "Error calling regress pro."
-    print "Please make sure that regress pro executable is correct."
+    print("Error calling regress pro.")
+    print("Please make sure that regress pro executable is correct.")
     sys.exit(1)
 
 
@@ -53,7 +53,7 @@ for dirpath, dirnames, filenames in os.walk(test_dir):
             run_error, run_msg = False, None
             devnull = open(os.devnull, 'w')
             try:
-                out_tst = subprocess.check_output([regpro_exec, "--script", fullname], stderr= devnull)
+                out_tst = subprocess.check_output([regpro_exec, "--script", fullname], stderr= devnull).decode("ascii")
                 # On windows replace \r\n with \n in the program output.
                 out_tst = re.sub(r'(\r+)\n', "\n", out_tst)
                 results_test = parse_fit_output(out_tst.split("\n"))
