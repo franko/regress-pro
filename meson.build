@@ -6,8 +6,3 @@ endif
 
 subdir('src')
 subdir('fox-gui')
-executable('regress', ['main.cpp'],
-           include_directories: [foxgui_incdir, kernel_incdir],
-           dependencies: [fox_dep, agg_dep, thread_dep],
-           link_with: [libkernel, libfoxgui],
-           gui_app: true)
