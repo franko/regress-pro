@@ -3,7 +3,7 @@ Installation Instruction
 
 These are the installation intructions for Regress Pro.
 
-Regress Pro can be compiled both on Windows and on Linux using GNU Make and GCC.
+Regress Pro can be compiled both on Windows and on GNU/Linux using GNU Make and GCC.
 On Windows the build process was tested using MinGW.
 
 The following libraries are needed to compile Regress Pro:
@@ -12,5 +12,24 @@ The following libraries are needed to compile Regress Pro:
 - FOX toolkit library, version 1.6
 - AGG library, verison 2.5
 
-In order to compile you should check the file 'makeconfig'. You may change the
-compiler flags if you know what you do otherwise leave them untouched.
+The Meson build system and Ninja build are needed to compile Regress Pro.
+
+To configure a build use the command:
+
+> meson <build-directory>
+
+or
+
+> meson --buildtype=release <build-directory>
+
+to configure a release build.
+
+If the configuration is successful you can build Regress Pro with the commands:
+
+> cd <build-directory>
+> ninja
+
+The stand-alone executable will be located in the build directory inside the "fox-gui" folder.
+
+Optinally a script is provided to create a Debian package on GNU/Linux.
+
