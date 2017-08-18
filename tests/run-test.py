@@ -4,7 +4,14 @@ import re
 import subprocess
 
 test_dir = "tests"
-regpro_exec = "./fox-gui/regress"
+
+if len(sys.argv) < 2:
+     print("Please provide the build directory argument")
+     sys.exit(1)
+
+build_dir = sys.argv[1]
+
+regpro_exec = os.path.join(build_dir, "fox-gui", "regress")
 
 def parse_fit_output(text):
     if not re.match(r'Recipe (\S+) :\s*$', text[0]): return None
