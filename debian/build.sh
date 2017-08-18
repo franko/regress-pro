@@ -1,6 +1,8 @@
 #!/bin/sh
 
-LGT_ISIZE_A=(`du -s debian_build`)
+DEBIAN_BUILD_DIR="build-debian"
+
+LGT_ISIZE_A=(`du -s ${DEBIAN_BUILD_DIR}`)
 LGT_ISIZE=${LGT_ISIZE_A[0]}
 
 LGT_ARCH=`dpkg-architecture -qDEB_HOST_ARCH`
@@ -8,12 +10,12 @@ LGT_ARCH=`dpkg-architecture -qDEB_HOST_ARCH`
 PACKAGE_NAME=$1
 VERSION=$2
 
-mkdir debian_build/DEBIAN
+mkdir ${DEBIAN_BUILD_DIR}/DEBIAN
 
-cat debian/control | sed "s/LGT_PACKAGE_NAME/$PACKAGE_NAME/;s/LGT_VERSION/$VERSION/;s/LGT_INSTALLED_SIZE/$LGT_ISIZE/;s/LGT_ARCH/$LGT_ARCH/" - > debian_build/DEBIAN/control
+cat debian/control | sed "s/LGT_PACKAGE_NAME/$PACKAGE_NAME/;s/LGT_VERSION/$VERSION/;s/LGT_INSTALLED_SIZE/$LGT_ISIZE/;s/LGT_ARCH/$LGT_ARCH/" - > ${DEBIAN_BUILD_DIR}/DEBIAN/control
 
-chown root.root -R debian_build
-chmod a-w -R debian_build
-chmod 0755 debian_build/DEBIAN
+chown root.root -R ${DEBIAN_BUILD_DIR}
+chmod a-w -R ${DEBIAN_BUILD_DIR}
+chmod 0755 ${DEBIAN_BUILD_DIR}/DEBIAN
 
-dpkg-deb -b debian_build "${PACKAGE_NAME}_$VERSION-1_${LGT_ARCH}.deb"
+dpkg-deb -b ${DEBIAN_BUILD_DIR} "${PACKAGE_NAME}_$VERSION-1_${LGT_ARCH}.deb"
