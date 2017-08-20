@@ -3,8 +3,6 @@
 
 #include "dispers-classes.h"
 
-__BEGIN_DECLS
-
 struct disp_sellmeier {
     double a[3];
     double b[3];
@@ -17,7 +15,5 @@ extern struct disp_class sellmeier_disp_class;
 extern struct disp_struct * disp_new_sellmeier(const char *name,
         const double a[],
         const double b[]);
-
-__END_DECLS
 
 #endif

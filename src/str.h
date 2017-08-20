@@ -7,8 +7,6 @@
 
 #include "defs.h"
 
-__BEGIN_DECLS
-
 struct _str {
     char *heap;
     size_t size;
@@ -72,7 +70,5 @@ extern void     str_printf_add(str_t d, const char *fmt, ...);
 extern void     str_vprintf(str_t d, const char *fmt, int append,
                             va_list ap);
 extern void     str_pad(str_t d, int len, char sep);
-
-__END_DECLS
 
 #endif

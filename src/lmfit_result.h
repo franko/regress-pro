@@ -3,8 +3,6 @@
 
 #include "defs.h"
 
-__BEGIN_DECLS
-
 /* The GSL error codes above 1024 can be used by applications. So
    we define some error codes compatible with GSL status codes. */
 enum {
@@ -20,7 +18,5 @@ struct lmfit_result {
 };
 
 const char *lmfit_result_error_string(const struct lmfit_result *r);
-
-__END_DECLS
 
 #endif

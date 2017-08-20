@@ -45,8 +45,8 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     m_filebox->setDirectory(regress_pro_app()->disp_dir);
 
     m_format_pane = new FXPopup(this);
-    new FXOption(m_format_pane, "Native", NULL, this, ID_FORMAT_NATIVE, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
-    new FXOption(m_format_pane, "Tabular", NULL, this, ID_FORMAT_TABULAR, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
+    new FXOption(m_format_pane, "Native", nullptr, this, ID_FORMAT_NATIVE, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
+    new FXOption(m_format_pane, "Tabular", nullptr, this, ID_FORMAT_TABULAR, FRAME_RAISED|JUSTIFY_HZ_APART|ICON_AFTER_TEXT);
 
     FXHorizontalFrame *bbox = new FXHorizontalFrame(top, LAYOUT_FILL_X);
     FXVerticalFrame *fvf = new FXVerticalFrame(bbox, LAYOUT_FILL_Y);
@@ -59,8 +59,8 @@ dispers_save_dialog::dispers_save_dialog(const disp_t *disp, FXWindow *owner, co
     auto autohbox = new FXHorizontalFrame(wsampvbox, LAYOUT_FILL_X);
     new FXRadioButton(autohbox, "Automatic", this, ID_SAMPLING_AUTO);
     m_sampling_listbox = new FXListBox(autohbox, this, ID_SAMPLING_OPTION, FRAME_SUNKEN|LISTBOX_NORMAL);
-    m_sampling_listbox->appendItem("Native", NULL, (void *) 0);
-    m_sampling_listbox->appendItem("Optimize", NULL, (void *) 1);
+    m_sampling_listbox->appendItem("Native", nullptr, (void *) 0);
+    m_sampling_listbox->appendItem("Optimize", nullptr, (void *) 1);
     m_sampling_listbox->setNumVisible(2);
     new FXLabel(autohbox, "tolerance");
     m_sampling_tol_textfield = new FXTextField(autohbox, 8, this, ID_SAMPLING_TOL, FRAME_SUNKEN|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
@@ -115,7 +115,7 @@ long
 dispers_save_dialog::on_update_sampling(FXObject *sender, FXSelector sel, void *)
 {
     FXuint msgid = (use_uniform_sampling() ? ID_ENABLE : ID_DISABLE);
-    sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+    sender->handle(this, FXSEL(SEL_COMMAND, msgid), nullptr);
     return 1;
 }
 
@@ -137,7 +137,7 @@ dispers_save_dialog::on_upd_sampling_option(FXObject *sender, FXSelector sel, vo
         m_sampling_listbox->setCurrentItem(1);
     }
     FXuint msgid = ((m_sampling_type & SAMPLING_TYPE_MASK) != SAMPLING_AUTO || !disp_is_tabular(m_disp) ? ID_DISABLE : ID_ENABLE);
-    m_sampling_listbox->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+    m_sampling_listbox->handle(this, FXSEL(SEL_COMMAND, msgid), nullptr);
     return 1;
 }
 
@@ -147,10 +147,10 @@ dispers_save_dialog::on_update_sampling_radio(FXObject *sender, FXSelector sel, 
     FXuint msgid = (FXSELID(sel) == ID_SAMPLING_AUTO ?
         (use_uniform_sampling() ? ID_UNCHECK : ID_CHECK) :
         (use_uniform_sampling() ? ID_CHECK   : ID_UNCHECK));
-    sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+    sender->handle(this, FXSEL(SEL_COMMAND, msgid), nullptr);
 
     FXuint enable_msgid = (m_sampling_type & SAMPLING_TYPE_MASK) == SAMPLING_NONE ? ID_DISABLE : ID_ENABLE;
-    sender->handle(this, FXSEL(SEL_COMMAND, enable_msgid), NULL);
+    sender->handle(this, FXSEL(SEL_COMMAND, enable_msgid), nullptr);
     return 1;
 }
 
@@ -158,7 +158,7 @@ long
 dispers_save_dialog::on_update_sampling_tolerance(FXObject *sender, FXSelector sel, void *)
 {
     FXuint msgid = (m_sampling_type == (SAMPLING_AUTO | SAMPLING_OPTIM)) ? ID_ENABLE : ID_DISABLE;
-    sender->handle(this, FXSEL(SEL_COMMAND, msgid), NULL);
+    sender->handle(this, FXSEL(SEL_COMMAND, msgid), nullptr);
     return 1;
 }
 
@@ -274,6 +274,6 @@ dispers_save_dialog::on_cmd_file_select(FXObject *, FXSelector, void *)
             return 1;
         }
     }
-    this->handle(this, FXSEL(SEL_COMMAND, ID_ACCEPT), NULL);
+    this->handle(this, FXSEL(SEL_COMMAND, ID_ACCEPT), nullptr);
     return 1;
 }

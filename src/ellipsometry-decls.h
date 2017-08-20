@@ -5,7 +5,9 @@
 
 typedef enum {
     POL_S = 0,
-    POL_P = 1
+    POL_START = POL_S,
+    POL_P = 1,
+    POL_END = POL_P + 1,
 } polar_t;
 
 #endif

@@ -7,13 +7,11 @@
 #include "writer.h"
 #include "lexer.h"
 
-__BEGIN_DECLS
-
 struct stack {
     int nb; /* number of mediums */
     struct disp_struct ** disp;
     double *thickness;
-    size_t nb_alloc;
+    int nb_alloc;
 };
 
 typedef struct stack stack_t;
@@ -34,7 +32,5 @@ extern void     stack_get_all_parameters(stack_t *s, struct fit_parameters *fps)
 extern double   stack_get_parameter_value(const stack_t *s, const fit_param_t *fp);
 extern int      stack_write(writer_t *w, const stack_t *s);
 extern stack_t *stack_read(lexer_t *l);
-
-__END_DECLS
 
 #endif

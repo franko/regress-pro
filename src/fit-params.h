@@ -7,8 +7,6 @@
 #include "lexer.h"
 #include "dispers-classes.h"
 
-__BEGIN_DECLS
-
 enum params_id {
     PID_THICKNESS = 1,
     PID_LAYER_N,
@@ -103,7 +101,5 @@ extern void     set_model_param(fit_param_t *fpres, int lyr,
 extern void     set_thick_param(fit_param_t *fp, int lyr);
 extern void     get_param_name(const fit_param_t *fp, str_t name);
 extern void     get_full_param_name(const fit_param_t *fp, str_t name);
-
-__END_DECLS
 
 #endif

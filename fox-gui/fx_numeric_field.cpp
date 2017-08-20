@@ -23,14 +23,14 @@ long fx_numeric_field::on_key_press(FXObject* obj, FXSelector sel, void* ptr)
         case KEY_Up:
         case KEY_KP_Up:
             if(event->state & SHIFTMASK) {
-                handle(this, FXSEL(SEL_COMMAND, ID_INCREMENT_DIGIT), NULL);
+                handle(this, FXSEL(SEL_COMMAND, ID_INCREMENT_DIGIT), nullptr);
                 return 1;
             }
             break;
         case KEY_Down:
         case KEY_KP_Down:
             if(event->state & SHIFTMASK) {
-                handle(this, FXSEL(SEL_COMMAND, ID_DECREMENT_DIGIT), NULL);
+                handle(this, FXSEL(SEL_COMMAND, ID_DECREMENT_DIGIT), nullptr);
                 return 1;
             }
             break;

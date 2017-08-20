@@ -5,8 +5,6 @@
 #include "cmpl.h"
 #include "dispers.h"
 
-__BEGIN_DECLS
-
 struct stack_cache {
     int is_valid;
     int nb_med;
@@ -24,7 +22,5 @@ struct fit_config {
     struct spectral_range spectr_range;
     double epsabs, epsrel;
 };
-
-__END_DECLS
 
 #endif

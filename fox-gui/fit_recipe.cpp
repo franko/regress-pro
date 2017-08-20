@@ -1,7 +1,7 @@
 #include "fit_recipe.h"
 #include "dispers-library.h"
 
-fit_recipe::fit_recipe(): ms_setup(NULL)
+fit_recipe::fit_recipe(): ms_setup(nullptr)
 {
     fit_config_set_default(config);
     stack = (stack_t*) emalloc(sizeof(stack_t));
@@ -59,7 +59,7 @@ fit_recipe *fit_recipe::read(lexer_t *l)
     seeds *seeds_list;
     multi_sample_recipe *mss;
     stack_t *stack = stack_read(l);
-    if (!stack) return NULL;
+    if (!stack) return nullptr;
     if (fit_config_read(l, config)) goto stack_fail;
     parameters = fit_parameters_read(l);
     if (!parameters) goto stack_fail;
@@ -71,5 +71,5 @@ params_fail:
     fit_parameters_free(parameters);
 stack_fail:
     stack_free(stack);
-    return NULL;
+    return nullptr;
 }

@@ -4,8 +4,6 @@
 #include "defs.h"
 #include "str.h"
 
-__BEGIN_DECLS
-
 struct fit_parameters;
 
 // TODO: rename below AB to RPE. Optionally rename ELLISS and REFLECTOMETER to SE / SR.
@@ -60,7 +58,5 @@ extern double   acquisition_get_se_aoi(const struct acquisition_parameters *acqu
 extern double   acquisition_get_se_analyzer(const struct acquisition_parameters *acquisition);
 
 extern const char * acquisition_parameter_name(int param_id);
-
-__END_DECLS
 
 #endif

@@ -14,6 +14,6 @@ dispers_edit_window::dispers_edit_window(disp_t *d, FXWindow *topwin, FXuint opt
 
     new FXHorizontalSeparator(frame, SEPARATOR_GROOVE|LAYOUT_FILL_X);
     FXHorizontalFrame *validhf = new FXHorizontalFrame(frame, LAYOUT_FILL_X);
-    new FXButton(validhf,"&Cancel",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
-    new FXButton(validhf,"&Ok",NULL,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(validhf,"&Cancel",nullptr,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(validhf,"&Ok",nullptr,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 }

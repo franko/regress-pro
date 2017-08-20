@@ -50,8 +50,8 @@ public:
     void get_row(int i, double *w, double *n, double *k) const {
         *w = disp_sample_wavelength(m_disp, i);
         const cmpl nk = n_value(m_disp, *w);
-        *n =  creal(nk);
-        *k = -cimag(nk);
+        *n =  std::real(nk);
+        *k = -std::imag(nk);
     }
 };
 
@@ -76,8 +76,8 @@ public:
     void get_row(int i, double *w, double *n, double *k) const {
         *w = m_sampler->value_at(i);
         cmpl nz = n_value(m_disp, *w);
-        *n = nz.data[0];
-        *k = -nz.data[1];
+        *n =  std::real(nz);
+        *k = -std::imag(nz);
     }
 };
 

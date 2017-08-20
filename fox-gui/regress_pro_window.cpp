@@ -93,9 +93,9 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,780,580),
-      spectrum(NULL), recipeFilename("untitled"),
-      result_filmstack_window(NULL), m_disp_fit_window(NULL), my_batch_window(NULL),
+    : FXMainWindow(a,"Regress Pro",nullptr,&a->appicon,DECOR_ALL,20,20,780,580),
+      spectrum(nullptr), recipeFilename("untitled"),
+      result_filmstack_window(nullptr), m_disp_fit_window(nullptr), my_batch_window(nullptr),
       m_enlarged_window(false), m_result_stack_match(true)
 {
     // Menubar
@@ -104,38 +104,38 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     // Script menu
     filemenu=new FXMenuPane(this);
-    new FXMenuCommand(filemenu,"&Save",NULL,this,ID_RECIPE_SAVE);
-    new FXMenuCommand(filemenu,"&Load",NULL,this,ID_RECIPE_LOAD);
-    new FXMenuCommand(filemenu,"&Quit\tCtl-Q",NULL,getApp(),FXApp::ID_QUIT);
-    new FXMenuTitle(menubar,"&Recipe",NULL,filemenu);
+    new FXMenuCommand(filemenu,"&Save",nullptr,this,ID_RECIPE_SAVE);
+    new FXMenuCommand(filemenu,"&Load",nullptr,this,ID_RECIPE_LOAD);
+    new FXMenuCommand(filemenu,"&Quit\tCtl-Q",nullptr,getApp(),FXApp::ID_QUIT);
+    new FXMenuTitle(menubar,"&Recipe",nullptr,filemenu);
 
     // Edit menu
     editmenu = new FXMenuPane(this);
-    new FXMenuCommand(editmenu, "Dataset", NULL, this, ID_DATASET_EDIT);
-    new FXMenuTitle(menubar, "&Edit", NULL, editmenu);
+    new FXMenuCommand(editmenu, "Dataset", nullptr, this, ID_DATASET_EDIT);
+    new FXMenuTitle(menubar, "&Edit", nullptr, editmenu);
 
     // Script menu
     spectrmenu = new FXMenuPane(this);
-    new FXMenuCommand(spectrmenu,"&Load Spectra",NULL,this,ID_LOAD_SPECTRA);
-    new FXMenuTitle(menubar,"S&pectra",NULL,spectrmenu);
+    new FXMenuCommand(spectrmenu,"&Load Spectra",nullptr,this,ID_LOAD_SPECTRA);
+    new FXMenuTitle(menubar,"S&pectra",nullptr,spectrmenu);
 
     // Dispersion menu
     dispmenu = new FXMenuPane(this);
-    new FXMenuCommand(dispmenu, "Dispersion Optimize",NULL,this,ID_DISP_OPTIM);
-    new FXMenuTitle(menubar,"&Dispersion",NULL,dispmenu);
+    new FXMenuCommand(dispmenu, "Dispersion Optimize",nullptr,this,ID_DISP_OPTIM);
+    new FXMenuTitle(menubar,"&Dispersion",nullptr,dispmenu);
 
     // Fit menu
     fitmenu = new FXMenuPane(this);
-    new FXMenuCommand(fitmenu, "&Run Fitting",NULL,this,ID_RUN_FIT);
-    new FXMenuCommand(fitmenu, "&Interactive Fit",NULL,this,ID_INTERACTIVE_FIT);
-    new FXMenuCommand(fitmenu, "Run &Multiple Fit",NULL,this,ID_RUN_MULTI_FIT);
-    new FXMenuCommand(fitmenu, "&Batch Window",NULL,this,ID_RUN_BATCH);
-    new FXMenuCommand(fitmenu, "Edit Result Stack",NULL,this,ID_RESULT_STACK);
-    new FXMenuTitle(menubar,"Fittin&g",NULL,fitmenu);
+    new FXMenuCommand(fitmenu, "&Run Fitting",nullptr,this,ID_RUN_FIT);
+    new FXMenuCommand(fitmenu, "&Interactive Fit",nullptr,this,ID_INTERACTIVE_FIT);
+    new FXMenuCommand(fitmenu, "Run &Multiple Fit",nullptr,this,ID_RUN_MULTI_FIT);
+    new FXMenuCommand(fitmenu, "&Batch Window",nullptr,this,ID_RUN_BATCH);
+    new FXMenuCommand(fitmenu, "Edit Result Stack",nullptr,this,ID_RESULT_STACK);
+    new FXMenuTitle(menubar,"Fittin&g",nullptr,fitmenu);
 
     helpmenu = new FXMenuPane(this);
-    new FXMenuCommand(helpmenu, "&About", NULL, this, ID_ABOUT);
-    new FXMenuTitle(menubar, "&Help", NULL, helpmenu, LAYOUT_RIGHT);
+    new FXMenuCommand(helpmenu, "&About", nullptr, this, ID_ABOUT);
+    new FXMenuTitle(menubar, "&Help", nullptr, helpmenu, LAYOUT_RIGHT);
 
     // Container
     FXVerticalFrame *cont = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
@@ -145,7 +145,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     FXSpring *resultspring = new FXSpring(cont, LAYOUT_FILL_X|LAYOUT_FILL_Y, 0, 35);
     FXGroupBox *rgb = new FXGroupBox(resultspring, "Fit output", GROUPBOX_NORMAL|LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_GROOVE);
-    resulttext = new FXText(rgb, NULL, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    resulttext = new FXText(rgb, nullptr, 0, TEXT_READONLY|TEXT_WORDWRAP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     resulttext->setFont(&regressProApp()->monospace_font);
 
     init_class_list();
@@ -224,7 +224,7 @@ regress_pro_window::set_spectrum(struct spectrum *new_spectrum)
 str_ptr regress_pro_window::load_spectrum(const char *filename) {
     str_ptr error_msg;
     struct spectrum *new_spectrum = load_gener_spectrum(filename, &error_msg);
-    if(new_spectrum == NULL) {
+    if(new_spectrum == nullptr) {
         return error_msg;
     }
     set_spectrum(new_spectrum);
@@ -278,15 +278,15 @@ regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
     FXDialogBox about(this,"About Regress Pro",DECOR_TITLE|DECOR_BORDER,0,0,0,0,
                       0,0,0,0, 0,0);
     FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
-    new FXLabel(side,"R e g r e s s   P r o",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
+    new FXLabel(side,"R e g r e s s   P r o",nullptr,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
     new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
     str_t git_build;
     str_init(git_build, 30);
 #ifdef GIT_BUILD
     str_printf(git_build, " git build %s", gitversion);
 #endif
-    new FXLabel(side,FXStringFormat("\nRegress Pro, version %d.%d.%d%s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,CSTR(git_build),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    FXButton *button=new FXButton(side,"&OK",NULL,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
+    new FXLabel(side,FXStringFormat("\nRegress Pro, version %d.%d.%d%s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,CSTR(git_build),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),nullptr,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXButton *button=new FXButton(side,"&OK",nullptr,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
     button->setFocus();
     str_free(git_build);
     about.execute(PLACEMENT_OWNER);
@@ -434,7 +434,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
 bool
 regress_pro_window::check_spectrum(const char *context)
 {
-    if(spectrum == NULL) {
+    if(spectrum == nullptr) {
         FXMessageBox::information(this, MBOX_OK, context,
                                   "Please load a spectra before.");
         return false;
@@ -522,10 +522,10 @@ prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config 
 {
     if (parameters->number == 0) {
         *error_msg = new_error_message(FIT_ERROR, "No fitting parameter defined");
-        return NULL;
+        return nullptr;
     }
     if (check_fit_parameters(stack, parameters, error_msg) != 0) {
-        return NULL;
+        return nullptr;
     }
     fit_engine *fit = fit_engine_new();
     fit_engine_bind(fit, stack, config, parameters);
@@ -586,7 +586,7 @@ long
 regress_pro_window::onCmdStackChange(FXObject *sender,FXSelector,void *)
 {
     if ((filmstack_window *) sender == main_filmstack_window) {
-        main_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), NULL);
+        main_recipe_window->handle(this, FXSEL(SEL_COMMAND, recipe_window::ID_STACK_CHANGE), nullptr);
         dataset_table *dataset = my_dataset_window->dataset();
         dataset->handle(this, FXSEL(SEL_COMMAND, dataset_table::ID_STACK_CHANGE), recipe->stack);
         m_result_stack_match = false;
@@ -625,14 +625,14 @@ process_foxgui_events(void *data, float progr, const char *msg)
     ProgressInfo *info = (ProgressInfo *) data;
     struct timeval current[1];
 
-    if(gettimeofday(current, NULL) != 0) {
+    if(gettimeofday(current, nullptr) != 0) {
         return 0;
     }
 
     float diff = timeval_subtract(info->start, current);
     const int multfactor = 4096;
 
-    if(info->dialog == NULL) {
+    if(info->dialog == nullptr) {
         if(diff < wait_time || progr > progress_thresold) {
             return 0;
         }
@@ -686,7 +686,7 @@ write_recipe_to_file(fit_recipe *recipe, dataset_table *dataset, const char *fil
 void
 regress_pro_window::save_recipe_as(const FXString& filename)
 {
-    dataset_table *dataset = recipe->ms_setup ? my_dataset_window->dataset() : NULL;
+    dataset_table *dataset = recipe->ms_setup ? my_dataset_window->dataset() : nullptr;
     if (write_recipe_to_file(recipe, dataset, filename.text())) {
         FXMessageBox::error(this, MBOX_OK, "Error Saving Recipe", "Cannot write file \"%s\".", filename.text());
     } else {

@@ -183,8 +183,8 @@ tab_array<double, 3> get_array_c(const pod_vector<double>& sampling_points, cons
         const double wavelength = sampling_points[i];
         const cmpl n = n_value(disp, wavelength);
         table.at(i, 0) = wavelength;
-        table.at(i, 1) =  creal(n);
-        table.at(i, 2) = -cimag(n);
+        table.at(i, 1) =  std::real(n);
+        table.at(i, 2) = -std::imag(n);
     }
     return table;
 }
@@ -196,8 +196,8 @@ double interp_delta_score_c(const cspline_array_interp& interp, const disp_t *di
         const double wavelength = wavelength_inf + (wavelength_sup - wavelength_inf) * k / test_points_number;
         auto nki = interp.eval(wavelength);
         cmpl nkr = n_value(disp, wavelength);
-        del_n = std::max(del_n, std::abs(nki.first  - creal(nkr)));
-        del_k = std::max(del_k, std::abs(nki.second + cimag(nkr)));
+        del_n = std::max(del_n, std::abs(nki.first  - std::real(nkr)));
+        del_k = std::max(del_k, std::abs(nki.second + std::imag(nkr)));
     }
     return std::max(del_n, del_k);
 }
@@ -220,8 +220,8 @@ void add_new_point_c(const disp_t *disp, pod_vector<double>& sampling_points, in
         const double wavelength = wavelength_inf + (wavelength_sup - wavelength_inf) * k / search_points_number;
         const cmpl n = n_value(disp, wavelength);
         table.row(0)[index + 1] = wavelength;
-        table.row(1)[index + 1] =  creal(n);
-        table.row(2)[index + 1] = -cimag(n);
+        table.row(1)[index + 1] =  std::real(n);
+        table.row(2)[index + 1] = -std::imag(n);
         interp.compute_interpolation();
         double kdel = interp_delta_score_c(interp, disp, wavelength_inf, wavelength_sup);
         if (del < 0 || kdel < del) {
@@ -243,8 +243,8 @@ int subsampling_eval_c(const disp_t *disp, const pod_vector<double>& sampling_po
             const double wavelength = wavelength_inf + (wavelength_sup - wavelength_inf) * k / test_points_number;
             auto nki = interp.eval(wavelength);
             const cmpl nkr = n_value(disp, wavelength);
-            if (std::abs(nki.first  - creal(nkr)) > tol ||
-                std::abs(nki.second + cimag(nkr)) > tol) {
+            if (std::abs(nki.first  - std::real(nkr)) > tol ||
+                std::abs(nki.second + std::imag(nkr)) > tol) {
                 return i;
             }
         }
@@ -300,8 +300,8 @@ disp_t *dispersion_from_sampling_points(const disp_t *disp, const pod_vector<dou
         const double wavelength = sampling_points[i];
         const cmpl n = n_value(disp, wavelength);
         st_matrix->data[i                     ] = wavelength;
-        st_matrix->data[i + 1 * st_matrix->tda] =  creal(n);
-        st_matrix->data[i + 2 * st_matrix->tda] = -cimag(n);
+        st_matrix->data[i + 1 * st_matrix->tda] =  std::real(n);
+        st_matrix->data[i + 2 * st_matrix->tda] = -std::imag(n);
     }
     disp_sample_table_prepare_interp(st_disp);
     return new_disp;

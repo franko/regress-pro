@@ -24,13 +24,13 @@ int multi_sample_recipe::write(writer_t *w)
 
 multi_sample_recipe *multi_sample_recipe::read(lexer_t *l)
 {
-    if (lexer_check_ident(l, "multi-sample")) return NULL;
+    if (lexer_check_ident(l, "multi-sample")) return nullptr;
     fit_parameters *iparameters = fit_parameters_read(l);
-    if (!iparameters) return NULL;
+    if (!iparameters) return nullptr;
     fit_parameters *cparameters = fit_parameters_read(l);
     if (!cparameters) goto ms_read_exit;
     return new multi_sample_recipe(iparameters, cparameters);
 ms_read_exit:
     fit_parameters_free(iparameters);
-    return NULL;
+    return nullptr;
 }

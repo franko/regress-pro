@@ -12,8 +12,6 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
 
-__BEGIN_DECLS
-
 
 struct multi_fit_engine {
     int samples_number;
@@ -62,7 +60,5 @@ extern void multi_fit_engine_compute_chisq(struct multi_fit_engine *fit, const g
 #ifdef DEBUG
 extern void multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_common, struct seeds *seeds_priv);
 #endif
-
-__END_DECLS
 
 #endif

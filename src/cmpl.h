@@ -1,41 +1,21 @@
 #ifndef CMPL_VECTOR_H
 #define CMPL_VECTOR_H
 
-#include <math.h>
-
-#ifdef __cplusplus
-
-
-struct cmpl {
-    enum part_e {
-        real_part = 0,
-        imag_part = 1,
-    };
-
-    double data[2];
-};
-
-inline double creal(cmpl z)
-{
-    return z.data[0];
-}
-inline double cimag(cmpl z)
-{
-    return z.data[1];
-}
-
-#else
-#include <complex.h>
-
-typedef double complex cmpl;
-#endif /* C++ */
-
+#include <cmath>
+#include <complex>
 #include "common.h"
 
-__BEGIN_DECLS
+typedef std::complex<double> cmpl;
 
-#define CMPL_VECTOR_TERM(v,i) (v)->data[i]
-#define CSQABS(z) (creal(z)*creal(z) + cimag(z)*cimag(z))
+template<class T> std::complex<T> operator*(const int val, const std::complex<T>& rhs) {
+    return std::complex<T>(val * rhs.real(), val * rhs.imag());
+}
+
+enum complex_part_e { REAL_PART, IMAGINARY_PART };
+
+static inline double complex_part(cmpl z, complex_part_e part) {
+    return (part == REAL_PART ? std::real(z) : std::imag(z));
+}
 
 struct cmpl_vector_struct {
     int size; /* number of cmpl elements */
@@ -49,7 +29,5 @@ cmpl_vector *   cmpl_vector_alloc(int nb);
 void            cmpl_vector_free(cmpl_vector *v);
 void            cmpl_vector_set(cmpl_vector *v, int i, cmpl val);
 cmpl            cmpl_vector_get(cmpl_vector *v, int i);
-
-__END_DECLS
 
 #endif

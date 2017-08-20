@@ -11,12 +11,12 @@ disp_t *ui_edit_dispersion(FXWindow *win, disp_t *disp)
         return edit_disp;
     }
     disp_free(edit_disp);
-    return NULL;
+    return nullptr;
 }
 
 disp_t *ui_choose_dispersion(FXWindow *win)
 {
     dispers_chooser chooser(win);
-    if (chooser.execute() != TRUE) return NULL;
+    if (chooser.execute() != TRUE) return nullptr;
     return chooser.get_dispersion();
 }

@@ -20,12 +20,12 @@ batch_window::batch_window(regress_pro_window *w, FXuint opts, FXint pl, FXint p
     app_window(w)
 {
     FXHorizontalFrame *hframe = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    table = new filelist_table(hframe, NULL, 0, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    table = new filelist_table(hframe, nullptr, 0, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXVerticalFrame *bframe = new FXVerticalFrame(hframe, LAYOUT_FILL_Y);
-    new FXButton(bframe, "Add Files", NULL, table, filelist_table::ID_ADD_FILES);
-    new FXButton(bframe, "Remove all", NULL, table, filelist_table::ID_REMOVE_FILES);
-    new FXButton(bframe, "Run", NULL, this, ID_RUN_BATCH);
+    new FXButton(bframe, "Add Files", nullptr, table, filelist_table::ID_ADD_FILES);
+    new FXButton(bframe, "Remove all", nullptr, table, filelist_table::ID_REMOVE_FILES);
+    new FXButton(bframe, "Run", nullptr, this, ID_RUN_BATCH);
 }
 
 int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
@@ -67,7 +67,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         }
         fit_engine_prepare(fit, s, FIT_RESET_ACQUISITION);
         lmfit_result fresult;
-        lmfit_grid(fit, recipe->seeds_list, &fresult, NULL, LMFIT_PRESERVE_STACK,
+        lmfit_grid(fit, recipe->seeds_list, &fresult, nullptr, LMFIT_PRESERVE_STACK,
                    window_process_events, this);
 
         unsigned j;

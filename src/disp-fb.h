@@ -26,8 +26,6 @@
 #include "defs.h"
 #include "dispers-classes.h"
 
-__BEGIN_DECLS
-
 /* Can use the original FB parameters or an alternative form where:
    A = A' C'^2
    B = 2 B'
@@ -74,7 +72,5 @@ extern struct disp_struct * disp_new_tauc_lorentz(const char *name, int coeff_fo
 extern void disp_fb_change_form(struct disp_struct *d, int new_coeff_form);
 extern void disp_add_osc(struct disp_struct *d);
 extern void disp_delete_osc(struct disp_struct *d, int index);
-
-__END_DECLS
 
 #endif

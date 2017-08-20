@@ -25,7 +25,7 @@ FXIMPLEMENT(plot_canvas,FXCanvas,plot_canvas_map,ARRAYNUMBER(plot_canvas_map));
 void plot_canvas::prepare_image_buffer(int ww, int hh)
 {
     delete m_img;
-    m_img = new FXImage(getApp(), NULL, IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
+    m_img = new FXImage(getApp(), nullptr, IMAGE_KEEP|IMAGE_OWNED|IMAGE_SHMI|IMAGE_SHMP, ww, hh);
     m_img->create();
 
     agg::int8u* buf = (agg::int8u*) m_img->getData();
@@ -82,7 +82,7 @@ long
 plot_canvas::on_update(FXObject *, FXSelector, void *)
 {
     if(m_dirty_flag) {
-        draw_plot(NULL);
+        draw_plot(nullptr);
         return 1;
     }
     return 0;
@@ -92,7 +92,7 @@ long
 plot_canvas::on_cmd_paint(FXObject *, FXSelector, void *ptr)
 {
     FXEvent* ev = (FXEvent*) ptr;
-    draw_plot(dirty() ? NULL : ev);
+    draw_plot(dirty() ? nullptr : ev);
     return 1;
 }
 
@@ -311,7 +311,7 @@ plot_canvas::on_clipboard_request(FXObject *sender, FXSelector sel, void *ptr)
         return 1;
     } else if (m_clipboard_image && (target == imageType || target == bmp_type || target == png_type)) {
         FXMemoryStream ms;
-        ms.open(FXStreamSave, NULL);
+        ms.open(FXStreamSave, nullptr);
         bool success;
         image *img = m_clipboard_image;
         if (target == imageType || target == bmp_type) {

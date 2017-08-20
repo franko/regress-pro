@@ -6,8 +6,6 @@
 #include "writer.h"
 #include "lexer.h"
 
-__BEGIN_DECLS
-
 #define data_table_get(d,r,c)  ((d)->heap[(d)->columns * (r) + (c)])
 #define data_table_set(d,r,c,v) (d)->heap[(d)->columns * (r) + (c)] = v
 #define data_table_ref(d) if ((d)->ref_count >= 0) { (d)->ref_count++; }
@@ -30,7 +28,5 @@ extern int data_table_write(writer_t *w, const struct data_table *dt);
 extern struct data_table *data_table_read(lexer_t *l);
 
 extern struct data_table empty_data_table[1];
-
-__END_DECLS
 
 #endif

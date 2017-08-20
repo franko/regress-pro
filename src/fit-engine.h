@@ -32,8 +32,6 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
 
-__BEGIN_DECLS
-
 #define FIT_OPTIONS_ACQUISITION(n) ((n) & ((1 << 8) - 1))
 #define FIT_OPTIONS_SUBSAMPLING(n) ((n) >> 8)
 
@@ -145,7 +143,5 @@ fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters
 
 extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);
-
-__END_DECLS
 
 #endif

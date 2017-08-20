@@ -24,8 +24,6 @@
 #include "defs.h"
 #include "dispers-classes.h"
 
-__BEGIN_DECLS
-
 struct lorentz_osc {
     double a;
     double en;
@@ -54,7 +52,5 @@ extern void disp_lorentz_add_oscillator(struct disp_struct *d);
 extern void disp_lorentz_delete_oscillator(struct disp_struct *d, int index);
 extern int disp_lorentz_oscillator_parameters_number(struct disp_struct *d);
 extern void disp_lorentz_change_style(struct disp_struct *d, int new_style);
-
-__END_DECLS
 
 #endif

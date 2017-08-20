@@ -8,13 +8,9 @@
 #include "lmfit_result.h"
 #include "str.h"
 
-__BEGIN_DECLS
-
 /* returns NULL if not successfull */
 int lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
                struct lmfit_result *result, str_ptr analysis, int preserve_init_stack,
                gui_hook_func_t hfun, void *hdata);
-
-__END_DECLS
 
 #endif

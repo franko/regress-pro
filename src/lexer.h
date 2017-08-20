@@ -4,8 +4,6 @@
 #include "defs.h"
 #include "str.h"
 
-__BEGIN_DECLS
-
 enum token_e {
     TK_UNDEF    = 0,
     TK_IDENT    = 1,
@@ -41,7 +39,5 @@ extern int       lexer_check_ident(lexer_t *l, const char *id);
 
 #define lexer_string(a) lexer_string_store(a, 0)
 #define lexer_ident(a) lexer_string_store(a, 1)
-
-__END_DECLS
 
 #endif

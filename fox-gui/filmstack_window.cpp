@@ -26,19 +26,19 @@ FXIMPLEMENT(filmstack_window,FXPacker,filmstack_window_map,ARRAYNUMBER(filmstack
 
 filmstack_window::filmstack_window(stack_t *s, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXPacker(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-    recipe_target(NULL), recipe_sel_change(0), recipe_sel_shift(0), stack(s)
+    recipe_target(nullptr), recipe_sel_change(0), recipe_sel_shift(0), stack(s)
 {
     stack_window = setup_stack_window(this);
 
     popupmenu = new FXMenuPane(this);
-    new FXMenuCommand(popupmenu,"Delete Layer", NULL, this, ID_DELETE_LAYER);
-    new FXMenuCommand(popupmenu,"Select New Layer", NULL, this, ID_REPLACE_LAYER);
-    new FXMenuCommand(popupmenu,"Insert Layer Above", NULL, this, ID_INSERT_LAYER);
-    new FXMenuCommand(popupmenu,"Edit Dispersion", NULL, this, ID_EDIT_LAYER);
+    new FXMenuCommand(popupmenu,"Delete Layer", nullptr, this, ID_DELETE_LAYER);
+    new FXMenuCommand(popupmenu,"Select New Layer", nullptr, this, ID_REPLACE_LAYER);
+    new FXMenuCommand(popupmenu,"Insert Layer Above", nullptr, this, ID_INSERT_LAYER);
+    new FXMenuCommand(popupmenu,"Edit Dispersion", nullptr, this, ID_EDIT_LAYER);
     new FXMenuSeparator(popupmenu);
-    new FXMenuCommand(popupmenu,"Save to User Library", NULL, this, ID_SAVE_USERLIB);
-    new FXMenuCommand(popupmenu,"Save to File", NULL, this, ID_DISP_SAVEFILE);
-    new FXMenuCommand(popupmenu,"Plot\t\tPlot dispersion", NULL, this, ID_PLOT_DISP);
+    new FXMenuCommand(popupmenu,"Save to User Library", nullptr, this, ID_SAVE_USERLIB);
+    new FXMenuCommand(popupmenu,"Save to File", nullptr, this, ID_DISP_SAVEFILE);
+    new FXMenuCommand(popupmenu,"Plot\t\tPlot dispersion", nullptr, this, ID_PLOT_DISP);
 }
 
 filmstack_window::~filmstack_window()
@@ -73,7 +73,7 @@ filmstack_window::setup_stack_window(FXComposite *cont)
     FXString nstr;
     for (int i = 0; i < stack->nb; i++) {
         nstr.format("%d", i);
-        new FXButton(matrix, nstr, NULL, this, ID_FILM_MENU + i, FRAME_SUNKEN);
+        new FXButton(matrix, nstr, nullptr, this, ID_FILM_MENU + i, FRAME_SUNKEN);
         FXTextField *filmtf = new FXTextField(matrix, 16, this, ID_FILM_NAME + i, FRAME_SUNKEN|LAYOUT_FILL_COLUMN);
         filmtf->setText(disp_get_name(stack->disp[i]));
         if (i > 0 && i < stack->nb - 1) {
@@ -100,7 +100,7 @@ filmstack_window::on_cmd_film_menu(FXObject*sender, FXSelector sel, void *ptr)
     FXEvent *event = (FXEvent *) ptr;
     current_layer = FXSELID(sel) - ID_FILM_MENU;
     if(!event->moved){
-        popupmenu->popup(NULL, event->root_x, event->root_y);
+        popupmenu->popup(nullptr, event->root_x, event->root_y);
         getApp()->runModalWhileShown(popupmenu);
     }
     return 1;
@@ -122,7 +122,7 @@ void
 filmstack_window::notify_stack_change()
 {
     if (recipe_target) {
-        recipe_target->handle(this, recipe_sel_change, NULL);
+        recipe_target->handle(this, recipe_sel_change, nullptr);
     }
 }
 
@@ -185,7 +185,7 @@ long
 filmstack_window::on_cmd_save_userlib(FXObject*, FXSelector, void*)
 {
     disp_t *d = disp_copy(stack->disp[current_layer]);
-    disp_list_add(user_lib, d, NULL);
+    disp_list_add(user_lib, d, nullptr);
     return 1;
 }
 
@@ -201,7 +201,7 @@ long
 filmstack_window::on_change_thickness(FXObject*, FXSelector sel, void *data)
 {
     int index = FXSELID(sel) - ID_FILM_THICKNESS;
-    double x = strtod((FXchar *)data, NULL);
+    double x = strtod((FXchar *)data, nullptr);
     stack->thickness[index - 1] = x;
     return 1;
 }

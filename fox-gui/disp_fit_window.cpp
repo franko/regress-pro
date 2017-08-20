@@ -21,11 +21,11 @@ disp_fit_window::disp_fit_window(disp_fit_manager* fit, FXWindow *win, const FXS
     m_fit_manager(fit)
 {
     dispmenu = new FXMenuPane(this);
-    new FXMenuCommand(dispmenu, "Select Reference", NULL, this, ID_SELECT_REF);
-    new FXMenuCommand(dispmenu, "Select Model", NULL, this, ID_SELECT_MODEL);
-    new FXMenuCommand(dispmenu, "Edit Model", NULL, this, ID_EDIT_MODEL);
-    new FXMenuCommand(dispmenu, "Save Model to User Library", NULL, this, ID_SAVE_USERLIB);
-    new FXMenuTitle(menubar, "&Dispersion", NULL, dispmenu);
+    new FXMenuCommand(dispmenu, "Select Reference", nullptr, this, ID_SELECT_REF);
+    new FXMenuCommand(dispmenu, "Select Model", nullptr, this, ID_SELECT_MODEL);
+    new FXMenuCommand(dispmenu, "Edit Model", nullptr, this, ID_EDIT_MODEL);
+    new FXMenuCommand(dispmenu, "Save Model to User Library", nullptr, this, ID_SAVE_USERLIB);
+    new FXMenuTitle(menubar, "&Dispersion", nullptr, dispmenu);
 }
 
 disp_fit_window::~disp_fit_window()
@@ -53,7 +53,7 @@ long disp_fit_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
     disp_t *disp = disp_copy(m_fit_manager->model_ref());
     dispers_edit_window edit_win(disp, this, DECOR_TITLE|DECOR_BORDER, 0, 0, 400, 320);
     if (edit_win.execute() == TRUE) {
-        disp_list_add(user_lib, disp, NULL);
+        disp_list_add(user_lib, disp, nullptr);
     }
     return 1;
 }

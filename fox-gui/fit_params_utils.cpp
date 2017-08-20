@@ -27,7 +27,7 @@ fit_parameters *listbox_populate_all_parameters(FXListBox *listbox, stack_t *sta
             current_layer = fp->layer_nb;
         }
         get_full_param_name(fp, name);
-        listbox->appendItem(CSTR(name), NULL, (void*) (intptr_t) (i + 1));
+        listbox->appendItem(CSTR(name), nullptr, (void*) (intptr_t) (i + 1));
     }
 
     str_free(name);
@@ -72,7 +72,7 @@ void list_populate(FXList *list, fit_parameters *fps, seeds *seed, bool clear)
     }
     for (size_t i = 0; i < fps->number; i++) {
         const fit_param_t *fp = &fps->values[i];
-        const seed_t *value = (seed ? &seed->values[i] : NULL);
+        const seed_t *value = (seed ? &seed->values[i] : nullptr);
         list->appendItem(format_fit_parameter(fp, value));
     }
 }
@@ -90,13 +90,13 @@ FXMenuPane *fit_parameters_menu(FXWindow *win, FXObject *target, FXSelector sel,
         if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer) {
             menu = new FXMenuPane(win);
             str_printf(name, "Layer %d", fp->layer_nb);
-            new FXMenuCascade(topmenu, CSTR(name), NULL, menu);
+            new FXMenuCascade(topmenu, CSTR(name), nullptr, menu);
             current_layer = fp->layer_nb;
         } else if (fp->id != PID_LAYER_N) {
             menu = topmenu;
         }
         get_full_param_name(fp, name);
-        new FXMenuCommand(menu, CSTR(name), NULL, target, sel + i);
+        new FXMenuCommand(menu, CSTR(name), nullptr, target, sel + i);
     }
     str_free(name);
     return topmenu;

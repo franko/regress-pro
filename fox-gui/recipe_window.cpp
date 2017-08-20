@@ -36,7 +36,7 @@ FXIMPLEMENT(recipe_window,FXPacker,recipe_window_map,ARRAYNUMBER(recipe_window_m
 
 recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXPacker(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-    recipe(rcp), param_list(NULL), seed_dirty(true)
+    recipe(rcp), param_list(nullptr), seed_dirty(true)
 {
     top_frame = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
@@ -73,10 +73,10 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     setup_parameters_list();
 
     FXMatrix *matrix = new FXMatrix(fpgroup, 2, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_SIDE_RIGHT);
-    new FXLabel(matrix, "Value", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Value", nullptr, LAYOUT_FILL_ROW);
     seed_tf = new FXTextField(matrix, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     seed_tf->setTipText("Initial value of fitting parameter");
-    new FXLabel(matrix, "Range", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Range", nullptr, LAYOUT_FILL_ROW);
     range_tf = new FXTextField(matrix, 8, this, ID_RANGE, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     range_tf->setTipText("Optional range used in grid search");
 
@@ -161,9 +161,9 @@ recipe_window::selected_parameter()
     FXint no = param_listbox->getCurrentItem();
     if (no >= 0) {
         int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
-        return index >= 0 ? &param_list->values[index] : NULL;
+        return index >= 0 ? &param_list->values[index] : nullptr;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -219,7 +219,7 @@ recipe_window::on_keypress_param_select(FXObject*, FXSelector sel, void *ptr)
     FXEvent* event=(FXEvent*)ptr;
     switch(event->code) {
     case KEY_Return:
-        return handle(this, FXSEL(SEL_COMMAND, ID_SEED), NULL);
+        return handle(this, FXSEL(SEL_COMMAND, ID_SEED), nullptr);
     default:
         /* */ ;
     }
@@ -262,12 +262,12 @@ seed_t recipe_window::get_seed_from_ui(const fit_param_t *fp)
             s.type = SEED_UNDEF;
         } else {
             s.type = SEED_SIMPLE;
-            s.seed = strtod(seed_tf->getText().text(), NULL);
+            s.seed = strtod(seed_tf->getText().text(), nullptr);
         }
     } else {
         s.type = SEED_RANGE;
-        s.seed = strtod(seed_tf->getText().text(), NULL);
-        s.delta = strtod(range_tf->getText().text(), NULL);
+        s.seed = strtod(seed_tf->getText().text(), nullptr);
+        s.delta = strtod(range_tf->getText().text(), nullptr);
     }
     return s;
 }
@@ -276,7 +276,7 @@ long
 recipe_window::on_cmd_seed(FXObject *, FXSelector, void *)
 {
     const fit_param_t *selfp = selected_parameter();
-    if (selfp == NULL) return 0;
+    if (selfp == nullptr) return 0;
     seed_t s = get_seed_from_ui(selfp);
     set_fit_parameter(selfp, &s);
     return 1;
@@ -437,8 +437,8 @@ recipe_window::enable_multi_sample(bool create_elements)
 
 
     ms_params_frame = new FXHorizontalFrame(params_group, LAYOUT_FILL_Y);
-    new FXButton(ms_params_frame, "sample", NULL, this, ID_ADD_INDIV, BUTTON_NORMAL|LAYOUT_FILL_X);
-    new FXButton(ms_params_frame, "constr", NULL, this, ID_ADD_CONSTR, BUTTON_NORMAL|LAYOUT_FILL_X);
+    new FXButton(ms_params_frame, "sample", nullptr, this, ID_ADD_INDIV, BUTTON_NORMAL|LAYOUT_FILL_X);
+    new FXButton(ms_params_frame, "constr", nullptr, this, ID_ADD_CONSTR, BUTTON_NORMAL|LAYOUT_FILL_X);
 
     if (create_elements) {
         ms_params_frame->create();
@@ -469,7 +469,7 @@ recipe_window::on_cmd_multi_sample(FXObject *, FXSelector, void *ptr)
         return 1;
     } else if (!ptr && recipe->ms_setup) {
         delete recipe->ms_setup;
-        recipe->ms_setup = NULL;
+        recipe->ms_setup = nullptr;
         disable_multi_sample();
         return 1;
     }

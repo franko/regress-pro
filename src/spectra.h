@@ -5,8 +5,6 @@
 #include "data-view.h"
 #include "acquisition.h"
 
-__BEGIN_DECLS
-
 struct spectral_range {
     int active;
     float min, max;
@@ -34,7 +32,5 @@ extern float const *     spectra_get_values(struct spectrum const *s, int j);
 extern struct spectrum * load_gener_spectrum(const char *filename, str_ptr *error_msg);
 
 extern void              spectr_cut_range(struct spectrum *s, float inf, float sup);
-
-__END_DECLS
 
 #endif

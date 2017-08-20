@@ -18,8 +18,6 @@
 #include "writer.h"
 #include "lexer.h"
 
-__BEGIN_DECLS
-
 struct disp_struct;
 
 struct disp_class {
@@ -41,7 +39,6 @@ struct disp_class {
     double *(*map_param)(struct disp_struct *d, int index);
     double(*get_param_value)(const struct disp_struct *d,
                              const fit_param_t *fp);
-    int (*write)(writer_t *w, const struct disp_struct *_d);
 
     /* Specific methods for tabular dispersions. */
     int (*samples_number)(const struct disp_struct *d);
@@ -50,6 +47,7 @@ struct disp_class {
     /* class methods */
     void (*encode_param)(str_t param, const fit_param_t *fp);
     int (*read)(lexer_t *l, struct disp_struct *d);
+    int (*write)(writer_t *w, const struct disp_struct *_d);
 };
 
 struct deriv_info {
@@ -124,7 +122,5 @@ extern void     disp_info_copy(struct disp_info *src, struct disp_info *dst);;
 
 // Validity condition for a wavelength range store in disp_info.
 #define DISP_VALID_RANGE(wl1, wl2) ((wl1) > 0.0 && (wl2) > (wl1))
-
-__END_DECLS
 
 #endif

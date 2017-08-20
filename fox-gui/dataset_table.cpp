@@ -65,7 +65,7 @@ long dataset_table::on_cmd_select_column(FXObject *obj, FXSelector sel, void *pt
     if (popup_col == 0) return 0;
     FXint x = getShell()->getX() + colHeader->getX() + colHeader->getItemOffset(popup_col);
     FXint y = getShell()->getY() + colHeader->getY();
-    popupmenu->popup(NULL, x, y);
+    popupmenu->popup(nullptr, x, y);
     getApp()->runModalWhileShown(popupmenu);
     return 1;
 }
@@ -110,7 +110,7 @@ bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_f
             free_error_message(error_msg);
             for (int k = 0; k < i; k++) {
                 spectra_free(spectra_list[k]);
-                spectra_list[k] = NULL;
+                spectra_list[k] = nullptr;
             }
             return false;
         }
@@ -147,7 +147,7 @@ bool dataset_table::get_values(int row, const fit_parameters *fps, double value_
                 break;
             }
         }
-        if (p == NULL) { /* Fit parameter not found. */
+        if (p == nullptr) { /* Fit parameter not found. */
             error_col = -1;
             return false;
         }
@@ -204,7 +204,7 @@ int dataset_table::read_update(lexer_t *l)
     }
     fit_param_link new_fplink(new_params);
 
-    fit_param_node *current_node = NULL;
+    fit_param_node *current_node = nullptr;
     for (int j = 0; j < m; j++) {
         int jcolumn = j + 1;
         fit_param_node *new_node = new fit_param_node(j, jcolumn);

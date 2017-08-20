@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include "defs.h"
 
-__BEGIN_DECLS
-
 #define SQR(x) ((x) * (x))
 
 #ifdef DEBUG_MEM
@@ -39,7 +37,5 @@ extern void   generic_array_free(struct generic_array *r);
 #define ARRAY_GET(arr, dtype, i) ((dtype *) (arr)->heap)[i]
 #define ARRAY_SET(arr, dtype, i, v) ((dtype *) (arr)->heap)[i] = (v)
 #define ARRAY_GET_PTR(arr, dtype, i) (((dtype *) (arr)->heap) + (i))
-
-__END_DECLS
 
 #endif
