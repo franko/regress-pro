@@ -61,7 +61,7 @@ struct disp_class ho_disp_class = {
 
 static const char *ho_param_names[] = {"Nosc", "En", "Eg", "Nu", "Phi"};
 
-/* The HO multiplicative factor is: 16 * cmpl(P, Ry)^2 * r0^3 where
+/* The HO multiplicative factor is: 16 * Pi * Ry^2 * r0^3 where
    Ry is the Rydberg constant Ry = 13.6058 eV et r0 is the Bohr radius:
    r0 = 0.0529177 nm.
    The definition above would give the following constant:
