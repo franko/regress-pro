@@ -10,5 +10,9 @@ if enable_debug
     add_global_arguments('-DDEBUG -DDEBUG_MEM', language : ['cpp'])
 endif
 
+if meson.get_compiler('cpp').get_id() == 'gcc'
+    add_global_arguments('-ffast-math', language : ['cpp'])
+endif
+
 subdir('src')
 subdir('fox-gui')
