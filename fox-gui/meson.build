@@ -7,4 +7,4 @@ executable('regress', fox_src,
            include_directories: [foxgui_incdir, kernel_incdir],
            dependencies: [gsl_dep, fox_dep, agg_dep, thread_dep],
            link_with: libkernel,
-           gui_app: not enable_debug)
+           gui_app: not debug_build)
