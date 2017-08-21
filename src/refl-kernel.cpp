@@ -2,15 +2,10 @@
 
 #include "refl-kernel.h"
 #include "math-constants.h"
+#include "math-utils.h"
 #include "gauss-legendre-quad.h"
 
 using namespace std::complex_literals;
-
-static inline cmpl
-csqr(cmpl x)
-{
-    return x*x;
-}
 
 static inline cmpl
 refl_coeff_ni(cmpl nt, cmpl nb)
@@ -94,7 +89,7 @@ mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
         r = refl_coeff_ni(nt, nc);
 
         den = 1.0 + r * R * rho;
-        isqden = 1.0 / csqr(den);
+        isqden = 1.0 / pow2(den);
         dfdR = rho * (1.0 - r*r) * isqden;
 
         for(k = nblyr; k > j+1; k--) {
@@ -148,7 +143,7 @@ mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
         r = refl_coeff_ext_ni(nt, nc, &drdnt, &drdnb);
 
         den = 1.0 + r * R * rho;
-        isqden = 1.0 / csqr(den);
+        isqden = 1.0 / pow2(den);
         dfdR = rho * (1.0 - r*r) * isqden;
 
         for(k = nb - 1; k > j+1; k--) {
@@ -159,7 +154,7 @@ mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
             jacth[k-1] *= dfdR;
         }
 
-        dfdr = (1.0 - csqr(R*rho)) * isqden;
+        dfdr = (1.0 - pow2(R*rho)) * isqden;
         dfdrho = R * (1.0 - r*r) * isqden;
 
         jacn[j+1] = dfdR * jacn[j+1] + dfdr * drdnb + dfdrho * drhodn;

@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <string.h>
 #include "dispers.h"
+#include "math-utils.h"
 #include "cmpl.h"
 #include "disp-fb-priv.h"
 
@@ -153,16 +154,16 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             /* Use the redefined A', B', C' parameters as described in the disp-fb.h file.
                The calculation are done based on the original parameters A, B, C. The
                derivatives are computed from the derivative wrt A, B, C. */
-            A = osc->a * SQR(osc->c);
+            A = osc->a * pow2(osc->c);
             B = 2 * osc->b;
-            C = SQR(osc->c) + SQR(osc->b);
+            C = pow2(osc->c) + pow2(osc->b);
         }
         const double den = E * (E - B) + C;
-        const double Q = 0.5 * sqrt(4*C - SQR(B));
-        const double B0 = (A / Q) * (-SQR(B)/2 + Eg * (B - Eg) + C);
-        const double C0 = (A / Q) * ((SQR(Eg) + C)*B/2 - 2 * Eg * C);
+        const double Q = 0.5 * sqrt(4*C - pow2(B));
+        const double B0 = (A / Q) * (-pow2(B)/2 + Eg * (B - Eg) + C);
+        const double C0 = (A / Q) * ((pow2(Eg) + C)*B/2 - 2 * Eg * C);
 
-        const double kterm = A * SQR(E - Eg) / den;
+        const double kterm = A * pow2(E - Eg) / den;
         const double nterm = (B0*E + C0) / den;
 
         ksum += egap_k(E, Eg, kterm);
@@ -179,14 +180,14 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             const double k_a = egap_k(E, Eg, kterm / A);
             const double n_a = nterm / A;
 
-            const double dB0dB = A * (B*SQR(B) + 8*C*Eg - 2*B*(3*C+SQR(Eg))) / (8 * Q*SQR(Q));
-            const double dC0dB = A * C * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
+            const double dB0dB = A * (B*pow2(B) + 8*C*Eg - 2*B*(3*C+pow2(Eg))) / (8 * Q*pow2(Q));
+            const double dC0dB = A * C * (C + Eg * (Eg - B)) / (2 * Q*pow2(Q));
 
             const double k_b = egap_k(E, Eg, E * kterm / den);
             const double n_b = (dB0dB * E + dC0dB) / den + E * nterm / den;
 
-            const double dB0dC = A * (C + Eg * (Eg - B)) / (2 * Q*SQR(Q));
-            const double dC0dC = A * ((B - 4*Eg) * (2*C - SQR(B)) - 2*B*SQR(Eg)) / (8 * Q*SQR(Q));
+            const double dB0dC = A * (C + Eg * (Eg - B)) / (2 * Q*pow2(Q));
+            const double dC0dC = A * ((B - 4*Eg) * (2*C - pow2(B)) - 2*B*pow2(Eg)) / (8 * Q*pow2(Q));
             const double k_c = egap_k(E, Eg, - kterm / den);
             const double n_c = (dB0dC * E + dC0dC) / den - nterm / den;
 
@@ -195,7 +196,7 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
                 cmpl_vector_set(pd, koffs + FB_B_OFFS, cmpl(n_b, -k_b));
                 cmpl_vector_set(pd, koffs + FB_C_OFFS, cmpl(n_c, -k_c));
             } else {
-                cmpl_vector_set(pd, koffs + FB_A_OFFS, SQR(osc->c) * (cmpl(n_a, -k_a)));
+                cmpl_vector_set(pd, koffs + FB_A_OFFS, pow2(osc->c) * (cmpl(n_a, -k_a)));
                 cmpl_vector_set(pd, koffs + FB_B_OFFS, 2.0 * (cmpl(n_b, -k_b)) + 2.0 * (cmpl(n_c, -k_c)) * osc->b);
                 cmpl_vector_set(pd, koffs + FB_C_OFFS, 2.0 * (cmpl(n_a, -k_a)) * osc->a * osc->c + 2.0 * (cmpl(n_c, -k_c)) * osc->c);
             }
@@ -298,16 +299,16 @@ static void fb_change_form(struct disp_fb *fb, int new_coeff_form)
         for (i = 0; i < fb->n; i++) {
             struct fb_osc *osc = &fb->osc[i];
             const double Ap = osc->a;
-            osc->a = Ap * SQR(osc->c);
+            osc->a = Ap * pow2(osc->c);
             const double Bp = osc->b;
             osc->b = 2 * Bp;
-            osc->c = SQR(osc->c) + SQR(Bp);
+            osc->c = pow2(osc->c) + pow2(Bp);
         }
     } else {
         int i;
         for (i = 0; i < fb->n; i++) {
             struct fb_osc *osc = &fb->osc[i];
-            const double Qq = osc->c - SQR(osc->b) / 4;
+            const double Qq = osc->c - pow2(osc->b) / 4;
             osc->a = osc->a / Qq;
             osc->b = osc->b / 2;
             osc->c = sqrt(Qq);

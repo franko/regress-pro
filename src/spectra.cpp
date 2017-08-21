@@ -5,14 +5,13 @@
 #include "spectra.h"
 #include "refl-utils.h"
 #include "math-constants.h"
+#include "math-utils.h"
 #include "error-messages.h"
 #include "data-table.h"
 #include "str.h"
 #include "fit-params.h"
 
 static struct spectrum * load_ellips_spectrum(const char *filename, str_ptr *error_msg);
-
-static double deg_to_radians(double x) { return x * M_PI / 180.0; }
 
 struct spectrum *
 load_ellips_spectrum(const char *filename, str_ptr *error_msg) {

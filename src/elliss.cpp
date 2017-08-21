@@ -21,19 +21,10 @@
 
 #include "elliss.h"
 #include "math-constants.h"
+#include "math-utils.h"
 #include "gauss-legendre-quad.h"
 
-static double deg_to_radians(double x) { return x * M_PI / 180.0; }
-
-static double sqr(double x) { return x*x; }
-
 using namespace std::complex_literals;
-
-static inline cmpl
-csqr(cmpl x)
-{
-    return x*x;
-}
 
 static cmpl
 refl_coeff(cmpl nt, cmpl cost, cmpl nb, cmpl cosb, polar_t pol)
@@ -59,12 +50,12 @@ refl_coeff_aoi_der(const cmpl nsin0, const cmpl ncos0, cmpl n0, cmpl cos0, cmpl 
     const cmpl drdaoi_prefact = 2 * nsin0 * ncos0 * ((n0*cos0) / (n1*cos1) - (n1*cos1) / (n0*cos0));
     if(pol == POL_P) {
         const cmpl den = n1*cos0 + n0*cos1;
-        *drdaoi = drdaoi_prefact / csqr(den);
+        *drdaoi = drdaoi_prefact / pow2(den);
         return (n1*cos0 - n0*cos1) / den;
     }
     /* S polarization. */
     const cmpl den = n0*cos0 + n1*cos1;
-    *drdaoi = drdaoi_prefact / csqr(den);
+    *drdaoi = drdaoi_prefact / pow2(den);
     return (n0*cos0 - n1*cos1) / den;
 }
 
@@ -80,14 +71,14 @@ refl_coeff_ext(cmpl nt, cmpl cost,
 
     if(pol == POL_P) {
         cmpl den = nb*cost + nt*cosb;
-        cmpl isqden = 1.0 / csqr(den);
+        cmpl isqden = 1.0 / pow2(den);
         rc = (nb*cost - nt*cosb) / den;
         *drdnt = - 2.0 * cosb * nb * (2*cost*cost - 1.0) * isqden / cost;
         *drdnb =   2.0 * cost * nt * (2*cosb*cosb - 1.0) * isqden / cosb;
         *den_out = den;
     } else {
         cmpl den = nt*cost + nb*cosb;
-        cmpl isqden = 1.0 / csqr(den);
+        cmpl isqden = 1.0 / pow2(den);
         rc = (nt*cost - nb*cosb) / den;
         *drdnt =   2.0 * cosb * nb * isqden / cost;
         *drdnb = - 2.0 * cost * nt * isqden / cosb;
@@ -104,7 +95,7 @@ fresnel_coeffs_diff(const cmpl nsin0, const cmpl ncos0, const cmpl n0, const cmp
     for(int p = POL_START; p < POL_END; p++) {
         cmpl fc_den;
         r[p] = refl_coeff_ext(n0, cos0, n1, cos1, &drdn0[p], &drdn1[p], &fc_den, (polar_t) p);
-        drdaoi[p] = drdaoi_prefact / csqr(fc_den);
+        drdaoi[p] = drdaoi_prefact / pow2(fc_den);
     }
 }
 
@@ -112,7 +103,7 @@ static cmpl
 snell_cos(cmpl nsin0, cmpl nlyr)
 {
     cmpl s = nsin0 / nlyr;
-    return std::sqrt(1.0 - csqr(s));
+    return std::sqrt(1.0 - pow2(s));
 }
 
 /* In this procedure we assume (nb > 2). This condition should be
@@ -176,7 +167,7 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
             r[p] = refl_coeff(ns[j], cost, ns[j+1], cosc, (polar_t) p);
 
             const cmpl den = 1.0 + r[p] * R[p] * rho;
-            const cmpl isqden = 1.0 / csqr(den);
+            const cmpl isqden = 1.0 / pow2(den);
             const cmpl dfdR = rho * (1.0 - r[p]*r[p]) * isqden;
 
             for(int k = films_number; k > j+1; k--) {
@@ -225,14 +216,14 @@ mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
             r[p] = refl_coeff_aoi_der(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, &drdaoi[p], (polar_t) p);
 
             const cmpl den = 1.0 + r[p] * R[p] * rho;
-            const cmpl isqden = 1.0 / csqr(den);
+            const cmpl isqden = 1.0 / pow2(den);
             const cmpl dfdR = rho * (1.0 - r[p]*r[p]) * isqden;
 
             for(int k = films_number; k > j+1; k--) {
                 pjacth[k - 1] *= dfdR;
             }
 
-            const cmpl dfdr = (1.0 - csqr(R[p]*rho)) * isqden;
+            const cmpl dfdr = (1.0 - pow2(R[p]*rho)) * isqden;
             const cmpl dfdrho = R[p] * (1.0 - r[p]*r[p]) * isqden;
             pjacth[j] = dfdrho * drhodth;
 
@@ -288,7 +279,7 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
             cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
 
             const cmpl den = 1.0 + r[p] * R[p] * rho;
-            const cmpl isqden = 1.0 / csqr(den);
+            const cmpl isqden = 1.0 / pow2(den);
             const cmpl dfdR = rho * (1.0 - r[p]*r[p]) * isqden;
 
             for(int k = nb - 1; k > j+1; k--) {
@@ -299,7 +290,7 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
                 pjacth[k-1] *= dfdR;
             }
 
-            const cmpl dfdr = (1.0 - csqr(R[p]*rho)) * isqden;
+            const cmpl dfdr = (1.0 - pow2(R[p]*rho)) * isqden;
             const cmpl dfdrho = R[p] * (1.0 - r[p]*r[p]) * isqden;
 
             pjacn[j+1] = dfdR * pjacn[j+1] + dfdr * drdnb[p] + dfdrho * drhodn;
@@ -368,7 +359,7 @@ se_ab_der(cmpl R[], cmpl dR[], double tanlz, cmpl *dalpha, cmpl *dbeta)
     const cmpl drho = (R[0]*dR[1] - R[1]*dR[0]) / (R[0]*R[0]);
     const double sqtpsi = std::norm(rho);
     const double tasq = tanlz * tanlz;
-    const double isqden = sqr(1 / (sqtpsi + tasq));
+    const double isqden = pow2(1 / (sqtpsi + tasq));
 
     const cmpl z1 = conj(rho) * drho;
     *dalpha = 4 * tasq * z1 * isqden;
@@ -516,7 +507,7 @@ se_ab_diff_from_sp(const double sp[3], const cmpl dsp[3], const double tanlz, cm
     const double tasq = tanlz * tanlz;
     const double abden = sp[1] + tasq * sp[0];
     const cmpl drs2 = dsp[0], drp2 = dsp[1], drprs = dsp[2];
-    dab[0] = 2 * tasq / sqr(abden) * (sp[0] * drp2 - sp[1] * drs2);
+    dab[0] = 2 * tasq / pow2(abden) * (sp[0] * drp2 - sp[1] * drs2);
     dab[1] = 2 * tanlz / abden * (drprs - sp[2] * (drp2 + tasq * drs2) / abden);
 }
 
@@ -525,7 +516,7 @@ se_ab_diff_from_sp_real(const double sp[3], const double dsp[3], const double ta
     const double tasq = tanlz * tanlz;
     const double abden = sp[1] + tasq * sp[0];
     const double drs2 = dsp[0], drp2 = dsp[1], drprs = dsp[2];
-    dab[0] = 2 * tasq / sqr(abden) * (sp[0] * drp2 - sp[1] * drs2);
+    dab[0] = 2 * tasq / pow2(abden) * (sp[0] * drp2 - sp[1] * drs2);
     dab[1] = 2 * tanlz / abden * (drprs - sp[2] * (drp2 + tasq * drs2) / abden);
 }
 
@@ -699,7 +690,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
 
             /* Derivatives with Analyzer angle (A). */
             const double secsqa = 1 + tasq; /* = 1 / cos^2(A) = sec^2(A) */
-            const double iden = 1 / sqr(abden);
+            const double iden = 1 / pow2(abden);
             jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)] = deg_to_radians(- 4 * sp[0] * sp[1] * tanlz * secsqa * iden);
             jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)] = deg_to_radians(2 * sp[2] * (sp[1] - tasq * sp[0]) * secsqa * iden);
         }

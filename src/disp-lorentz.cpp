@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <string.h>
 #include "dispers.h"
+#include "math-utils.h"
 #include "cmpl.h"
 
 static void     lor_free(disp_t *d);
@@ -142,8 +143,8 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     for(int k = 0; k < nb; k++) {
         const struct lorentz_osc *p = &lor->oscillators[k];
         const double a = p->a, br = p->br, en = p->en;
-        const double hhnum = (lor->style == LORENTZ_STYLE_ABE ? a * br * en : a * SQR(en));
-        const cmpl hh = hhnum / (SQR(en) - SQR(e) + 1i * br * e);
+        const double hhnum = (lor->style == LORENTZ_STYLE_ABE ? a * br * en : a * pow2(en));
+        const cmpl hh = hhnum / (pow2(en) - pow2(e) + 1i * br * e);
 
         if(pd) {
             const int koffs = osc_offs + LOR_NB_PARAMS * k;
@@ -175,22 +176,22 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const cmpl y0_a = cmpl_vector_get(pd, idx_a);
         cmpl_vector_set(pd, idx_a, epsfact * y0_a);
 
-        const cmpl osc_den = SQR(en) - SQR(e) + 1i * br * e;
+        const cmpl osc_den = pow2(en) - pow2(e) + 1i * br * e;
 
         const int idx_en = koffs + LOR_EN_OFFS;
         const cmpl y0_en = cmpl_vector_get(pd, idx_en);
         if (lor->style == LORENTZ_STYLE_ABE) {
-            const cmpl num_en = - (SQR(en) + SQR(e) - 1i * br * e);
+            const cmpl num_en = - (pow2(en) + pow2(e) - 1i * br * e);
             cmpl_vector_set(pd, idx_en, epsfact * num_en / osc_den * y0_en);
         } else {
-            const cmpl num_en = 2.0 * (1i * br * e - SQR(e));
+            const cmpl num_en = 2.0 * (1i * br * e - pow2(e));
             cmpl_vector_set(pd, idx_en, epsfact * num_en / osc_den * y0_en);
         }
 
         const int idx_br = koffs + LOR_BR_OFFS;
         const cmpl y0_br = cmpl_vector_get(pd, idx_br);
         if (lor->style == LORENTZ_STYLE_ABE) {
-            const cmpl num_br = SQR(en) - SQR(e);
+            const cmpl num_br = pow2(en) - pow2(e);
             cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
         } else {
             const cmpl num_br = - 1i * br * e;

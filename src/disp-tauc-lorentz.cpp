@@ -102,10 +102,10 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
                - osc->b is Ep and is the energy position
                - osc->c is Gamma and is the peak width. */
             E0 = pow(pow4(osc->b) + pow4(osc->c) / 4, 0.25);
-            C = sqrt(2 * SQR(E0) - 2 * SQR(osc->b));
+            C = sqrt(2 * pow2(E0) - 2 * pow2(osc->b));
             A = osc->a * pow4(osc->c) / (4 * E0 * C);
         }
-        const double Eq = SQR(E), Cq = SQR(C), E0q = SQR(E0), Egq = SQR(Eg);
+        const double Eq = pow2(E), Cq = pow2(C), E0q = pow2(E0), Egq = pow2(Eg);
         const double den = pow2(Eq - E0q) + Cq * Eq;
 
         int alpha_real = (C < (2 - 1e-10) * E0);
@@ -160,7 +160,7 @@ void tauc_lorentz_change_form(struct disp_fb *fb, int new_coeff_form)
             const double ALp = osc->a, Ep = osc->b, G = osc->c;
             const double Gqq = pow4(G);
             const double E0 = pow(pow4(Ep) + Gqq / 4, 0.25);
-            const double C = sqrt(2 * SQR(E0) - 2 * SQR(Ep));
+            const double C = sqrt(2 * pow2(E0) - 2 * pow2(Ep));
             const double AL = ALp * Gqq / (4 * E0 * C);
             osc->a = AL;
             osc->b = E0;
@@ -171,10 +171,10 @@ void tauc_lorentz_change_form(struct disp_fb *fb, int new_coeff_form)
         for (i = 0; i < fb->n; i++) {
             struct fb_osc *osc = &fb->osc[i];
             const double AL = osc->a, E0 = osc->b, C = osc->c;
-            const double Cq = SQR(C);
-            const double Gqq = (4 * SQR(E0) - Cq) * Cq;
+            const double Cq = pow2(C);
+            const double Gqq = (4 * pow2(E0) - Cq) * Cq;
             const double G = pow(Gqq, 0.25);
-            const double Ep = sqrt(SQR(E0) - Cq / 2);
+            const double Ep = sqrt(pow2(E0) - Cq / 2);
             const double ALp = (4 * AL * E0 * C) / Gqq;
             osc->a = ALp;
             osc->b = Ep;

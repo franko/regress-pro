@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include "dispers.h"
+#include "math-utils.h"
 #include "common.h"
 #include "cmpl.h"
 
@@ -40,7 +41,7 @@ cmpl
 sellmeier_n_value(const disp_t *disp, double lam)
 {
     const struct disp_sellmeier *c = & disp->disp.sellmeier;
-    const double lamsq = SQR(lam / 1000);
+    const double lamsq = pow2(lam / 1000);
     double nsq = 1;
     for (int i = 0; i < SELLMEIER_PARAMS_NO; i++) {
         nsq += c->a[i] * lamsq / (lamsq - c->b[i]);
@@ -52,7 +53,7 @@ cmpl
 sellmeier_n_value_deriv(const disp_t *d, double lam, cmpl_vector *pd)
 {
     const struct disp_sellmeier *c = & d->disp.sellmeier;
-    const double lamsq = SQR(lam / 1000);
+    const double lamsq = pow2(lam / 1000);
     double den[3];
     double nsq = 1;
     for (int i = 0; i < SELLMEIER_PARAMS_NO; i++) {
@@ -64,9 +65,9 @@ sellmeier_n_value_deriv(const disp_t *d, double lam, cmpl_vector *pd)
     cmpl_vector_set(pd, 0, der_coeff * lamsq / den[0]);
     cmpl_vector_set(pd, 1, der_coeff * lamsq / den[1]);
     cmpl_vector_set(pd, 2, der_coeff * lamsq / den[2]);
-    cmpl_vector_set(pd, 3, der_coeff * c->a[0] * lamsq / SQR(den[0]));
-    cmpl_vector_set(pd, 4, der_coeff * c->a[1] * lamsq / SQR(den[1]));
-    cmpl_vector_set(pd, 5, der_coeff * c->a[2] * lamsq / SQR(den[2]));
+    cmpl_vector_set(pd, 3, der_coeff * c->a[0] * lamsq / pow2(den[0]));
+    cmpl_vector_set(pd, 4, der_coeff * c->a[1] * lamsq / pow2(den[1]));
+    cmpl_vector_set(pd, 5, der_coeff * c->a[2] * lamsq / pow2(den[2]));
     return n;
 }
 

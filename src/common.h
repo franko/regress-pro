@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include "defs.h"
 
-#define SQR(x) ((x) * (x))
-
 #ifdef DEBUG_MEM
 #define emalloc(n) malloc((size_t) (n))
 #define erealloc(x,n) realloc(x,(size_t) (n))

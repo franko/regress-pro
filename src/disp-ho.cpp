@@ -22,6 +22,7 @@
 #include <string.h>
 #include "dispers.h"
 #include "math-constants.h"
+#include "math-utils.h"
 #include "cmpl.h"
 
 static void     ho_free(disp_t *d);
@@ -165,7 +166,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const struct ho_params *p = m->params + k;
 
         hh = HO_MULT_FACT * p->nosc * std::exp(- 1i * p->phi) / \
-             (SQR(p->en) - SQR(e) + 1i * p->eg * e);
+             (pow2(p->en) - pow2(e) + 1i * p->eg * e);
 
         if(pd) {
             cmpl_vector_set(pd, HO_NB_PARAMS * k + HO_NOSC_OFFS, hh / p->nosc);
@@ -199,11 +200,11 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         cmpl dndh, y, hhden;
 
         idx = koffs + HO_NU_OFFS;
-        y = hsum / SQR(den) * cmpl_vector_get(pd, idx);
+        y = hsum / pow2(den) * cmpl_vector_get(pd, idx);
         y *= epsfact;
         cmpl_vector_set(pd, idx, y);
 
-        dndh = p->nu * hsum / SQR(den) + 1.0 / den;
+        dndh = p->nu * hsum / pow2(den) + 1.0 / den;
 
         idx = koffs + HO_NOSC_OFFS;
         y = dndh * cmpl_vector_get(pd, idx);
@@ -215,7 +216,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         y *= epsfact;
         cmpl_vector_set(pd, idx, y);
 
-        hhden = SQR(p->en) - SQR(e) + 1i * p->eg * e;
+        hhden = pow2(p->en) - pow2(e) + 1i * p->eg * e;
 
         idx = koffs + HO_EN_OFFS;
         y = dndh * (- 2.0 * p->en / hhden) * cmpl_vector_get(pd, idx);
