@@ -6,6 +6,10 @@ if host_machine.system() == 'windows'
     add_global_arguments('-DWIN32', language : ['c', 'cpp'])
 endif
 
+if meson.get_compiler('cpp').get_id() == 'gcc'
+    add_global_arguments('-ffast-math', language : ['c', 'cpp'])
+endif
+
 if enable_debug
     add_global_arguments('-DDEBUG -DDEBUG_MEM', language : ['c', 'cpp'])
 endif
