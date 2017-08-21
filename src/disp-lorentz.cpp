@@ -138,22 +138,16 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     const int nb = lor->oscillators_number;
     const double e = LOR_EV_NM / lambda;
     const int osc_offs = 1; /* Index offset in partial derivative for the oscillators. */
+    cmpl hhinvden[nb];
+    double hhnum[nb];
 
     cmpl hsum = 0.0;
     for(int k = 0; k < nb; k++) {
         const struct lorentz_osc *p = &lor->oscillators[k];
         const double a = p->a, br = p->br, en = p->en;
-        const double hhnum = (lor->style == LORENTZ_STYLE_ABE ? a * br * en : a * pow2(en));
-        const cmpl hh = hhnum / (pow2(en) - pow2(e) + 1i * br * e);
-
-        if(pd) {
-            const int koffs = osc_offs + LOR_NB_PARAMS * k;
-            cmpl_vector_set(pd, koffs + LOR_A_OFFS,  hh / a);
-            cmpl_vector_set(pd, koffs + LOR_EN_OFFS, hh / en);
-            cmpl_vector_set(pd, koffs + LOR_BR_OFFS, hh / br);
-        }
-
-        hsum += hh;
+        hhnum[k] = (lor->style == LORENTZ_STYLE_ABE ? a * br * en : a * pow2(en));
+        hhinvden[k] = 1.0 / (pow2(en) - pow2(e) + 1i * br * e);
+        hsum += hhnum[k] * hhinvden[k];
     }
 
     const cmpl epsilon = lor->e_offset + hsum;
@@ -167,36 +161,19 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     /* Derivative with e_offset. */
     cmpl_vector_set(pd, 0, epsfact);
 
-    for(int k = 0; k < nb; k++) {
+    for(int k = 0, kpd = osc_offs; k < nb; k++, kpd += LOR_NB_PARAMS) {
         const struct lorentz_osc *p = lor->oscillators + k;
-        const double br = p->br, en = p->en;
-        const int koffs = osc_offs + k * LOR_NB_PARAMS;
+        const double a = p->a, br = p->br, en = p->en;
 
-        const int idx_a = koffs + LOR_A_OFFS;
-        const cmpl y0_a = cmpl_vector_get(pd, idx_a);
-        cmpl_vector_set(pd, idx_a, epsfact * y0_a);
+        const cmpl epshh = epsfact * hhnum[k] * hhinvden[k];
+        cmpl_vector_set(pd, kpd + LOR_A_OFFS, epshh / a);
 
-        const cmpl osc_den = pow2(en) - pow2(e) + 1i * br * e;
+        const cmpl epshhiden = epshh * hhinvden[k];
+        const cmpl num_en = (lor->style == LORENTZ_STYLE_ABE ? - pow2(en) - pow2(e) + 1i * br * e : 2 * e * (1i * br - e));
+        cmpl_vector_set(pd, kpd + LOR_EN_OFFS, epshhiden * num_en / en);
 
-        const int idx_en = koffs + LOR_EN_OFFS;
-        const cmpl y0_en = cmpl_vector_get(pd, idx_en);
-        if (lor->style == LORENTZ_STYLE_ABE) {
-            const cmpl num_en = - (pow2(en) + pow2(e) - 1i * br * e);
-            cmpl_vector_set(pd, idx_en, epsfact * num_en / osc_den * y0_en);
-        } else {
-            const cmpl num_en = 2.0 * (1i * br * e - pow2(e));
-            cmpl_vector_set(pd, idx_en, epsfact * num_en / osc_den * y0_en);
-        }
-
-        const int idx_br = koffs + LOR_BR_OFFS;
-        const cmpl y0_br = cmpl_vector_get(pd, idx_br);
-        if (lor->style == LORENTZ_STYLE_ABE) {
-            const cmpl num_br = pow2(en) - pow2(e);
-            cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
-        } else {
-            const cmpl num_br = - 1i * br * e;
-            cmpl_vector_set(pd, idx_br, epsfact * num_br / osc_den * y0_br);
-        }
+        const cmpl num_br = (lor->style == LORENTZ_STYLE_ABE ? pow2(en) - pow2(e) : - 1i * br * e);
+        cmpl_vector_set(pd, kpd + LOR_BR_OFFS, epshhiden * num_br / br);
     }
 
     return n;
