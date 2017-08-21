@@ -7,6 +7,7 @@
 #endif
 
 #include "dispers.h"
+#include "math-constants.h"
 #include "cmpl.h"
 
 struct epsilon_fraction {

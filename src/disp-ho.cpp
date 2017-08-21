@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <string.h>
 #include "dispers.h"
+#include "math-constants.h"
 #include "cmpl.h"
 
 static void     ho_free(disp_t *d);

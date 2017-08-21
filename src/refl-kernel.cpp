@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "refl-kernel.h"
+#include "math-constants.h"
 #include "gauss-legendre-quad.h"
 
 using namespace std::complex_literals;

@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "elliss.h"
+#include "math-constants.h"
 #include "gauss-legendre-quad.h"
 
 static double deg_to_radians(double x) { return x * M_PI / 180.0; }

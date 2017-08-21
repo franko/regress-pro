@@ -24,6 +24,7 @@
 #include <gsl/gsl_deriv.h>
 
 #include "cmpl.h"
+#include "math-constants.h"
 #include "dispers.h"
 #include "fit-params.h"
 #include "disp-fb-priv.h"

@@ -4,6 +4,7 @@
 #include "common.h"
 #include "spectra.h"
 #include "refl-utils.h"
+#include "math-constants.h"
 #include "error-messages.h"
 #include "data-table.h"
 #include "str.h"
