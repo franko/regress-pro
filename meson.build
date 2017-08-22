@@ -1,5 +1,13 @@
 project('regress-pro', 'cpp', version: '2.0.2', default_options : ['cpp_std=c++14'])
 
+conf = configuration_data()
+conf.set('VERSION_MAJOR', '2')
+conf.set('VERSION_MINOR', '0')
+conf.set('VERSION_PATCH', '2')
+conf.set('RELEASE_BUILD', get_option('release_build'))
+conf.set_quoted('HOST_SYSTEM', host_machine.system())
+conf.set_quoted('CPU_FAMILY', host_machine.cpu_family())
+
 enable_debug = get_option('buildtype') != 'release'
 
 if host_machine.system() == 'windows'

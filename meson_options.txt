@@ -1,0 +1,1 @@
+option('release_build', type : 'boolean', value : 'false', description : 'Is it an official release build')

@@ -2,6 +2,8 @@ gsl_dep = dependency('gsl')
 thread_dep = dependency('threads')
 kernel_incdir = include_directories('.')
 
+configure_file(output : 'defs.h', configuration : conf)
+
 kernel_src = [
     'common.cpp', 'data-table.cpp', 'data-view.cpp', 'rc_matrix.cpp', 'disp-table.cpp', 'disp-sample-table.cpp',
     'disp-lookup.cpp', 'str.cpp', 'dispers-library.cpp', 'str-util.cpp', 'error-messages.cpp', 'cmpl.cpp',

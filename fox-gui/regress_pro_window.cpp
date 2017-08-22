@@ -48,10 +48,6 @@
 #include "batch_window.h"
 #include "lexer.h"
 
-#ifdef GIT_BUILD
-extern const char *gitversion;
-#endif
-
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config, str_ptr *error_msg);
 
@@ -280,15 +276,10 @@ regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
     FXVerticalFrame* side=new FXVerticalFrame(&about,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0, 10,10,10,10, 0,0);
     new FXLabel(side,"R e g r e s s   P r o",nullptr,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
     new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
-    str_t git_build;
-    str_init(git_build, 30);
-#ifdef GIT_BUILD
-    str_printf(git_build, " git build %s", gitversion);
-#endif
-    new FXLabel(side,FXStringFormat("\nRegress Pro, version %d.%d.%d%s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,CSTR(git_build),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),nullptr,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    FXString release_string = regressProApp()->get_release_string();
+    new FXLabel(side,FXStringFormat("\nRegress Pro, version %s, %s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",release_string.text(),regressProApp()->get_host_string().text(),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),nullptr,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXButton *button=new FXButton(side,"&OK",nullptr,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
     button->setFocus();
-    str_free(git_build);
     about.execute(PLACEMENT_OWNER);
     return 1;
 }
