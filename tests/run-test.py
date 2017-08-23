@@ -11,7 +11,7 @@ if len(sys.argv) < 2:
 
 build_dir = sys.argv[1]
 
-regpro_exec = os.path.join(build_dir, "fox-gui", "regress")
+regpro_exec = os.path.join(build_dir, "fox-gui", "regress-pro")
 
 def parse_fit_output(text):
     if not re.match(r'Recipe (\S+) :\s*$', text[0]): return None
