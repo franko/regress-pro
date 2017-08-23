@@ -433,18 +433,18 @@ mult_layer_se_jacob(enum se_type type,
                     double *jacob_th, cmpl *jacob_n, double *jacob_acquisition)
 {
     const int nblyr = nb - 2;
-    cmpl mlr_jacob_th[2 * nb], mlr_jacob_n[2 * nb];
+    cmpl_array16 mlr_jacob_th(2 * nb), mlr_jacob_n(2 * nb);
     double tanlz = tan(anlz);
     cmpl R[2], dRdaoi[2], nsin0;
 
     nsin0 = ns[0] * std::sin((cmpl) phi0);
 
     if(jacob_th && jacob_n) {
-        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
+        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th.data(), mlr_jacob_n.data());
     } else if (jacob_th || jacob_acquisition) {
-        mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th);
+        mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th.data());
     } else if (jacob_th) {
-        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th);
+        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th.data());
     } else {
         mult_layer_refl(nb, ns, nsin0, ds, lambda, R);
     }
@@ -460,11 +460,11 @@ mult_layer_se_jacob(enum se_type type,
         mlr_jacob_n[0 ] = 0.0;
         mlr_jacob_n[nb] = 0.0;
 
-        set_se_measuring_jacobian_complex(type, nb, R, tanlz, mlr_jacob_n, jacob_n);
+        set_se_measuring_jacobian_complex(type, nb, R, tanlz, mlr_jacob_n.data(), jacob_n);
     }
 
     if(jacob_th) {
-        set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th, jacob_th);
+        set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th.data(), jacob_th);
     }
 
     if (jacob_acquisition) {
@@ -565,14 +565,14 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
     const int nblyr = nb - 2;
     const double tanlz = tan(anlz);
     double sp_jacob_th[3 * nblyr];
-    cmpl sp_jacob_n[3 * nb];
+    cmpl_array24 sp_jacob_n(3 * nb);
     double sp_diff_aoi[3] = {0.0};
     double sp_diff_numap[3] = {0.0};
     double sp_diff_bandwidth[3] = {0.0};
     double sp[3] = {0.0};
 
     memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
-    memset(sp_jacob_n, 0, 3 * nb * sizeof(cmpl));
+    memset(sp_jacob_n.data(), 0, 3 * nb * sizeof(cmpl));
 
     const struct gauss_quad_info *quad_rule_bw = (acquisition->bandwidth > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_7) : gauss_rule(UNIT_RULE));
     const struct gauss_quad_info *quad_rule_na = (acquisition->numap > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_3) : gauss_rule(UNIT_RULE));
@@ -584,15 +584,15 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             const double rule_abscissa_na = gauss_rule_abscissa(quad_rule_na, ina);
             const double lambda_bw = lambda + rule_abscissa_bw * acquisition->bandwidth / 2.0;
             const cmpl nsin0_na = ns[0] * std::sin((cmpl) (phi0 + rule_abscissa_na * delta_phi0));
-            cmpl mlr_jacob_th[2 * nblyr], mlr_jacob_n[2 * nb];
+            cmpl_array16 mlr_jacob_th(2 * nblyr), mlr_jacob_n(2 * nb);
             cmpl R[2], dRdaoi[2];
 
             if(jacob_th && jacob_n) {
-                mult_layer_refl_jacob(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
+                mult_layer_refl_jacob(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th.data(), mlr_jacob_n.data());
             } else if (jacob_th || jacob_acq) {
-                mult_layer_refl_jacob_th_aoi(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th);
+                mult_layer_refl_jacob_th_aoi(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th.data());
             } else if (jacob_th) {
-                mult_layer_refl_jacob_th(nb, ns, nsin0_na, ds, lambda_bw, R, mlr_jacob_th);
+                mult_layer_refl_jacob_th(nb, ns, nsin0_na, ds, lambda_bw, R, mlr_jacob_th.data());
             } else {
                 mult_layer_refl(nb, ns, nsin0_na, ds, lambda_bw, R);
             }
@@ -668,7 +668,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
                 cmpl dab[2];
-                se_ab_diff_from_sp(sp, sp_jacob_n + 3 * j, tanlz, dab);
+                se_ab_diff_from_sp(sp, sp_jacob_n.data() + 3 * j, tanlz, dab);
                 jacob_n[     j] = dab[0];
                 jacob_n[nb + j] = dab[1];
             }
@@ -701,7 +701,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
                 cmpl dpsidel[2];
-                se_psidel_diff_from_sp(sp, sp_jacob_n + 3 * j, dpsidel);
+                se_psidel_diff_from_sp(sp, sp_jacob_n.data() + 3 * j, dpsidel);
                 jacob_n[     j] = dpsidel[0];
                 jacob_n[nb + j] = dpsidel[1];
             }

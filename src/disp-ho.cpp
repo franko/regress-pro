@@ -154,7 +154,7 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     const struct disp_ho *m = & d->disp.ho;
     const int nb = m->nb_hos;
     const double e = HO_EV_NM/ lambda;
-    cmpl hh[nb], invhhden[nb];
+    cmpl_array8 hh(nb), invhhden(nb);
 
     cmpl hsum = 0.0, hnusum = 0.0;
     for (int k = 0; k < nb; k++) {

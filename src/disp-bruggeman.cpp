@@ -15,10 +15,7 @@ struct epsilon_fraction {
     cmpl eps;
 };
 
-struct epsilon_sequence {
-    int length;
-    struct epsilon_fraction *terms;
-};
+typedef StackArraySized<epsilon_fraction, 6> epsilon_sequence;
 
 static void     bruggeman_free(struct disp_struct *d);
 static disp_t * bruggeman_copy(const disp_t *d);
@@ -36,8 +33,8 @@ static double bruggeman_get_param_value(const struct disp_struct *d,
 static double * bruggeman_map_param(disp_t *d, int index);
 static int bruggeman_write(writer_t *w, const disp_t *_d);
 static int bruggeman_read(lexer_t *l, disp_t *d);
-static cmpl bruggeman_bicomp_quad_solve(const struct epsilon_sequence *seq, double lam);
-static cmpl bruggeman_epsilon_ode_newton(struct epsilon_sequence *seq, double lam);
+static cmpl bruggeman_bicomp_quad_solve(const epsilon_sequence *seq, double lam);
+static cmpl bruggeman_epsilon_ode_newton(epsilon_sequence *seq, double lam);
 
 static inline double dmin(double a, double b) {
     return (a > b ? b : a);
@@ -126,13 +123,13 @@ bruggeman_n_value(const disp_t *disp, double lam)
 }
 
 static cmpl
-epsilon_ode_eval(const struct epsilon_sequence *seq, double t, const cmpl eps) {
+epsilon_ode_eval(const epsilon_sequence *seq, double t, const cmpl eps) {
     cmpl sum_num = 0;
-    const struct epsilon_fraction *e0 = &seq->terms[0];
+    const struct epsilon_fraction *e0 = &seq->at(0);
     const cmpl den0 = e0->eps + 2.0 * eps;
     cmpl sum_den = e0->f * e0->eps / (den0 * den0);
-    for (int i = 1; i < seq->length; i++) {
-        const struct epsilon_fraction *e = &seq->terms[i];
+    for (int i = 1; i < seq->size(); i++) {
+        const struct epsilon_fraction *e = &seq->at(i);
         const cmpl den = e->eps + 2.0 * eps;
         sum_num += e->f * (e->eps - eps) / den;
         sum_den += e->f * t * e->eps / (den * den);
@@ -141,7 +138,7 @@ epsilon_ode_eval(const struct epsilon_sequence *seq, double t, const cmpl eps) {
 }
 
 struct bruggeman_rkf45 {
-    const struct epsilon_sequence *seq;
+    const epsilon_sequence *seq;
     cmpl y0;
     cmpl y;
     cmpl yerr;
@@ -220,39 +217,39 @@ static void rkf45_apply (struct bruggeman_rkf45 *state, double t, double h,
 }
 
 static unsigned int
-compute_epsilon_sequence(struct epsilon_sequence *seq, const struct disp_bruggeman *d, double lam) {
+compute_epsilon_sequence(epsilon_sequence *seq, const struct disp_bruggeman *d, double lam) {
     const cmpl n_base = n_value(d->disp_base, lam);
     const cmpl eps_base = n_base * n_base;
     double f_base = 1;
     int eps_physical = 1;
-    for (int i = 1; i < seq->length; i++) {
-        struct epsilon_fraction *t = &seq->terms[i];
+    for (int i = 1; i < seq->size(); i++) {
+        struct epsilon_fraction *t = &seq->at(i);
         t->f = d->components[i - 1].fraction;
         const cmpl n = n_value(d->components[i - 1].disp, lam);
         t->eps = n * n;
         f_base -= t->f;
         eps_physical = eps_physical && (t->f >= 0 && std::imag(t->eps) - 1e-12 <= 0);
     }
-    seq->terms[0].f = f_base;
-    seq->terms[0].eps = eps_base;
+    seq->at(0).f = f_base;
+    seq->at(0).eps = eps_base;
     return eps_physical && (f_base >= 0 && std::imag(eps_base) - 1e-12 <= 0);
 }
 
-static void sequence_swap_term(struct epsilon_sequence *seq, int i) {
+static void sequence_swap_term(epsilon_sequence *seq, int i) {
     if (i > 0) {
-        struct epsilon_fraction tmp = seq->terms[0];
-        seq->terms[0] = seq->terms[i];
-        seq->terms[i] = tmp;
+        struct epsilon_fraction tmp = seq->at(0);
+        seq->at(0) = seq->at(i);
+        seq->at(i) = tmp;
     }
 }
 
 /* Swap the first term of the sequence with the one having the biggest
    fraction. */
-static int sequence_normalize_fraction_order(struct epsilon_sequence *seq) {
+static int sequence_normalize_fraction_order(epsilon_sequence *seq) {
     int i_best = 0;
-    double f_best = seq->terms[0].f;
-    for (int i = 1; i < seq->length; i++) {
-        const struct epsilon_fraction *t = &seq->terms[i];
+    double f_best = seq->at(0).f;
+    for (int i = 1; i < seq->size(); i++) {
+        const struct epsilon_fraction *t = &seq->at(i);
         if (t->f > f_best) {
             i_best = i;
             f_best = t->f;
@@ -262,18 +259,18 @@ static int sequence_normalize_fraction_order(struct epsilon_sequence *seq) {
     return i_best;
 }
 
-static cmpl compute_sum_fesq(const struct epsilon_sequence *seq, const cmpl eps) {
+static cmpl compute_sum_fesq(const epsilon_sequence *seq, const cmpl eps) {
     cmpl sum_fesq = 0;
-    for (int i = 0; i < seq->length; i++) {
-        const struct epsilon_fraction *t = &seq->terms[i];
+    for (int i = 0; i < seq->size(); i++) {
+        const struct epsilon_fraction *t = &seq->at(i);
         const cmpl den = t->eps + 2.0 * eps;
         sum_fesq += 3 * t->f * t->eps / (den * den);
     }
     return sum_fesq;
 }
 
-static cmpl epsilon_ode_solve(const struct epsilon_sequence *seq, const double ytol) {
-    const cmpl eps0 = seq->terms[0].eps;
+static cmpl epsilon_ode_solve(const epsilon_sequence *seq, const double ytol) {
+    const cmpl eps0 = seq->at(0).eps;
     struct bruggeman_rkf45 state[1] = {{seq, eps0, eps0}};
     double t = 0.0, t_stop = 1.0;
     cmpl dydt0 = epsilon_ode_eval(state->seq, t, eps0), dydt1;
@@ -295,12 +292,12 @@ static cmpl epsilon_ode_solve(const struct epsilon_sequence *seq, const double y
     return state->y;
 }
 
-static cmpl epsilon_newton_refine(const struct epsilon_sequence *seq, cmpl eps, const double eps_tol) {
+static cmpl epsilon_newton_refine(const epsilon_sequence *seq, cmpl eps, const double eps_tol) {
     int k;
     for (k = 0; k < 20; k++) {
         cmpl dsum = 0, nsum = 0;
-        for (int i = 0; i < seq->length; i++) {
-            const struct epsilon_fraction *t = &seq->terms[i];
+        for (int i = 0; i < seq->size(); i++) {
+            const struct epsilon_fraction *t = &seq->at(i);
             const cmpl den = t->eps + 2.0 * eps;
             dsum += t->f * t->eps / (den * den);
             nsum += t->f * (t->eps - eps) / den;
@@ -316,10 +313,10 @@ static cmpl epsilon_newton_refine(const struct epsilon_sequence *seq, cmpl eps, 
     return eps;
 }
 
-static double epsilon_abs_magnitude(const struct epsilon_sequence *seq) {
+static double epsilon_abs_magnitude(const epsilon_sequence *seq) {
     double eps_abs = 0.0;
-    for (int i = 0; i < seq->length; i++) {
-        const struct epsilon_fraction *t = &seq->terms[i];
+    for (int i = 0; i < seq->size(); i++) {
+        const struct epsilon_fraction *t = &seq->at(i);
         const double er = fabs(std::real(t->eps)), ei = fabs(std::imag(t->eps));
         eps_abs = dmax(er, eps_abs);
         eps_abs = dmax(ei, eps_abs);;
@@ -327,7 +324,7 @@ static double epsilon_abs_magnitude(const struct epsilon_sequence *seq) {
     return eps_abs;
 }
 
-cmpl bruggeman_epsilon_ode_newton(struct epsilon_sequence *seq, double lam) {
+cmpl bruggeman_epsilon_ode_newton(epsilon_sequence *seq, double lam) {
     int i_swap = sequence_normalize_fraction_order(seq);
 
     const double eps_abs = epsilon_abs_magnitude(seq);
@@ -340,9 +337,9 @@ cmpl bruggeman_epsilon_ode_newton(struct epsilon_sequence *seq, double lam) {
 }
 
 /* Assume the bruggeman has only two components (including the base). */
-cmpl bruggeman_bicomp_quad_solve(const struct epsilon_sequence *seq, double lam) {
-    const cmpl e1 = seq->terms[0].eps, e2 = seq->terms[1].eps;
-    const double f1 = seq->terms[0].f, f2 = seq->terms[1].f;
+cmpl bruggeman_bicomp_quad_solve(const epsilon_sequence *seq, double lam) {
+    const cmpl e1 = seq->at(0).eps, e2 = seq->at(1).eps;
+    const double f1 = seq->at(0).f, f2 = seq->at(1).f;
     const cmpl b = 2 * f1 * e1 + 2 * f2 * e2 - f1 * e2 - f2 * e1;
     const cmpl root = std::sqrt(b*b + 8.0 * e1 * e2);
     const int sign = std::imag(root) <= 0.0 ? 1 : -1;
@@ -354,24 +351,23 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
 {
     const struct disp_bruggeman *d = &disp->disp.bruggeman;
     const int terms_no = d->components_number + 1;
-    struct epsilon_fraction terms[terms_no];
-    struct epsilon_sequence seq[1] = {{terms_no, terms}};
-    int is_physical = compute_epsilon_sequence(seq, d, lam);
+    epsilon_sequence seq(terms_no);
+    int is_physical = compute_epsilon_sequence(&seq, d, lam);
 
     cmpl eps;
     if (d->components_number == 1 && is_physical) {
-        eps = bruggeman_bicomp_quad_solve(seq, lam);
+        eps = bruggeman_bicomp_quad_solve(&seq, lam);
     } else {
-        eps = bruggeman_epsilon_ode_newton(seq, lam);
+        eps = bruggeman_epsilon_ode_newton(&seq, lam);
     }
 
     const cmpl n = epsilon_sqrt(eps);
     if (v != nullptr) {
-        const cmpl sum_fesq = compute_sum_fesq(seq, eps);
+        const cmpl sum_fesq = compute_sum_fesq(&seq, eps);
         const cmpl deriv_factor = 1.0 / (2.0 * n);
         cmpl n_der0;
-        for (int i = 0; i < seq->length; i++) {
-            const struct epsilon_fraction *t = &seq->terms[i];
+        for (int i = 0; i < seq.size(); i++) {
+            const struct epsilon_fraction *t = &seq.at(i);
             const cmpl resid = (t->eps - eps) / (t->eps + 2 * eps);
             const cmpl n_der = deriv_factor * (resid / sum_fesq + eps);
             if (i == 0) {

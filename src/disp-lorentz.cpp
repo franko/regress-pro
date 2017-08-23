@@ -138,7 +138,7 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     const int nb = lor->oscillators_number;
     const double e = LOR_EV_NM / lambda;
     const int osc_offs = 1; /* Index offset in partial derivative for the oscillators. */
-    cmpl hhinvden[nb];
+    cmpl_array8 hhinvden(nb);
     double hhnum[nb];
 
     cmpl hsum = 0.0;

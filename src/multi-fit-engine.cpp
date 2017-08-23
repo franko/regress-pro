@@ -149,7 +149,7 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
         const enum system_kind sys_kind = spectrum->acquisition->type;
         const int channels_number = SYSTEM_CHANNELS_NUMBER(sys_kind);
         double jacob_th_data[channels_number * (nb_med - 2)];
-        cmpl jacob_n_data[channels_number * nb_med];
+        cmpl_array16 jacob_n_store(channels_number * nb_med);
         double jacob_acq_data[channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind)];
 
         /* STEP 2 : From the stack we retrive the thicknesses and RIs
@@ -159,8 +159,8 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
 
         /* TODO: take into account the case of fixed RIs and when acquisition
            parameters are not needed. */
-        double *jacob_th  = (jacob ? jacob_th_data  : nullptr);
-        cmpl *  jacob_n   = (jacob ? jacob_n_data   : nullptr);
+        double *jacob_th  = (jacob ? jacob_th_data : nullptr);
+        cmpl *  jacob_n   = (jacob ? jacob_n_store.data() : nullptr);
         double *jacob_acq = (jacob ? jacob_acq_data : nullptr);
 
         for(int j = 0, jpt = sample_offset; j < npt; j++, jpt += channels_number) {
@@ -168,7 +168,8 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
             const double lambda = spectr_data[0];
             double result[channels_number];
 
-            cmpl ns[nb_med];
+            cmpl_array8 ns_store(nb_med);
+            cmpl *ns = ns_store.data();
             stack_get_ns_list(stack_sample, ns, lambda);
 
             /* STEP 3 : We call the ellipsometer kernel function */

@@ -57,7 +57,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     struct spectrum *s = fit->run->spectr;
     size_t nb_med = fit->stack->nb;
     double jacob_th_data[nb_med - 2];
-    cmpl jacob_n_data[nb_med];
+    cmpl_array8 jacob_n_store(nb_med);
     double jacob_acq_data[SR_ACQ_PARAMETERS_NB];
 
     /* STEP 1 : We apply the actual values of the fit parameters
@@ -71,7 +71,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     const double *ths = stack_get_ths_list(fit->stack);
 
     double *jacob_th  = (jacob ? jacob_th_data : nullptr);
-    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_data  : nullptr);
+    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_store.data() : nullptr);
     double *jacob_acq = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : nullptr);
 
     for(int j = 0; j < spectra_points(s); j++) {
@@ -79,7 +79,8 @@ refl_fit_fdf(const gsl_vector *x, void *params,
         const double lambda = spectr_data[0];
         const double r_meas = spectr_data[1];
 
-        cmpl ns[nb_med];
+        cmpl_array8 ns_store(nb_med);
+        cmpl *ns = ns_store.data();
         if(fit->run->cache.th_only) {
             fit_engine_get_cached_ns(fit, j, ns);
         } else {

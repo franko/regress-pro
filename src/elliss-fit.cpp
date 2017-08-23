@@ -63,7 +63,7 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     const int nb_med = fit->stack->nb;
     const int npt = spectra_points(s);
     double jacob_th_data[2 * (nb_med - 2)];
-    cmpl jacob_n_data[2 * nb_med];
+    cmpl_array16 jacob_n_store(2 * nb_med);
     const enum se_type se_type = GET_SE_TYPE(fit->acquisition->type);
     double jacob_acq_data[2 * SE_ACQ_PARAMETERS_NB(se_type)];
 
@@ -78,7 +78,7 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     const double *ths = stack_get_ths_list(fit->stack);
 
     double *jacob_th  = (jacob ? jacob_th_data : nullptr);
-    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_data : nullptr);
+    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_store.data() : nullptr);
     double *jacob_acq = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : nullptr);
 
     for(int j = 0; j < npt; j++) {
@@ -88,7 +88,8 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         const double meas_beta  = spectr_data[2];
         struct elliss_ab theory[1];
 
-        cmpl ns[nb_med];
+        cmpl_array8 ns_store(nb_med);
+        cmpl *ns = ns_store.data();
         if(fit->run->cache.th_only) {
             fit_engine_get_cached_ns(fit, j, ns);
         } else {
