@@ -564,15 +564,15 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
     const int se_type = (acquisition->type == SYSTEM_ELLISS_AB ? SE_ALPHA_BETA : SE_PSI_DEL);
     const int nblyr = nb - 2;
     const double tanlz = tan(anlz);
-    double sp_jacob_th[3 * nblyr];
+    double_array24 sp_jacob_th(3 * nblyr);
     cmpl_array24 sp_jacob_n(3 * nb);
     double sp_diff_aoi[3] = {0.0};
     double sp_diff_numap[3] = {0.0};
     double sp_diff_bandwidth[3] = {0.0};
     double sp[3] = {0.0};
 
-    memset(sp_jacob_th, 0, 3 * nblyr * sizeof(double));
-    memset(sp_jacob_n.data(), 0, 3 * nb * sizeof(cmpl));
+    sp_jacob_n.set_elements (0.0, 3 * nb);
+    sp_jacob_th.set_elements(0.0, 3 * nb);
 
     const struct gauss_quad_info *quad_rule_bw = (acquisition->bandwidth > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_7) : gauss_rule(UNIT_RULE));
     const struct gauss_quad_info *quad_rule_na = (acquisition->numap > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_3) : gauss_rule(UNIT_RULE));
@@ -677,7 +677,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
                 double dab[2];
-                se_ab_diff_from_sp_real(sp, sp_jacob_th + 3 * j, tanlz, dab);
+                se_ab_diff_from_sp_real(sp, sp_jacob_th.data() + 3 * j, tanlz, dab);
                 jacob_th[        j] = dab[0];
                 jacob_th[nblyr + j] = dab[1];
             }
@@ -710,7 +710,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
                 double dpsidel[2];
-                se_psidel_diff_from_sp_real(sp, sp_jacob_th + 3 * j, dpsidel);
+                se_psidel_diff_from_sp_real(sp, sp_jacob_th.data() + 3 * j, dpsidel);
                 jacob_th[        j] = dpsidel[0];
                 jacob_th[nblyr + j] = dpsidel[1];
             }

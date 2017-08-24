@@ -11,6 +11,12 @@ protected:
 public:
     StackArrayBase(StackArrayBase& original): m_data(original.m_data) { }
 
+    void set_elements(const T value, unsigned n) {
+        for (unsigned j = 0; j < n; j++) {
+            m_data[j] = value;
+        }
+    }
+
     const T* data() const { return m_data; }
           T* data()       { return m_data; }
 

@@ -208,10 +208,10 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
     double_array8 rsq_jacob_th(nb - 2);
     double rsq = 0.0;
 
-    memset(rsq_jacob_th.data(), 0, (nb - 2) * sizeof(double));
+    rsq_jacob_th.set_elements(0.0, nb - 2);
 
     if(jacob_n) {
-        memset(jacob_n->data(), 0, nb * sizeof(cmpl));
+        jacob_n->set_elements(0.0, nb);
     }
 
     if (jacob_acq) {
