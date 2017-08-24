@@ -59,7 +59,7 @@ mult_layer_refl_ni_nojacob(int nb, const cmpl ns[], const double ds[],
 
 static cmpl
 mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
-                            double lambda, cmpl_array8& jacth)
+                            double lambda, cmpl_array& jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const int nblyr = nb - 2;
@@ -108,7 +108,7 @@ mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
 
 static cmpl
 mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
-                         double lambda, cmpl_array8& jacth, cmpl_array8& jacn)
+                         double lambda, cmpl_array& jacth, cmpl_array& jacn)
 {
     const double omega = 2 * M_PI / lambda;
     const int nblyr = nb - 2;

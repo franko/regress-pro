@@ -21,6 +21,7 @@ static inline double complex_part(cmpl z, complex_part_e part) {
 typedef StackArray<cmpl, 8>  cmpl_array8;
 typedef StackArray<cmpl, 16> cmpl_array16;
 typedef StackArray<cmpl, 24> cmpl_array24;
+typedef StackArrayBase<cmpl> cmpl_array;
 
 struct cmpl_vector_struct {
     int size; /* number of cmpl elements */

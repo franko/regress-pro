@@ -140,7 +140,7 @@ mult_layer_refl(int nb, const cmpl ns[], cmpl nsin0,
 static void
 mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
                          const double ds[], double lambda, cmpl R[],
-                         cmpl_array16& jacth)
+                         cmpl_array& jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const int films_number = nb - 2;
@@ -185,7 +185,7 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
 static void
 mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
                             const double ds[], double lambda, cmpl R[2],
-                            cmpl dRdaoi[2], cmpl_array16& jacth)
+                            cmpl dRdaoi[2], cmpl_array& jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const cmpl bphase = 2i * omega;
@@ -237,7 +237,7 @@ mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
 static void
 mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
                       const double ds[], double lambda,
-                      cmpl R[2], cmpl dRdaoi[2], cmpl_array16& jacth, cmpl_array16& jacn)
+                      cmpl R[2], cmpl dRdaoi[2], cmpl_array& jacth, cmpl_array& jacn)
 {
     const double omega = 2 * M_PI / lambda;
     const cmpl bphase = 2i * omega;
@@ -393,7 +393,7 @@ se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
 }
 
 static void
-set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl_array16& mlr_jacob, double jacob[])
+set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl_array& mlr_jacob, double jacob[])
 {
     for(int j = 0; j < n; j++) {
         cmpl d_alpha, d_beta;
@@ -409,7 +409,7 @@ set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], con
 }
 
 static void
-set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl_array16& mlr_jacob, cmpl jacob[])
+set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl_array& mlr_jacob, cmpl jacob[])
 {
     for(int j = 0; j < n; j++) {
         cmpl d_alpha, d_beta;

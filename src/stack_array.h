@@ -3,22 +3,13 @@
 
 #include <cstddef>
 
-template <typename T, unsigned stack_capacity>
-class StackArray {
+template <typename T>
+class StackArrayBase {
+protected:
+    StackArrayBase(T* data): m_data(data) { }
+    StackArrayBase() = delete;
 public:
-    StackArray(unsigned size) {
-        if (size > stack_capacity) {
-            m_data = new T[size];
-        } else {
-            m_data = m_stack;
-        }
-    }
-
-    ~StackArray() {
-        if (m_data != m_stack) {
-            delete [] m_data;
-        }
-    }
+    StackArrayBase(StackArrayBase& original): m_data(original.m_data) { }
 
     const T* data() const { return m_data; }
           T* data()       { return m_data; }
@@ -28,15 +19,29 @@ public:
 
     const T& at(unsigned index) const { return m_data[index]; }
           T& at(unsigned index)       { return m_data[index]; }
-private:
-    T m_stack[stack_capacity];
+protected:
     T *m_data;
 };
 
-template <typename T, unsigned stack_capacity>
-class StackArraySized : public StackArray<T, stack_capacity> {
+template <typename T, unsigned Capacity>
+class StackArray : public StackArrayBase<T> {
 public:
-    StackArraySized(unsigned size): StackArray<T, stack_capacity>(size), m_size(size) { }
+    StackArray(unsigned size): StackArrayBase<T>(size > Capacity ? new T[size] : m_stack) { }
+
+    ~StackArray() {
+        T *base_data = this->m_data;
+        if (base_data != m_stack) {
+            delete [] base_data;
+        }
+    }
+private:
+    T m_stack[Capacity];
+};
+
+template <typename T, unsigned Capacity>
+class StackArraySized : public StackArray<T, Capacity> {
+public:
+    StackArraySized(unsigned size): StackArray<T, Capacity>(size), m_size(size) { }
     unsigned size() const { return m_size; }
 private:
     unsigned m_size;
