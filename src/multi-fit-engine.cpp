@@ -51,7 +51,7 @@ static inline int sr_acquisition_enum(int pid) {
     return (-1);
 }
 
-static inline double select_acquisition_jacob(const enum system_kind sys_kind, const double jacob_acq[], const int channel, const int pid) {
+static inline double select_acquisition_jacob(const enum system_kind sys_kind, const double_array jacob_acq, const int channel, const int pid) {
     if (sys_kind == SYSTEM_ELLISS_AB || sys_kind == SYSTEM_ELLISS_PSIDEL) {
         const int index = se_acquisition_enum(pid);
         return jacob_acq[SE_ACQ_INDEX(channel, index)];
@@ -65,7 +65,7 @@ static inline double select_acquisition_jacob(const enum system_kind sys_kind, c
 static void
 select_param_jacobian(const enum system_kind sys_kind, const int channels_number, const fit_param_t *fp, const stack_t *stack,
                        struct deriv_info *ideriv, double lambda,
-                       double result[], double jacob_th[], cmpl jacob_n[], double jacob_acq[])
+                       double result[], double_array jacob_th, cmpl_array jacob_n, double_array jacob_acq)
 {
     const int nb_med = stack->nb, nb_lyr = nb_med - 2;
     const int layer = fp->layer_nb;
@@ -106,7 +106,7 @@ static void
 mult_layer_refl_sys(const enum system_kind sys_kind, size_t nb, const cmpl ns[],
                    const double ds[], double lambda,
                    const struct acquisition_parameters *acquisition, double result[],
-                   double *jacob_th, cmpl *jacob_n, double *jacob_acq)
+                   double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq)
 {
     switch (sys_kind) {
     case SYSTEM_REFLECTOMETER:
@@ -119,7 +119,10 @@ mult_layer_refl_sys(const enum system_kind sys_kind, size_t nb, const cmpl ns[],
     {
         const enum se_type se_type = GET_SE_TYPE(sys_kind);
         ell_ab_t e;
-        mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acq);
+        mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e,
+            jacob_th  ? jacob_th->data()  : nullptr,
+            jacob_n   ? jacob_n->data()   : nullptr,
+            jacob_acq ? jacob_acq->data() : nullptr);
         result[0] = e->alpha;
         result[1] = e->beta;
         break;
@@ -148,9 +151,9 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
         const int npt = spectra_points(spectrum);
         const enum system_kind sys_kind = spectrum->acquisition->type;
         const int channels_number = SYSTEM_CHANNELS_NUMBER(sys_kind);
-        double jacob_th_data[channels_number * (nb_med - 2)];
-        cmpl_array16 jacob_n_store(channels_number * nb_med);
-        double jacob_acq_data[channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind)];
+        double_array16 jacob_th(channels_number * (nb_med - 2));
+        cmpl_array16 jacob_n(channels_number * nb_med);
+        double_array8 jacob_acq(channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind));
 
         /* STEP 2 : From the stack we retrive the thicknesses and RIs
         informations. */
@@ -159,9 +162,9 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
 
         /* TODO: take into account the case of fixed RIs and when acquisition
            parameters are not needed. */
-        double *jacob_th  = (jacob ? jacob_th_data : nullptr);
-        cmpl *  jacob_n   = (jacob ? jacob_n_store.data() : nullptr);
-        double *jacob_acq = (jacob ? jacob_acq_data : nullptr);
+        double_array *jacob_th_ptr  = (jacob ? &jacob_th  : nullptr);
+        cmpl_array   *jacob_n_ptr   = (jacob ? &jacob_n   : nullptr);
+        double_array *jacob_acq_ptr = (jacob ? &jacob_acq : nullptr);
 
         for(int j = 0, jpt = sample_offset; j < npt; j++, jpt += channels_number) {
             float const * spectr_data = spectra_get_values(spectrum, j);
@@ -173,7 +176,7 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
             stack_get_ns_list(stack_sample, ns, lambda);
 
             /* STEP 3 : We call the ellipsometer kernel function */
-            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, &fit->acquisitions[sample], result, jacob_th, jacob_n, jacob_acq);
+            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, &fit->acquisitions[sample], result, jacob_th_ptr, jacob_n_ptr, jacob_acq_ptr);
 
             if(f != nullptr) {
                 for (int q = 0; q < channels_number; q++) {

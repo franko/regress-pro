@@ -16,7 +16,7 @@
 double
 get_parameter_jacob_r(fit_param_t const *fp, stack_t const *stack,
                       struct deriv_info *ideriv, double lambda,
-                      double jacob_th[], cmpl jacob_n[], double jacob_acq[1])
+                      double_array jacob_th, cmpl_array jacob_n, double_array jacob_acq)
 {
     double result;
     int lyr = fp->layer_nb;
@@ -56,9 +56,9 @@ refl_fit_fdf(const gsl_vector *x, void *params,
     struct fit_engine *fit = (struct fit_engine *) params;
     struct spectrum *s = fit->run->spectr;
     size_t nb_med = fit->stack->nb;
-    double jacob_th_data[nb_med - 2];
-    cmpl_array8 jacob_n_store(nb_med);
-    double jacob_acq_data[SR_ACQ_PARAMETERS_NB];
+    double_array8 jacob_th(nb_med - 2);
+    cmpl_array8 jacob_n(nb_med);
+    double_array8 jacob_acq(SR_ACQ_PARAMETERS_NB);
 
     /* STEP 1 : We apply the actual values of the fit parameters
                 to the stack. */
@@ -70,9 +70,9 @@ refl_fit_fdf(const gsl_vector *x, void *params,
 
     const double *ths = stack_get_ths_list(fit->stack);
 
-    double *jacob_th  = (jacob ? jacob_th_data : nullptr);
-    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_store.data() : nullptr);
-    double *jacob_acq = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : nullptr);
+    double_array *jacob_th_ptr  = (jacob ? &jacob_th : nullptr);
+    cmpl_array   *jacob_n_ptr   = (jacob && !fit->run->cache.th_only ? &jacob_n : nullptr);
+    double_array *jacob_acq_ptr = (jacob && fit->run->cache.require_acquisition_jacob ? &jacob_acq : nullptr);
 
     for(int j = 0; j < spectra_points(s); j++) {
         float const * spectr_data = spectra_get_values(s, j);
@@ -89,7 +89,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
 
         /* STEP 3 : We call the procedure to compute the reflectivity. */
         double r_theory;
-        mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, &r_theory, jacob_th, jacob_n, jacob_acq);
+        mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, &r_theory, jacob_th_ptr, jacob_n_ptr, jacob_acq_ptr);
 
         if(f != nullptr) {
             gsl_vector_set(f, j, r_theory - r_meas);

@@ -16,6 +16,6 @@ enum { SR_RMULT = 0, SR_BANDWIDTH };
 extern int
 mult_layer_refl_sr(int nb, const cmpl ns[], const double ds[],
                    double lambda, const struct acquisition_parameters *acquisition,
-                   double result[1], double *jacob_th, cmpl *jacob_n, double *jacob_acq);
+                   double result[1], double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq);
 
 #endif

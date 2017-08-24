@@ -23,6 +23,11 @@ typedef StackArray<cmpl, 16> cmpl_array16;
 typedef StackArray<cmpl, 24> cmpl_array24;
 typedef StackArrayBase<cmpl> cmpl_array;
 
+typedef StackArray<double, 8>  double_array8;
+typedef StackArray<double, 16> double_array16;
+typedef StackArray<double, 24> double_array24;
+typedef StackArrayBase<double> double_array;
+
 struct cmpl_vector_struct {
     int size; /* number of cmpl elements */
     cmpl * data;

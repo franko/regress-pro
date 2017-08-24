@@ -59,7 +59,7 @@ mult_layer_refl_ni_nojacob(int nb, const cmpl ns[], const double ds[],
 
 static cmpl
 mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
-                            double lambda, cmpl_array& jacth)
+                            double lambda, cmpl_array jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const int nblyr = nb - 2;
@@ -108,7 +108,7 @@ mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
 
 static cmpl
 mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
-                         double lambda, cmpl_array& jacth, cmpl_array& jacn)
+                         double lambda, cmpl_array jacth, cmpl_array jacn)
 {
     const double omega = 2 * M_PI / lambda;
     const int nblyr = nb - 2;
@@ -171,7 +171,7 @@ mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
 static double
 mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
                    double lambda,
-                   double *jacob_th, cmpl *jacob_n)
+                   double_array *jacob_th, cmpl_array *jacob_n)
 {
     cmpl_array8 mlr_jacob_th(nb), mlr_jacob_n(nb);
     cmpl r;
@@ -187,13 +187,13 @@ mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
     if(jacob_th)
         for(int k = 0; k < nb-2; k++) {
             cmpl dr = mlr_jacob_th[k];
-            jacob_th[k] = std::real(2 * r * conj(dr));
+            jacob_th->at(k) = std::real(2 * r * conj(dr));
         }
 
     if(jacob_n)
         for(int k = 0; k < nb; k++) {
             cmpl dr = mlr_jacob_n[k];
-            jacob_n[k] = conj(2 * r * conj(dr));
+            jacob_n->at(k) = conj(2 * r * conj(dr));
         }
 
     return std::norm(r);
@@ -202,20 +202,20 @@ mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
 static double
 mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
                              double lambda, const double bandwidth,
-                             double *jacob_th, cmpl *jacob_n, double *jacob_acq)
+                             double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq)
 {
     cmpl_array8 mlr_jacob_th(nb), mlr_jacob_n(nb);
-    double rsq_jacob_th[nb - 2];
+    double_array8 rsq_jacob_th(nb - 2);
     double rsq = 0.0;
 
-    memset(rsq_jacob_th, 0, (nb - 2) * sizeof(double));
+    memset(rsq_jacob_th.data(), 0, (nb - 2) * sizeof(double));
 
     if(jacob_n) {
-        memset(jacob_n, 0, nb * sizeof(cmpl));
+        memset(jacob_n->data(), 0, nb * sizeof(cmpl));
     }
 
     if (jacob_acq) {
-        jacob_acq[SR_BANDWIDTH] = 0.0;
+        jacob_acq->at(SR_BANDWIDTH) = 0.0;
     }
 
     const struct gauss_quad_info *quad_rule = gauss_rule(GAUSS_LEGENDRE_RULE_7);
@@ -238,7 +238,7 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
         if(jacob_n) {
             for(int k = 0; k < nb; k++) {
                 const cmpl dr = mlr_jacob_n[k];
-                jacob_n[k     ] += weight * conj(2 * r * conj(dr));
+                jacob_n->at(k) += weight * conj(2 * r * conj(dr));
             }
         }
 
@@ -258,13 +258,13 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
             for (int k = 0; k < nb - 2; k++) {
                 dpdlambda += - drsqdt[k] * ds[k] / lambda_w;
             }
-            jacob_acq[SR_BANDWIDTH] += weight * rule_abscissa * dpdlambda / 2.0;
+            jacob_acq->at(SR_BANDWIDTH) += weight * rule_abscissa * dpdlambda / 2.0;
         }
     }
 
     if (jacob_th) {
         for (int k = 0; k < nb - 2; k++) {
-            jacob_th[k] = rsq_jacob_th[k];
+            jacob_th->at(k) = rsq_jacob_th[k];
         }
     }
 
@@ -274,7 +274,7 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
 int
 mult_layer_refl_sr(int nb, const cmpl ns[], const double ds[],
                    double lambda, const struct acquisition_parameters *acquisition,
-                   double result[1], double *jacob_th, cmpl *jacob_n, double *jacob_acq)
+                   double result[1], double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq)
 {
     double r_raw;
     if (acquisition->bandwidth > 0.0 || jacob_acq) {
@@ -287,18 +287,18 @@ mult_layer_refl_sr(int nb, const cmpl ns[], const double ds[],
 
     if (jacob_th) {
         for (int j = 0; j < nb - 2; j++) {
-            jacob_th[j] *= rmult;
+            jacob_th->at(j) *= rmult;
         }
     }
 
     if (jacob_n) {
         for (int j = 0; j < nb; j++) {
-            jacob_n[j] *= rmult;
+            jacob_n->at(j) *= rmult;
         }
     }
 
     if (jacob_acq) {
-        jacob_acq[SR_RMULT] = r_raw;
+        jacob_acq->at(SR_RMULT) = r_raw;
     }
     return 0;
 }
