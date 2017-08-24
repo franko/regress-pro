@@ -59,7 +59,7 @@ mult_layer_refl_ni_nojacob(int nb, const cmpl ns[], const double ds[],
 
 static cmpl
 mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
-                            double lambda, cmpl *jacth)
+                            double lambda, cmpl_array8& jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const int nblyr = nb - 2;
@@ -108,7 +108,7 @@ mult_layer_refl_ni_jacob_th(int nb, const cmpl ns[], const double ds[],
 
 static cmpl
 mult_layer_refl_ni_jacob(int nb, const cmpl ns[], const double ds[],
-                         double lambda, cmpl *jacth, cmpl *jacn)
+                         double lambda, cmpl_array8& jacth, cmpl_array8& jacn)
 {
     const double omega = 2 * M_PI / lambda;
     const int nblyr = nb - 2;
@@ -177,9 +177,9 @@ mult_layer_refl_ni(int nb, const cmpl ns[], const double ds[],
     cmpl r;
 
     if(jacob_th && jacob_n) {
-        r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda, mlr_jacob_th.data(), mlr_jacob_n.data());
+        r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda, mlr_jacob_th, mlr_jacob_n);
     } else if(jacob_th) {
-        r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda, mlr_jacob_th.data());
+        r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda, mlr_jacob_th);
     } else {
         r = mult_layer_refl_ni_nojacob(nb, ns, ds, lambda);
     }
@@ -225,9 +225,9 @@ mult_layer_refl_ni_bandwidth(int nb, const cmpl ns[], const double ds[],
         cmpl r;
 
         if(jacob_th && jacob_n) {
-            r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda_w, mlr_jacob_th.data(), mlr_jacob_n.data());
+            r = mult_layer_refl_ni_jacob(nb, ns, ds, lambda_w, mlr_jacob_th, mlr_jacob_n);
         } else if(jacob_th) {
-            r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda_w, mlr_jacob_th.data());
+            r = mult_layer_refl_ni_jacob_th(nb, ns, ds, lambda_w, mlr_jacob_th);
         } else {
             r = mult_layer_refl_ni_nojacob(nb, ns, ds, lambda_w);
         }

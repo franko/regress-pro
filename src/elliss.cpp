@@ -140,7 +140,7 @@ mult_layer_refl(int nb, const cmpl ns[], cmpl nsin0,
 static void
 mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
                          const double ds[], double lambda, cmpl R[],
-                         cmpl *jacth)
+                         cmpl_array16& jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const int films_number = nb - 2;
@@ -162,7 +162,7 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
 
         cmpl r[2];
         for(int p = POL_START; p < POL_END; p++) {
-            cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
+            const int pol_offset = (p == 0 ? 0 : films_number);
 
             r[p] = refl_coeff(ns[j], cost, ns[j+1], cosc, (polar_t) p);
 
@@ -171,11 +171,11 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
             const cmpl dfdR = rho * (1.0 - r[p]*r[p]) * isqden;
 
             for(int k = films_number; k > j+1; k--) {
-                pjacth[k - 1] *= dfdR;
+                jacth[pol_offset + k - 1] *= dfdR;
             }
 
             const cmpl dfdrho = R[p] * (1.0 - r[p]*r[p]) * isqden;
-            pjacth[j] = dfdrho * drhodth;
+            jacth[pol_offset + j] = dfdrho * drhodth;
 
             R[p] = (r[p] + R[p] * rho) / den;
         }
@@ -185,7 +185,7 @@ mult_layer_refl_jacob_th(int nb, const cmpl ns[], cmpl nsin0,
 static void
 mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
                             const double ds[], double lambda, cmpl R[2],
-                            cmpl dRdaoi[2], cmpl *jacth)
+                            cmpl dRdaoi[2], cmpl_array16& jacth)
 {
     const double omega = 2 * M_PI / lambda;
     const cmpl bphase = 2i * omega;
@@ -211,7 +211,7 @@ mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
 
         cmpl r[2], drdaoi[2];
         for(int p = POL_START; p < POL_END; p++) {
-            cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
+            const int pol_offset = (p == 0 ? 0 : films_number);
 
             r[p] = refl_coeff_aoi_der(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, &drdaoi[p], (polar_t) p);
 
@@ -220,12 +220,12 @@ mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
             const cmpl dfdR = rho * (1.0 - r[p]*r[p]) * isqden;
 
             for(int k = films_number; k > j+1; k--) {
-                pjacth[k - 1] *= dfdR;
+                jacth[pol_offset + k - 1] *= dfdR;
             }
 
             const cmpl dfdr = (1.0 - pow2(R[p]*rho)) * isqden;
             const cmpl dfdrho = R[p] * (1.0 - r[p]*r[p]) * isqden;
-            pjacth[j] = dfdrho * drhodth;
+            jacth[pol_offset + j] = dfdrho * drhodth;
 
             dRdaoi[p] = dfdr * drdaoi[p] + dfdrho * drhodaoi + dfdR * dRdaoi[p];
 
@@ -237,7 +237,7 @@ mult_layer_refl_jacob_th_aoi(int nb, const cmpl ns[], cmpl nsin0,
 static void
 mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
                       const double ds[], double lambda,
-                      cmpl R[2], cmpl dRdaoi[2], cmpl *jacth, cmpl *jacn)
+                      cmpl R[2], cmpl dRdaoi[2], cmpl_array16& jacth, cmpl_array16& jacn)
 {
     const double omega = 2 * M_PI / lambda;
     const cmpl bphase = 2i * omega;
@@ -275,28 +275,28 @@ mult_layer_refl_jacob(int nb, const cmpl ns[], cmpl nsin0,
         fresnel_coeffs_diff(nsin0, ncos0, ns[j], cost, ns[j+1], cosc, r, drdnt, drdnb, drdaoi);
 
         for(int p = POL_START; p < POL_END; p++) {
-            cmpl *pjacn  = jacn  + (p == 0 ? 0 : nb);
-            cmpl *pjacth = jacth + (p == 0 ? 0 : films_number);
+            const int pol_offset_med = (p == 0 ? 0 : nb);
+            const int pol_offset_flm = (p == 0 ? 0 : films_number);
 
             const cmpl den = 1.0 + r[p] * R[p] * rho;
             const cmpl isqden = 1.0 / pow2(den);
             const cmpl dfdR = rho * (1.0 - r[p]*r[p]) * isqden;
 
             for(int k = nb - 1; k > j+1; k--) {
-                pjacn[k] *= dfdR;
+                jacn[pol_offset_med + k] *= dfdR;
             }
 
             for(int k = films_number; k > j+1; k--) {
-                pjacth[k-1] *= dfdR;
+                jacth[pol_offset_flm + k - 1] *= dfdR;
             }
 
             const cmpl dfdr = (1.0 - pow2(R[p]*rho)) * isqden;
             const cmpl dfdrho = R[p] * (1.0 - r[p]*r[p]) * isqden;
 
-            pjacn[j+1] = dfdR * pjacn[j+1] + dfdr * drdnb[p] + dfdrho * drhodn;
-            pjacn[j] = (j == 0 ? 0.0 : dfdr * drdnt[p]);
+            jacn[pol_offset_med + j + 1] = dfdR * jacn[pol_offset_med + j + 1] + dfdr * drdnb[p] + dfdrho * drhodn;
+            jacn[pol_offset_med + j] = (j == 0 ? 0.0 : dfdr * drdnt[p]);
 
-            pjacth[j] = dfdrho * drhodth;
+            jacth[pol_offset_flm + j] = dfdrho * drhodth;
 
             dRdaoi[p] = dfdr * drdaoi[p] + dfdrho * drhodaoi + dfdR * dRdaoi[p];
 
@@ -393,7 +393,7 @@ se_ab_der_acquisition(cmpl R[], cmpl dR[], double tanlz, double *jac)
 }
 
 static void
-set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl mlr_jacob[], double jacob[])
+set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl_array16& mlr_jacob, double jacob[])
 {
     for(int j = 0; j < n; j++) {
         cmpl d_alpha, d_beta;
@@ -409,7 +409,7 @@ set_se_measuring_jacobian_real(enum se_type se_type, const int n, cmpl R[2], con
 }
 
 static void
-set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl mlr_jacob[], cmpl jacob[])
+set_se_measuring_jacobian_complex(enum se_type se_type, const int n, cmpl R[2], const double tanlz, const cmpl_array16& mlr_jacob, cmpl jacob[])
 {
     for(int j = 0; j < n; j++) {
         cmpl d_alpha, d_beta;
@@ -440,11 +440,11 @@ mult_layer_se_jacob(enum se_type type,
     nsin0 = ns[0] * std::sin((cmpl) phi0);
 
     if(jacob_th && jacob_n) {
-        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th.data(), mlr_jacob_n.data());
+        mult_layer_refl_jacob(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
     } else if (jacob_th || jacob_acquisition) {
-        mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th.data());
+        mult_layer_refl_jacob_th_aoi(nb, ns, nsin0, ds, lambda, R, dRdaoi, mlr_jacob_th);
     } else if (jacob_th) {
-        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th.data());
+        mult_layer_refl_jacob_th(nb, ns, nsin0, ds, lambda, R, mlr_jacob_th);
     } else {
         mult_layer_refl(nb, ns, nsin0, ds, lambda, R);
     }
@@ -460,11 +460,11 @@ mult_layer_se_jacob(enum se_type type,
         mlr_jacob_n[0 ] = 0.0;
         mlr_jacob_n[nb] = 0.0;
 
-        set_se_measuring_jacobian_complex(type, nb, R, tanlz, mlr_jacob_n.data(), jacob_n);
+        set_se_measuring_jacobian_complex(type, nb, R, tanlz, mlr_jacob_n, jacob_n);
     }
 
     if(jacob_th) {
-        set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th.data(), jacob_th);
+        set_se_measuring_jacobian_real(type, nblyr, R, tanlz, mlr_jacob_th, jacob_th);
     }
 
     if (jacob_acquisition) {
@@ -588,11 +588,11 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
             cmpl R[2], dRdaoi[2];
 
             if(jacob_th && jacob_n) {
-                mult_layer_refl_jacob(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th.data(), mlr_jacob_n.data());
+                mult_layer_refl_jacob(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th, mlr_jacob_n);
             } else if (jacob_th || jacob_acq) {
-                mult_layer_refl_jacob_th_aoi(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th.data());
+                mult_layer_refl_jacob_th_aoi(nb, ns, nsin0_na, ds, lambda_bw, R, dRdaoi, mlr_jacob_th);
             } else if (jacob_th) {
-                mult_layer_refl_jacob_th(nb, ns, nsin0_na, ds, lambda_bw, R, mlr_jacob_th.data());
+                mult_layer_refl_jacob_th(nb, ns, nsin0_na, ds, lambda_bw, R, mlr_jacob_th);
             } else {
                 mult_layer_refl(nb, ns, nsin0_na, ds, lambda_bw, R);
             }
