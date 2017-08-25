@@ -1,0 +1,3 @@
+load-spectrum "tests/spectres/nitride-380A-oxide-2500A.dat"
+load-recipe "tests/recipes/nitride-oxide-2500A-th.rcp"
+fit

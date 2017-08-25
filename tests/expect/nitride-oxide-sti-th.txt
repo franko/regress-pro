@@ -1,0 +1,9 @@
+Recipe tests/recipes/nitride-oxide-2500A-th.rcp :
+       T1 : 387.927
+       T2 : 2838.33
+Residual Chisq/pt: 457
+
+Grid search best point: 380 2500
+With Chi Square: 1424.63. Required threshold was: 3000.
+
+Nb of iterations to converge: 7

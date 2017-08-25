@@ -1,0 +1,14 @@
+Recipe tests/recipes/teos-nitride-pmd-nisi.rcp :
+       T1 : 275.388
+       T2 : 87.8398
+       T3 : 638.921
+       T4 : 1391.04
+       T5 : 345.399
+       T6 : 64.9874
+       T7 : 60.3364
+Residual Chisq/pt: 536.972
+
+Grid search best point: 200 100 600 1500 400 15 100
+With Chi Square: 638.448. Required threshold was: 500.
+
+Nb of iterations to converge: 14

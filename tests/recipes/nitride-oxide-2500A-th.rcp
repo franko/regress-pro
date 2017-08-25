@@ -1,0 +1,22 @@
+stack 4
+  380 2500
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  ho "Nitride HCD"
+    range 190 1000
+    2
+    122.288 11.3068 0 0.3333 0
+    3.1223 5.8842 2.7456 0.3333 -0.2123
+  library "sio2"
+  library "silicon-1"
+fit-config
+  max-iterations 30
+  subsampling 1
+  epsilon 1e-007 1e-007
+fit-parameters 2
+  thickness 1
+  thickness 2
+seed-list 2
+  range 380 380
+  range 2500 1500
