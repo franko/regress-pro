@@ -3,7 +3,9 @@
 static const char * error_type_id[] = {
     "Error reading file.",
     "Error checking recipe.",
-    "Error running fit."
+    "Error running script.",
+    "Spectrum not found.",
+    "Error running fit.",
 };
 
 str_ptr
