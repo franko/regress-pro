@@ -572,7 +572,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
     double sp[3] = {0.0};
 
     sp_jacob_n.set_elements (0.0, 3 * nb);
-    sp_jacob_th.set_elements(0.0, 3 * nb);
+    sp_jacob_th.set_elements(0.0, 3 * nblyr);
 
     const struct gauss_quad_info *quad_rule_bw = (acquisition->bandwidth > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_7) : gauss_rule(UNIT_RULE));
     const struct gauss_quad_info *quad_rule_na = (acquisition->numap > 0.0 ? gauss_rule(GAUSS_LEGENDRE_RULE_3) : gauss_rule(UNIT_RULE));
