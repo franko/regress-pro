@@ -119,10 +119,7 @@ mult_layer_refl_sys(const enum system_kind sys_kind, size_t nb, const cmpl ns[],
     {
         const enum se_type se_type = GET_SE_TYPE(sys_kind);
         ell_ab_t e;
-        mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e,
-            jacob_th  ? jacob_th->data()  : nullptr,
-            jacob_n   ? jacob_n->data()   : nullptr,
-            jacob_acq ? jacob_acq->data() : nullptr);
+        mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acq);
         result[0] = e->alpha;
         result[1] = e->beta;
         break;

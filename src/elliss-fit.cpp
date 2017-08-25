@@ -8,8 +8,8 @@
 void
 get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
                        struct deriv_info *ideriv, double lambda,
-                       double jacob_th[], cmpl jacob_n[],
-                       double jacob_acq[], struct elliss_ab *result)
+                       double_array jacob_th, cmpl_array jacob_n,
+                       double_array jacob_acq, struct elliss_ab *result)
 {
     const int nb_med = stack->nb, nb_lyr = nb_med - 2;
     const int layer = fp->layer_nb;
@@ -62,10 +62,10 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     struct spectrum *s = fit->run->spectr;
     const int nb_med = fit->stack->nb;
     const int npt = spectra_points(s);
-    double jacob_th_data[2 * (nb_med - 2)];
-    cmpl_array16 jacob_n_store(2 * nb_med);
+    double_array16 jacob_th(2 * (nb_med - 2));
+    cmpl_array16 jacob_n(2 * nb_med);
     const enum se_type se_type = GET_SE_TYPE(fit->acquisition->type);
-    double jacob_acq_data[2 * SE_ACQ_PARAMETERS_NB(se_type)];
+    double_array8 jacob_acq(2 * SE_ACQ_PARAMETERS_NB(se_type));
 
     /* STEP 1 : We apply the actual values of the fit parameters
                 to the stack. */
@@ -77,9 +77,9 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
 
     const double *ths = stack_get_ths_list(fit->stack);
 
-    double *jacob_th  = (jacob ? jacob_th_data : nullptr);
-    cmpl *  jacob_n   = (jacob && !fit->run->cache.th_only ? jacob_n_store.data() : nullptr);
-    double *jacob_acq = (jacob && fit->run->cache.require_acquisition_jacob ? jacob_acq_data : nullptr);
+    double_array *jacob_th_ptr  = (jacob ? &jacob_th : nullptr);
+    cmpl_array   *jacob_n_ptr   = (jacob && !fit->run->cache.th_only ? &jacob_n : nullptr);
+    double_array *jacob_acq_ptr = (jacob && fit->run->cache.require_acquisition_jacob ? &jacob_acq : nullptr);
 
     for(int j = 0; j < npt; j++) {
         float const * spectr_data = spectra_get_values(s, j);
@@ -99,7 +99,7 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
         /* STEP 3 : We call the ellipsometer kernel function */
 
         mult_layer_refl_se(se_type, nb_med, ns, ths, lambda,
-            fit->acquisition, theory, jacob_th, jacob_n, jacob_acq);
+            fit->acquisition, theory, jacob_th_ptr, jacob_n_ptr, jacob_acq_ptr);
 
         if(f != nullptr) {
             gsl_vector_set(f, j,       theory->alpha - meas_alpha);
