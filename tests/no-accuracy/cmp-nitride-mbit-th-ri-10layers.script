@@ -1,0 +1,3 @@
+load-spectrum "tests/spectres/CMPMBIT-NOVA-TBOX3.dat"
+load-recipe "tests/recipes/cmp-nitride-mbit-th-ri-10layers.rcp"
+fit

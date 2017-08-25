@@ -27,12 +27,14 @@ def parse_fit_output(text):
     results.append( ("ChiSquare", float(m.group(1))) )
     return results
 
-def check_results_eq(results_a, results_b):
+def check_results_eq(results_a, results_b, eps_abs, eps_rel):
     mismatch = []
     for i, (tpa, tpb) in enumerate(zip(results_a, results_b)):
         name_a, value_a = tpa
         name_b, value_b = tpb
-        if name_a != name_b or value_a != value_b:
+        abs_value = abs((value_a + value_b) / 2)
+        abs_delta = abs(value_a - value_b)
+        if name_a != name_b or (abs_delta > eps_abs and abs_delta > eps_rel * abs_value):
             mismatch.append(i)
     return (len(mismatch) == 0, mismatch)
 
@@ -51,8 +53,16 @@ except:
     print("Please make sure that regress pro executable is correct.")
     sys.exit(1)
 
+accuracy_table = {
+    'default': (0, 1e-8),
+    'low-accuracy': (0, 1e-2),
+    'no-accuracy':  (0, 0.05),
+}
 
 for dirpath, dirnames, filenames in os.walk(test_dir):
+    mtn = re.search(r'(low-accuracy|no-accuracy)$', dirpath)
+    accuracy = mtn.group(1) if mtn else 'default'
+    eps_abs, eps_rel = accuracy_table[accuracy]
     for filename in sorted(filenames):
         m = re.match(r'([^.]+)\.script$', filename)
         if m:
@@ -78,7 +88,7 @@ for dirpath, dirnames, filenames in os.walk(test_dir):
             led, msg = None, None
             output_match, mismatch = False, None
             if not run_error:
-                output_match, mismatch = check_results_eq(results_test, results_ref)
+                output_match, mismatch = check_results_eq(results_test, results_ref, eps_abs, eps_rel)
             if run_error:
                 led, msg = "*", "\x1B[31m%s\x1B[0m" % run_msg
             elif results_test and results_ref and output_match:
@@ -95,5 +105,5 @@ for dirpath, dirnames, filenames in os.walk(test_dir):
                     log.write("    test : parameter %s, value %g\n" % results_test[index])
                 log.close()
 
-            print("%s %-24s %s" % (led, test_name, msg))
+            print("%s %-36s %6s   %s" % (led, test_name, msg, accuracy))
             sys.stdout.flush()
