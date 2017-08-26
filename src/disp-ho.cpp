@@ -185,23 +185,23 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const double nosc = p->nosc, en = p->en, nu = p->nu;
         const int koffs = k * HO_NB_PARAMS;
 
-        cmpl_vector_set(pd, koffs + HO_NU_OFFS, dndnuhc * hh[k]);
+        pd->at(koffs + HO_NU_OFFS) = dndnuhc * hh[k];
 
         const cmpl dndh = (nu * hsum * invden + 1.0) * invden;
         const cmpl hhdndh = epsfact * dndh * hh[k];
 
-        cmpl_vector_set(pd, koffs + HO_NOSC_OFFS, hhdndh / nosc);
-        cmpl_vector_set(pd, koffs + HO_PHI_OFFS, - 1i * hhdndh);
+        pd->at(koffs + HO_NOSC_OFFS) = hhdndh / nosc;
+        pd->at(koffs + HO_PHI_OFFS) = - 1i * hhdndh;
 
         const cmpl depsde = hhdndh * invhhden[k];
-        cmpl_vector_set(pd, koffs + HO_EN_OFFS, - 2 * en * depsde);
-        cmpl_vector_set(pd, koffs + HO_EG_OFFS, - 1i * e * depsde);
+        pd->at(koffs + HO_EN_OFFS) = - 2 * en * depsde;
+        pd->at(koffs + HO_EG_OFFS) = - 1i * e * depsde;
     }
 
     if (chop_k) {
         for (int k = 0; k < nb * HO_NB_PARAMS; k++) {
-            const cmpl y = cmpl_vector_get(pd, k);
-            cmpl_vector_set(pd, k, std::real(y));
+            const cmpl y = pd->at(k);
+            pd->at(k) = std::real(y);
         }
         return std::real(n_raw);
     }

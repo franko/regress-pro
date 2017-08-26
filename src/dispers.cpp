@@ -103,8 +103,6 @@ get_model_param_deriv(const disp_t *disp, struct deriv_info *deriv_info,
                       const fit_param_t *fp, double lambda,
                       double *dnr, double *dni)
 {
-    cmpl val;
-
     assert(disp->dclass != nullptr);
 
     if(! deriv_info->is_valid) {
@@ -112,7 +110,7 @@ get_model_param_deriv(const disp_t *disp, struct deriv_info *deriv_info,
         deriv_info->is_valid = 1;
     }
 
-    val = cmpl_vector_get(deriv_info->val, fp->param_nb);
+    cmpl val = deriv_info->val->at(fp->param_nb);
 
     *dnr = std::real(val);
     *dni = std::imag(val);

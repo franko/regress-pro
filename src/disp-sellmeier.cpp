@@ -62,12 +62,12 @@ sellmeier_n_value_deriv(const disp_t *d, double lam, cmpl_vector *pd)
     }
     const double n = sqrt(nsq);
     const double der_coeff = 1.0 / (2 * n);
-    cmpl_vector_set(pd, 0, der_coeff * lamsq / den[0]);
-    cmpl_vector_set(pd, 1, der_coeff * lamsq / den[1]);
-    cmpl_vector_set(pd, 2, der_coeff * lamsq / den[2]);
-    cmpl_vector_set(pd, 3, der_coeff * c->a[0] * lamsq / pow2(den[0]));
-    cmpl_vector_set(pd, 4, der_coeff * c->a[1] * lamsq / pow2(den[1]));
-    cmpl_vector_set(pd, 5, der_coeff * c->a[2] * lamsq / pow2(den[2]));
+    pd->at(0) = der_coeff * lamsq / den[0];
+    pd->at(1) = der_coeff * lamsq / den[1];
+    pd->at(2) = der_coeff * lamsq / den[2];
+    pd->at(3) = der_coeff * c->a[0] * lamsq / pow2(den[0]);
+    pd->at(4) = der_coeff * c->a[1] * lamsq / pow2(den[1]);
+    pd->at(5) = der_coeff * c->a[2] * lamsq / pow2(den[2]);
     return n;
 }
 

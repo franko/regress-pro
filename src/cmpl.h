@@ -5,6 +5,7 @@
 #include <complex>
 #include "common.h"
 #include "stack_array.h"
+#include "pod_vector.h"
 
 typedef std::complex<double> cmpl;
 
@@ -28,17 +29,6 @@ typedef StackArray<double, 16> double_array16;
 typedef StackArray<double, 24> double_array24;
 typedef StackArrayBase<double> double_array;
 
-struct cmpl_vector_struct {
-    int size; /* number of cmpl elements */
-    cmpl * data;
-    int owner;
-};
-
-typedef struct cmpl_vector_struct cmpl_vector;
-
-cmpl_vector *   cmpl_vector_alloc(int nb);
-void            cmpl_vector_free(cmpl_vector *v);
-void            cmpl_vector_set(cmpl_vector *v, int i, cmpl val);
-cmpl            cmpl_vector_get(cmpl_vector *v, int i);
+typedef pod::array<cmpl> cmpl_vector;
 
 #endif

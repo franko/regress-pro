@@ -58,12 +58,12 @@ cauchy_n_value_deriv(const disp_t *d, double lam, cmpl_vector *pd)
     const struct disp_cauchy *c = & d->disp.cauchy;
     const double lamsq = lam * lam;
     const cmpl n = cauchy(c, lam);
-    cmpl_vector_set(pd, 0, 1.0);
-    cmpl_vector_set(pd, 1, 1.0 / lamsq);
-    cmpl_vector_set(pd, 2, 1.0 / (lamsq*lamsq));
-    cmpl_vector_set(pd, 3, - 1i);
-    cmpl_vector_set(pd, 4, - 1i / lamsq);
-    cmpl_vector_set(pd, 5, - 1i / (lamsq*lamsq));
+    pd->at(0) = 1.0;
+    pd->at(1) = 1.0 / lamsq;
+    pd->at(2) = 1.0 / (lamsq*lamsq);
+    pd->at(3) = - 1i;
+    pd->at(4) = - 1i / lamsq;
+    pd->at(5) = - 1i / (lamsq*lamsq);
     return n;
 }
 

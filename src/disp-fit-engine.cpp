@@ -113,7 +113,7 @@ disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
             n_value_deriv(fit->model_disp, fit->model_der, lambda);
 
             for(kp = 0; kp < fit->parameters->number; kp++) {
-                cmpl dndp = cmpl_vector_get(fit->model_der, params[kp].param_nb);
+                cmpl dndp = fit->model_der->at(params[kp].param_nb);
 
                 gsl_matrix_set(jacob, j,      kp, std::real(dndp));
                 gsl_matrix_set(jacob, j+nsmp, kp, std::imag(dndp));
@@ -159,7 +159,7 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
     disp_nb_params = disp_get_number_of_params(fit->model_disp);
 
     assert(fit->model_der == nullptr);
-    fit->model_der = cmpl_vector_alloc(disp_nb_params);
+    fit->model_der = new cmpl_vector(disp_nb_params);
 
     f.f      = & disp_fit_f;
     f.df     = & disp_fit_df;
@@ -206,7 +206,7 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
     commit_fit_parameters(fit, x);
     update_disp_info(fit);
 
-    cmpl_vector_free(fit->model_der);
+    delete fit->model_der;
     fit->model_der = nullptr;
 
     gsl_multifit_fdfsolver_free(s);

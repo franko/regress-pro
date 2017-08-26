@@ -243,7 +243,7 @@ tauc_lorentz_num_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         gsl_deriv_central(&F, p0, h, &ideriv, &abserr);
         *p->param_ptr = p0;
 
-        cmpl_vector_set(pd, i, rderiv + 1i * ideriv);
+        pd->at(i) = rderiv + 1i * ideriv;
     }
 }
 

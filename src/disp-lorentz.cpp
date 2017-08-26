@@ -159,21 +159,21 @@ lor_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     }
 
     /* Derivative with e_offset. */
-    cmpl_vector_set(pd, 0, epsfact);
+    pd->at(0) = epsfact;
 
     for(int k = 0, kpd = osc_offs; k < nb; k++, kpd += LOR_NB_PARAMS) {
         const struct lorentz_osc *p = lor->oscillators + k;
         const double a = p->a, br = p->br, en = p->en;
 
         const cmpl epshh = epsfact * hhnum[k] * hhinvden[k];
-        cmpl_vector_set(pd, kpd + LOR_A_OFFS, epshh / a);
+        pd->at(kpd + LOR_A_OFFS) = epshh / a;
 
         const cmpl epshhiden = epshh * hhinvden[k];
         const cmpl num_en = (lor->style == LORENTZ_STYLE_ABE ? - pow2(en) - pow2(e) + 1i * br * e : 2 * e * (1i * br - e));
-        cmpl_vector_set(pd, kpd + LOR_EN_OFFS, epshhiden * num_en / en);
+        pd->at(kpd + LOR_EN_OFFS) = epshhiden * num_en / en;
 
         const cmpl num_br = (lor->style == LORENTZ_STYLE_ABE ? pow2(en) - pow2(e) : - 1i * br * e);
-        cmpl_vector_set(pd, kpd + LOR_BR_OFFS, epshhiden * num_br / br);
+        pd->at(kpd + LOR_BR_OFFS) = epshhiden * num_br / br;
     }
 
     return n;

@@ -49,7 +49,7 @@ build_stack_cache(struct stack_cache *cache, stack_t *stack,
         size_t tpnb = disp_get_number_of_params(stack->disp[j]);
 
         di->is_valid = 0;
-        di->val = (tpnb == 0 ? nullptr : cmpl_vector_alloc(tpnb));
+        di->val = (tpnb == 0 ? nullptr : new cmpl_vector(tpnb));
     }
 
     cache->th_only = th_only_optimize;
@@ -83,9 +83,8 @@ dispose_stack_cache(struct stack_cache *cache)
 
     for(j = 0; j < nb_med; j++) {
         struct deriv_info *di = & cache->deriv_info[j];
-        if(di->val) {
-            cmpl_vector_free(di->val);
-        }
+        // The value below can be null.
+        delete di->val;
     }
     free(cache->deriv_info);
 

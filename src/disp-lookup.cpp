@@ -130,7 +130,7 @@ lookup_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *der)
     double p1 = lookup->component[j].p;
     double p2 = lookup->component[j+1].p;
     cmpl dn = (n2 - n1) / (p2 - p1);
-    cmpl_vector_set(der, 0, dn);
+    der->at(0) = dn;
     return n1 + (n2 - n1) * ((lookup->p - p1) / (p2 - p1));
 }
 

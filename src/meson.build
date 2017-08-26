@@ -6,7 +6,7 @@ configure_file(output : 'defs.h', configuration : conf)
 
 kernel_src = [
     'common.cpp', 'data-table.cpp', 'data-view.cpp', 'rc_matrix.cpp', 'disp-table.cpp', 'disp-sample-table.cpp',
-    'disp-lookup.cpp', 'str.cpp', 'dispers-library.cpp', 'str-util.cpp', 'error-messages.cpp', 'cmpl.cpp',
+    'disp-lookup.cpp', 'str.cpp', 'dispers-library.cpp', 'str-util.cpp', 'error-messages.cpp',
     'minsampling.cpp', 'dispers.cpp', 'disp-fb.cpp', 'disp-tauc-lorentz.cpp', 'disp-ho.cpp', 'disp-lorentz.cpp',
     'disp-bruggeman.cpp', 'disp-cauchy.cpp', 'disp-sellmeier.cpp', 'dispers-classes.cpp', 'stack.cpp', 'lmfit.cpp',
     'fit-timestamp.cpp', 'lmfit-simple.cpp', 'fit-params.cpp', 'fit-engine.cpp', 'refl-kernel.cpp', 'refl-fit.cpp',

@@ -192,21 +192,21 @@ fb_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
             const double n_c = (dB0dC * E + dC0dC) / den - nterm / den;
 
             if (fb->form == FOROUHI_BLOOMER_STANDARD) {
-                cmpl_vector_set(pd, koffs + FB_A_OFFS, cmpl(n_a, -k_a));
-                cmpl_vector_set(pd, koffs + FB_B_OFFS, cmpl(n_b, -k_b));
-                cmpl_vector_set(pd, koffs + FB_C_OFFS, cmpl(n_c, -k_c));
+                pd->at(koffs + FB_A_OFFS) = cmpl(n_a, -k_a);
+                pd->at(koffs + FB_B_OFFS) = cmpl(n_b, -k_b);
+                pd->at(koffs + FB_C_OFFS) = cmpl(n_c, -k_c);
             } else {
-                cmpl_vector_set(pd, koffs + FB_A_OFFS, pow2(osc->c) * (cmpl(n_a, -k_a)));
-                cmpl_vector_set(pd, koffs + FB_B_OFFS, 2.0 * (cmpl(n_b, -k_b)) + 2.0 * (cmpl(n_c, -k_c)) * osc->b);
-                cmpl_vector_set(pd, koffs + FB_C_OFFS, 2.0 * (cmpl(n_a, -k_a)) * osc->a * osc->c + 2.0 * (cmpl(n_c, -k_c)) * osc->c);
+                pd->at(koffs + FB_A_OFFS) = pow2(osc->c) * (cmpl(n_a, -k_a));
+                pd->at(koffs + FB_B_OFFS) = 2.0 * (cmpl(n_b, -k_b)) + 2.0 * (cmpl(n_c, -k_c)) * osc->b;
+                pd->at(koffs + FB_C_OFFS) = 2.0 * (cmpl(n_a, -k_a)) * osc->a * osc->c + 2.0 * (cmpl(n_c, -k_c)) * osc->c;
             }
         }
     }
 
     if (pd) {
         /* Derivative wrt N_inf */
-        cmpl_vector_set(pd, FB_NINF_OFFS, 1.0);
-        cmpl_vector_set(pd, FB_EG_OFFS, dndeg);
+        pd->at(FB_NINF_OFFS) = 1.0;
+        pd->at(FB_EG_OFFS) = dndeg;
     }
 
     return cmpl(nsum, -ksum);

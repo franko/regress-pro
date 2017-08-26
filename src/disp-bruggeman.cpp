@@ -373,7 +373,7 @@ bruggeman_n_value_deriv(const disp_t *disp, double lam, cmpl_vector *v)
             if (i == 0) {
                 n_der0 = n_der;
             } else {
-                cmpl_vector_set(v, i - 1, n_der - n_der0);
+                v->at(i - 1) = n_der - n_der0;
             }
         }
     }
