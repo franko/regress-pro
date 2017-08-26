@@ -1,7 +1,7 @@
 #include "fit_panel.h"
 
 #include "fx_numeric_field.h"
-#include "Strcpp.h"
+#include "str_cpp.h"
 #include "regress_pro.h"
 
 // Map
@@ -66,7 +66,7 @@ void fit_panel::setup()
 
     m_parameters.resize(m_fit->parameters_number());
 
-    Str pname;
+    str pname;
     FXString label_text;
     int current_layer = 0;
     for(unsigned k = 0; k < m_parameters.size(); k++) {
@@ -89,8 +89,8 @@ void fit_panel::setup()
             current_layer = -1;
         }
 
-        get_param_name(&p->fp, pname.str());
-        FXString fxpname((const FXchar *) pname.cstr());
+        get_param_name(&p->fp, &pname);
+        FXString fxpname((const FXchar *) pname.text());
         FXCheckButton* bt = new FXCheckButton(param_matrix, fxpname, this, ID_PARAM_SELECT);
         FXTextField* tf = new fx_numeric_field(param_matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 

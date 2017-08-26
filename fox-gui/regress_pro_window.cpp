@@ -27,7 +27,7 @@
 #include <gsl/gsl_vector.h>
 
 #include "regress_pro_window.h"
-#include "Strcpp.h"
+#include "str_cpp.h"
 #include "error-messages.h"
 #include "fit-engine.h"
 #include "multi-fit-engine.h"
@@ -386,27 +386,27 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     multi_fit_engine_check_deriv(fit, recipe->seeds_list, iseeds);
 #endif
 
-    Str fit_error_msgs;
+    str fit_error_msgs;
     ProgressInfo progress(this->getApp(), this);
 
-    Str analysis;
+    str analysis;
     lmfit_multi(fit, recipe->seeds_list, iseeds,
-                analysis.str(), fit_error_msgs.str(),
+                &analysis, &fit_error_msgs,
                 process_foxgui_events, &progress);
 
     progress.hide();
 
-    if(fit_error_msgs.length() > 0) {
-        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages", "%s.", fit_error_msgs.cstr());
+    if(fit_error_msgs.len() > 0) {
+        FXMessageBox::information(this, MBOX_OK, "Multiple Fit messages", "%s.", fit_error_msgs.text());
     }
 
     FXString text_fit_result;
 
-    Str fp_results;
-    multi_fit_engine_print_fit_results(fit, fp_results.str());
-    text_fit_result.append(fp_results.cstr());
+    str fp_results;
+    multi_fit_engine_print_fit_results(fit, &fp_results);
+    text_fit_result.append(fp_results.text());
 
-    text_fit_result.append(analysis.cstr());
+    text_fit_result.append(analysis.text());
 
     resulttext->setText(text_fit_result);
     resulttext->setModified(TRUE);
@@ -461,17 +461,17 @@ regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& 
 FXString
 regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
 {
-    Str analysis;
+    str analysis;
 
     fit_engine_prepare(fit, fspectrum, FIT_RESET_ACQUISITION);
 
     lmfit_result result;
     if (scriptMode()) {
-        lmfit_grid(fit, fseeds, &result, analysis.str(),
+        lmfit_grid(fit, fseeds, &result, &analysis,
                    LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
     } else {
         ProgressInfo progress(this->getApp(), this);
-        lmfit_grid(fit, fseeds, &result, analysis.str(),
+        lmfit_grid(fit, fseeds, &result, &analysis,
                    LMFIT_GET_RESULTING_STACK,
                    process_foxgui_events, & progress);
         progress.hide();
@@ -490,9 +490,9 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append(row);
 
     /* fit parameters results */
-    Str fit_parameters_results;
-    fit_engine_print_fit_results(fit, fit_parameters_results.str(), 0);
-    fitresult.append(fit_parameters_results.cstr());
+    str fit_parameters_results;
+    fit_engine_print_fit_results(fit, &fit_parameters_results, 0);
+    fitresult.append(fit_parameters_results.text());
 
     /* final chi square obtained */
     row.format("Residual Chisq/pt: %g\n", result.chisq);
@@ -500,7 +500,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     /* covariance matrix analysis */
     fitresult.append("\n");
-    fitresult.append(analysis.cstr());
+    fitresult.append(analysis.text());
 
     update_interactive_fit(fit, result);
     fit_engine_disable(fit);
@@ -715,12 +715,12 @@ regress_pro_window::onCmdRecipeSaveAs(FXObject *, FXSelector, void *)
 }
 
 str_ptr regress_pro_window::load_recipe(const char *filename) {
-    Str content;
-    if(str_loadfile(filename, content.str()) != 0) {
+    str content;
+    if(str_loadfile(filename, &content) != 0) {
         return new_error_message(LOADING_FILE_ERROR, "Cannot read file \"%s\".", filename);
     }
 
-    lexer_t *l = lexer_new(content.cstr());
+    lexer_t *l = lexer_new(content.text());
     fit_recipe *new_recipe = fit_recipe::read(l);
     if (!new_recipe) {
         lexer_free(l);
