@@ -36,6 +36,7 @@ static inline int se_acquisition_enum(int pid) {
     switch(pid) {
     case PID_AOI:       return SE_AOI;
     case PID_ANALYZER:  return SE_ANALYZER;
+    case PID_POLARIZER: return SE_POLARIZER;
     case PID_BANDWIDTH: return SE_BANDWIDTH;
     case PID_NUMAP:     return SE_NUMAP;
     }
@@ -52,10 +53,10 @@ static inline int sr_acquisition_enum(int pid) {
 }
 
 static inline double select_acquisition_jacob(const enum system_kind sys_kind, const double_array jacob_acq, const int channel, const int pid) {
-    if (sys_kind == SYSTEM_ELLISS_AB || sys_kind == SYSTEM_ELLISS_PSIDEL) {
+    if (sys_kind == SYSTEM_SE_RAE || sys_kind == SYSTEM_SE_RPE || sys_kind == SYSTEM_SE) {
         const int index = se_acquisition_enum(pid);
         return jacob_acq[SE_ACQ_INDEX(channel, index)];
-    } else if (sys_kind == SYSTEM_REFLECTOMETER) {
+    } else if (sys_kind == SYSTEM_SR) {
         const int index = sr_acquisition_enum(pid);
         return jacob_acq[index];
     }
@@ -109,15 +110,16 @@ mult_layer_refl_sys(const enum system_kind sys_kind, size_t nb, const cmpl ns[],
                    double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq)
 {
     switch (sys_kind) {
-    case SYSTEM_REFLECTOMETER:
+    case SYSTEM_SR:
     {
         mult_layer_refl_sr(nb, ns, ds, lambda, acquisition, result, jacob_th, jacob_n, jacob_acq);
         break;
     }
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
+    case SYSTEM_SE_RPE:
+    case SYSTEM_SE_RAE:
+    case SYSTEM_SE:
     {
-        const enum se_type se_type = GET_SE_TYPE(sys_kind);
+        const enum se_type se_type = SE_TYPE(sys_kind);
         ell_ab_t e;
         mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acq);
         result[0] = e->alpha;
@@ -282,7 +284,7 @@ multi_fit_engine_prepare(struct multi_fit_engine *fit)
         const struct spectrum *spectrum = fit->spectra_list[k];
         const enum system_kind sys_kind = spectrum->acquisition->type;
         npt_sum += SYSTEM_CHANNELS_NUMBER(sys_kind) * spectra_points(spectrum);
-        cfg->chisq_threshold = (sys_kind == SYSTEM_REFLECTOMETER ? 5.0E3 : 2.0E5);
+        cfg->chisq_threshold = (sys_kind == SYSTEM_SR ? 5.0E3 : 2.0E5);
     }
 
     fit->mffun.f      = &multifit_f;

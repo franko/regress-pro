@@ -37,6 +37,7 @@ get_parameter_jacobian(fit_param_t const *fp, stack_t const *stack,
         result->beta  = jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_AOI)];
         break;
     case PID_ANALYZER:
+    case PID_POLARIZER:
         result->alpha = jacob_acq[SE_ACQ_INDEX(SE_ALPHA, SE_ANALYZER)];
         result->beta  = jacob_acq[SE_ACQ_INDEX(SE_BETA , SE_ANALYZER)];
         break;
@@ -64,7 +65,7 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
     const int npt = spectra_points(s);
     double_array16 jacob_th(2 * (nb_med - 2));
     cmpl_array16 jacob_n(2 * nb_med);
-    const enum se_type se_type = GET_SE_TYPE(fit->acquisition->type);
+    const enum se_type se_type = SE_TYPE(fit->acquisition->type);
     double_array8 jacob_acq(2 * SE_ACQ_PARAMETERS_NB(se_type));
 
     /* STEP 1 : We apply the actual values of the fit parameters

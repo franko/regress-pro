@@ -361,7 +361,7 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
                          cfg->spectr_range.min, cfg->spectr_range.max);
 
     if(cfg->subsampling && enable_subsampling) {
-        const int channels_no = (syskind == SYSTEM_REFLECTOMETER ? 1 : 2);
+        const int channels_no = (syskind == SYSTEM_SR ? 1 : 2);
         const int channel_start = 1;
         table_sample_minimize(fit->run->spectr, 0.05, channel_start, channel_start + channels_no);
     }
@@ -369,7 +369,7 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
     build_fit_engine_cache(fit);
 
     switch(syskind) {
-    case SYSTEM_REFLECTOMETER:
+    case SYSTEM_SR:
         fit->run->mffun.f      = & refl_fit_f;
         fit->run->mffun.df     = & refl_fit_df;
         fit->run->mffun.fdf    = & refl_fit_fdf;
@@ -377,8 +377,9 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
         fit->run->mffun.p      = fit->parameters->number;
         fit->run->mffun.params = fit;
         break;
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL:
+    case SYSTEM_SE_RPE:
+    case SYSTEM_SE_RAE:
+    case SYSTEM_SE:
         fit->run->mffun.f      = & elliss_fit_f;
         fit->run->mffun.df     = & elliss_fit_df;
         fit->run->mffun.fdf    = & elliss_fit_fdf;
@@ -391,7 +392,7 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
     }
 
     if(! cfg->threshold_given) {
-        cfg->chisq_threshold = (syskind == SYSTEM_REFLECTOMETER ? 150 : 3000);
+        cfg->chisq_threshold = (syskind == SYSTEM_SR ? 150 : 3000);
     }
 
     fit->run->results = gsl_vector_alloc(fit->parameters->number);
@@ -571,15 +572,16 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
         stack_get_ns_list(fit->stack, ns, lambda);
 
         switch(syskind) {
-        case SYSTEM_REFLECTOMETER: {
+        case SYSTEM_SR: {
             double r;
             mult_layer_refl_sr(nb_med, ns, ths, lambda, fit->acquisition, &r, nullptr, nullptr, nullptr);
             data_table_set(table, j, 1, r);
             break;
         }
-        case SYSTEM_ELLISS_AB:
-        case SYSTEM_ELLISS_PSIDEL: {
-            const enum se_type se_type = GET_SE_TYPE(syskind);
+        case SYSTEM_SE_RPE:
+        case SYSTEM_SE_RAE:
+        case SYSTEM_SE: {
+            const enum se_type se_type = SE_TYPE(syskind);
             ell_ab_t ell;
 
             mult_layer_refl_se(se_type, nb_med, ns, ths, lambda, fit->acquisition, ell, nullptr, nullptr, nullptr);

@@ -2,6 +2,7 @@
 
 #include "spectrum_plot.h"
 #include "spectrum_vs.h"
+#include "elliss.h"
 
 void
 spectra_plot_simple(plot_canvas* canvas, struct spectrum* spectr)
@@ -11,20 +12,21 @@ spectra_plot_simple(plot_canvas* canvas, struct spectrum* spectr)
     canvas->clear_plots();
 
     switch(skind) {
-    case SYSTEM_REFLECTOMETER: {
+    case SYSTEM_SR: {
         spectrum_vs *ref_r = new spectrum_vs(spectr);
         add_new_simple_plot(canvas, ref_r, "reflectance");
         break;
     }
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL: {
-        bool se_ab = (skind == SYSTEM_ELLISS_AB);
+    case SYSTEM_SE_RPE:
+    case SYSTEM_SE_RAE:
+    case SYSTEM_SE: {
+        const int se_type = SE_TYPE(skind);
 
-        char const * const title0 = (se_ab ? "SE alpha" : "SE tan(psi)");
+        char const * const title0 = (se_type == SE_ALPHA_BETA ? "SE alpha" : "SE tan(psi)");
         spectrum_vs *ref_c0 = new spectrum_vs(spectr, 0);
         add_new_simple_plot(canvas, ref_c0, title0);
 
-        char const * const title1 = (se_ab ? "SE beta" : "SE cos(delta)");
+        char const * const title1 = (se_type == SE_ALPHA_BETA ? "SE beta" : "SE cos(delta)");
         spectrum_vs *ref_c1 = new spectrum_vs(spectr, 1);
         add_new_simple_plot(canvas, ref_c1, title1);
 
@@ -47,22 +49,23 @@ spectra_plot(plot_canvas* canvas, struct spectrum* ref_spectr,
     canvas->clear_plots();
 
     switch(skind) {
-    case SYSTEM_REFLECTOMETER: {
+    case SYSTEM_SR: {
         spectrum_vs *ref_r = new spectrum_vs(ref_spectr);
         spectrum_vs *mod_r = new spectrum_vs(mod_spectr);
         add_new_plot(canvas, ref_r, mod_r, "reflectance");
         break;
     }
-    case SYSTEM_ELLISS_AB:
-    case SYSTEM_ELLISS_PSIDEL: {
-        bool se_ab = (skind == SYSTEM_ELLISS_AB);
+    case SYSTEM_SE_RPE:
+    case SYSTEM_SE_RAE:
+    case SYSTEM_SE: {
+        const int se_type = SE_TYPE(skind);
 
-        char const * const title0 = (se_ab ? "SE alpha" : "SE tan(psi)");
+        char const * const title0 = (se_type == SE_ALPHA_BETA ? "SE alpha" : "SE tan(psi)");
         spectrum_vs *ref_c0 = new spectrum_vs(ref_spectr, 0);
         spectrum_vs *mod_c0 = new spectrum_vs(mod_spectr, 0);
         add_new_plot(canvas, ref_c0, mod_c0, title0);
 
-        char const * const title1 = (se_ab ? "SE beta" : "SE cos(delta)");
+        char const * const title1 = (se_type == SE_ALPHA_BETA ? "SE beta" : "SE cos(delta)");
         spectrum_vs *ref_c1 = new spectrum_vs(ref_spectr, 1);
         spectrum_vs *mod_c1 = new spectrum_vs(mod_spectr, 1);
         add_new_plot(canvas, ref_c1, mod_c1, title1);
