@@ -57,7 +57,7 @@ struct fit_engine {
 
     int spectra_number, spectra_capacity;    
     struct spectrum_item *spectra_list;
-    int *spectra_groups;
+    int *spectra_groups; /* An array with the group number of each sample (stack). */
 
     int samples_number; /* Equal to the number of film stacks. */
     struct stack **stack_list;
@@ -123,9 +123,7 @@ extern void dispose_stack_cache(struct stack_cache *cache);
 
 extern void fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]);
 
-extern void fit_engine_generate_spectrum(struct fit_engine *fit,
-        struct spectrum *ref,
-        struct spectrum *synth);
+extern void fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref, int spectrum_no, struct spectrum *synth);
 
 extern void fit_engine_print_fit_results(struct fit_engine *fit,
         str_t text, int tabular);

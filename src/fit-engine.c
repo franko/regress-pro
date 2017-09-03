@@ -643,24 +643,26 @@ extern int  fit_engine_prepare(struct fit_engine *f, const struct spectrum *s, c
     return fit_engine_prepare_final(f, fit_engine_flags);
 }
 
+/* ***************************************** Done. */
 int
 fit_engine_prepare_final(struct fit_engine *fit, const int fit_engine_flags)
 {
     const int acq_policy = FIT_OPTIONS_ACQUISITION(fit_engine_flags);
     const int enable_subsampling = FIT_OPTIONS_SUBSAMPLING(fit_engine_flags);
-    const struct fit_config *config = fit->config;
+    struct fit_config *config = fit->config;
 
     if (acq_policy == FIT_RESET_ACQUISITION) {
         /* Copy all the spectra acquisitions info into the fit structure. */
         for (int j = 0; j < fit->samples_number; j++) {
-            fit->acquisitions[j] = fit->spectra_list[j]->acquisition[0];
+            struct spectrum_item *si = &fit->spectra_list[j];
+            si->acquisition[0] = si->spectrum->acquisition[0];
         }
     }
 
     int points_number = 0;
     if(config->spectr_range.active) {
         for(int k = 0; k < fit->spectra_number; k++) {
-            const float wlmin = config.spectr_range.min, wlmax = config->spectr_range.max;
+            const float wlmin = config->spectr_range.min, wlmax = config->spectr_range.max;
             struct spectrum *spectrum = fit->spectra_list[k].spectrum;
             spectr_cut_range(spectrum, wlmin, wlmax);
             const int channels_number = SYSTEM_CHANNELS_NUMBER(spectrum->acquisition->type);
@@ -680,8 +682,8 @@ fit_engine_prepare_final(struct fit_engine *fit, const int fit_engine_flags)
     fit->mffun.p      = fit->parameters->number;
     fit->mffun.params = fit;
 
-    if(!cfg->threshold_given) {
-        cfg->chisq_threshold = 150; // FIXME
+    if(!config->threshold_given) {
+        config->chisq_threshold = 150; // FIXME
     }
 
     fit->results = gsl_vector_alloc(fit->parameters->number);
@@ -693,12 +695,15 @@ fit_engine_prepare_final(struct fit_engine *fit, const int fit_engine_flags)
     return 0;
 }
 
+// **************************************** DONE
 void
 fit_engine_disable(struct fit_engine *fit)
 {
     dispose_fit_engine_cache(fit);
-    spectra_free(fit->run->spectr);
-    gsl_vector_free(fit->run->results);
+    for (int j = 0; j < fit->samples_number; j++) {
+        spectra_free(fit->spectra_list[j].spectrum);
+    }
+    gsl_vector_free(fit->results);
 }
 
 int
@@ -785,7 +790,7 @@ fit_engine_get_parameter_value(const struct fit_engine *fit, const fit_param_t *
     } else {
         const int sample_no = scope_sample_any(fp->scope);
         if (sample_no < fit->samples_number) {
-            const struct stack *stack = fit->stack_list[samples_number];
+            const struct stack *stack = fit->stack_list[sample_no];
             return stack_get_parameter_value(stack, fp);
         }
     }
@@ -823,20 +828,20 @@ fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x,
 {
     int fp_index = fit_parameters_find(fit->parameters, fp);
 
-    gsl_vector *y0 = gsl_vector_alloc(fit->run->mffun.n);
-    gsl_vector *y1 = gsl_vector_alloc(fit->run->mffun.n);
-    gsl_vector *xtest = gsl_vector_alloc(fit->run->mffun.p);
-    gsl_matrix *jacob = gsl_matrix_alloc(fit->run->mffun.n, fit->run->mffun.p);
+    gsl_vector *y0 = gsl_vector_alloc(fit->mffun.n);
+    gsl_vector *y1 = gsl_vector_alloc(fit->mffun.n);
+    gsl_vector *xtest = gsl_vector_alloc(fit->mffun.p);
+    gsl_matrix *jacob = gsl_matrix_alloc(fit->mffun.n, fit->mffun.p);
 
     gsl_vector_view jview = gsl_matrix_column(jacob, fp_index);
-    fit->run->mffun.df(x, fit, jacob);
+    fit->mffun.df(x, fit, jacob);
 
     gsl_vector_memcpy(xtest, x);
-    fit->run->mffun.f(xtest, fit, y0);
+    fit->mffun.f(xtest, fit, y0);
 
     while (1) {
         gsl_vector_set(xtest, fp_index, gsl_vector_get(x, fp_index) + delta);
-        fit->run->mffun.f(xtest, fit, y1);
+        fit->mffun.f(xtest, fit, y1);
 
         gsl_vector_sub(y1, y0);
         gsl_vector_scale(y1, 1.0 / delta);
@@ -860,8 +865,8 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
 {
     enum system_kind syskind = ref->acquisition->type;
     const struct spectrum_item *sitem = &fit->spectra_list[spectrum_no];
-    const stack_t *stack = fit->stack_list[scope_sample(sitem->scope)];
-    const channels_number = SYSTEM_CHANNELS_NUMBER(syskind);
+    const stack_t *stack = fit->stack_list[scope_sample_raw(sitem->scope)];
+    const int channels_number = SYSTEM_CHANNELS_NUMBER(syskind);
     const size_t nb_med = stack->nb;
     struct data_table *table = synth->table[0].table;
     const int npt = spectra_points(ref);
@@ -894,9 +899,12 @@ struct fit_engine *
 fit_engine_new()
 {
     struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
-    acquisition_set_default(fit->acquisition);
+    //cacquisition_set_default(fit->acquisition);
     fit->parameters = NULL;
-    fit->stack = NULL;
+    fit->stack_list = NULL;
+    fit->spectra_list = NULL;
+    fit->spectra_groups = NULL;
+    fit->results = NULL;
     return fit;
 }
 

@@ -135,7 +135,7 @@ stack_get_ths_list(const stack_t *s)
 }
 
 void
-stack_get_ns_list(stack_t *s, cmpl *ns, double lambda)
+stack_get_ns_list(const stack_t *s, cmpl *ns, double lambda)
 {
     int j;
     for(j = 0; j < s->nb; j++) {
@@ -156,7 +156,7 @@ stack_free(stack_t *s)
 }
 
 void
-stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps, unsigned int scope)
+stack_get_all_parameters(const stack_t *stack, struct fit_parameters *fps, unsigned int scope)
 {
     int n_layers = stack->nb - 2;
     fit_param_t fp[1];
