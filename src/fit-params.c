@@ -42,8 +42,30 @@ get_param_name(const fit_param_t *fp, str_t name)
 }
 
 void
+scope_suffix_as_string(str_t suffix, const int scope)
+{
+    const int g = FIT_PARAM_SCOPE_GROUP(scope);
+    const int s = FIT_PARAM_SCOPE_SAMPLE(scope);
+    const int a = FIT_PARAM_SCOPE_ACQUISITION(scope);
+    char gbuf[16] = {'\0'}, sbuf[16] = {'\0'}, abuf[16] = {'\0'};
+    if (g > 0) {
+        sprintf(gbuf, "G%d", g - 1);
+    }
+    if (s > 0) {
+        sprintf(gbuf, "%sS%d", gbuf[0] == 0 ? "" : ":", s - 1);
+    }
+    if (a > 0) {
+        sprintf(gbuf, "%s%d", (sbuf[0] == 0 && gbuf[0] == 0) ? "" : ":", a - 1);
+    }
+    str_printf(suffix, "%s%s%s", gbuf, sbuf, abuf);
+}
+
+void
 get_full_param_name(const fit_param_t *fp, str_t name)
 {
+    str_t scope_suffix;
+    str_init(scope_suffix, 15);
+    scope_suffix_as_string(scope_suffix, fp->scope);
     if (fp->id >= PID_ACQUISITION_PARAMETER) {
         acquisition_parameter_to_string(name, fp->id);
     } else if (fp->id == PID_THICKNESS) {
@@ -57,6 +79,10 @@ get_full_param_name(const fit_param_t *fp, str_t name)
     } else {
         str_printf(name, "###");
     }
+    if (!str_is_null(scope_suffix)) {
+        str_append(name, scope_suffix, ' ');
+    }
+    str_free(scope_suffix);
 }
 
 void

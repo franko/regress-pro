@@ -908,26 +908,64 @@ fit_engine_new()
     return fit;
 }
 
+static void
+stack_list_free(struct fit_engine *fit)
+{
+    if (fit->stack_list) {
+        for (int i = 0; i < fit->samples_number; i++) {
+            stack_free(fit->stack_list[i]);
+        }
+        free(fit->stack_list);
+    }
+    fit->stack_list = NULL;
+    fit->samples_number = 0;
+}
+
+static void
+stack_list_add_single_stack(struct fit_engine *fit, const stack_t *stack)
+{
+    fit->stack_list = emalloc(sizeof(struct stack *));
+    fit->stack_list[0] = stack_copy(stack);
+    fit->samples_number = 1;
+}
+
 void
 fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters)
 {
     fit->config[0] = *config;
+    stack_list_free(fit);
+    stack_list_add_single_stack(fit, stack);
     /* fit is not the owner of the "parameters", we just keep a reference */
     fit->parameters = parameters;
-    fit->stack = stack_copy(stack);
 }
 
 struct fit_engine *
 fit_engine_clone(struct fit_engine *src_fit)
 {
     struct fit_engine *fit = emalloc(sizeof(struct fit_engine));
-    fit->acquisition[0] = src_fit->acquisition[0];
     fit->config[0] = src_fit->config[0];
+    /* The fit parameters are not owned and read-only so we copy just the pointer. */
     fit->parameters = src_fit->parameters;
-    if (src_fit->stack) {
-        fit->stack = stack_copy(src_fit->stack);
+    if (src_fit->stack_list) {
+        fit->stack_list = emalloc(sizeof(struct stack *) * src_fit->samples_number);
+        for (int i = 0; i < src_fit->samples_number; i++) {
+            fit->stack_list[i] = stack_copy(src_fit->stack_list[i]);
+        }
     } else {
-        fit->stack = NULL;
+        fit->stack_list = NULL;
+    }
+    if (src_fit->spectra_list) {
+        fit->spectra_list = emalloc(sizeof(struct spectrum_item) * src_fit->spectra_number);
+        fit->spectra_groups = emalloc(sizeof(int) * src_fit->spectra_number);
+        for (int i = 0; i < src_fit->spectra_number; i++) {
+            const struct spectrum_item *src_sitem = &src_fit->spectra_list[i];
+            struct spectrum_item *dst_sitem = &fit->spectra_list[i];
+            *dst_sitem->acquisition = *src_sitem->acquisition;
+            dst_sitem->spectrum = spectra_copy(src_sitem->spectrum);
+            dst_sitem->scope = src_sitem->scope;
+
+            fit->spectra_groups[i] = src_fit->spectra_groups[i];
+        }
     }
     return fit;
 }
@@ -935,25 +973,38 @@ fit_engine_clone(struct fit_engine *src_fit)
 void
 fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack)
 {
-    if (fit->stack) {
-        stack_free(fit->stack);
-    }
-    fit->stack = stack;
+    stack_list_free(fit);
+    stack_list_add_single_stack(fit, stack);
 }
 
 stack_t *
 fit_engine_yield_stack(struct fit_engine *fit)
 {
-    stack_t *s = fit->stack;
-    fit->stack = NULL;
+    // TODO: figure out a meaningful API when more then one stack is present;
+    assert(fit->samples_number == 1);
+    stack_t *s = fit->stack_list[0];
+    free(fit->stack_list);
+    fit->stack_list = NULL;
+    fit->samples_number = 0;
     return s;
 }
 
 void
 fit_engine_free(struct fit_engine *fit)
 {
-    if (fit->stack) {
-        stack_free(fit->stack);
+    stack_list_free(fit);
+    if (fit->spectra_list) {
+        for (int i = 0; i < fit->spectra_number; i++) {
+            spectra_free(fit->spectra_list[i].spectrum);
+        }
+        free(fit->spectra_list);
+        free(fit->spectra_groups);
+    }
+    if (fit->parameters) {
+        fit_parameters_free(fit->parameters);
+    }
+    if (fit->results) {
+        gsl_vector_free(fit->results);
     }
     free(fit);
 }
@@ -972,12 +1023,12 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
         fit_param_t *fp = fit->parameters->values + j;
         get_param_name(fp, pname);
         if(tabular) {
-            str_printf(value, "%.6g", gsl_vector_get(fit->run->results, j));
+            str_printf(value, "%.6g", gsl_vector_get(fit->results, j));
             str_pad(value, 12, ' ');
             str_append(text, value, 0);
         } else
             str_printf_add(text, "%9s : %.6g\n", CSTR(pname),
-                           gsl_vector_get(fit->run->results, j));
+                           gsl_vector_get(fit->results, j));
     }
 
     str_free(value);
@@ -985,9 +1036,9 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
 }
 
 void
-fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters *acquisition)
+fit_engine_set_acquisition(struct fit_engine *fit, int spectrum_number, struct acquisition_parameters *acquisition)
 {
-    fit->acquisition[0] = *acquisition;
+    fit->spectra_list[spectrum_number].acquisition[0] = *acquisition;
 }
 
 void
@@ -1064,8 +1115,9 @@ config_exit:
 
 void
 fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]) {
-    const int nb_med = fit->stack->nb;
-    const cmpl *ns_cached = fit->run->cache.ns_full_spectr + j * nb_med;
+    assert(fit->samples_number == 1 && fit->spectra_number == 1);
+    const int nb_med = fit->stack_list[0]->nb;
+    const cmpl *ns_cached = fit->cache.ns_full_spectr + j * nb_med;
     for (int k = 0; k < nb_med; k++) {
         ns[k] = ns_cached[k];
     }

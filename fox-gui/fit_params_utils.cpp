@@ -6,8 +6,10 @@
 fit_parameters *listbox_populate_all_parameters(FXListBox *listbox, stack_t *stack, const struct acquisition_parameters *acquisition)
 {
     fit_parameters *fps = fit_parameters_new();
-    stack_get_all_parameters(stack, fps);
-    acquisition_get_all_parameters(acquisition, fps);
+    /* TODO: query only the first (default) stack with group = 1. Should handle multiple
+       film stacks and groups. */
+    stack_get_all_parameters(stack, fps, FIT_PARAM_SCOPE(1,1,0));
+    acquisition_get_all_parameters(acquisition, fps, FIT_PARAM_SCOPE(1,1,1));
 
     listbox->clearItems();
 

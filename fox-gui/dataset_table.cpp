@@ -17,7 +17,7 @@ dataset_table::dataset_table(fit_recipe *recipe, FXComposite *p,FXObject* tgt,FX
 {
     str_init(buffer, 20);
     fit_params = fit_parameters_new();
-    stack_get_all_parameters(recipe->stack, fit_params);
+    stack_get_all_parameters(recipe->stack, fit_params, FIT_PARAM_SCOPE(1,1,0));
     popupmenu = fit_parameters_menu(this, this, ID_FIT_PARAM, fit_params);
 }
 
@@ -31,7 +31,7 @@ dataset_table::~dataset_table()
 void dataset_table::stack_change_update(stack_t *stack)
 {
     fit_parameters_clear(fit_params);
-    stack_get_all_parameters(stack, fit_params);
+    stack_get_all_parameters(stack, fit_params, FIT_PARAM_SCOPE(1,1,0));
     delete popupmenu;
     popupmenu = fit_parameters_menu(this, this, ID_FIT_PARAM, fit_params);
     popupmenu->create();

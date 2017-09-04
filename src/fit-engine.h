@@ -57,6 +57,7 @@ struct fit_engine {
 
     int spectra_number, spectra_capacity;    
     struct spectrum_item *spectra_list;
+    // TODO: mode the spectra_groups information into the spectrum_item.
     int *spectra_groups; /* An array with the group number of each sample (stack). */
 
     int samples_number; /* Equal to the number of film stacks. */
@@ -145,7 +146,7 @@ extern void
 fit_config_set_default(struct fit_config *cfg);
 
 extern void
-fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters *acquisition);
+fit_engine_set_acquisition(struct fit_engine *fit, int spectrum_number, struct acquisition_parameters *acquisition);
 
 extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);

@@ -56,7 +56,7 @@ typedef struct {
     int layer_nb;
     enum disp_type model_id;
     int param_nb;
-    unsigned int scope; 
+    unsigned int scope;
 } fit_param_t;
 
 struct fit_parameters {
