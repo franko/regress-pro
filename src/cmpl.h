@@ -19,16 +19,17 @@ static inline double complex_part(cmpl z, complex_part_e part) {
     return (part == REAL_PART ? std::real(z) : std::imag(z));
 }
 
-typedef StackArray<cmpl, 8>  cmpl_array8;
-typedef StackArray<cmpl, 16> cmpl_array16;
-typedef StackArray<cmpl, 24> cmpl_array24;
-typedef StackArrayBase<cmpl> cmpl_array;
+typedef stack_array<cmpl, 4>  cmpl_array4;
+typedef stack_array<cmpl, 8>  cmpl_array8;
+typedef stack_array<cmpl, 16> cmpl_array16;
+typedef stack_array<cmpl, 24> cmpl_array24;
+typedef stack_array_base<cmpl> cmpl_array;
 
-typedef StackArray<double, 4>  double_array4;
-typedef StackArray<double, 8>  double_array8;
-typedef StackArray<double, 16> double_array16;
-typedef StackArray<double, 24> double_array24;
-typedef StackArrayBase<double> double_array;
+typedef stack_array<double, 4>  double_array4;
+typedef stack_array<double, 8>  double_array8;
+typedef stack_array<double, 16> double_array16;
+typedef stack_array<double, 24> double_array24;
+typedef stack_array_base<double> double_array;
 
 typedef pod::array<cmpl> cmpl_vector;
 

@@ -15,7 +15,7 @@ struct epsilon_fraction {
     cmpl eps;
 };
 
-typedef StackArraySized<epsilon_fraction, 6> epsilon_sequence;
+typedef stack_array_sized<epsilon_fraction, 6> epsilon_sequence;
 
 static void     bruggeman_free(struct disp_struct *d);
 static disp_t * bruggeman_copy(const disp_t *d);
