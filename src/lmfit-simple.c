@@ -13,22 +13,17 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
              struct lmfit_result *result, str_ptr analysis, str_ptr error_msg,
              gui_hook_func_t hfun, void *hdata)
 {
-    const gsl_multifit_fdfsolver_type *T;
-    gsl_multifit_fdfsolver *s;
-    gsl_multifit_function_fdf *f;
     struct fit_config *cfg = fit->config;
     int iter;
     double chi;
     int status;
     int stop_request;
 
-    assert(fit->run);
-
-    f = &fit->run->mffun;
+    gsl_multifit_function_fdf *f = &fit->mffun;
 
     /* We choose Levenberg-Marquardt algorithm, scaled version*/
-    T = gsl_multifit_fdfsolver_lmsder;
-    s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
     if(analysis) {
         str_copy_c(analysis, "Seed used: ");
@@ -40,7 +35,7 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
 
     chi = gsl_blas_dnrm2(s->f);
     result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
-    result->nb_points = spectra_points(fit->run->spectr);
+    result->nb_points = f->n;
     result->nb_iterations = iter;
     result->gsl_status = status;
 
@@ -75,7 +70,7 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
     fit_engine_commit_parameters(fit, x);
     fit_engine_update_disp_info(fit);
 
-    gsl_vector_memcpy(fit->run->results, x);
+    gsl_vector_memcpy(fit->results, x);
 
     gsl_multifit_fdfsolver_free(s);
 

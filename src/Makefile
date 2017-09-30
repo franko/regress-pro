@@ -16,7 +16,7 @@ ELL_SRC_FILES = common.c data-table.c data-view.c rc_matrix.c disp-table.c \
 	batch.c error-messages.c cmpl.c minsampling.c dispers.c disp-fb.c disp-tauc-lorentz.c disp-ho.c \
 	disp-bruggeman.c disp-cauchy.c disp-sellmeier.c dispers-classes.c stack.c lmfit.c \
 	fit-timestamp.c lmfit-simple.c fit-params.c fit-engine.c refl-kernel.c \
-	refl-fit.c elliss-fit.c number-parse.c refl-utils.c \
+	number-parse.c refl-utils.c \
 	acquisition.c \
 	gauss-legendre-quad.c \
 	spectra.c elliss.c \
