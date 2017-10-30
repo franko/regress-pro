@@ -361,9 +361,17 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
                          cfg->spectr_range.min, cfg->spectr_range.max);
 
     if(cfg->subsampling && enable_subsampling) {
-        const int channels_no = (syskind == SYSTEM_SR ? 1 : 2);
+        const int accuracy_max_iter = 5;
+        const int min_points_ratio = 2;
+        const int min_points_nb = min_points_ratio * fit->parameters->number;
         const int channel_start = 1;
-        table_sample_minimize(fit->run->spectr, 0.05, channel_start, channel_start + channels_no);
+        const int channels_no = (syskind == SYSTEM_SR ? 1 : 2);
+        float accuracy_limit = 0.05;
+        for (int k = 0; k < accuracy_max_iter; k++) {
+            bool min_ok = table_sample_minimize(fit->run->spectr, accuracy_limit, channel_start, channel_start + channels_no, min_points_nb);
+            if (min_ok) break;
+            accuracy_limit = accuracy_limit / 5.0;
+        }
     }
 
     build_fit_engine_cache(fit);

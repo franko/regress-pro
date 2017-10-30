@@ -57,8 +57,8 @@ minsampling_stepper(struct step_data *info, int idx, int idx_red, int channel_s,
     return map;
 }
 
-void
-table_sample_minimize(struct spectrum *s, float dlmt, int channel_s, int channel_e)
+bool
+table_sample_minimize(struct spectrum *s, float dlmt, int channel_s, int channel_e, int min_points_nb)
 {
     struct step_data info[1];
     int *map;
@@ -70,6 +70,16 @@ table_sample_minimize(struct spectrum *s, float dlmt, int channel_s, int channel
     map = minsampling_stepper(info, s->table->idx_start, 1, channel_s, channel_e);
     map[0] = 0;
 
+    if (info->size < min_points_nb) {
+        // If the number of points is less than the minimum required points do not perform
+        // subsampling.
+#ifdef DEBUG
+        fprintf(stderr, "No subsampling done. Required points: %d versus subsampling: %d\n", min_points_nb, info->size);
+#endif
+        free(map);
+        return false;
+    }
+
 #ifdef DEBUG
     fprintf(stderr, "number of channels: %d, original size: %d, reduced size: %d\n", channel_e - channel_s, info->idx_max, info->size);
     for (int j = 0; j < info->size; j++) {
@@ -79,4 +89,5 @@ table_sample_minimize(struct spectrum *s, float dlmt, int channel_s, int channel
 #endif
 
     data_view_set_map(s->table, info->size, map);
+    return true;
 }
