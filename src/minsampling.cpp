@@ -25,8 +25,6 @@ static float tget(const struct step_data *info, int row, int col) {
 int *
 minsampling_stepper(struct step_data *info, int idx, int idx_red, int channel_s, int channel_e)
 {
-    int *map = nullptr;
-
     const int channels_no = (channel_e - channel_s);
     for (int j = idx + 2; j < info->idx_max; j++) {
         float p[channels_no];
@@ -41,7 +39,7 @@ minsampling_stepper(struct step_data *info, int idx, int idx_red, int channel_s,
                 const float yint = tget(info, idx, ch) + (tget(info, k, 0) - tget(info, idx, 0)) * p[q];
                 const float del = yint - tget(info, k, ch);
                 if (fabsf(del) > info->epsilon) {
-                    map = minsampling_stepper(info, j - 1, idx_red + 1, channel_s, channel_e);
+                    int *map = minsampling_stepper(info, j - 1, idx_red + 1, channel_s, channel_e);
                     /* map cannot be null here */
                     map[idx_red] = j - 1;
                     return map;
@@ -52,7 +50,7 @@ minsampling_stepper(struct step_data *info, int idx, int idx_red, int channel_s,
 
     info->size = idx_red + 1;
 
-    map = (int *) emalloc((idx_red + 1) * sizeof(int));
+    int *map = (int *) emalloc((idx_red + 1) * sizeof(int));
     map[idx_red] = info->idx_max - 1;
     return map;
 }
