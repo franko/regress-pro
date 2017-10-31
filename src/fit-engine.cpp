@@ -343,6 +343,21 @@ fit_engine_check_deriv(struct fit_engine *fit) {
 }
 #endif
 
+const char *
+fit_engine_prepare_check_error(struct fit_engine *fit, struct spectrum *s)
+{
+    const enum system_kind skind = s->acquisition->type;
+    if (skind == SYSTEM_UNDEF || skind >= SYSTEM_INVALID) {
+        return "Unknown or undefined spectrum type";
+    }
+    if (spectra_points(s) < int(fit->parameters->number)) {
+        return "Not enough points in the spectrum";
+    }
+    return nullptr;
+}
+
+// Should never fails if the corresponding function fit_engine_prepare_check_error
+// does not return any error.
 int
 fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_engine_flags)
 {

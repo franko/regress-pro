@@ -80,6 +80,10 @@ extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 
 extern void fit_engine_free(struct fit_engine *fit);
 
+/* Check for error before calling the _prepare function. If clean the prepare function
+   should never fail. */
+extern const char * fit_engine_prepare_check_error(struct fit_engine *fit, struct spectrum *s);
+
 extern int  fit_engine_prepare(struct fit_engine *f, struct spectrum *s, const int fit_engine_flags);
 
 extern void fit_engine_disable(struct fit_engine *f);

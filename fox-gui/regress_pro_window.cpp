@@ -529,6 +529,11 @@ str_ptr regress_pro_window::run_fit_command() {
     if (!fit) {
         return error_msg;
     }
+    const char *check_error = fit_engine_prepare_check_error(fit, this->spectrum);
+    if (check_error) {
+        return new_error_message(SPECTRUM_INVALID, check_error);
+    }
+
     FXString fit_result = run_fit(fit, recipe->seeds_list, this->spectrum);
     fit_engine_free(fit);
 

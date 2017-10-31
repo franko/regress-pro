@@ -9,6 +9,7 @@ enum error_type_e {
     RECIPE_CHECK,
     TESTING_SCRIPT_ERROR,
     SPECTRA_NOT_FOUND,
+    SPECTRUM_INVALID,
     FIT_ERROR,
 };
 

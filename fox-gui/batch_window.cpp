@@ -62,7 +62,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
     for (int i = 0; i < table->samples_number(); i++) {
         FXString name = table->getItemText(i, 0);
         spectrum *s = load_gener_spectrum(name.text(), error_msg);
-        if (!s) {
+        if (!s || fit_engine_prepare_check_error(fit, s) != nullptr) {
             return 1;
         }
         fit_engine_prepare(fit, s, FIT_RESET_ACQUISITION);
