@@ -1,0 +1,3 @@
+load-spectrum "tests/spectres/Silicon_As_implant.dat"
+load-recipe "tests/recipes/si-implant-bilayer-cr2-model.rcp"
+fit
