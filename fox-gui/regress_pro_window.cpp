@@ -35,6 +35,7 @@
 #include "fit-params.h"
 #include "spectra.h"
 #include "grid-search.h"
+#include "nlopt_fit.h"
 #include "str.h"
 #include "str-util.h"
 #include "dispers-library.h"
@@ -467,13 +468,12 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     lmfit_result result;
     if (scriptMode()) {
-        lmfit_grid(fit, fseeds, &result, &analysis,
-                   LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
+        // lmfit_grid(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
+        nlopt_fit(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
     } else {
         ProgressInfo progress(this->getApp(), this);
-        lmfit_grid(fit, fseeds, &result, &analysis,
-                   LMFIT_GET_RESULTING_STACK,
-                   process_foxgui_events, & progress);
+        // lmfit_grid(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, process_foxgui_events, & progress);
+        nlopt_fit(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, process_foxgui_events, & progress);
         progress.hide();
     }
 

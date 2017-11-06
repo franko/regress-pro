@@ -23,9 +23,6 @@ public:
     const T* data() const { return m_data; }
           T* data()       { return m_data; }
 
-    const T& operator[](unsigned index) const { return m_data[index]; }
-          T& operator[](unsigned index)       { return m_data[index]; }
-
     const T& at(unsigned index) const { return m_data[index]; }
           T& at(unsigned index)       { return m_data[index]; }
 protected:

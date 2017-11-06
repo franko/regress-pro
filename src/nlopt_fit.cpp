@@ -6,6 +6,7 @@
 #include "math-utils.h"
 #include "nlopt_fit.h"
 #include "fit_result.h"
+#include "gsl_cpp.h"
 #include "cmpl.h"
 
 // To be used as the user data in the nlopt ojective function.
@@ -81,39 +82,35 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, double x[])
 }
 
 int
-nlopt_fit(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
+nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
           gui_hook_func_t hfun, void *hdata)
 {
-    const int dim = fit->parameters->number;
+    const int dim = parent_fit->parameters->number;
 
     if(hfun) {
         (*hfun)(hdata, 0.0, "Running NLopt search...");
     }
 
-    stack_t *initial_stack = nullptr;
-    if (preserve_init_stack) {
-        initial_stack = stack_copy(fit->stack);
-    }
+    fit_engine *fit = fit_engine_clone(parent_fit);
+    fit_engine_prepare(fit, parent_fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
     objective_data data(fit);
-    nlopt_opt opt = nlopt_create(NLOPT_LD_MMA, dim);
-    gsl_vector *x = gsl_vector_alloc(dim);
-    set_optimizer_bounds(opt, fit, seeds, x->data);
+    nlopt_opt opt = nlopt_create(NLOPT_GN_ORIG_DIRECT_L, dim);
+    gsl::vector x(dim);
+    set_optimizer_bounds(opt, fit, seeds, x.data());
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
     nlopt_set_xtol_rel(opt, 1e-4);
-
-    fit_engine_prepare(fit, fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
     fprintf(stderr, "initial point:");
     for (int i = 0; i < dim; i++) {
         fprintf(stderr, " %g", gsl_vector_get(x, i));
     }
-    const double minf0 = objective_func(dim, x->data, nullptr, &data);
+    const double minf0 = objective_func(dim, x.data(), nullptr, &data);
     fprintf(stderr, "\nwith objective function: %g\n", minf0);
 
     double chisq;
     int status = GSL_SUCCESS;
-    if (nlopt_optimize(opt, x->data, &chisq) < 0) {
+    if (nlopt_optimize(opt, x.data(), &chisq) < 0) {
         // TO BE done properly.
         fprintf(stderr, "nlopt failed!\n");
         status = 1;
@@ -124,19 +121,15 @@ nlopt_fit(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis,
     }
     fprintf(stderr, "\nwith objective function: %g\n", chisq);
     fit_engine_disable(fit);
+    fit_engine_free(fit);
 
-    if (preserve_init_stack) {
-        /* we restore the initial stack */
-        stack_free(fit->stack);
-        fit->stack = initial_stack;
-    } else {
+    if (!preserve_init_stack) {
         /* we take care to commit the results obtained from the fit */
-        fit_engine_commit_parameters(fit, x);
-        fit_engine_update_disp_info(fit);
+        fit_engine_commit_parameters(parent_fit, x);
+        fit_engine_update_disp_info(parent_fit);
     }
 
-    gsl_vector_memcpy(fit->run->results, x);
-    gsl_vector_free(x);
+    gsl_vector_memcpy(parent_fit->run->results, x);
 
     result->chisq = chisq;
     result->nb_points = data.n();
