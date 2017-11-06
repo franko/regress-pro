@@ -61,7 +61,7 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
 }
 
 static void
-set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, double_array x)
+set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, double x[])
 {
     const int dim = fit->parameters->number;
     double_array8 lower_bounds(dim), upper_bounds(dim);
@@ -85,17 +85,20 @@ nlopt_fit(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis,
           gui_hook_func_t hfun, void *hdata)
 {
     const int dim = fit->parameters->number;
-    fit_result nlopt_result[1];
 
     if(hfun) {
         (*hfun)(hdata, 0.0, "Running NLopt search...");
     }
 
+    stack_t *initial_stack = nullptr;
+    if (preserve_init_stack) {
+        initial_stack = stack_copy(fit->stack);
+    }
+
     objective_data data(fit);
-    fit_result_init(nlopt_result, fit);
     nlopt_opt opt = nlopt_create(NLOPT_LD_MMA, dim);
-    double_array8 x(dim);
-    set_optimizer_bounds(opt, fit, seeds, x);
+    gsl_vector *x = gsl_vector_alloc(dim);
+    set_optimizer_bounds(opt, fit, seeds, x->data);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
     nlopt_set_xtol_rel(opt, 1e-4);
 
@@ -103,21 +106,42 @@ nlopt_fit(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis,
 
     fprintf(stderr, "initial point:");
     for (int i = 0; i < dim; i++) {
-        fprintf(stderr, " %g", x[i]);
+        fprintf(stderr, " %g", gsl_vector_get(x, i));
     }
-    const double minf0 = objective_func(dim, x, nullptr, &data);
+    const double minf0 = objective_func(dim, x->data, nullptr, &data);
     fprintf(stderr, "\nwith objective function: %g\n", minf0);
 
-    double minf;
-    if (nlopt_optimize(opt, x, &minf) < 0) {
+    double chisq;
+    int status = GSL_SUCCESS;
+    if (nlopt_optimize(opt, x->data, &chisq) < 0) {
         // TO BE done properly.
         fprintf(stderr, "nlopt failed!\n");
-        return 1;
+        status = 1;
     }
     fprintf(stderr, "found minimum at:");
     for (int i = 0; i < dim; i++) {
-        fprintf(stderr, " %g", x[i]);
+        fprintf(stderr, " %g", gsl_vector_get(x, i));
     }
-    fprintf(stderr, "\nwith objective function: %g\n", minf);
+    fprintf(stderr, "\nwith objective function: %g\n", chisq);
+    fit_engine_disable(fit);
+
+    if (preserve_init_stack) {
+        /* we restore the initial stack */
+        stack_free(fit->stack);
+        fit->stack = initial_stack;
+    } else {
+        /* we take care to commit the results obtained from the fit */
+        fit_engine_commit_parameters(fit, x);
+        fit_engine_update_disp_info(fit);
+    }
+
+    gsl_vector_memcpy(fit->run->results, x);
+    gsl_vector_free(x);
+
+    result->chisq = chisq;
+    result->nb_points = data.n();
+    result->nb_iterations = 0;
+    result->gsl_status = status;
+
     return 0;
 }
