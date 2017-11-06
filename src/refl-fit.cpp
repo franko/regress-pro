@@ -79,8 +79,7 @@ refl_fit_fdf(const gsl_vector *x, void *params,
         const double lambda = spectr_data[0];
         const double r_meas = spectr_data[1];
 
-        cmpl_array8 ns_store(nb_med);
-        cmpl *ns = ns_store.data();
+        cmpl_array8 ns(nb_med);
         if(fit->run->cache.th_only) {
             fit_engine_get_cached_ns(fit, j, ns);
         } else {

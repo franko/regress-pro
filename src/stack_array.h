@@ -17,6 +17,9 @@ public:
         }
     }
 
+    operator const T*() const { return m_data; }
+    operator       T*()      { return m_data; }
+
     const T* data() const { return m_data; }
           T* data()       { return m_data; }
 

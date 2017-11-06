@@ -76,8 +76,8 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, double_array 
             upper_bounds[j] = +HUGE_VAL;
         }
     }
-    nlopt_set_lower_bounds(opt, lower_bounds.data());
-    nlopt_set_upper_bounds(opt, upper_bounds.data());
+    nlopt_set_lower_bounds(opt, lower_bounds);
+    nlopt_set_upper_bounds(opt, upper_bounds);
 }
 
 int
@@ -105,11 +105,11 @@ nlopt_fit(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis,
     for (int i = 0; i < dim; i++) {
         fprintf(stderr, " %g", x[i]);
     }
-    const double minf0 = objective_func(dim, x.data(), nullptr, &data);
+    const double minf0 = objective_func(dim, x, nullptr, &data);
     fprintf(stderr, "\nwith objective function: %g\n", minf0);
 
     double minf;
-    if (nlopt_optimize(opt, x.data(), &minf) < 0) {
+    if (nlopt_optimize(opt, x, &minf) < 0) {
         // TO BE done properly.
         fprintf(stderr, "nlopt failed!\n");
         return 1;

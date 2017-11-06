@@ -668,7 +668,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
                 cmpl dab[2];
-                se_ab_diff_from_sp(sp, sp_jacob_n.data() + 3 * j, tanlz, dab);
+                se_ab_diff_from_sp(sp, sp_jacob_n + 3 * j, tanlz, dab);
                 jacob_n->at(     j) = dab[0];
                 jacob_n->at(nb + j) = dab[1];
             }
@@ -677,7 +677,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
                 double dab[2];
-                se_ab_diff_from_sp_real(sp, sp_jacob_th.data() + 3 * j, tanlz, dab);
+                se_ab_diff_from_sp_real(sp, sp_jacob_th + 3 * j, tanlz, dab);
                 jacob_th->at(        j) = dab[0];
                 jacob_th->at(nblyr + j) = dab[1];
             }
@@ -701,7 +701,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_n) {
             for(int j = 0; j < nb; j++) {
                 cmpl dpsidel[2];
-                se_psidel_diff_from_sp(sp, sp_jacob_n.data() + 3 * j, dpsidel);
+                se_psidel_diff_from_sp(sp, sp_jacob_n + 3 * j, dpsidel);
                 jacob_n->at(     j) = dpsidel[0];
                 jacob_n->at(nb + j) = dpsidel[1];
             }
@@ -710,7 +710,7 @@ mult_layer_se_integ_jacob(int nb, const cmpl ns[], const double ds[], double lam
         if (jacob_th) {
             for(int j = 0; j < nblyr; j++) {
                 double dpsidel[2];
-                se_psidel_diff_from_sp_real(sp, sp_jacob_th.data() + 3 * j, dpsidel);
+                se_psidel_diff_from_sp_real(sp, sp_jacob_th + 3 * j, dpsidel);
                 jacob_th->at(        j) = dpsidel[0];
                 jacob_th->at(nblyr + j) = dpsidel[1];
             }

@@ -170,8 +170,7 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
             const double lambda = spectr_data[0];
             double result[channels_number];
 
-            cmpl_array8 ns_store(nb_med);
-            cmpl *ns = ns_store.data();
+            cmpl_array8 ns(nb_med);
             stack_get_ns_list(stack_sample, ns, lambda);
 
             /* STEP 3 : We call the ellipsometer kernel function */
