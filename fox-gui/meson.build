@@ -5,6 +5,6 @@ fox_src = ['disp-lookup-components.cpp', 'dispers_sampling_optim.cpp', 'Progress
 
 executable('regress-pro', fox_src,
            include_directories: [foxgui_incdir, kernel_incdir],
-           dependencies: [gsl_dep, fox_dep, agg_dep, thread_dep],
+           dependencies: [gsl_dep, nlopt_dep, fox_dep, agg_dep, thread_dep],
            link_with: libkernel,
            gui_app: not enable_debug)
