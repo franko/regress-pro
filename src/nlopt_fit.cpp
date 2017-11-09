@@ -62,20 +62,26 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
 }
 
 static void
-set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, double x[])
+set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, gsl_vector *x)
 {
     const int dim = fit->parameters->number;
     double_array8 lower_bounds(dim), upper_bounds(dim);
     for(int j = 0; j < dim; j++) {
-        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &seeds->values[j]);
+        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &seeds->values[j]);
+        gsl_vector_set(x, j, xc);
+    }
+    for(int j = 0; j < dim; j++) {
+        const double xc = gsl_vector_get(x, j);
+        double delta;
         if(seeds->values[j].type == SEED_RANGE) {
-            const double delta = seeds->values[j].delta;
-            lower_bounds[j] = x[j] - delta;
-            upper_bounds[j] = x[j] + delta;
+            delta = seeds->values[j].delta;
         } else {
-            lower_bounds[j] = -HUGE_VAL;
-            upper_bounds[j] = +HUGE_VAL;
+            const fit_param_t fp = fit->parameters->values[j];
+            delta = fit_engine_estimate_param_grid_step(fit, x, &fp, fabs(xc) > 0.1 ? xc / 10.0 : 0.01);
         }
+        fprintf(stderr, "parameter: %d, delta: %g\n", j, delta);
+        lower_bounds[j] = xc - delta;
+        upper_bounds[j] = xc + delta;
     }
     nlopt_set_lower_bounds(opt, lower_bounds);
     nlopt_set_upper_bounds(opt, upper_bounds);
@@ -95,9 +101,9 @@ nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr an
     fit_engine_prepare(fit, parent_fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
     objective_data data(fit);
-    nlopt_opt opt = nlopt_create(NLOPT_GN_ORIG_DIRECT_L, dim);
+    nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
     gsl::vector x(dim);
-    set_optimizer_bounds(opt, fit, seeds, x.data());
+    set_optimizer_bounds(opt, fit, seeds, x);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
     nlopt_set_xtol_rel(opt, 1e-4);
 
@@ -107,6 +113,7 @@ nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr an
     }
     const double minf0 = objective_func(dim, x.data(), nullptr, &data);
     fprintf(stderr, "\nwith objective function: %g\n", minf0);
+    fflush(stderr);
 
     double chisq;
     int status = GSL_SUCCESS;
