@@ -9,6 +9,12 @@
 #include "gsl_cpp.h"
 #include "cmpl.h"
 
+enum {
+    MY_NLOPT_MAXEVAL = 5000,
+    MY_NLOPT_EVAL_REFRESH = 100,
+    MY_NLOPT_MAX_SECONDS = 8,
+};
+
 // To be used as the user data in the nlopt ojective function.
 // Hold the resources to evaluate the f and df using the fit_engine's
 // multifit fdf function.
@@ -16,8 +22,13 @@ struct objective_data {
     fit_engine *fit;
     gsl_vector *f;
     gsl_matrix *J;
+    nlopt_opt opt;
+    gui_hook_func_t hfun;
+    void *hdata;
+    int eval_count;
 
-    objective_data(fit_engine *_fit): fit(_fit) {
+    objective_data(fit_engine *_fit, nlopt_opt _opt, gui_hook_func_t _hfun, void *_hdata):
+        fit(_fit), opt(_opt), hfun(_hfun), hdata(_hdata), eval_count(0) {
         f = gsl_vector_alloc(fit->run->mffun.n);
         J = gsl_matrix_alloc(fit->run->mffun.n, fit->run->mffun.p);
     }
@@ -25,6 +36,14 @@ struct objective_data {
     ~objective_data() {
         gsl_vector_free(f);
         gsl_matrix_free(J);
+    }
+
+    bool check_for_stop_request() const {
+        if (eval_count % MY_NLOPT_EVAL_REFRESH == 0) {
+            const float xf = float(eval_count) / float(MY_NLOPT_MAXEVAL);
+            return (*hfun)(hdata, xf, nullptr) != 0;
+        }
+        return false;
     }
 
     void eval_f(const gsl_vector *x) {
@@ -42,11 +61,12 @@ static double
 objective_func(unsigned n, const double *x, double *grad, void *_data)
 {
     objective_data *data = (objective_data *) _data;
+    if (data->check_for_stop_request()) {
+        nlopt_force_stop(data->opt);
+    }
     gsl_vector_const_view xv = gsl_vector_const_view_array(x, n);
     data->eval_f(&xv.vector);
-
     const double chisq = pow2(gsl_blas_dnrm2(data->f));
-
     if (grad) {
         data->eval_df(&xv.vector);
         for (int k = 0; k < (int) n; k++) { // Iterate over the fit parameters.
@@ -57,7 +77,7 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
             grad[k] = der;
         }
     }
-
+    data->eval_count ++;
     return chisq;
 }
 
@@ -100,12 +120,14 @@ nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr an
     fit_engine *fit = fit_engine_clone(parent_fit);
     fit_engine_prepare(fit, parent_fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
-    objective_data data(fit);
     nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
+    objective_data data(fit, opt, hfun, hdata);
     gsl::vector x(dim);
     set_optimizer_bounds(opt, fit, seeds, x);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
-    nlopt_set_xtol_rel(opt, 1e-4);
+    nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
+    nlopt_set_stopval(opt, 1e-5);
+    nlopt_set_ftol_rel(opt, 1e-5);
 
     fprintf(stderr, "initial point:");
     for (int i = 0; i < dim; i++) {
@@ -127,6 +149,7 @@ nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr an
         fprintf(stderr, " %g", gsl_vector_get(x, i));
     }
     fprintf(stderr, "\nwith objective function: %g\n", chisq);
+    fflush(stderr);
     fit_engine_disable(fit);
     fit_engine_free(fit);
 
