@@ -97,7 +97,7 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, gsl_vector *x
             delta = seeds->values[j].delta;
         } else {
             const fit_param_t fp = fit->parameters->values[j];
-            delta = fit_engine_estimate_param_grid_step(fit, x, &fp, fabs(xc) > 0.1 ? xc / 10.0 : 0.01);
+            delta = fit_engine_estimate_param_grid_step(fit, x, &fp, fabs(xc) > 0.1 ? fabs(xc) / 2 : 0.05);
         }
         fprintf(stderr, "parameter: %d, delta: %g\n", j, delta);
         lower_bounds[j] = xc - delta;
