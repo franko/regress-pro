@@ -28,6 +28,8 @@ public:
     double& at(int i)       { return *gsl_vector_ptr(m_vector, i); }
     double  at(int i) const { return gsl_vector_get(m_vector, i); }
 
+    int size() const { return m_vector->size; }
+
 protected:
 	gsl_vector *m_vector;
 };
