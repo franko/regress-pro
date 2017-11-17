@@ -794,3 +794,12 @@ fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]) {
         ns[k] = ns_cached[k];
     }
 }
+
+void fit_engine_commit_fit_results(fit_engine *fit, const gsl_vector *x) {
+    fit_engine_commit_parameters(fit, x);
+    fit_engine_update_disp_info(fit);
+}
+
+void fit_engine_copy_fit_results(fit_engine *fit, const gsl_vector *x) {
+    gsl_vector_memcpy(fit->run->results, x);
+}

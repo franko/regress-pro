@@ -48,3 +48,21 @@ lmfit_iter(gsl_vector *x, gsl_multifit_function_fdf *f,
 
     return status;
 }
+
+// Perform Levenberg-Marquart final step. Store the new results in gsl_vector x and update
+// result struct.
+void fit_engine_lmfit(fit_engine *fit, gsl_vector *x, lmfit_result *result, fit_config *cfg, gui_hook_func_t hfun, void *hdata, int& stop_request) {
+    gsl_multifit_function_fdf *f = &fit->run->mffun;
+    const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
+    gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
+
+    int iter;
+    int status = lmfit_iter(x, f, s, cfg->nb_max_iters, cfg->epsabs, cfg->epsrel, &iter, hfun, hdata, &stop_request);
+
+    const double chi = gsl_blas_dnrm2(s->f);
+    result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
+    result->gsl_status = status;
+    result->nb_iterations = iter;
+
+    gsl_multifit_fdfsolver_free(s);
+}

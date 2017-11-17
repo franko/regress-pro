@@ -16,9 +16,15 @@ enum {
     MY_NLOPT_MAX_SECONDS = 8,
 };
 
+enum {
+    GSEARCH_SUCCESS = 0,
+    GSEARCH_STOP_REQUEST,
+    GSEARCH_FAILURE,
+};
+
 // Used for the procedure that set optimizer bounds based on fit parameters.
 // The large options set the limits to +/- inf for parameters without a given range.
-enum { OPT_BOUNDS_LIMIT, OPT_BOUNDS_LARGE };
+enum { OPT_BOUNDS_RESTRICT, OPT_BOUNDS_LARGE };
 
 // To be used as the user data in the nlopt ojective function.
 // Hold the resources to evaluate the f and df using the fit_engine's
@@ -45,16 +51,19 @@ struct objective_data {
         gsl_matrix_free(J);
     }
 
-    bool check_for_stop_request() const {
-        if (eval_count % MY_NLOPT_EVAL_REFRESH == 0) {
+    bool check_for_stop_request() {
+        if (hfun && eval_count % MY_NLOPT_EVAL_REFRESH == 0) {
             const float xf = float(eval_count) / float(max_eval);
-            return (*hfun)(hdata, xf, nullptr) != 0;
+            int stop_request = (*hfun)(hdata, xf, nullptr);
+            return (stop_request != 0);
         }
         return false;
     }
 
     void start_message(const char *msg) {
-        (*hfun)(hdata, 0.0, msg);
+        if (hfun) {
+            (*hfun)(hdata, 0.0, msg);
+        }
     }
 
     void eval_f(const gsl_vector *x) {
@@ -118,7 +127,7 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, int limits_ty
             lower_bounds[j] = xc - delta;
             upper_bounds[j] = xc + delta;
         } else {
-            if (limits_type == OPT_BOUNDS_LIMIT) {
+            if (limits_type == OPT_BOUNDS_RESTRICT) {
                 const fit_param_t fp = fit->parameters->values[j];
                 const double delta = fit_engine_estimate_param_grid_step(fit, &xv.vector, &fp, fabs(xc) > 0.1 ? fabs(xc) / 2 : 0.05);
                 lower_bounds[j] = xc - delta;
@@ -134,44 +143,53 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, int limits_ty
     nlopt_set_upper_bounds(opt, upper_bounds);
 }
 
-static void
-debug_print_fit_result(const char *tag, gsl::vector& x, double chisq) {
-    fprintf(stderr, "%s\n", tag);
-    for (int i = 0; i < x.size(); i++) {
-        fprintf(stderr, " %g", x[i]);
+static void report_global_search_outcome(int nlopt_status, gsl::vector& x, double chisq, str_ptr analysis) {
+    if (nlopt_status < 0) {
+        str_printf(analysis, "Global search failed with error code: %d\n", nlopt_status);
+        return;
     }
-    fprintf(stderr, "\nwith objective function: %g\n", chisq);
-    fflush(stderr);
+
+    str_printf(analysis, "Found global minimum");
+    for (int i = 0; i < x.size(); i++) {
+        str_printf_add(analysis, " %g", x[i]);
+    }
+    str_printf_add(analysis, " with chi square: %g\n", chisq);
+    str_printf_add(analysis, "NLopt termination code: %d\n", nlopt_status);
 }
 
+// Perform a global optimization search and return the results in the vector "x". Return a
+// status code indicating success or failure. The user interface is updated.
 static int
-do_final_optimization(fit_engine *fit, seeds *seeds, lmfit_result *result, gsl::vector& x, gui_hook_func_t hfun, void *hdata) {
+global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_func_t hfun, void *hdata, gsl::vector& x) {
     const int dim = fit->parameters->number;
-    nlopt_opt opt = nlopt_create(NLOPT_LD_MMA, dim);
-    objective_data data(fit, opt, hfun, hdata, MY_NLOPT_MAXEVAL_FINAL);
-    data.start_message("Starting local optimization.");
-    set_optimizer_bounds(opt, fit, seeds, OPT_BOUNDS_LARGE);
+    // Prepare the NLOpt optimizer.
+    nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
+    objective_data data(fit, opt, hfun, hdata, MY_NLOPT_MAXEVAL);
+
+    // Send message to the UI.
+    data.start_message("Running NLopt search...");
+
+    set_initial_seeds(fit, seeds, x);
+    set_optimizer_bounds(opt, fit, seeds, OPT_BOUNDS_RESTRICT);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
-    nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL_FINAL);
-    nlopt_set_stopval(opt, 1e-6);
-    nlopt_set_ftol_rel(opt, 1e-8);
+    nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
+    nlopt_set_stopval(opt, 1e-4);
+    nlopt_set_ftol_rel(opt, 1e-4);
+
+#if 0
+    const double chisq0 = objective_func(dim, x.data(), nullptr, &data);
+    debug_print_fit_result("initial point:", x, chisq0);
+#endif
 
     double chisq;
+    // Perform the actual NLopt optimization.
     int nlopt_status = nlopt_optimize(opt, x.data(), &chisq);
-    fprintf(stderr, "nlopt local optimization exit code: %d\n", nlopt_status);
-    int status;
-    if (nlopt_status < 0) {
-        fflush(stderr);
-        status = GSL_FAILURE;
-    } else {
-        debug_print_fit_result("final optimization minimum:", x, chisq);
-        result->chisq = chisq;
-        status = GSL_SUCCESS;
-    }
-    result->nb_points = data.n();
-    result->nb_iterations = 0;
+
+    // Report global seach information in text format.
+    report_global_search_outcome(nlopt_status, x, chisq, analysis);
     nlopt_destroy(opt);
-    return status;
+
+    return (nlopt_status >= 0 ? GSEARCH_SUCCESS : (nlopt_status == NLOPT_FORCED_STOP ? GSEARCH_STOP_REQUEST : GSEARCH_FAILURE));
 }
 
 int
@@ -179,52 +197,28 @@ nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr an
           gui_hook_func_t hfun, void *hdata)
 {
     const int dim = parent_fit->parameters->number;
+
+    // Create a copy of the original fit engine.
     fit_engine *fit = fit_engine_clone(parent_fit);
+
+    // Prepare the new fit engine using the spectrum and enable subsumpling.
     fit_engine_prepare(fit, parent_fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
-    nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
-    objective_data data(fit, opt, hfun, hdata, MY_NLOPT_MAXEVAL);
-    data.start_message("Running NLopt search...");
-    gsl::vector x(dim);
-    set_initial_seeds(fit, seeds, x);
-    set_optimizer_bounds(opt, fit, seeds, OPT_BOUNDS_LIMIT);
-    nlopt_set_min_objective(opt, objective_func, (void *) &data);
-    nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
-    nlopt_set_stopval(opt, 1e-4);
-    nlopt_set_ftol_rel(opt, 1e-4);
-
-    const double chisq0 = objective_func(dim, x.data(), nullptr, &data);
-    debug_print_fit_result("initial point:", x, chisq0);
-
-    double chisq;
-    int status = GSL_SUCCESS;
-    int nlopt_status = nlopt_optimize(opt, x.data(), &chisq);
-    fprintf(stderr, "nlopt global optimization exit code: %d\n", nlopt_status);
-    if (nlopt_status < 0) {
-        // TO BE done properly.
-        fprintf(stderr, "nlopt failed!\n");
-        fflush(stderr);
-        status = 1;
-    } else {
-        result->chisq = chisq;
-        debug_print_fit_result("global optimization minimum:", x, chisq);
-        status = do_final_optimization(parent_fit, seeds, result, x, hfun, hdata);
-    }
-
-    result->gsl_status = status;
-
-    nlopt_destroy(opt);
-
+    gsl::vector x(dim); // Will store the best solution found.
+    int gsearch_status = global_search_nlopt(fit, seeds, analysis, hfun, hdata, x);
     fit_engine_disable(fit);
     fit_engine_free(fit);
 
-    if (!preserve_init_stack) {
-        /* we take care to commit the results obtained from the fit */
-        fit_engine_commit_parameters(parent_fit, x);
-        fit_engine_update_disp_info(parent_fit);
+    if(gsearch_status == GSEARCH_SUCCESS) {
+        int stop_request;
+        fit_engine_lmfit(parent_fit, x, result, parent_fit->config, hfun, hdata, stop_request);
     }
 
-    gsl_vector_memcpy(parent_fit->run->results, x);
+    if (!preserve_init_stack) {
+        /* we take care to commit the results obtained from the fit */
+        fit_engine_commit_fit_results(parent_fit, x);
+    }
+    fit_engine_copy_fit_results(parent_fit, x);
 
     return 0;
 }

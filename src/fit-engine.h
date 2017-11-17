@@ -146,4 +146,7 @@ fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters
 extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);
 
+extern void fit_engine_commit_fit_results(struct fit_engine *fit, const gsl_vector *x);
+extern void fit_engine_copy_fit_results(fit_engine *fit, const gsl_vector *x);
+
 #endif

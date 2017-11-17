@@ -149,14 +149,13 @@ void *thr_eval_func(void *arg) {
     return nullptr;
 }
 
-int
-lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
-    int preserve_init_stack, struct fit_result *result,
-    gui_hook_func_t hfun, void *hdata)
+static int
+lmfit_grid_run(fit_engine *fit, seeds *seeds, int preserve_init_stack, fit_result *result,
+    lmfit_result *lmresult, gui_hook_func_t hfun, void *hdata)
 {
     struct fit_config *cfg = fit->config;
-    int status, stop_request = 0;
-    stack_t *initial_stack;
+    int stop_request = 0;
+    stack_t *initial_stack = nullptr;
     const int dim = fit->parameters->number;
     const seed_t *vseed = seeds->values;
 
@@ -248,50 +247,32 @@ lmfit_grid_run(struct fit_engine *fit, struct seeds *seeds,
     result->interrupted = stop_request;
 
     if(stop_request == 0) {
-        gsl_multifit_function_fdf *f = &fit->run->mffun;
-        const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
-        gsl_multifit_fdfsolver *s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
-
-        int iter;
-        status = lmfit_iter(x, f, s, cfg->nb_max_iters,
-            cfg->epsabs, cfg->epsrel,
-            &iter, hfun, hdata, &stop_request);
-
-        const double chi = gsl_blas_dnrm2(s->f);
-        result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
-        result->status = status;
-        result->iter = iter;
-
-        gsl_multifit_fdfsolver_free(s);
+        fit_engine_lmfit(fit, x, lmresult, cfg, hfun, hdata, stop_request);
     }
 
-    if(preserve_init_stack) {
+    if (preserve_init_stack) {
         /* we restore the initial stack */
         stack_free(fit->stack);
         fit->stack = initial_stack;
     } else {
         /* we take care to commit the results obtained from the fit */
-        fit_engine_commit_parameters(fit, x);
-        fit_engine_update_disp_info(fit);
+        fit_engine_commit_fit_results(fit, x);
     }
-
-    gsl_vector_memcpy(fit->run->results, x);
+    fit_engine_copy_fit_results(fit, x);
 
     gsl_vector_free(x);
-
-    return status;
+    return result->status; // TODO: to be removed ???
 }
 
 int
-lmfit_grid(struct fit_engine *fit, struct seeds *seeds,
-           struct lmfit_result *result, str_ptr analysis, int preserve_init_stack,
+lmfit_grid(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
            gui_hook_func_t hfun, void *hdata)
 {
     struct fit_result grid_result[1];
     int status;
 
     fit_result_init(grid_result, fit);
-    status = lmfit_grid_run(fit, seeds, preserve_init_stack, grid_result, hfun, hdata);
+    status = lmfit_grid_run(fit, seeds, preserve_init_stack, grid_result, result, hfun, hdata);
     if (analysis) {
         fit_result_report(grid_result, analysis);
     }
