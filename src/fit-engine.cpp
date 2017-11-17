@@ -371,9 +371,9 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
     }
     fit->run->spectr = spectra_copy(s);
 
-    if(fit->config->spectr_range.active)
-        spectr_cut_range(fit->run->spectr,
-                         cfg->spectr_range.min, cfg->spectr_range.max);
+    if(fit->config->spectr_range.active) {
+        spectr_cut_range(fit->run->spectr, cfg->spectr_range.min, cfg->spectr_range.max);
+    }
 
     if(cfg->subsampling && enable_subsampling) {
         const int accuracy_max_iter = 5;

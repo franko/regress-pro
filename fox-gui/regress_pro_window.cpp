@@ -498,7 +498,6 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     row.format("Residual Chisq/pt: %g\n", result.chisq);
     fitresult.append(row);
 
-    /* covariance matrix analysis */
     fitresult.append("\n");
     fitresult.append(analysis.text());
 
