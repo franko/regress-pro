@@ -58,7 +58,7 @@ public:
     }
 
     virtual void apply_transform(const agg::trans_affine& m, double as) {
-        m_trans.transformer(m);
+        m_mtx = m;
     }
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) {
