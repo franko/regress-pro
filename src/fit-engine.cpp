@@ -550,7 +550,9 @@ fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x,
     gsl_vector_memcpy(xtest, x);
     fit->run->mffun.f(xtest, fit, y0);
 
-    while (1) {
+    int iter;
+    const int max_iter = 20;
+    for (iter = 0; iter < max_iter; iter++) {
         gsl_vector_set(xtest, fp_index, gsl_vector_get(x, fp_index) + delta);
         fit->run->mffun.f(xtest, fit, y1);
 
@@ -561,6 +563,10 @@ fit_engine_estimate_param_grid_step(struct fit_engine *fit, const gsl_vector *x,
         if (r2 < 0.2) break;
 
         delta /= 2;
+    }
+
+    if (iter >= max_iter) {
+        fprintf(stderr, "WARNING: maximum number of iterations reached in step estimations for parameter %d.\n", fp_index);
     }
 
     gsl_vector_free(y0);
