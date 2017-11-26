@@ -418,8 +418,6 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
         cfg->chisq_threshold = (syskind == SYSTEM_SR ? 150 : 3000);
     }
 
-    fit->run->results = gsl_vector_alloc(fit->parameters->number);
-
 #ifdef DEBUG
     fit_engine_check_deriv(fit);
 #endif
@@ -432,7 +430,9 @@ fit_engine_disable(struct fit_engine *fit)
 {
     dispose_fit_engine_cache(fit);
     spectra_free(fit->run->spectr);
-    gsl_vector_free(fit->run->results);
+#ifdef DEBUG
+    memset(fit->run, 0, sizeof(struct fit_run));
+#endif
 }
 
 int
@@ -683,7 +683,7 @@ fit_engine_free(struct fit_engine *fit)
 }
 
 void
-fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
+fit_engine_print_fit_results(struct fit_engine *fit, const gsl::vector& x, str_t text, int tabular)
 {
     str_t pname, value;
     size_t j;
@@ -696,12 +696,12 @@ fit_engine_print_fit_results(struct fit_engine *fit, str_t text, int tabular)
         fit_param_t *fp = fit->parameters->values + j;
         get_param_name(fp, pname);
         if(tabular) {
-            str_printf(value, "%.6g", gsl_vector_get(fit->run->results, j));
+            str_printf(value, "%.6g", x[j]);
             str_pad(value, 12, ' ');
             str_append(text, value, 0);
-        } else
-            str_printf_add(text, "%9s : %.6g\n", CSTR(pname),
-                           gsl_vector_get(fit->run->results, j));
+        } else {
+            str_printf_add(text, "%9s : %.6g\n", CSTR(pname), x[j]);
+        }
     }
 
     str_free(value);
@@ -798,8 +798,4 @@ fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]) {
 void fit_engine_commit_fit_results(fit_engine *fit, const gsl_vector *x) {
     fit_engine_commit_parameters(fit, x);
     fit_engine_update_disp_info(fit);
-}
-
-void fit_engine_copy_fit_results(fit_engine *fit, const gsl_vector *x) {
-    gsl_vector_memcpy(fit->run->results, x);
 }

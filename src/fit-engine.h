@@ -28,6 +28,7 @@
 #include "fit-params.h"
 #include "fit-engine-common.h"
 #include "writer.h"
+#include "gsl_cpp.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
@@ -47,7 +48,6 @@ enum fit_engine_subsamplig {
 struct fit_run {
     struct spectrum *spectr;
     gsl_multifit_function_fdf mffun;
-    gsl_vector *results;
     struct stack_cache cache;
 };
 
@@ -121,8 +121,7 @@ extern void fit_engine_generate_spectrum(struct fit_engine *fit,
         struct spectrum *ref,
         struct spectrum *synth);
 
-extern void fit_engine_print_fit_results(struct fit_engine *fit,
-        str_t text, int tabular);
+extern void fit_engine_print_fit_results(struct fit_engine *fit, const gsl::vector& x, str_t text, int tabular);
 
 extern struct fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit);
@@ -147,6 +146,5 @@ extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);
 
 extern void fit_engine_commit_fit_results(struct fit_engine *fit, const gsl_vector *x);
-extern void fit_engine_copy_fit_results(fit_engine *fit, const gsl_vector *x);
 
 #endif

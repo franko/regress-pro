@@ -74,9 +74,6 @@ lmfit_simple(struct fit_engine *fit, gsl_vector *x,
     /* we take care to commit the results obtained from the fit */
     fit_engine_commit_parameters(fit, x);
     fit_engine_update_disp_info(fit);
-
-    gsl_vector_memcpy(fit->run->results, x);
-
     gsl_multifit_fdfsolver_free(s);
 
     return status;

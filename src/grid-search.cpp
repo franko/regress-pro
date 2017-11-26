@@ -150,7 +150,7 @@ void *thr_eval_func(void *arg) {
 }
 
 static int
-lmfit_grid_run(fit_engine *fit, seeds *seeds, int preserve_init_stack, fit_result *result,
+lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_stack, fit_result *result,
     lmfit_result *lmresult, gui_hook_func_t hfun, void *hdata)
 {
     struct fit_config *cfg = fit->config;
@@ -159,10 +159,7 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, int preserve_init_stack, fit_resul
     const int dim = fit->parameters->number;
     const seed_t *vseed = seeds->values;
 
-    assert(fit->run);
     assert(fit->parameters->number == seeds->number);
-
-    gsl_vector *x = gsl_vector_alloc(dim);
 
     if(preserve_init_stack) {
         initial_stack = stack_copy(fit->stack);
@@ -170,15 +167,14 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, int preserve_init_stack, fit_resul
 
     /* We store in x the central coordinates of the grid. */
     for(int j = 0; j < dim; j++) {
-        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
-        gsl_vector_set(x, j, xc);
+        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
     }
 
     int modulo[dim];
     double x0[dim], dx[dim];
 
     for(int j = 0; j < dim; j++) {
-        const double x_center = gsl_vector_get(x, j);
+        const double x_center = x[j];
         if(vseed[j].type == SEED_RANGE) {
             const fit_param_t fp = fit->parameters->values[j];
             const double delta = vseed[j].delta;
@@ -258,21 +254,19 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, int preserve_init_stack, fit_resul
         /* we take care to commit the results obtained from the fit */
         fit_engine_commit_fit_results(fit, x);
     }
-    fit_engine_copy_fit_results(fit, x);
-
-    gsl_vector_free(x);
-    return result->status; // TODO: to be removed ???
+    return result->status;
 }
 
 int
-lmfit_grid(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
+lmfit_grid(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
            gui_hook_func_t hfun, void *hdata)
 {
     struct fit_result grid_result[1];
     int status;
 
+    fit_engine_prepare(fit, spectrum, FIT_RESET_ACQUISITION);
     fit_result_init(grid_result, fit);
-    status = lmfit_grid_run(fit, seeds, preserve_init_stack, grid_result, result, hfun, hdata);
+    status = lmfit_grid_run(fit, seeds, x, preserve_init_stack, grid_result, result, hfun, hdata);
     if (analysis) {
         fit_result_report(grid_result, analysis);
     }
@@ -281,5 +275,6 @@ lmfit_grid(fit_engine *fit, seeds *seeds, lmfit_result *result, str_ptr analysis
     result->nb_iterations = grid_result->iter;
     result->gsl_status = (grid_result->interrupted ? LMFIT_USER_INTERRUPTED : grid_result->status);
     fit_result_free(grid_result);
+    fit_engine_disable(fit);
     return status;
 }

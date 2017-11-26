@@ -1,7 +1,7 @@
 #include "batch_window.h"
-#include "grid-search.h"
 #include "regress_pro_window.h"
 #include "error-messages.h"
+#include "nlopt_fit.h"
 
 extern "C" {
     static int window_process_events(void *data, float p, const char *msg);
@@ -65,20 +65,17 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         if (!s || fit_engine_prepare_check_error(fit, s) != nullptr) {
             return 1;
         }
-        fit_engine_prepare(fit, s, FIT_RESET_ACQUISITION);
+        gsl::vector x(fit->parameters->number);
         lmfit_result fresult;
-        lmfit_grid(fit, recipe->seeds_list, &fresult, nullptr, LMFIT_PRESERVE_STACK,
-                   window_process_events, this);
-
+        nlopt_fit(fit, s, x, recipe->seeds_list, &fresult, nullptr, LMFIT_PRESERVE_STACK, window_process_events, this);
         unsigned j;
         for (j = 0; j < recipe->parameters->number; j++) {
-            result.format("%g", gsl_vector_get(fit->run->results, j));
+            result.format("%g", x[j]);
             table->setItemText(i, j + 1, result);
         }
         result.format("%g", fresult.chisq);
         table->setItemText(i, j + 1, result);
 
-        fit_engine_disable(fit);
         spectra_free(s);
     }
 

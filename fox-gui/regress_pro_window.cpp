@@ -48,6 +48,7 @@
 #include "dataset_window.h"
 #include "batch_window.h"
 #include "lexer.h"
+#include "gsl_cpp.h"
 
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config, str_ptr *error_msg);
@@ -464,16 +465,13 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 {
     str analysis;
 
-    fit_engine_prepare(fit, fspectrum, FIT_RESET_ACQUISITION);
-
+    gsl::vector x(fit->parameters->number); // Used to store best fit results.
     lmfit_result result;
     if (scriptMode()) {
-        // lmfit_grid(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
-        nlopt_fit(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
+        nlopt_fit(fit, fspectrum, x, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, nullptr, nullptr);
     } else {
         ProgressInfo progress(this->getApp(), this);
-        // lmfit_grid(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, process_foxgui_events, & progress);
-        nlopt_fit(fit, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, process_foxgui_events, & progress);
+        nlopt_fit(fit, fspectrum, x, fseeds, &result, &analysis, LMFIT_GET_RESULTING_STACK, process_foxgui_events, & progress);
         progress.hide();
     }
 
@@ -491,7 +489,7 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
 
     /* fit parameters results */
     str fit_parameters_results;
-    fit_engine_print_fit_results(fit, &fit_parameters_results, 0);
+    fit_engine_print_fit_results(fit, x, &fit_parameters_results, 0);
     fitresult.append(fit_parameters_results.text());
 
     /* final chi square obtained */
@@ -502,7 +500,6 @@ regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fsp
     fitresult.append(analysis.text());
 
     update_interactive_fit(fit, result);
-    fit_engine_disable(fit);
 
     return fitresult;
 }

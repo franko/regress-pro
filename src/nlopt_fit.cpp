@@ -112,16 +112,12 @@ set_initial_seeds(fit_engine *fit, seeds *seeds, gsl_vector *x)
 }
 
 static void
-set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, int limits_type)
+set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, const gsl_vector *x, int limits_type)
 {
     const int dim = fit->parameters->number;
-    double_array8 lower_bounds(dim), upper_bounds(dim), x(dim);
-    gsl_vector_const_view xv = gsl_vector_const_view_array(x.data(), dim);
+    double_array8 lower_bounds(dim), upper_bounds(dim);
     for(int j = 0; j < dim; j++) {
-        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &seeds->values[j]);
-    }
-    for(int j = 0; j < dim; j++) {
-        const double xc = x[j];
+        const double xc = gsl_vector_get(x, j);
         if(seeds->values[j].type == SEED_RANGE) {
             const double delta = seeds->values[j].delta;
             lower_bounds[j] = xc - delta;
@@ -129,7 +125,7 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, int limits_ty
         } else {
             if (limits_type == OPT_BOUNDS_RESTRICT) {
                 const fit_param_t fp = fit->parameters->values[j];
-                const double delta = fit_engine_estimate_param_grid_step(fit, &xv.vector, &fp, fabs(xc) > 0.1 ? fabs(xc) / 2 : 0.05);
+                const double delta = fit_engine_estimate_param_grid_step(fit, x, &fp, fabs(xc) > 0.1 ? fabs(xc) / 2 : 0.05);
                 lower_bounds[j] = xc - delta;
                 upper_bounds[j] = xc + delta;
             } else {
@@ -170,16 +166,11 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     data.start_message("Running NLopt search...");
 
     set_initial_seeds(fit, seeds, x);
-    set_optimizer_bounds(opt, fit, seeds, OPT_BOUNDS_RESTRICT);
+    set_optimizer_bounds(opt, fit, seeds, x, OPT_BOUNDS_RESTRICT);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
     nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
     nlopt_set_stopval(opt, 1e-4);
     nlopt_set_ftol_rel(opt, 1e-4);
-
-#if 0
-    const double chisq0 = objective_func(dim, x.data(), nullptr, &data);
-    debug_print_fit_result("initial point:", x, chisq0);
-#endif
 
     double chisq;
     // Perform the actual NLopt optimization.
@@ -192,33 +183,28 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     return (nlopt_status >= 0 ? GSEARCH_SUCCESS : (nlopt_status == NLOPT_FORCED_STOP ? GSEARCH_STOP_REQUEST : GSEARCH_FAILURE));
 }
 
-int
-nlopt_fit(fit_engine *parent_fit, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
+void
+nlopt_fit(fit_engine *parent_fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
           gui_hook_func_t hfun, void *hdata)
 {
-    const int dim = parent_fit->parameters->number;
-
     // Create a copy of the original fit engine.
     fit_engine *fit = fit_engine_clone(parent_fit);
 
     // Prepare the new fit engine using the spectrum and enable subsumpling.
-    fit_engine_prepare(fit, parent_fit->run->spectr, FIT_KEEP_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
+    fit_engine_prepare(fit, spectrum, FIT_RESET_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
 
-    gsl::vector x(dim); // Will store the best solution found.
     int gsearch_status = global_search_nlopt(fit, seeds, analysis, hfun, hdata, x);
     fit_engine_disable(fit);
     fit_engine_free(fit);
 
     if(gsearch_status == GSEARCH_SUCCESS) {
         int stop_request;
+        fit_engine_prepare(parent_fit, spectrum, FIT_RESET_ACQUISITION);
         fit_engine_lmfit(parent_fit, x, result, parent_fit->config, hfun, hdata, stop_request);
+        if (!preserve_init_stack) {
+            /* we take care to commit the results obtained from the fit */
+            fit_engine_commit_fit_results(parent_fit, x);
+        }
+        fit_engine_disable(parent_fit);
     }
-
-    if (!preserve_init_stack) {
-        /* we take care to commit the results obtained from the fit */
-        fit_engine_commit_fit_results(parent_fit, x);
-    }
-    fit_engine_copy_fit_results(parent_fit, x);
-
-    return 0;
 }
