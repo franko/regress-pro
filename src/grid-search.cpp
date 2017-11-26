@@ -149,7 +149,7 @@ void *thr_eval_func(void *arg) {
     return nullptr;
 }
 
-static int
+static void
 lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_stack, fit_result *result,
     lmfit_result *lmresult, gui_hook_func_t hfun, void *hdata)
 {
@@ -254,27 +254,21 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
         /* we take care to commit the results obtained from the fit */
         fit_engine_commit_fit_results(fit, x);
     }
-    return result->status;
 }
 
-int
+void
 lmfit_grid(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
            gui_hook_func_t hfun, void *hdata)
 {
     struct fit_result grid_result[1];
-    int status;
 
     fit_engine_prepare(fit, spectrum, FIT_RESET_ACQUISITION);
     fit_result_init(grid_result, fit);
-    status = lmfit_grid_run(fit, seeds, x, preserve_init_stack, grid_result, result, hfun, hdata);
+    lmfit_grid_run(fit, seeds, x, preserve_init_stack, grid_result, result, hfun, hdata);
     if (analysis) {
         fit_result_report(grid_result, analysis);
     }
-    result->chisq = grid_result->chisq;
     result->nb_points = spectra_points(fit->run->spectr);
-    result->nb_iterations = grid_result->iter;
-    result->gsl_status = (grid_result->interrupted ? LMFIT_USER_INTERRUPTED : grid_result->status);
     fit_result_free(grid_result);
     fit_engine_disable(fit);
-    return status;
 }

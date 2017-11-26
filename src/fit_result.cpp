@@ -28,6 +28,4 @@ fit_result_report(struct fit_result *r, str_ptr analysis)
         str_copy_c(analysis, "** Fit interrupted by the user.\n");
         return;
     }
-
-    str_printf_add(analysis, "Nb of iterations to converge: %i\n", r->iter);
 }
