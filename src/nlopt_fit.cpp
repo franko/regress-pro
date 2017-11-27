@@ -139,13 +139,15 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, const gsl_vec
     nlopt_set_upper_bounds(opt, upper_bounds);
 }
 
-static void report_global_search_outcome(int nlopt_status, gsl::vector& x, double chisq, str_ptr analysis) {
+static void report_global_search_outcome(fit_engine *fit, int nlopt_status, gsl::vector& x, double chisq, str_ptr analysis) {
+    str_printf(analysis, "Global optimization using %d sampling points.\n", spectra_points(fit->run->spectr));
+
     if (nlopt_status < 0) {
-        str_printf(analysis, "Global search failed with error code: %d\n", nlopt_status);
+        str_printf_add(analysis, "Global search failed with error code: %d\n", nlopt_status);
         return;
     }
 
-    str_printf(analysis, "Found global minimum");
+    str_printf_add(analysis, "Found global minimum");
     for (int i = 0; i < x.size(); i++) {
         str_printf_add(analysis, " %g", x[i]);
     }
@@ -176,9 +178,10 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     // Perform the actual NLopt optimization.
     int nlopt_status = nlopt_optimize(opt, x.data(), &chisq);
 
-    // Report global seach information in text format.
+    const double chisq_normal = 1.0E6 * chisq / fit->run->mffun.n;
+
     if (analysis) {
-        report_global_search_outcome(nlopt_status, x, chisq, analysis);
+        report_global_search_outcome(fit, nlopt_status, x, chisq_normal, analysis);
     }
     nlopt_destroy(opt);
 
