@@ -40,7 +40,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         table->insertColumns(table->getNumColumns(), missing_columns);
     }
 
-    table->removeRange(0, table->samples_number() - 1, 1, table->getNumColumns() - 1);
+    table->removeRange(0, table->samples_number(), 1, table->getNumColumns() - 1);
 
     str_t pname;
     str_init(pname, 15);
