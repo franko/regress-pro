@@ -177,7 +177,9 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     int nlopt_status = nlopt_optimize(opt, x.data(), &chisq);
 
     // Report global seach information in text format.
-    report_global_search_outcome(nlopt_status, x, chisq, analysis);
+    if (analysis) {
+        report_global_search_outcome(nlopt_status, x, chisq, analysis);
+    }
     nlopt_destroy(opt);
 
     return (nlopt_status >= 0 ? GSEARCH_SUCCESS : (nlopt_status == NLOPT_FORCED_STOP ? GSEARCH_STOP_REQUEST : GSEARCH_FAILURE));
