@@ -229,9 +229,9 @@ int dataset_table::read_update(lexer_t *l)
                 double val;
                 if (lexer_number(l, &val)) return 1;
                 cell.format("%g", val);
-                setItemText(i, j + 1, cell);
+                setItemText(i + 1, j + 1, cell);
             } else {
-                setItemText(i, j + 1, "");
+                setItemText(i + 1, j + 1, "");
             }
         }
     }

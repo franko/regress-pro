@@ -40,27 +40,24 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         table->insertColumns(table->getNumColumns(), missing_columns);
     }
 
+    table->removeRange(0, table->samples_number() - 1, 1, table->getNumColumns() - 1);
+
     str_t pname;
     str_init(pname, 15);
     int j;
     for (j = 0; j < int(recipe->parameters->number); j++) {
         get_param_name(&recipe->parameters->values[j], pname);
-        table->setColumnText(j + 1, CSTR(pname));
+        table->setItemText(0, j + 1, CSTR(pname));
     }
-    table->setColumnText(j + 1, "Chi Square");
+    table->setItemText(0, j + 1, "Chi Square");
     str_free(pname);
-    for (j++; j + 1 < table->getNumColumns(); j++) {
-        table->setColumnText(j + 1, "");
-    }
-
-    table->removeRange(0, table->samples_number() - 1, 1, table->getNumColumns() - 1);
 
     fit_engine *fit = fit_engine_new();
     fit_engine_bind(fit, recipe->stack, recipe->config, recipe->parameters);
 
     FXString result;
     for (int i = 0; i < table->samples_number(); i++) {
-        FXString name = table->getItemText(i, 0);
+        FXString name = table->getItemText(i + 1, 0);
         spectrum *s = load_gener_spectrum(name.text(), error_msg);
         if (!s || fit_engine_prepare_check_error(fit, s) != nullptr) {
             return 1;
@@ -71,10 +68,10 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         unsigned j;
         for (j = 0; j < recipe->parameters->number; j++) {
             result.format("%g", x[j]);
-            table->setItemText(i, j + 1, result);
+            table->setItemText(i + 1, j + 1, result);
         }
         result.format("%g", fresult.chisq);
-        table->setItemText(i, j + 1, result);
+        table->setItemText(i + 1, j + 1, result);
 
         spectra_free(s);
     }
