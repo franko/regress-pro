@@ -63,6 +63,7 @@ void fit_engine_lmfit(fit_engine *fit, gsl_vector *x, lmfit_result *result, fit_
     result->chisq = 1.0E6 * pow(chi, 2.0) / f->n;
     result->gsl_status = status;
     result->nb_iterations = iter;
+    result->nb_points = spectra_points(fit->run->spectr);
 
     gsl_multifit_fdfsolver_free(s);
 }

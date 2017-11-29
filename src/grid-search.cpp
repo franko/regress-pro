@@ -244,6 +244,8 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
 
     if(stop_request == 0) {
         fit_engine_lmfit(fit, x, lmresult, cfg, hfun, hdata, stop_request);
+    } else {
+        lmfit_result_error_init(lmresult, LMFIT_USER_INTERRUPTED);
     }
 
     if (preserve_init_stack) {
@@ -268,7 +270,6 @@ lmfit_grid(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lm
     if (analysis) {
         fit_result_report(grid_result, analysis);
     }
-    result->nb_points = spectra_points(fit->run->spectr);
     fit_result_free(grid_result);
     fit_engine_disable(fit);
 }

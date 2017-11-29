@@ -206,11 +206,13 @@ nlopt_fit(fit_engine *parent_fit, spectrum *spectrum, gsl::vector& x, seeds *see
         int stop_request;
         fit_engine_prepare(parent_fit, spectrum, FIT_RESET_ACQUISITION);
         fit_engine_lmfit(parent_fit, x, result, parent_fit->config, hfun, hdata, stop_request);
-        result->nb_points = spectra_points(parent_fit->run->spectr);
         if (!preserve_init_stack) {
             /* we take care to commit the results obtained from the fit */
             fit_engine_commit_fit_results(parent_fit, x);
         }
         fit_engine_disable(parent_fit);
+    } else {
+        const int gsl_status = gsearch_status == GSEARCH_FAILURE ? LMFIT_ERROR_GLOBAL_SEARCH : LMFIT_USER_INTERRUPTED;
+        lmfit_result_error_init(result, gsl_status);
     }
 }

@@ -8,6 +8,7 @@
 enum {
     LMFIT_DATA_NOT_LOADED = 1024,
     LMFIT_USER_INTERRUPTED,
+    LMFIT_ERROR_GLOBAL_SEARCH,
 };
 
 struct lmfit_result {
@@ -17,6 +18,7 @@ struct lmfit_result {
     int gsl_status;
 };
 
-const char *lmfit_result_error_string(const struct lmfit_result *r);
+extern const char *lmfit_result_error_string(const struct lmfit_result *r);
+extern void lmfit_result_error_init(lmfit_result *result, int gsl_status);
 
 #endif
