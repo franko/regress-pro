@@ -3,22 +3,25 @@ stack 4
   cauchy "vacuum"
     1 0 0
     0 0 0
-  tauc-lorentz "Nitride STI TL #1b"
-    1 1 1 4.31894
-    3.5 8.2 8.2
+  tauc-lorentz "Nitride TL"
+    range 190 1000
+    1 1 1 4.25
+    3.5 9.2 8
   library "sio2"
   library "silicon-1"
 fit-config
   max-iterations 30
   subsampling 0
   epsilon 1e-007 1e-007
-fit-parameters 4
+fit-parameters 5
   thickness 1
   n 1 tauc-lorentz 2
   n 1 tauc-lorentz 3
   n 1 tauc-lorentz 4
-seed-list 4
-  undef
-  undef
-  undef
-  undef
+  n 1 tauc-lorentz 1
+seed-list 5
+  range 1600 1600
+  range 10 10
+  range 9.2 6
+  range 5 5
+  range 4.5 3

@@ -1,3 +1,4 @@
+#include <ctime>
 #include <nlopt.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -13,7 +14,7 @@ enum {
     MY_NLOPT_MAXEVAL = 5000,
     MY_NLOPT_MAXEVAL_FINAL = 500,
     MY_NLOPT_EVAL_REFRESH = 50,
-    MY_NLOPT_MAX_SECONDS = 8,
+    MY_NLOPT_MAX_SECONDS = 20,
 };
 
 enum {
@@ -38,12 +39,14 @@ struct objective_data {
     gui_hook_func_t hfun;
     void *hdata;
     int eval_count;
-    int max_eval;
+    clock_t start_clock;
+    double ss_tot;
 
-    objective_data(fit_engine *_fit, nlopt_opt _opt, gui_hook_func_t _hfun, void *_hdata, int _max_eval):
-        fit(_fit), opt(_opt), hfun(_hfun), hdata(_hdata), eval_count(0), max_eval(_max_eval) {
+    objective_data(fit_engine *_fit, nlopt_opt _opt, gui_hook_func_t _hfun, void *_hdata):
+        fit(_fit), opt(_opt), hfun(_hfun), hdata(_hdata), eval_count(0) {
         f = gsl_vector_alloc(fit->run->mffun.n);
         J = gsl_matrix_alloc(fit->run->mffun.n, fit->run->mffun.p);
+        ss_tot = fit_engine_compute_ss_tot(fit);
     }
 
     ~objective_data() {
@@ -53,7 +56,8 @@ struct objective_data {
 
     bool check_for_stop_request() {
         if (hfun && eval_count % MY_NLOPT_EVAL_REFRESH == 0) {
-            const float xf = float(eval_count) / float(max_eval);
+            const double elapsed_ms = 1000.0 * (std::clock() - start_clock) / CLOCKS_PER_SEC;
+            const double xf = elapsed_ms / (1000 * MY_NLOPT_MAX_SECONDS);
             int stop_request = (*hfun)(hdata, xf, nullptr);
             return (stop_request != 0);
         }
@@ -86,7 +90,8 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
     }
     gsl_vector_const_view xv = gsl_vector_const_view_array(x, n);
     data->eval_f(&xv.vector);
-    const double chisq = pow2(gsl_blas_dnrm2(data->f));
+    const double ss_tot = data->ss_tot;
+    const double chisq = pow2(gsl_blas_dnrm2(data->f)) / ss_tot;
     if (grad) {
         data->eval_df(&xv.vector);
         for (int k = 0; k < (int) n; k++) { // Iterate over the fit parameters.
@@ -94,7 +99,7 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
             for (int i = 0; i < data->n(); i++) { // Iterate over the points.
                 der += 2 * gsl_vector_get(data->f, i) * gsl_matrix_get(data->J, i, k);
             }
-            grad[k] = der;
+            grad[k] = der / ss_tot;
         }
     }
     data->eval_count ++;
@@ -139,7 +144,7 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, const gsl_vec
     nlopt_set_upper_bounds(opt, upper_bounds);
 }
 
-static void report_global_search_outcome(fit_engine *fit, int nlopt_status, gsl::vector& x, double chisq, str_ptr analysis) {
+static void report_global_search_outcome(fit_engine *fit, int nlopt_status, gsl::vector& x, double chisq, double r2, str_ptr analysis) {
     str_printf(analysis, "Global optimization using %d sampling points.\n", spectra_points(fit->run->spectr));
 
     if (nlopt_status < 0) {
@@ -151,7 +156,7 @@ static void report_global_search_outcome(fit_engine *fit, int nlopt_status, gsl:
     for (int i = 0; i < x.size(); i++) {
         str_printf_add(analysis, " %g", x[i]);
     }
-    str_printf_add(analysis, " with chi square: %g\n", chisq);
+    str_printf_add(analysis, " with chi square: %g and R2: %g\n", chisq, r2);
     str_printf_add(analysis, "NLopt termination code: %d\n", nlopt_status);
 }
 
@@ -162,7 +167,7 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     const int dim = fit->parameters->number;
     // Prepare the NLOpt optimizer.
     nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
-    objective_data data(fit, opt, hfun, hdata, MY_NLOPT_MAXEVAL);
+    objective_data data(fit, opt, hfun, hdata);
 
     // Send message to the UI.
     data.start_message("Running NLopt search...");
@@ -170,18 +175,20 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     set_initial_seeds(fit, seeds, x);
     set_optimizer_bounds(opt, fit, seeds, x, OPT_BOUNDS_RESTRICT);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
-    nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
-    nlopt_set_stopval(opt, 1e-4);
-    nlopt_set_ftol_rel(opt, 1e-4);
+    // nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
+    nlopt_set_maxtime(opt, 20);
+    nlopt_set_stopval(opt, 0.001);
+    // nlopt_set_ftol_rel(opt, 1e-4);
 
     double chisq;
     // Perform the actual NLopt optimization.
     int nlopt_status = nlopt_optimize(opt, x.data(), &chisq);
 
-    const double chisq_normal = 1.0E6 * chisq / fit->run->mffun.n;
-
     if (analysis) {
-        report_global_search_outcome(fit, nlopt_status, x, chisq_normal, analysis);
+        const double chisq_normal = 1.0E6 * (chisq * data.ss_tot) / fit->run->mffun.n;
+        const double r2 = 1 - chisq;
+        fprintf(stderr, "SSred/SStot after global fit (subsampling): %g\n", chisq);
+        report_global_search_outcome(fit, nlopt_status, x, chisq_normal, r2, analysis);
     }
     nlopt_destroy(opt);
 
@@ -205,12 +212,29 @@ nlopt_fit(fit_engine *parent_fit, spectrum *spectrum, gsl::vector& x, seeds *see
     if(gsearch_status == GSEARCH_SUCCESS) {
         int stop_request;
         fit_engine_prepare(parent_fit, spectrum, FIT_RESET_ACQUISITION);
+#ifdef DEBUG
+        fit_engine_commit_fit_results(parent_fit, x);
+        gsl_vector *f = gsl_vector_alloc(parent_fit->run->mffun.n);
+        parent_fit->run->mffun.f(x, (void *) parent_fit, f);
+        const double ss_tot = fit_engine_compute_ss_tot(parent_fit);
+        const double chisq = pow2(gsl_blas_dnrm2(f)) / ss_tot;
+        fprintf(stderr, "SSred/SStot after global fit (full samples): %g\n", chisq);
+#endif
         fit_engine_lmfit(parent_fit, x, result, parent_fit->config, hfun, hdata, stop_request);
         if (!preserve_init_stack) {
             /* we take care to commit the results obtained from the fit */
             fit_engine_commit_fit_results(parent_fit, x);
+#ifdef DEBUG
+            parent_fit->run->mffun.f(x, (void *) parent_fit, f);
+            // const double ss_tot = fit_engine_compute_ss_tot(parent_fit);
+            const double chisqf = pow2(gsl_blas_dnrm2(f)) / ss_tot;
+            fprintf(stderr, "SSred/SStot after final fit (full samples): %g\n", chisqf);
+#endif
         }
         fit_engine_disable(parent_fit);
+#ifdef DEBUG
+        gsl_vector_free(f);
+#endif
     } else {
         const int gsl_status = gsearch_status == GSEARCH_FAILURE ? LMFIT_ERROR_GLOBAL_SEARCH : LMFIT_USER_INTERRUPTED;
         lmfit_result_error_init(result, gsl_status);

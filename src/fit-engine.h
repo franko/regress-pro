@@ -147,4 +147,7 @@ extern int fit_config_read(lexer_t *l, struct fit_config *config);
 
 extern void fit_engine_commit_fit_results(struct fit_engine *fit, const gsl_vector *x);
 
+extern int fit_engine_channels_number(const fit_engine *fit);
+extern double fit_engine_compute_ss_tot(const fit_engine *fit);
+
 #endif

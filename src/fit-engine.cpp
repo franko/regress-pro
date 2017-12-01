@@ -28,6 +28,7 @@
 #include "error-messages.h"
 #include "minsampling.h"
 #include "fit-timestamp.h"
+#include "math-utils.h"
 
 static void build_fit_engine_cache(struct fit_engine *f);
 
@@ -804,4 +805,37 @@ fit_engine_get_cached_ns(struct fit_engine *fit, int j, cmpl ns[]) {
 void fit_engine_commit_fit_results(fit_engine *fit, const gsl_vector *x) {
     fit_engine_commit_parameters(fit, x);
     fit_engine_update_disp_info(fit);
+}
+
+int fit_engine_channels_number(const fit_engine *fit) {
+    return (fit->run->spectr->acquisition->type == SYSTEM_SR ? 1 : 2);
+}
+
+double fit_engine_compute_ss_tot(const fit_engine *fit) {
+    const int N = spectra_points(fit->run->spectr);
+    const int C = fit_engine_channels_number(fit);
+    double_array4 avg(C);
+    for (int k = 0; k < C; k++) {
+        avg[k] = 0.0;
+        for (int i = 0; i < N; i++) {
+            float const * spectr_data = spectra_get_values(fit->run->spectr, i);
+            avg[k] += spectr_data[1 + k];
+        }
+    }
+    for (int k = 0; k < C; k++) {
+        avg[k] = avg[k] / N;
+    }
+    double_array4 ss(C);
+    for (int k = 0; k < C; k++) {
+        ss[k] = 0.0;
+        for (int i = 0; i < N; i++) {
+            float const * spectr_data = spectra_get_values(fit->run->spectr, i);
+            ss[k] += pow2(spectr_data[1 + k] - avg[k]);
+        }
+    }
+    double ss_sum = 0.0;
+    for (int k = 0; k < C; k++) {
+        ss_sum += ss[k];
+    }
+    return ss_sum;
 }
