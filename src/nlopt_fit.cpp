@@ -175,10 +175,9 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     set_initial_seeds(fit, seeds, x);
     set_optimizer_bounds(opt, fit, seeds, x, OPT_BOUNDS_RESTRICT);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
-    // nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
-    nlopt_set_stopval(opt, 0.001);
-    // nlopt_set_ftol_rel(opt, 1e-4);
     nlopt_set_maxtime(opt, MY_NLOPT_MAX_SECONDS);
+    nlopt_set_stopval(opt, 0.006);
+    nlopt_set_xtol_rel(opt, 1e-6);
 
     double chisq;
     // Perform the actual NLopt optimization.
