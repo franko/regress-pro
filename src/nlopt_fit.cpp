@@ -14,7 +14,7 @@ enum {
     MY_NLOPT_MAXEVAL = 5000,
     MY_NLOPT_MAXEVAL_FINAL = 500,
     MY_NLOPT_EVAL_REFRESH = 50,
-    MY_NLOPT_MAX_SECONDS = 20,
+    MY_NLOPT_MAX_SECONDS = 8,
 };
 
 enum {
@@ -47,6 +47,7 @@ struct objective_data {
         f = gsl_vector_alloc(fit->run->mffun.n);
         J = gsl_matrix_alloc(fit->run->mffun.n, fit->run->mffun.p);
         ss_tot = fit_engine_compute_ss_tot(fit);
+        start_clock = std::clock();
     }
 
     ~objective_data() {
@@ -176,9 +177,9 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
     set_optimizer_bounds(opt, fit, seeds, x, OPT_BOUNDS_RESTRICT);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
     // nlopt_set_maxeval(opt, MY_NLOPT_MAXEVAL);
-    nlopt_set_maxtime(opt, 20);
     nlopt_set_stopval(opt, 0.001);
     // nlopt_set_ftol_rel(opt, 1e-4);
+    nlopt_set_maxtime(opt, MY_NLOPT_MAX_SECONDS);
 
     double chisq;
     // Perform the actual NLopt optimization.
