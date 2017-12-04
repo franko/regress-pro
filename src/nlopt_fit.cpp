@@ -130,8 +130,7 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, const gsl_vec
             upper_bounds[j] = xc + delta;
         } else {
             if (limits_type == OPT_BOUNDS_RESTRICT) {
-                const fit_param_t fp = fit->parameters->values[j];
-                const double delta = fit_engine_estimate_param_grid_step(fit, x, &fp, fabs(xc) > 0.1 ? fabs(xc) / 2 : 0.05);
+                const double delta = std::max(fabs(xc) / 2, 0.1);
                 lower_bounds[j] = xc - delta;
                 upper_bounds[j] = xc + delta;
             } else {
