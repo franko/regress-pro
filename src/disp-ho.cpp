@@ -162,10 +162,10 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const double nosc = p->nosc, en = p->en, eg = p->eg, nu = p->nu, phi = p->phi;
 
         invhhden[k] = 1.0 / (pow2(en) - pow2(e) + 1i * eg * e);
-        hh[k] = HO_MULT_FACT * nosc * (cos(phi) - 1i * sin(phi)) * invhhden[k];
+        hh[k] = HO_MULT_FACT * (cos(phi) - 1i * sin(phi)) * invhhden[k];
 
-        hsum += hh[k];
-        hnusum += nu * hh[k];
+        hsum += nosc * hh[k];
+        hnusum += nu * nosc * hh[k];
     }
 
     const cmpl invden = 1.0 / (1.0 - hnusum);
@@ -185,12 +185,13 @@ ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         const double nosc = p->nosc, en = p->en, nu = p->nu;
         const int koffs = k * HO_NB_PARAMS;
 
-        pd->at(koffs + HO_NU_OFFS) = dndnuhc * hh[k];
+        pd->at(koffs + HO_NU_OFFS) = dndnuhc * nosc * hh[k];
 
         const cmpl dndh = (nu * hsum * invden + 1.0) * invden;
-        const cmpl hhdndh = epsfact * dndh * hh[k];
+        const cmpl hhdndosc = epsfact * dndh * hh[k];
+        const cmpl hhdndh = nosc * hhdndosc;
 
-        pd->at(koffs + HO_NOSC_OFFS) = hhdndh / nosc;
+        pd->at(koffs + HO_NOSC_OFFS) = hhdndosc;
         pd->at(koffs + HO_PHI_OFFS) = - 1i * hhdndh;
 
         const cmpl depsde = hhdndh * invhhden[k];
