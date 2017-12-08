@@ -87,7 +87,7 @@ void dataset_table::link_parameter(const fit_param_t *fp, const int column)
 void dataset_table::set_column_parameter_name(const fit_param_t *fp, int column)
 {
     get_full_param_name(fp, buffer);
-    setColumnText(column, CSTR(buffer));
+    setItemText(0, column, CSTR(buffer));
 }
 
 long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
@@ -102,7 +102,7 @@ long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
 bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_filename)
 {
     for (int i = 0; i < samples_number(); i++) {
-        FXString name = getItemText(i, 0);
+        FXString name = getItemText(i + 1, 0);
         str_ptr error_msg;
         spectrum *s = load_gener_spectrum(name.text(), &error_msg);
         if (!s) {
@@ -140,7 +140,7 @@ bool dataset_table::get_values(int row, const fit_parameters *fps, double value_
         for (p = fplink.top; p; p = p->next) {
             const fit_param_t *xfp = &fplink.params->values[p->fp_index];
             if (fit_param_compare(xfp, fp) == 0) {
-                if (get_cell_value(row, p->column, &value_array[i])) {
+                if (get_cell_value(row + 1, p->column, &value_array[i])) {
                     error_col = p->column;
                     return false;
                 }
@@ -169,7 +169,7 @@ int dataset_table::write(writer_t *w)
     writer_printf(w, "samples");
     writer_newline_enter(w);
     for (int i = 0; i < n; i++) {
-        FXString name = getItemText(i, 0);
+        FXString name = getItemText(i + 1, 0);
         str_t quoted_name;
         str_init(quoted_name, 127);
         writer_quote_string(quoted_name, name.text());
@@ -177,7 +177,7 @@ int dataset_table::write(writer_t *w)
         str_free(quoted_name);
         for (fit_param_node *p = fplink.top; p; p = p->next) {
             double cell_value;
-            if (get_cell_value(i, p->column, &cell_value)) {
+            if (get_cell_value(i + 1, p->column, &cell_value)) {
                 writer_printf(w, " undef");
             } else {
                 writer_printf(w, " %g", cell_value);

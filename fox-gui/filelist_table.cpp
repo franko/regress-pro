@@ -27,8 +27,8 @@ void filelist_table::set_filename(int i, const char *filename)
 
 void filelist_table::append_rows(int n)
 {
-    if (entries_no + n > getNumRows()) {
-        int add_no = entries_no + n - getNumRows();
+    if (entries_no + n > getNumRows() - 1) {
+        int add_no = entries_no + n - getNumRows() + 1;
         insertRows(entries_no, add_no);
     }
     entries_no += n;
@@ -36,7 +36,7 @@ void filelist_table::append_rows(int n)
 
 void filelist_table::clear_samples()
 {
-    removeRows(0, entries_no);
+    removeRows(0, entries_no + 1);
     insertRows(0, FILELIST_MIN_ROWS);
     entries_no = 0;
 }
