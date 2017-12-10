@@ -108,26 +108,26 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
 }
 
 static void
-set_initial_seeds(fit_engine *fit, seeds *seeds, gsl_vector *x)
+set_initial_seeds(fit_engine *fit, seeds_list *seeds, gsl_vector *x)
 {
     const int dim = fit->parameters->number;
     for(int j = 0; j < dim; j++) {
-        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &seeds->values[j]);
+        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &seeds->at(j));
         gsl_vector_set(x, j, xc);
     }
 }
 
 static void
-set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds *seeds, const gsl_vector *x, int limits_type)
+set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds_list *seeds, const gsl_vector *x, int limits_type)
 {
     const int dim = fit->parameters->number;
     double_array8 lower_bounds(dim), upper_bounds(dim);
     for(int j = 0; j < dim; j++) {
+        const seed_t& seed = seeds->at(j);
         const double xc = gsl_vector_get(x, j);
-        if(seeds->values[j].type == SEED_RANGE) {
-            const double delta = seeds->values[j].delta;
-            lower_bounds[j] = xc - delta;
-            upper_bounds[j] = xc + delta;
+        if(seed.type == SEED_RANGE) {
+            lower_bounds[j] = xc - seed.delta;
+            upper_bounds[j] = xc + seed.delta;
         } else {
             if (limits_type == OPT_BOUNDS_RESTRICT) {
                 const double delta = std::max(fabs(xc) / 2, 0.1);
@@ -163,7 +163,7 @@ static void report_global_search_outcome(fit_engine *fit, int nlopt_status, gsl:
 // Perform a global optimization search and return the results in the vector "x". Return a
 // status code indicating success or failure. The user interface is updated.
 static int
-global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_func_t hfun, void *hdata, gsl::vector& x) {
+global_search_nlopt(fit_engine *fit, seeds_list *seeds, str_ptr analysis, gui_hook_func_t hfun, void *hdata, gsl::vector& x) {
     const int dim = fit->parameters->number;
     // Prepare the NLOpt optimizer.
     nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
@@ -195,7 +195,7 @@ global_search_nlopt(fit_engine *fit, seeds *seeds, str_ptr analysis, gui_hook_fu
 }
 
 void
-nlopt_fit(fit_engine *parent_fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
+nlopt_fit(fit_engine *parent_fit, spectrum *spectrum, gsl::vector& x, seeds_list *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
           gui_hook_func_t hfun, void *hdata)
 {
     // Create a copy of the original fit engine.

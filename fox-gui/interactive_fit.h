@@ -119,7 +119,7 @@ public:
         return true;
     }
 
-    virtual lmfit_result run(struct fit_parameters* fps) {
+    virtual lmfit_result run(fit_parameters* fps) {
         lmfit_result result;
 
         if (!spectra_loaded()) {
@@ -173,7 +173,7 @@ private:
     struct fit_engine* m_fit_engine;
     struct spectrum* m_ref_spectr;
     struct spectrum* m_model_spectr;
-    struct fit_parameters *m_all_parameters;
+    fit_parameters *m_all_parameters;
 };
 
 #endif

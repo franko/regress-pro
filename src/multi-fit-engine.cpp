@@ -252,8 +252,8 @@ multifit_df(const gsl_vector *x, void *params, gsl_matrix *jacob)
 int
 multi_fit_engine_prepare(struct multi_fit_engine *fit)
 {
-    struct fit_parameters const * common = fit->common_parameters;
-    struct fit_parameters const * priv   = fit->private_parameters;
+    fit_parameters const * common = fit->common_parameters;
+    fit_parameters const * priv   = fit->private_parameters;
     struct fit_config *cfg = & fit->config;
     size_t nb_total_params;
 
@@ -363,8 +363,8 @@ int
 multi_fit_engine_commit_parameters(struct multi_fit_engine *fit,
                                    const gsl_vector *x)
 {
-    struct fit_parameters const * common = fit->common_parameters;
-    struct fit_parameters const * priv   = fit->private_parameters;
+    fit_parameters const * common = fit->common_parameters;
+    fit_parameters const * priv   = fit->private_parameters;
     int nb_priv_params = priv->number;
     int joffs = 0;
     int sample;
@@ -451,7 +451,7 @@ multi_fit_engine_free(struct multi_fit_engine *f)
 }
 
 void
-multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const struct fit_parameters *cparameters, const struct fit_parameters *pparameters)
+multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const fit_parameters *cparameters, const fit_parameters *pparameters)
 {
     int k;
     /* fit is not the owner of the "parameters", we just keep a reference */
@@ -466,7 +466,7 @@ multi_fit_engine_bind(struct multi_fit_engine *fit, const stack_t *stack, const 
 }
 
 void
-multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, int sample_nb, const struct fit_parameters *fps, const double value[])
+multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, int sample_nb, const fit_parameters *fps, const double value[])
 {
     int k;
     for(k = 0; k < (int) fps->number; k++) {
@@ -638,7 +638,7 @@ central_deriv(const gsl_multifit_function_fdf *f, gsl_vector *x, int parameter_i
 }
 
 void
-multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_common, struct seeds *seeds_priv) {
+multi_fit_engine_check_deriv(struct multi_fit_engine *fit, seeds_list *seeds_common, seeds_list *seeds_priv) {
     const int points_number = fit->mffun.n;
     const int parameters_number = fit->mffun.p;
     struct fdf_deriv_ws ws[1];
@@ -659,11 +659,11 @@ multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_c
 
     int k;
     for(k = 0; k < seeds_common->number; k++) {
-        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->at(k), &seeds_common->values[k]));
+        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->at(k), &seeds_common->at(k)));
     }
 
     for(int ks = 0; ks < seeds_priv->number; ks++, k++) {
-        gsl_vector_set(x, k, seeds_priv->values[ks].seed);
+        gsl_vector_set(x, k, seeds_priv->at(ks).seed);
     }
 
     for(int j = 0; j < parameters_number; j++) {

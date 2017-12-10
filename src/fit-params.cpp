@@ -106,52 +106,28 @@ int fit_parameters_add(fit_parameters *lst, fit_param_t const * fp) {
 }
 
 void
-fit_parameters_remove(struct fit_parameters *lst, int index) {
+fit_parameters_remove(fit_parameters *lst, int index) {
     lst->erase(index);
 }
 
-struct seeds *
-seed_list_new(void) {
-    return (struct seeds *) ARRAY_NEW(seed_t);
+seeds_list *seed_list_new() {
+    return new seeds_list();
 }
 
-void
-seed_list_free(struct seeds *s)
-{
-    free(s->values);
-    free(s);
+void seed_list_free(seeds_list *s) {
+    delete s;
 }
 
-void
-seed_list_add_simple(struct seeds *s, double v)
-{
-    size_t idx = s->number;
-
-    ARRAY_CHECK_ALLOC(s, seed_t, idx);
-
-    s->values[idx].type = SEED_SIMPLE;
-    s->values[idx].seed = v;
-
-    s->number ++;
+void seed_list_add_simple(seeds_list *s, double v) {
+    s->add(seed_t{SEED_SIMPLE, v});   
 }
 
-void
-seed_list_add(struct seeds *s, const seed_t *v)
-{
-    size_t idx = s->number;
-    ARRAY_CHECK_ALLOC(s, seed_t, idx);
-    memcpy(s->values + idx, v, sizeof(seed_t));
-    s->number ++;
+void seed_list_add(seeds_list *s, const seed_t *v) {
+    s->add(*v);
 }
 
-void
-seed_list_remove(struct seeds *lst, int index)
-{
-    size_t i;
-    for (i = index; i + 1 < lst->number; i++) {
-        lst->values[i] = lst->values[i + 1];
-    }
-    lst->number--;
+void seed_list_remove(seeds_list *lst, int index) {
+    lst->erase(index);
 }
 
 static int
@@ -187,7 +163,7 @@ seed_read(lexer_t *l, seed_t *seed)
 }
 
 int
-seed_list_write(writer_t *w, const struct seeds *s)
+seed_list_write(writer_t *w, const seeds_list *s)
 {
     writer_printf(w, "seed-list %d", s->number);
     writer_newline_enter(w);
@@ -196,17 +172,17 @@ seed_list_write(writer_t *w, const struct seeds *s)
         if (i > 0) {
             writer_newline(w);
         }
-        seed_write(w, s->values + i);
+        seed_write(w, &s->at(i));
     }
     writer_newline_exit(w);
     return 1;
 }
 
-struct seeds *
+seeds_list *
 seed_list_read(lexer_t *l)
 {
     int i, nb;
-    struct seeds *s = seed_list_new();
+    seeds_list *s = seed_list_new();
     if (lexer_check_ident(l, "seed-list")) goto seeds_exit;
     if (lexer_integer(l, &nb)) goto seeds_exit;
     for (i = 0; i < nb; i++) {
@@ -251,7 +227,7 @@ int fit_parameters_are_RI_fixed(fit_parameters *f) {
 }
 
 int
-fit_parameters_contains_acquisition_parameters(struct fit_parameters *f)
+fit_parameters_contains_acquisition_parameters(fit_parameters *f)
 {
     for(int j = 0; j < f->number; j++) {
         const int id = f->at(j).id;
@@ -275,7 +251,7 @@ fit_param_compare(const fit_param_t *a, const fit_param_t *b)
 }
 
 int
-fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp)
+fit_parameters_find(const fit_parameters *lst, const fit_param_t *fp)
 {
     int j;
     for(j = 0; j < lst->number; j++) {
@@ -288,7 +264,7 @@ fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp)
 }
 
 static void
-fix_delete_layer(struct fit_parameters *lst, int index)
+fix_delete_layer(fit_parameters *lst, int index)
 {
     for (int i = 0; i < lst->number; i++) {
         fit_param_t *fp = &lst->at(i);
@@ -303,7 +279,7 @@ fix_delete_layer(struct fit_parameters *lst, int index)
 }
 
 static void
-fix_insert_layer(struct fit_parameters *lst, int index)
+fix_insert_layer(fit_parameters *lst, int index)
 {
     for (int i = 0; i < lst->number; i++) {
         fit_param_t *fp = &lst->at(i);
@@ -314,7 +290,7 @@ fix_insert_layer(struct fit_parameters *lst, int index)
 }
 
 void
-fit_parameters_fix_layer_shift(struct fit_parameters *lst, struct shift_info shift)
+fit_parameters_fix_layer_shift(fit_parameters *lst, struct shift_info shift)
 {
     if (shift.event == SHIFT_DELETE_LAYER) {
         fix_delete_layer(lst, shift.index);
@@ -380,7 +356,7 @@ fit_param_read(lexer_t *l, fit_param_t *fp)
 }
 
 int
-fit_parameters_write(writer_t *w, const struct fit_parameters *s)
+fit_parameters_write(writer_t *w, const fit_parameters *s)
 {
     writer_printf(w, "fit-parameters %d", s->number);
     writer_newline_enter(w);
@@ -395,11 +371,11 @@ fit_parameters_write(writer_t *w, const struct fit_parameters *s)
     return 1;
 }
 
-struct fit_parameters *
+fit_parameters *
 fit_parameters_read(lexer_t *l)
 {
     int nb;
-    struct fit_parameters *fps = fit_parameters_new();
+    fit_parameters *fps = fit_parameters_new();
     if (lexer_check_ident(l, "fit-parameters")) goto params_exit;
     if (lexer_integer(l, &nb)) goto params_exit;
     int i;

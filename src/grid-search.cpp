@@ -150,14 +150,13 @@ void *thr_eval_func(void *arg) {
 }
 
 static void
-lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_stack, fit_result *result,
+lmfit_grid_run(fit_engine *fit, seeds_list *seeds, gsl::vector& x, int preserve_init_stack, fit_result *result,
     lmfit_result *lmresult, gui_hook_func_t hfun, void *hdata)
 {
     struct fit_config *cfg = fit->config;
     int stop_request = 0;
     stack_t *initial_stack = nullptr;
     const int dim = fit->parameters->number;
-    const seed_t *vseed = seeds->values;
 
     assert(fit->parameters->number == seeds->number);
 
@@ -167,7 +166,7 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
 
     /* We store in x the central coordinates of the grid. */
     for(int j = 0; j < dim; j++) {
-        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &vseed[j]);
+        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &seeds->at(j));
     }
 
     int modulo[dim];
@@ -175,9 +174,9 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
 
     for(int j = 0; j < dim; j++) {
         const double x_center = x[j];
-        if(vseed[j].type == SEED_RANGE) {
+        if(seeds->at(j).type == SEED_RANGE) {
             const fit_param_t& fp = fit->parameters->at(j);
-            const double delta = vseed[j].delta;
+            const double delta = seeds->at(j).delta;
             x0[j] = x_center - delta;
             dx[j] = fit_engine_estimate_param_grid_step(fit, x, &fp, delta);
             modulo[j] = (int) (2 * delta / dx[j]) + 1;
@@ -259,7 +258,7 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
 }
 
 void
-lmfit_grid(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
+lmfit_grid(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds_list *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack,
            gui_hook_func_t hfun, void *hdata)
 {
     struct fit_result grid_result[1];

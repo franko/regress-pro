@@ -52,7 +52,7 @@ disp_fit_engine_new() {
 
 void
 disp_fit_engine_set_parameters(struct disp_fit_engine *fit,
-                               const struct fit_parameters *fps)
+                               const fit_parameters *fps)
 {
     fit->parameters = fps;
     assert(fps->number > 0);

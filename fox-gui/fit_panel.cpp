@@ -233,7 +233,7 @@ fit_panel::on_cmd_spectral_range(FXObject *, FXSelector, void*)
 
 long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
 {
-    struct fit_parameters* fps = fit_parameters_new();
+    fit_parameters* fps = fit_parameters_new();
 
     for(unsigned j = 0; j < m_parameters.size(); j++) {
         if(m_parameters[j].selected) {

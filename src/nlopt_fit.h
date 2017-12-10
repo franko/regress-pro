@@ -7,6 +7,6 @@
 #include "lmfit_result.h"
 #include "str.h"
 
-extern void nlopt_fit(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack, gui_hook_func_t hfun, void *hdata);
+extern void nlopt_fit(fit_engine *fit, spectrum *spectrum, gsl::vector& x, seeds_list *seeds, lmfit_result *result, str_ptr analysis, int preserve_init_stack, gui_hook_func_t hfun, void *hdata);
 
 #endif

@@ -8,7 +8,7 @@
 
 struct fit_recipe {
     fit_recipe();
-    fit_recipe(stack_t *s, const fit_config *cfg, fit_parameters *fps, seeds *sl, multi_sample_recipe *mss);
+    fit_recipe(stack_t *s, const fit_config *cfg, fit_parameters *fps, seeds_list *sl, multi_sample_recipe *mss);
     ~fit_recipe();
 
     void setup_default_stack();
@@ -19,7 +19,7 @@ struct fit_recipe {
     fit_config config[1];
     stack_t *stack;
     fit_parameters *parameters;
-    seeds *seeds_list;
+    seeds_list *seeds;
     multi_sample_recipe *ms_setup;
 };
 

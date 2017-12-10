@@ -65,14 +65,14 @@ int listbox_select_parameter(FXListBox *listbox, int fp_index)
     return 0;
 }
 
-void list_populate(FXList *list, fit_parameters *fps, seeds *seed, bool clear)
+void list_populate(FXList *list, fit_parameters *fps, seeds_list *seeds, bool clear)
 {
     if (clear) {
         list->clearItems();
     }
     for (int i = 0; i < fps->number; i++) {
         const fit_param_t *fp = &fps->at(i);
-        const seed_t *value = (seed ? &seed->values[i] : nullptr);
+        const seed_t *value = (seeds ? &seeds->at(i) : nullptr);
         list->appendItem(format_fit_parameter(fp, value));
     }
 }

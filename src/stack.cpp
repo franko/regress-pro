@@ -156,7 +156,7 @@ stack_free(stack_t *s)
 }
 
 void
-stack_get_all_parameters(stack_t *stack, struct fit_parameters *fps)
+stack_get_all_parameters(stack_t *stack, fit_parameters *fps)
 {
     int n_layers = stack->nb - 2;
     fit_param_t fp[1];

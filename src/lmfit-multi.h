@@ -8,7 +8,7 @@
 /* returns 0 if successfull */
 int
 lmfit_multi(struct multi_fit_engine *fit,
-            struct seeds *seeds_common, struct seeds *seeds_priv,
+            seeds_list *seeds_common, seeds_list *seeds_priv,
             str_ptr analysis, str_ptr error_msg,
             gui_hook_func_t hfun, void *hdata);
 

@@ -13,7 +13,7 @@
 
 int
 lmfit_multi(struct multi_fit_engine *fit,
-            struct seeds *seeds_common, struct seeds *seeds_priv,
+            seeds_list *seeds_common, seeds_list *seeds_priv,
             str_ptr analysis, str_ptr error_msg,
             gui_hook_func_t hfun, void *hdata)
 {
@@ -35,11 +35,11 @@ lmfit_multi(struct multi_fit_engine *fit,
     s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
     for(k = 0; k < seeds_common->number; k++) {
-        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->at(k), &seeds_common->values[k]));
+        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->at(k), &seeds_common->at(k)));
     }
 
     for(ks = 0; ks < seeds_priv->number; ks++, k++) {
-        gsl_vector_set(x, k, seeds_priv->values[ks].seed);
+        gsl_vector_set(x, k, seeds_priv->at(ks).seed);
     }
 
     if(analysis) {

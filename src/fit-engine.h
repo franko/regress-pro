@@ -56,12 +56,12 @@ struct fit_engine {
     struct fit_config config[1];
 
     struct stack *stack;
-    struct fit_parameters *parameters;
+    fit_parameters *parameters;
 
     struct fit_run run[1];
 };
 
-struct seeds;
+class seeds_list;
 
 extern struct fit_engine *fit_engine_new();
 
@@ -72,7 +72,7 @@ extern struct fit_engine *fit_engine_clone(struct fit_engine *fit);
    It makes internally a copy of the stack and of the config.
    It holds only a reference to the fit parameters and this latter can be
    NULL if the parameters are given later. */
-extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters);
+extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, fit_parameters *parameters);
 
 /* Bind the fit_engine to the provided film stack by taking the ownership.
    No copy of the film stack is made. */
@@ -92,7 +92,7 @@ extern void fit_engine_disable(struct fit_engine *f);
    caller function. */
 extern stack_t *fit_engine_yield_stack(struct fit_engine *f);
 
-extern int  check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *error_msg);
+extern int  check_fit_parameters(struct stack *stack, fit_parameters *fps, str_ptr *error_msg);
 
 extern void fit_engine_commit_parameters(struct fit_engine *fit,
         const gsl_vector *x);
@@ -101,7 +101,7 @@ extern int fit_engine_apply_param(struct fit_engine *fit,
                                   const fit_param_t *fp, double val);
 
 extern void fit_engine_apply_parameters(struct fit_engine *fit,
-                                        const struct fit_parameters *fps,
+                                        const fit_parameters *fps,
                                         const gsl_vector *x);
 
 extern void fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wavelength_start, double *wavelength_end);
@@ -123,7 +123,7 @@ extern void fit_engine_generate_spectrum(struct fit_engine *fit,
 
 extern void fit_engine_print_fit_results(struct fit_engine *fit, const gsl::vector& x, str_t text, int tabular);
 
-extern struct fit_parameters *
+extern fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit);
 
 extern double

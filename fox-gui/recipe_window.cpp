@@ -80,7 +80,7 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     range_tf = new FXTextField(matrix, 8, this, ID_RANGE, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     range_tf->setTipText("Optional range used in grid search");
 
-    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    list_populate(fit_list, recipe->parameters, recipe->seeds, true);
 
     if (recipe->ms_setup) {
         setup_multi_sample_parameters(false);
@@ -198,7 +198,7 @@ recipe_window::update_seed_value(const fit_param_t *fp)
 {
     int i = fit_parameters_find(recipe->parameters, fp);
     if (i >= 0) {
-        set_seed_fields(&recipe->seeds_list->values[i]);
+        set_seed_fields(&recipe->seeds->at(i));
     } else {
         clear_seed_textfield();
         clear_range_textfield();
@@ -245,11 +245,11 @@ recipe_window::set_fit_parameter(const fit_param_t *fp, const seed_t *value)
 {
     int i = fit_parameters_find(recipe->parameters, fp);
     if (i >= 0) {
-        recipe->seeds_list->values[i] = *value;
+        recipe->seeds->at(i) = *value;
         fit_list_update_parameter(i, fp, value);
     } else {
         fit_parameters_add(recipe->parameters, fp);
-        seed_list_add(recipe->seeds_list, value);
+        seed_list_add(recipe->seeds, value);
         fit_list_append_parameter(fp, value);
     }
 }
@@ -306,7 +306,7 @@ recipe_window::on_keypress_parameter(FXObject *sender, FXSelector sel, void *ptr
             if (index < 0) return 0;
             fit_list->removeItem(index);
             fit_parameters_remove(recipe->parameters, index);
-            seed_list_remove(recipe->seeds_list, index);
+            seed_list_remove(recipe->seeds, index);
             return 1;
         } else if (sender == iparams_listbox || sender == cparams_listbox) {
             FXList *list = (FXList *) sender;
@@ -387,7 +387,7 @@ recipe_window::on_changed_subsampling(FXObject *, FXSelector sel, void *ptr)
 long
 recipe_window::on_cmd_stack_change(FXObject *, FXSelector, void *)
 {
-    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    list_populate(fit_list, recipe->parameters, recipe->seeds, true);
     setup_parameters_list();
     return 1;
 }
@@ -419,7 +419,7 @@ void
 recipe_window::bind_new_fit_recipe(fit_recipe *rcp)
 {
     recipe = rcp;
-    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    list_populate(fit_list, recipe->parameters, recipe->seeds, true);
     setup_parameters_list();
     setup_multi_sample_parameters();
     setup_config_parameters();

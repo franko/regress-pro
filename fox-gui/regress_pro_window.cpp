@@ -365,7 +365,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
         return 1;
     }
 
-    struct seeds *iseeds = seed_list_new();
+    seeds_list *iseeds = seed_list_new();
 
     double iseed_values[iparams->number];
     for (int i = 0; i < samples_number; i++) {
@@ -385,14 +385,14 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     }
 
 #ifdef DEBUG
-    multi_fit_engine_check_deriv(fit, recipe->seeds_list, iseeds);
+    multi_fit_engine_check_deriv(fit, recipe->seeds, iseeds);
 #endif
 
     str fit_error_msgs;
     ProgressInfo progress(this->getApp(), this);
 
     str analysis;
-    lmfit_multi(fit, recipe->seeds_list, iseeds,
+    lmfit_multi(fit, recipe->seeds, iseeds,
                 &analysis, &fit_error_msgs,
                 process_foxgui_events, &progress);
 
@@ -461,7 +461,7 @@ regress_pro_window::update_interactive_fit(fit_engine *fit, const lmfit_result& 
 }
 
 FXString
-regress_pro_window::run_fit(fit_engine *fit, seeds *fseeds, struct spectrum *fspectrum)
+regress_pro_window::run_fit(fit_engine *fit, seeds_list *fseeds, struct spectrum *fspectrum)
 {
     str analysis;
 
@@ -530,7 +530,7 @@ str_ptr regress_pro_window::run_fit_command() {
         return new_error_message(SPECTRUM_INVALID, check_error);
     }
 
-    FXString fit_result = run_fit(fit, recipe->seeds_list, this->spectrum);
+    FXString fit_result = run_fit(fit, recipe->seeds, this->spectrum);
     fit_engine_free(fit);
 
     if (scriptMode()) {

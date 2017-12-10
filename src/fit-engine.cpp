@@ -125,7 +125,7 @@ fit_engine_apply_param(struct fit_engine *fit, const fit_param_t *fp,
 
 void
 fit_engine_apply_parameters(struct fit_engine *fit,
-                            const struct fit_parameters *fps,
+                            const fit_parameters *fps,
                             const gsl_vector *x)
 {
     for (int j = 0; j < fps->number; j++) {
@@ -140,7 +140,7 @@ fit_engine_apply_parameters(struct fit_engine *fit,
 void
 fit_engine_commit_parameters(struct fit_engine *fit, const gsl_vector *x)
 {
-    struct fit_parameters const * fps = fit->parameters;
+    fit_parameters const * fps = fit->parameters;
     fit_engine_apply_parameters(fit, fps, x);
 }
 
@@ -433,7 +433,7 @@ fit_engine_disable(struct fit_engine *fit)
 }
 
 int
-check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *error_msg)
+check_fit_parameters(struct stack *stack, fit_parameters *fps, str_ptr *error_msg)
 {
     int j, nb_med = stack->nb;
 
@@ -485,9 +485,9 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
     return 0;
 }
 
-struct fit_parameters *
+fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit) {
-    struct fit_parameters *fps = fit_parameters_new();
+    fit_parameters *fps = fit_parameters_new();
     stack_get_all_parameters(fit->stack, fps);
     acquisition_get_all_parameters(fit->acquisition, fps);
     return fps;
@@ -636,7 +636,7 @@ fit_engine_new()
 }
 
 void
-fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters)
+fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, fit_parameters *parameters)
 {
     fit->config[0] = *config;
     /* fit is not the owner of the "parameters", we just keep a reference */

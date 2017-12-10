@@ -64,7 +64,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         }
         gsl::vector x(fit->parameters->number);
         lmfit_result fresult;
-        nlopt_fit(fit, s, x, recipe->seeds_list, &fresult, nullptr, LMFIT_PRESERVE_STACK, window_process_events, this);
+        nlopt_fit(fit, s, x, recipe->seeds, &fresult, nullptr, LMFIT_PRESERVE_STACK, window_process_events, this);
         int j;
         for (j = 0; j < recipe->parameters->number; j++) {
             result.format("%g", x[j]);

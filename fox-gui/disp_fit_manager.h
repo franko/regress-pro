@@ -120,7 +120,7 @@ public:
         return false;
     }
 
-    virtual lmfit_result run(struct fit_parameters* fps) {
+    virtual lmfit_result run(fit_parameters* fps) {
         lmfit_result result;
         disp_t* d = m_fit_engine->model_disp;
         gsl_vector* x = gsl_vector_alloc(fps->number);
