@@ -117,7 +117,7 @@ elliss_fit_fdf(const gsl_vector *x, void *params, gsl_vector *f,
             }
 
             for(int kp = 0; kp < (int) fit->parameters->number; kp++) {
-                fit_param_t *fp = fit->parameters->values + kp;
+                fit_param_t *fp = &fit->parameters->at(kp);
 
                 get_parameter_jacobian(fp, fit->stack, ideriv, lambda,
                                        jacob_th, jacob_n, jacob_acq, jac);

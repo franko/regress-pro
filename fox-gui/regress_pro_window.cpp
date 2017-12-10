@@ -379,7 +379,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
             multi_fit_engine_free(fit);
             return 1;
         }
-        for (unsigned j = 0; j < iparams->number; j++) {
+        for (int j = 0; j < iparams->number; j++) {
             seed_list_add_simple(iseeds, iseed_values[j]);
         }
     }

@@ -128,13 +128,9 @@ fit_engine_apply_parameters(struct fit_engine *fit,
                             const struct fit_parameters *fps,
                             const gsl_vector *x)
 {
-    size_t j;
-
-    for(j = 0; j < fps->number; j++) {
-        const fit_param_t *fp = fps->values + j;
-        double pval = gsl_vector_get(x, j);
-        int status;
-        status = fit_engine_apply_param(fit, fp, pval);
+    for (int j = 0; j < fps->number; j++) {
+        const double pval = gsl_vector_get(x, j);
+        int status = fit_engine_apply_param(fit, &fps->at(j), pval);
         /* No error should never occurs here because the fit parameters
         are checked in advance. */
         assert(status == 0);
@@ -169,9 +165,9 @@ fit_engine_update_disp_info(struct fit_engine *fit)
     fit_engine_get_wavelength_limits(fit, &wavelength_start, &wavelength_end);
     for (int i = 0; i < fit->stack->nb; i++) {
         disp_t *d = fit->stack->disp[i];
-        for(size_t j = 0; j < fit->parameters->number; j++) {
-            const fit_param_t *fp = &fit->parameters->values[j];
-            if (fp->id == PID_LAYER_N && fp->layer_nb == i) {
+        for(int j = 0; j < fit->parameters->number; j++) {
+            const fit_param_t& fp = fit->parameters->at(j);
+            if (fp.id == PID_LAYER_N && fp.layer_nb == i) {
                 disp_set_info_wavelength(d, wavelength_start, wavelength_end);
                 char buffer[128];
                 if (fit_timestamp(128, buffer) != 0) {
@@ -293,7 +289,7 @@ fit_engine_check_deriv(struct fit_engine *fit) {
     gsl_vector *x = gsl_vector_alloc(parameters_number);
 
     for(int j = 0; j < parameters_number; j++) {
-        double seed = fit_engine_get_parameter_value(fit, &fit->parameters->values[j]);
+        double seed = fit_engine_get_parameter_value(fit, &fit->parameters->at(j));
         gsl_vector_set(x, j, seed);
     }
 
@@ -451,7 +447,7 @@ check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *e
     }
 
     for(j = 0; j < (int) fps->number; j++) {
-        fit_param_t *fp = fps->values + j;
+        fit_param_t *fp = &fps->at(j);
 
         if (fp->id >= PID_ACQUISITION_PARAMETER && fp->id < PID_INVALID)
             return 0;
@@ -693,14 +689,13 @@ void
 fit_engine_print_fit_results(struct fit_engine *fit, const gsl::vector& x, str_t text, int tabular)
 {
     str_t pname, value;
-    size_t j;
 
     str_set_null(text);
     str_init(pname, 15);
     str_init(value, 15);
 
-    for(j = 0; j < fit->parameters->number; j++) {
-        fit_param_t *fp = fit->parameters->values + j;
+    for(int j = 0; j < fit->parameters->number; j++) {
+        fit_param_t *fp = &fit->parameters->at(j);
         get_param_name(fp, pname);
         if(tabular) {
             str_printf(value, "%.6g", x[j]);

@@ -112,7 +112,7 @@ set_initial_seeds(fit_engine *fit, seeds *seeds, gsl_vector *x)
 {
     const int dim = fit->parameters->number;
     for(int j = 0; j < dim; j++) {
-        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &seeds->values[j]);
+        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &seeds->values[j]);
         gsl_vector_set(x, j, xc);
     }
 }

@@ -167,7 +167,7 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
 
     /* We store in x the central coordinates of the grid. */
     for(int j = 0; j < dim; j++) {
-        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->values[j], &vseed[j]);
+        x[j] = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &vseed[j]);
     }
 
     int modulo[dim];
@@ -176,7 +176,7 @@ lmfit_grid_run(fit_engine *fit, seeds *seeds, gsl::vector& x, int preserve_init_
     for(int j = 0; j < dim; j++) {
         const double x_center = x[j];
         if(vseed[j].type == SEED_RANGE) {
-            const fit_param_t fp = fit->parameters->values[j];
+            const fit_param_t& fp = fit->parameters->at(j);
             const double delta = vseed[j].delta;
             x0[j] = x_center - delta;
             dx[j] = fit_engine_estimate_param_grid_step(fit, x, &fp, delta);

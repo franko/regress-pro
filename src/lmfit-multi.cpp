@@ -35,7 +35,7 @@ lmfit_multi(struct multi_fit_engine *fit,
     s = gsl_multifit_fdfsolver_alloc(T, f->n, f->p);
 
     for(k = 0; k < seeds_common->number; k++) {
-        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->values[k], &seeds_common->values[k]));
+        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->at(k), &seeds_common->values[k]));
     }
 
     for(ks = 0; ks < seeds_priv->number; ks++, k++) {

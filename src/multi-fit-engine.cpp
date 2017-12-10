@@ -194,7 +194,7 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
 
                 int kp;
                 for(kp = 0; kp < nb_comm_params; kp++) {
-                    const fit_param_t *fp = fit->common_parameters->values + kp;
+                    const fit_param_t *fp = &fit->common_parameters->at(kp);
                     double fp_jacob[channels_number];
 
                     select_param_jacobian(sys_kind, channels_number, fp, stack_sample, ideriv, lambda,
@@ -212,7 +212,7 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
                 }
 
                 for(int ikp = 0; ikp < nb_priv_params; kp++, ikp++) {
-                    fit_param_t *fp = fit->private_parameters->values + ikp;
+                    const fit_param_t *fp = &fit->private_parameters->at(ikp);
                     double fp_jacob[channels_number];
 
                     select_param_jacobian(sys_kind, channels_number, fp, stack_sample, ideriv, lambda,
@@ -365,12 +365,12 @@ multi_fit_engine_commit_parameters(struct multi_fit_engine *fit,
 {
     struct fit_parameters const * common = fit->common_parameters;
     struct fit_parameters const * priv   = fit->private_parameters;
-    size_t nb_priv_params = priv->number;
-    size_t j, joffs = 0;
+    int nb_priv_params = priv->number;
+    int joffs = 0;
     int sample;
 
-    for(j = 0; j < common->number; j++) {
-        const fit_param_t *fp = common->values + j;
+    for (int j = 0; j < common->number; j++) {
+        const fit_param_t *fp = &common->at(j);
         double param_value = gsl_vector_get(x, joffs + j);
         int status;
 
@@ -383,8 +383,8 @@ multi_fit_engine_commit_parameters(struct multi_fit_engine *fit,
 
     joffs += common->number;
 
-    for(j = 0; j < nb_priv_params; j++) {
-        const fit_param_t *fp = priv->values + j;
+    for (int j = 0; j < nb_priv_params; j++) {
+        const fit_param_t *fp = &priv->at(j);
 
         for(sample = 0; sample < fit->samples_number; sample++) {
             double param_value =
@@ -470,7 +470,7 @@ multi_fit_engine_apply_parameters(struct multi_fit_engine *fit, int sample_nb, c
 {
     int k;
     for(k = 0; k < (int) fps->number; k++) {
-        stack_apply_param(fit->stack_list[sample_nb], &fps->values[k], value[k]);
+        stack_apply_param(fit->stack_list[sample_nb], &fps->at(k), value[k]);
     }
 }
 
@@ -486,7 +486,7 @@ multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
     str_init(pname, 15);
 
     for (j = 0, kp = 0; j < (int) fit->common_parameters->number; j++, kp++) {
-        fit_param_t *fp = fit->common_parameters->values + j;
+        const fit_param_t *fp = &fit->common_parameters->at(j);
         get_param_name(fp, pname);
         str_printf_add(text, "COMMON    / %9s : %.6g\n", CSTR(pname),
                        gsl_vector_get(fit->results, j));
@@ -495,7 +495,7 @@ multi_fit_engine_print_fit_results(struct multi_fit_engine *fit,
 
     for (k = 0; k < fit->samples_number; k++) {
         for (j = 0; j < (int) fit->private_parameters->number; j++, kp++) {
-            fit_param_t *fp = fit->private_parameters->values + j;
+            const fit_param_t *fp = &fit->private_parameters->at(j);
             get_param_name(fp, pname);
             str_printf_add(text, "SAMPLE(%02i)/ %9s : %.6g\n", k, CSTR(pname),
                            gsl_vector_get(fit->results, kp));
@@ -659,7 +659,7 @@ multi_fit_engine_check_deriv(struct multi_fit_engine *fit, struct seeds *seeds_c
 
     int k;
     for(k = 0; k < seeds_common->number; k++) {
-        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->values[k], &seeds_common->values[k]));
+        gsl_vector_set(x, k, multi_fit_engine_get_seed_value(fit, &fit->common_parameters->at(k), &seeds_common->values[k]));
     }
 
     for(int ks = 0; ks < seeds_priv->number; ks++, k++) {

@@ -139,12 +139,12 @@ void recipe_window::setup_multi_sample_parameters(bool create_elements)
             cparams_listbox->clearItems();
         }
         multi_sample_recipe *ms = recipe->ms_setup;
-        for (unsigned i = 0; i < ms->iparameters->number; i++) {
-            const fit_param_t *fp = &ms->iparameters->values[i];
+        for (int i = 0; i < ms->iparameters->number; i++) {
+            const fit_param_t *fp = &ms->iparameters->at(i);
             iparams_listbox->appendItem(format_fit_parameter(fp));
         }
-        for (unsigned i = 0; i < ms->cparameters->number; i++) {
-            const fit_param_t *fp = &ms->cparameters->values[i];
+        for (int i = 0; i < ms->cparameters->number; i++) {
+            const fit_param_t *fp = &ms->cparameters->at(i);
             cparams_listbox->appendItem(format_fit_parameter(fp));
         }
     }
@@ -161,7 +161,7 @@ recipe_window::selected_parameter()
     FXint no = param_listbox->getCurrentItem();
     if (no >= 0) {
         int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
-        return index >= 0 ? &param_list->values[index] : nullptr;
+        return index >= 0 ? &param_list->at(index) : nullptr;
     }
     return nullptr;
 }
@@ -396,7 +396,7 @@ long
 recipe_window::on_select_parameter(FXObject *, FXSelector, void *)
 {
     FXint index = fit_list->getCurrentItem();
-    const fit_param_t *selfp = &recipe->parameters->values[index];
+    const fit_param_t *selfp = &recipe->parameters->at(index);
     int fp_index = fit_parameters_find(param_list, selfp);
     listbox_select_parameter(param_listbox, fp_index);
     return 1;
@@ -507,11 +507,11 @@ long recipe_window::on_select_param(FXObject *, FXSelector sel, void *)
     if (id == ID_PARAM_INDIV) {
         FXint index = iparams_listbox->getCurrentItem();
         /* Get the selected fit parameter. */
-        selfp = &ms->iparameters->values[index];
+        selfp = &ms->iparameters->at(index);
     } else {
         FXint index = cparams_listbox->getCurrentItem();
         /* Get the selected fit parameter. */
-        selfp = &ms->cparameters->values[index];
+        selfp = &ms->cparameters->at(index);
     }
     /* Find the index of the fit parameter in the list of all
        possible parameters. */

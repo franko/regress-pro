@@ -77,8 +77,8 @@ struct oper_run_fit : fit_action {
     }
 
     void apply_values(fit_manager *fm, double *values) {
-        for (unsigned i = 0; i < params->number; i++) {
-            int k = fm->lookup(&params->values[i]);
+        for (int i = 0; i < params->number; i++) {
+            int k = fm->lookup(&params->at(i));
             if (k >= 0) {
                 fm->set_parameter_value(k, values[i]);
             }

@@ -1,6 +1,7 @@
 #ifndef FIT_PARAMS_H
 #define FIT_PARAMS_H
 
+#include "generic_pod_vector.h"
 #include "common.h"
 #include "str.h"
 #include "writer.h"
@@ -51,10 +52,9 @@ typedef struct {
     int param_nb;
 } fit_param_t;
 
-struct fit_parameters {
-    size_t number;
-    size_t alloc;
-    fit_param_t *values;
+class fit_parameters : public pod_vector_base<fit_param_t> {
+    using base_type = pod_vector_base<fit_param_t>;
+    using base_type::base_type;
 };
 
 struct seeds {

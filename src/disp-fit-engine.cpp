@@ -61,13 +61,10 @@ disp_fit_engine_set_parameters(struct disp_fit_engine *fit,
 static void
 commit_fit_parameters(struct disp_fit_engine *fit, const gsl_vector *x)
 {
-    const fit_param_t *fpptr = fit->parameters->values;
-    int k, nfp = fit->parameters->number;
-
-    for(k = 0; k < nfp; k++) {
-        const fit_param_t *fp = fpptr + k;
-        double fpval = gsl_vector_get(x, k);
-        dispers_apply_param(fit->model_disp, fp, fpval);
+    for(int k = 0; k < fit->parameters->number; k++) {
+        const fit_param_t& fp = fit->parameters->at(k);
+        double value = gsl_vector_get(x, k);
+        dispers_apply_param(fit->model_disp, &fp, value);
     }
 }
 
@@ -95,8 +92,7 @@ disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
 
     for(j = 0; j < nsmp; j++) {
         double lambda = gsl_vector_get(wl, j);
-        fit_param_t *params = fit->parameters->values;
-        int kp;
+        const fit_parameters *params = fit->parameters;
 
         if(f) {
             cmpl n_mod = n_value(fit->model_disp, lambda);
@@ -112,8 +108,8 @@ disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
         if(jacob) {
             n_value_deriv(fit->model_disp, fit->model_der, lambda);
 
-            for(kp = 0; kp < fit->parameters->number; kp++) {
-                cmpl dndp = fit->model_der->at(params[kp].param_nb);
+            for (int kp = 0; kp < fit->parameters->number; kp++) {
+                cmpl dndp = fit->model_der->at(params->at(kp).param_nb);
 
                 gsl_matrix_set(jacob, j,      kp, std::real(dndp));
                 gsl_matrix_set(jacob, j+nsmp, kp, std::imag(dndp));

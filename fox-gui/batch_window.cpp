@@ -46,7 +46,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
     str_init(pname, 15);
     int j;
     for (j = 0; j < int(recipe->parameters->number); j++) {
-        get_param_name(&recipe->parameters->values[j], pname);
+        get_param_name(&recipe->parameters->at(j), pname);
         table->setItemText(0, j + 1, CSTR(pname));
     }
     table->setItemText(0, j + 1, "Chi Square");
@@ -65,7 +65,7 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         gsl::vector x(fit->parameters->number);
         lmfit_result fresult;
         nlopt_fit(fit, s, x, recipe->seeds_list, &fresult, nullptr, LMFIT_PRESERVE_STACK, window_process_events, this);
-        unsigned j;
+        int j;
         for (j = 0; j < recipe->parameters->number; j++) {
             result.format("%g", x[j]);
             table->setItemText(i + 1, j + 1, result);

@@ -125,8 +125,8 @@ public:
         disp_t* d = m_fit_engine->model_disp;
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
-        for(unsigned k = 0; k < fps->number; k++) {
-            double val = disp_get_param_value(d, &fps->values[k]);
+        for(int k = 0; k < fps->number; k++) {
+            double val = disp_get_param_value(d, &fps->at(k));
             gsl_vector_set(x, k, val);
         }
 

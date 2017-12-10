@@ -84,56 +84,30 @@ get_disp_param_name(const fit_param_t *fp, str_ptr buf)
     }
 }
 
-struct fit_parameters *
-fit_parameters_new(void) {
-    return (struct fit_parameters *) ARRAY_NEW(fit_param_t);
+fit_parameters *fit_parameters_new() {
+    return new fit_parameters();
+}
+
+void fit_parameters_free(fit_parameters *s) {
+    delete s;
+}
+
+void fit_parameters_clear(fit_parameters *s) {
+    s->clear();
+}
+
+fit_parameters *fit_parameters_copy(const fit_parameters *fps) {
+    return new fit_parameters(*fps);
+}
+
+int fit_parameters_add(fit_parameters *lst, fit_param_t const * fp) {
+    lst->add(*fp);
+    return lst->number;
 }
 
 void
-fit_parameters_free(struct fit_parameters *s)
-{
-    free(s->values);
-    free(s);
-}
-
-void
-fit_parameters_clear(struct fit_parameters *s)
-{
-    s->number = 0;
-}
-
-struct fit_parameters *
-fit_parameters_copy(const struct fit_parameters *fps)
-{
-    struct fit_parameters *new_fps = (struct fit_parameters *) generic_array_new(sizeof(fit_param_t), fps->number);
-    unsigned int i;
-    for (i = 0; i < fps->number; i++) {
-        new_fps->values[i] = fps->values[i];
-    }
-    new_fps->number = fps->number;
-    return new_fps;
-}
-
-int
-fit_parameters_add(struct fit_parameters *lst, fit_param_t const * fp)
-{
-    size_t idx = lst->number;
-
-    ARRAY_CHECK_ALLOC(lst, fit_param_t, idx);
-
-    memcpy(lst->values + idx, fp, sizeof(fit_param_t));
-
-    return lst->number++;
-}
-
-void
-fit_parameters_remove(struct fit_parameters *lst, int index)
-{
-    size_t i;
-    for (i = index; i + 1 < lst->number; i++) {
-        lst->values[i] = lst->values[i + 1];
-    }
-    lst->number--;
+fit_parameters_remove(struct fit_parameters *lst, int index) {
+    lst->erase(index);
 }
 
 struct seeds *
@@ -266,12 +240,10 @@ strategy_free(struct strategy *s)
     free(s);
 }
 
-int
-fit_parameters_are_RI_fixed(struct fit_parameters *f)
-{
+int fit_parameters_are_RI_fixed(fit_parameters *f) {
     int j;
     for(j = 0; j < f->number; j++) {
-        if(f->values[j].id == PID_LAYER_N) {
+        if(f->at(j).id == PID_LAYER_N) {
             break;
         }
     }
@@ -282,7 +254,7 @@ int
 fit_parameters_contains_acquisition_parameters(struct fit_parameters *f)
 {
     for(int j = 0; j < f->number; j++) {
-        const int id = f->values[j].id;
+        const int id = f->at(j).id;
         if(id >= PID_ACQUISITION_PARAMETER || id < PID_INVALID) {
             return 1;
         }
@@ -307,7 +279,7 @@ fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp)
 {
     int j;
     for(j = 0; j < lst->number; j++) {
-        const fit_param_t *lfp = &lst->values[j];
+        const fit_param_t *lfp = &lst->at(j);
         if (fit_param_compare(lfp, fp) == 0) {
             return j;
         }
@@ -318,9 +290,8 @@ fit_parameters_find(const struct fit_parameters *lst, const fit_param_t *fp)
 static void
 fix_delete_layer(struct fit_parameters *lst, int index)
 {
-    size_t i;
-    for (i = 0; i < lst->number; i++) {
-        fit_param_t *fp = &lst->values[i];
+    for (int i = 0; i < lst->number; i++) {
+        fit_param_t *fp = &lst->at(i);
         if (fp->id < PID_ACQUISITION_PARAMETER && fp->layer_nb >= index) {
             if (fp->layer_nb > index) {
                 fp->layer_nb --;
@@ -334,9 +305,8 @@ fix_delete_layer(struct fit_parameters *lst, int index)
 static void
 fix_insert_layer(struct fit_parameters *lst, int index)
 {
-    size_t i;
-    for (i = 0; i < lst->number; i++) {
-        fit_param_t *fp = &lst->values[i];
+    for (int i = 0; i < lst->number; i++) {
+        fit_param_t *fp = &lst->at(i);
         if (fp->id < PID_ACQUISITION_PARAMETER && fp->layer_nb >= index) {
             fp->layer_nb ++;
         }
@@ -419,7 +389,7 @@ fit_parameters_write(writer_t *w, const struct fit_parameters *s)
         if (i > 0) {
             writer_newline(w);
         }
-        fit_param_write(w, s->values + i);
+        fit_param_write(w, &s->at(i));
     }
     writer_newline_exit(w);
     return 1;

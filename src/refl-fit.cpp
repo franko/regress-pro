@@ -104,12 +104,8 @@ refl_fit_fdf(const gsl_vector *x, void *params,
             }
 
             for(int kp = 0; kp < (int) fit->parameters->number; kp++) {
-                const fit_param_t *fp = fit->parameters->values + kp;
-                double pjac;
-
-                pjac = get_parameter_jacob_r(fp, fit->stack, ideriv, lambda,
-                                             jacob_th, jacob_n, jacob_acq);
-
+                const fit_param_t *fp = &fit->parameters->at(kp);
+                const double pjac = get_parameter_jacob_r(fp, fit->stack, ideriv, lambda, jacob_th, jacob_n, jacob_acq);
                 gsl_matrix_set(jacob, j, kp, pjac);
             }
         }

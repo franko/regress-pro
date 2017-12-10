@@ -47,7 +47,7 @@ long dataset_table::on_cmd_stack_shift(FXObject *, FXSelector, void *data)
 {
     fit_parameters_fix_layer_shift(fplink.params, *(shift_info *)data);
     for (fit_param_node *p = fplink.top; p; p = p->next) {
-        const fit_param_t *fp = &fplink.params->values[p->fp_index];
+        const fit_param_t *fp = &fplink.params->at(p->fp_index);
         set_column_parameter_name(fp, p->column);
     }
     return 1;
@@ -74,7 +74,7 @@ void dataset_table::link_parameter(const fit_param_t *fp, const int column)
 {
     for (fit_param_node *p = fplink.top; p; p = p->next) {
         if (p->column == column) {
-            fplink.params->values[p->fp_index] = *fp;
+            fplink.params->at(p->fp_index) = *fp;
             return;
         }
     }
@@ -93,9 +93,9 @@ void dataset_table::set_column_parameter_name(const fit_param_t *fp, int column)
 long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
 {
     int fp_index = FXSELID(sel) - ID_FIT_PARAM;
-    const fit_param_t *fp = fit_params->values + fp_index;
+    const fit_param_t *fp = &fit_params->at(fp_index);
     link_parameter(fp, popup_col);
-    set_column_parameter_name(fit_params->values + fp_index, popup_col);
+    set_column_parameter_name(fp, popup_col);
     return 1;
 }
 
@@ -134,11 +134,11 @@ int dataset_table::get_cell_value(int i, int j, double *pvalue)
 bool dataset_table::get_values(int row, const fit_parameters *fps, double value_array[], int& error_col)
 {
     FXString cell_text;
-    for (unsigned i = 0; i < fps->number; i++) {
-        const fit_param_t *fp = &fps->values[i];
+    for (int i = 0; i < fps->number; i++) {
+        const fit_param_t *fp = &fps->at(i);
         fit_param_node *p;
         for (p = fplink.top; p; p = p->next) {
-            const fit_param_t *xfp = &fplink.params->values[p->fp_index];
+            const fit_param_t *xfp = &fplink.params->at(p->fp_index);
             if (fit_param_compare(xfp, fp) == 0) {
                 if (get_cell_value(row + 1, p->column, &value_array[i])) {
                     error_col = p->column;
@@ -161,7 +161,7 @@ int dataset_table::write(writer_t *w)
     int m = 0;
     fit_parameters *active_params = fit_parameters_new();
     for (fit_param_node *p = fplink.top; p; p = p->next, m++) {
-        fit_parameters_add(active_params, &fplink.params->values[p->fp_index]);
+        fit_parameters_add(active_params, &fplink.params->at(p->fp_index));
     }
     writer_printf(w, "dataset %d %d", n, m);
     writer_newline_enter(w);
@@ -237,7 +237,7 @@ int dataset_table::read_update(lexer_t *l)
     }
 
     for (int j = 0; j < m; j++) {
-        set_column_parameter_name(&new_fplink.params->values[j], j + 1);
+        set_column_parameter_name(&new_fplink.params->at(j), j + 1);
     }
     for (int j = m + 1; j < getNumColumns(); j++) {
         setColumnText(j, "");

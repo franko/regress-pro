@@ -16,7 +16,7 @@ fit_parameters *listbox_populate_all_parameters(FXListBox *listbox, stack_t *sta
 
     int current_layer = 0;
     for (int i = 0; i < int(fps->number); i++) {
-        const fit_param_t *fp = &fps->values[i];
+        const fit_param_t *fp = &fps->at(i);
         if (fp->id >= PID_ACQUISITION_PARAMETER && current_layer >= 0) {
             listbox->appendItem("-- acquisition");
             current_layer = -1;
@@ -70,8 +70,8 @@ void list_populate(FXList *list, fit_parameters *fps, seeds *seed, bool clear)
     if (clear) {
         list->clearItems();
     }
-    for (size_t i = 0; i < fps->number; i++) {
-        const fit_param_t *fp = &fps->values[i];
+    for (int i = 0; i < fps->number; i++) {
+        const fit_param_t *fp = &fps->at(i);
         const seed_t *value = (seed ? &seed->values[i] : nullptr);
         list->appendItem(format_fit_parameter(fp, value));
     }
@@ -85,8 +85,8 @@ FXMenuPane *fit_parameters_menu(FXWindow *win, FXObject *target, FXSelector sel,
     str_t name;
     str_init(name, 16);
     int current_layer = 0;
-    for (size_t i = 0; i < fps->number; i++) {
-        const fit_param_t *fp = &fps->values[i];
+    for (int i = 0; i < fps->number; i++) {
+        const fit_param_t *fp = &fps->at(i);
         if (fp->id == PID_LAYER_N && fp->layer_nb != current_layer) {
             menu = new FXMenuPane(win);
             str_printf(name, "Layer %d", fp->layer_nb);

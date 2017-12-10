@@ -301,8 +301,8 @@ bool fit_panel::set_sampling(double s_start, double s_end)
 double *fit_panel::new_array_fit_values(fit_manager *fm, fit_parameters *fps)
 {
     double *values = new(std::nothrow) double[fps->number];
-    for (unsigned i = 0; i < fps->number; i++) {
-        int k = fm->lookup(&fps->values[i]);
+    for (int i = 0; i < fps->number; i++) {
+        int k = fm->lookup(&fps->at(i));
         values[i] = (k >= 0 ? m_fit->get_parameter_value(k) : 0.0);
     }
     return values;
