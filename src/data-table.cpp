@@ -3,46 +3,37 @@
 #include <string.h>
 
 #include "data-table.h"
+#include "generic_pod_vector.h"
 
 struct data_table empty_data_table[1] = {{0, 0, -1, {0.0}}};
 
 struct data_table *
 data_table_read_lines(FILE *f, const char *fmt, int row_start, int columns) {
-    struct generic_array *data = (struct generic_array *) ARRAY_NEW(float);
+    pod_vector_base<float> table(256);
     struct data_table *r = nullptr;
     int rows, nread, j;
 
     for(j = 0, rows = 0; /* */; rows++, j += columns) {
-        float *val;
-
-        ARRAY_CHECK_ALLOC(data, float, j + columns - 1);
-
-        data->number += columns;
-
-        val = ((float *) data->heap) + j;
-
+        float val[3];
         if(columns == 2) {
-            nread = fscanf(f, fmt, & val[0], & val[1]);
+            nread = fscanf(f, fmt, &val[0], &val[1]);
         } else if(columns == 3) {
-            nread = fscanf(f, fmt, & val[0], & val[1], & val[2]);
+            nread = fscanf(f, fmt, &val[0], &val[1], &val[2]);
         } else {
             assert(0);
         }
 
+        table.add_array(val, columns);
+
         if(nread < columns) {
             if(feof(f) && rows >= 2) {
                 r = data_table_new(rows + row_start, columns);
-                memcpy(r->heap + columns * row_start,
-                       data->heap,
-                       rows * columns * sizeof(float));
+                const float *table_data = table.data();
+                std::copy(table_data, table_data + rows * columns, r->heap + columns * row_start);
             }
-
             break;
         }
     }
-
-    ARRAY_FREE(data);
-
     return r;
 }
 

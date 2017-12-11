@@ -22,9 +22,19 @@ public:
         number++;
     }
 
-    void erase(const int pos) {
-        std::copy(&m_array[pos + 1], &m_array[number], &m_array[pos]);
-        number--;
+    void add_array(const T array[], int dim) {
+        capacity(number + dim);
+        for (int i = 0; i < dim; i++) {
+            m_array[number + i] = array[i];
+        }
+        number += dim;
+    }
+
+    void erase(const int pos, const int dim = 1) {
+        if (pos + dim < number) {
+            std::copy(&m_array[pos + dim], &m_array[number], &m_array[pos]);
+        }
+        number -= dim;
     }
 
     void insert(const T& elem, const int pos) {
@@ -47,6 +57,9 @@ public:
     const T& at(int i) const           { return m_array[i]; }
           T& at(int i)                 { return m_array[i]; }
     T  value_at(int i) const           { return m_array[i]; }
+
+    const T* data() const { return m_array.get(); }
+          T* data()       { return m_array.get(); }
 
     int number;
 
