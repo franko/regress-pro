@@ -195,6 +195,7 @@ static int
 global_search_nlopt(fit_engine *fit, seeds_list *seeds, str_ptr analysis, gui_hook_func_t hfun, void *hdata, gsl::vector& x) {
     const int dim = fit->parameters->number;
     // Prepare the NLOpt optimizer.
+    // The algorithms that appears to work better are: NLOPT_GN_CRS2_LM, NLOPT_GN_ISRES, NLOPT_GN_ESCH
     nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, dim);
     objective_data data(fit, opt, hfun, hdata);
 
@@ -211,7 +212,6 @@ global_search_nlopt(fit_engine *fit, seeds_list *seeds, str_ptr analysis, gui_ho
     }
     nlopt_set_maxtime(opt, MY_NLOPT_MAX_SECONDS);
     nlopt_set_stopval(opt, 0.006);
-    nlopt_set_xtol_rel(opt, 1e-6);
 
     double chisq;
     // Perform the actual NLopt optimization.
