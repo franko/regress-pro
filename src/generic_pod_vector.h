@@ -3,11 +3,19 @@
 
 #include <memory>
 
-template <typename T>
+template <unsigned BlockSize>
+struct AllocatorPolicyBlockSize {
+    static int capacity(int new_capacity) {
+        return (new_capacity <= 0 ? BlockSize : BlockSize * ((new_capacity + BlockSize - 1) / BlockSize));
+    }
+
+    static bool release_on_clear() { return false; }
+};
+
+template <typename T, typename AllocatorPolicy = AllocatorPolicyBlockSize<8> >
 class pod_vector_base {
 public:
-    pod_vector_base(): number(0), m_capacity(0), m_array(nullptr) { }
-    pod_vector_base(int capacity): number(0), m_capacity(capacity), m_array(std::make_unique<T[]>(capacity)) { }
+    pod_vector_base(int cap = 0): number(0), m_capacity(AllocatorPolicy::capacity(cap)), m_array(std::make_unique<T[]>(AllocatorPolicy::capacity(cap))) { }
 
     pod_vector_base(const pod_vector_base& src) {
         number = src.number;
@@ -44,11 +52,16 @@ public:
         number++;
     }
 
-    void clear() { number = 0; }
+    void clear() {
+        number = 0;
+        if (AllocatorPolicy::release_on_clear()) {
+            resize(AllocatorPolicy::capacity(0));
+        }
+    }
 
     void capacity(int new_capacity) {
         if (new_capacity > m_capacity) {
-            resize(new_capacity);
+            resize(AllocatorPolicy::capacity(new_capacity));
         }
     }
 
