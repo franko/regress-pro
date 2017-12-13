@@ -5,6 +5,7 @@
 #include "error-messages.h"
 #include "data-table.h"
 #include "number-parse.h"
+#include "generic_pod_vector.h"
 
 #define NORMALIZE(c) ((float) (c) / 32020.0)
 
@@ -188,23 +189,28 @@ static int filmetrics_test_line_format(const char *s)
 static struct data_table *
 filmetrics_read_data_table(FILE *f, unsigned parse_flags, str_ptr ln) {
     const int columns = 2;
-    struct generic_array *data = (struct generic_array *) ARRAY_NEW(float);
+    pod_vector_base<float> table(256);
     struct data_table *r = nullptr;
     int row, index = 0;
 
     for(row = 0; /* */; row++, index += columns) {
-        ARRAY_CHECK_ALLOC(data, float, index + columns - 1);
-        data->number += columns;
         str_getline(ln, f);
-        if (filmetrics_parse_line(CSTR(ln), parse_flags, ARRAY_GET_PTR(data, float, index))) {
+        float row_values[2];
+        int status = filmetrics_parse_line(CSTR(ln), parse_flags, row_values);
+        if (status == 0) {
+            table.add_array(row_values, columns);
+        }
+        if (status != 0) {
             if(feof(f) && row >= 2) {
                 r = data_table_new(row, columns);
-                memcpy(r->heap, data->heap, row * columns * sizeof(float));
+                for (int j = 0; j < row; j++) {
+                    fprintf(stderr, "%g %g\n", table[j*columns], table[j*columns+1]);
+                }
+                std::copy(&table[0], &table[row * columns], r->heap);
             }
             break;
         }
     }
-    ARRAY_FREE(data);
     return r;
 }
 
