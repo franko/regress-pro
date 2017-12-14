@@ -1,4 +1,5 @@
 #include <ctime>
+#include <cstdint>
 #include <nlopt.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -107,6 +108,34 @@ objective_func(unsigned n, const double *x, double *grad, void *_data)
     return chisq;
 }
 
+inline double default_delta_estimate(double x) {
+    return std::max(fabs(x) / 2, 0.1);
+}
+
+static int estimate_search_maxevals(fit_engine *fit, seeds_list *seeds, const gsl::vector& x, int limits_type) {
+    enum { MAXEVAL_GRID_MULTIPLIER = 3, NO_RANGE_EVALS = 5 };
+    const int dim = fit->parameters->number;
+    long long int n = 1;
+    for(int j = 0; j < dim; j++) {
+        const fit_param_t& fp = fit->parameters->at(j);
+        if(seeds->at(j).type == SEED_RANGE) {
+            const double delta = seeds->at(j).delta;
+            const double dx = fit_engine_estimate_param_grid_step(fit, x, &fp, delta);
+            n *= (long long int) (2 * delta / dx) + 1;
+        } else {
+            if (limits_type == OPT_BOUNDS_RESTRICT) {
+                const double delta = default_delta_estimate(x[j]);
+                const double dx = fit_engine_estimate_param_grid_step(fit, x, &fp, delta);
+                n *= (long long int) (2 * delta / dx) + 1;
+            } else {
+                n *= NO_RANGE_EVALS;
+            }
+        }
+    }
+    n *= MAXEVAL_GRID_MULTIPLIER;
+    return (n > INT32_MAX ? -1 : int(n));
+}
+
 static void
 set_initial_seeds(fit_engine *fit, seeds_list *seeds, gsl_vector *x)
 {
@@ -130,7 +159,7 @@ set_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds_list *seeds, const gs
             upper_bounds[j] = xc + seed.delta;
         } else {
             if (limits_type == OPT_BOUNDS_RESTRICT) {
-                const double delta = std::max(fabs(xc) / 2, 0.1);
+                const double delta = default_delta_estimate(xc);
                 lower_bounds[j] = xc - delta;
                 upper_bounds[j] = xc + delta;
             } else {
@@ -175,6 +204,11 @@ global_search_nlopt(fit_engine *fit, seeds_list *seeds, str_ptr analysis, gui_ho
     set_initial_seeds(fit, seeds, x);
     set_optimizer_bounds(opt, fit, seeds, x, OPT_BOUNDS_RESTRICT);
     nlopt_set_min_objective(opt, objective_func, (void *) &data);
+    const int maxevals = estimate_search_maxevals(fit, seeds, x, OPT_BOUNDS_RESTRICT);
+    if (maxevals > 0) {
+        nlopt_set_maxeval(opt, maxevals);
+        fprintf(stderr, "maxevals: %d\n", maxevals);
+    }
     nlopt_set_maxtime(opt, MY_NLOPT_MAX_SECONDS);
     nlopt_set_stopval(opt, 0.006);
     nlopt_set_xtol_rel(opt, 1e-6);
