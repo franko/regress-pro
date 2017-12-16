@@ -34,7 +34,6 @@
 #include "lmfit-multi.h"
 #include "fit-params.h"
 #include "spectra.h"
-#include "grid-search.h"
 #include "nlopt_fit.h"
 #include "str.h"
 #include "str-util.h"
