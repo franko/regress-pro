@@ -4,23 +4,52 @@
 #include <cstring>
 
 #include "str.h"
+#include "str_priv.h"
+
+static inline void null(_str& s) {
+    s.heap = nullptr;
+    s.size = 0;
+    s.length = 0;
+}
+
+static inline void set(_str& dest, _str& src) {
+    dest.heap = src.heap;
+    dest.size = src.size;
+    dest.length = src.length;
+}
 
 class str : public _str {
 public:
     str() {
-        str_init(this, 64);
+        str_init_raw(this, 64);
+        heap[0] = 0;
+        length = 0;
     }
 
     str(const str& s) {
-        str_init_from_str(this, &s);
+        const size_t len = s.length;
+        str_init_raw(this, len + 1);
+        memcpy(heap, s.heap, len + 1);
+        length = len;
     }
 
-    str(const char *t) {
-        str_init_from_c(this, t);
+    str(str&& s) {
+        set(*this, s);
+        null(s);
+    }
+
+    str(const char *s) {
+        const size_t len = strlen(s);
+        str_init_raw(this, len + 1);
+        memcpy(heap, s, len + 1);
+        length = len;
     }
 
     ~str() {
-        str_free(this);
+        if (size > 0) {
+            free(heap);
+        }
+        heap = 0;
     }
 
     str& operator=(const str& s) {
@@ -31,14 +60,12 @@ public:
     unsigned len() const { return this->length; }
     const char *text() const { return CSTR(this); }
 
-#if 0
-    // Preparing C++11 transition
     str& operator=(str&& s) {
-        STR_MEMCPY(this, &s);
-        STR_NULL(&s);
+        free(heap);
+        set(*this, s);
+        null(s);
         return *this;
     }
-#endif
 
     str& operator=(const char *s) {
         str_copy_c(this, s);

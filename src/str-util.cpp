@@ -44,7 +44,7 @@ str_loadfile(const char *filename, str_t text)
         return 1;
     }
 
-    STR_SIZE_CHECK(text, tsize + 1);
+    STR_SIZE_CHECK(text, (size_t) tsize + 1);
 
     n = fread(text->heap, 1, tsize, fp);
 #ifndef WIN32
