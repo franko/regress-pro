@@ -25,7 +25,7 @@
 
 #include "utils.h"
 #include "list.h"
-#include "strpp.h"
+#include "str_cpp.h"
 #include "canvas.h"
 #include "units.h"
 #include "rect.h"
