@@ -189,7 +189,7 @@ static str nlopt_exit_code_message(int nlopt_status, const search_config& config
     case NLOPT_FTOL_REACHED:
     case NLOPT_XTOL_REACHED:    return str("reached expected tolerance");
     case NLOPT_MAXEVAL_REACHED: return str::format("reached max number of evaluations: %d", config.maxevals);
-    case NLOPT_MAXTIME_REACHED: return str::format("reached max allowed time: %g seconds.", config.maxtime);
+    case NLOPT_MAXTIME_REACHED: return str::format("reached max allowed time: %g seconds", config.maxtime);
     default:
         /* */ ;
     }
