@@ -21,7 +21,7 @@ extern void select_param_jacobian(const enum system_kind sys_kind, const int cha
 extern void mult_layer_refl_sys(const enum system_kind sys_kind, int nb_med, const cmpl ns[],
                                 const double ds[], double lambda,
                                 const acquisition_parameters *acquisition, double result[],
-                                double_array& jacob_th, cmpl_array& jacob_n, double_array& jacob_acq,
+                                double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq,
                                 const unsigned jacob_flags);
 
 #endif

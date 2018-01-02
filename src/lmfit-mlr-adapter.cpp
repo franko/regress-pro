@@ -73,12 +73,12 @@ void select_param_jacobian(const enum system_kind sys_kind, const int channels_n
 void mult_layer_refl_sys(const enum system_kind sys_kind, int nb_med, const cmpl ns[],
                          const double ds[], double lambda,
                          const acquisition_parameters *acquisition, double result[],
-                         double_array& jacob_th, cmpl_array& jacob_n, double_array& jacob_acq,
+                         double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq,
                          const unsigned jacob_flags)
 {
-    double_array *jacob_th_ptr  = (jacob_flags & REQUIRE_JACOB_T ? &jacob_th  : nullptr);
-    cmpl_array   *jacob_n_ptr   = (jacob_flags & REQUIRE_JACOB_N ? &jacob_n   : nullptr);
-    double_array *jacob_acq_ptr = (jacob_flags & REQUIRE_JACOB_A ? &jacob_acq : nullptr);
+    double_array *jacob_th_ptr  = (jacob_flags & REQUIRE_JACOB_T ? jacob_th  : nullptr);
+    cmpl_array   *jacob_n_ptr   = (jacob_flags & REQUIRE_JACOB_N ? jacob_n   : nullptr);
+    double_array *jacob_acq_ptr = (jacob_flags & REQUIRE_JACOB_A ? jacob_acq : nullptr);
 
     switch (sys_kind) {
     case SYSTEM_SR:

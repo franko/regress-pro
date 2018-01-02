@@ -397,7 +397,7 @@ static int fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix 
         }
 
         /* STEP 3 : We call the function to compute the model values. */
-        mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, fit->acquisition, result, jacob_th, jacob_n, jacob_acq, jacob_flags);
+        mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, fit->acquisition, result, &jacob_th, &jacob_n, &jacob_acq, jacob_flags);
 
         const int f_index = j * channels_number;
         if(f != NULL) {
@@ -654,8 +654,6 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
     struct data_table *table = synth->table[0].table;
     cmpl_array8 ns(nb_med);
     double_array4 result(channels_number);
-    stack_array<double, 1> jacob_dummy_d(1);
-    stack_array<cmpl, 1> jacob_dummy_c(1);
 
     assert(spectra_points(ref) == spectra_points(synth));
 
@@ -666,7 +664,7 @@ fit_engine_generate_spectrum(struct fit_engine *fit, struct spectrum *ref,
         const double lambda = get_lambda_by_index(ref, j);
         data_table_set(table, j, 0, lambda);
         stack_get_ns_list(fit->stack, ns, lambda);
-        mult_layer_refl_sys(syskind, nb_med, ns, ths, lambda, fit->acquisition, result, jacob_dummy_d, jacob_dummy_c, jacob_dummy_d, REQUIRE_JACOB_NONE);
+        mult_layer_refl_sys(syskind, nb_med, ns, ths, lambda, fit->acquisition, result, nullptr, nullptr, nullptr, REQUIRE_JACOB_NONE);
         for (int q = 0; q < channels_number; q++) {
             data_table_set(table, j, q + 1, result[q]);
         }
