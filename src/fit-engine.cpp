@@ -20,10 +20,9 @@
 
 #include <assert.h>
 #include <string.h>
+#include <algorithm>
 #include "fit-engine.h"
-#include "refl-fit.h"
 #include "refl-kernel.h"
-#include "elliss-fit.h"
 #include "elliss.h"
 #include "error-messages.h"
 #include "minsampling.h"
@@ -353,6 +352,194 @@ fit_engine_prepare_check_error(struct fit_engine *fit, struct spectrum *s)
     return nullptr;
 }
 
+static inline int se_acquisition_enum(int pid) {
+    switch(pid) {
+    case PID_AOI:       return SE_AOI;
+    case PID_ANALYZER:  return SE_ANALYZER;
+    case PID_POLARIZER: return SE_POLARIZER;
+    case PID_BANDWIDTH: return SE_BANDWIDTH;
+    case PID_NUMAP:     return SE_NUMAP;
+    }
+    return (-1);
+}
+
+
+static inline int sr_acquisition_enum(int pid) {
+    switch(pid) {
+    case PID_FIRSTMUL:  return SR_RMULT;
+    case PID_BANDWIDTH: return SR_BANDWIDTH;
+    }
+    return (-1);
+}
+
+static inline double select_acquisition_jacob(const enum system_kind sys_kind, const double jacob_acq[], const int channel, const int pid) {
+    if (sys_kind == SYSTEM_SE_RAE || sys_kind == SYSTEM_SE_RPE || sys_kind == SYSTEM_SE) {
+        const int index = se_acquisition_enum(pid);
+        return jacob_acq[SE_ACQ_INDEX(channel, index)];
+    } else if (sys_kind == SYSTEM_SR) {
+        const int index = sr_acquisition_enum(pid);
+        return jacob_acq[index];
+    }
+    return 0.0;
+}
+
+static void
+select_param_jacobian(const enum system_kind sys_kind, const int channels_number, const fit_param_t *fp, const stack_t *stack,
+                       struct deriv_info *ideriv, double lambda,
+                       double result[], double jacob_th[], cmpl jacob_n[], double jacob_acq[])
+{
+    const int nb_med = stack->nb, nb_lyr = nb_med - 2;
+    const int layer = fp->layer_nb;
+    double dnr, dni;
+
+    switch(fp->id) {
+    case PID_THICKNESS:
+        for (int q = 0; q < channels_number; q++) {
+            result[q] = jacob_th[q * nb_lyr + (layer - 1)];
+        }
+        break;
+    case PID_LAYER_N:
+        get_model_param_deriv(stack->disp[layer], &ideriv[layer], fp, lambda, &dnr, &dni);
+        for (int q = 0; q < channels_number; q++) {
+            const cmpl drdn = jacob_n[q * nb_med + layer];
+            result[q] = std::real(drdn) * dnr - std::imag(drdn) * dni;
+        }
+        break;
+    case PID_AOI:
+    case PID_ANALYZER:
+    case PID_NUMAP:
+    case PID_BANDWIDTH:
+    case PID_FIRSTMUL:
+    {
+        for (int q = 0; q < channels_number; q++) {
+            result[q] = select_acquisition_jacob(sys_kind, jacob_acq, q, fp->id);
+        }
+        break;
+    }
+    default:
+        std::fill_n(result, channels_number, 0.0);
+    }
+}
+
+enum { REQUIRE_JACOB_T = 1 << 0, REQUIRE_JACOB_N = 1 << 1, REQUIRE_JACOB_A = 1 << 2 };
+
+static void
+mult_layer_refl_sys(const enum system_kind sys_kind, int nb_med, const cmpl ns[],
+                   const double ds[], double lambda,
+                   const acquisition_parameters *acquisition, double result[],
+                   double_array& jacob_th, cmpl_array& jacob_n, double_array& jacob_acq,
+                   const unsigned jacob_flags)
+{
+    double_array *jacob_th_ptr  = (jacob_flags & REQUIRE_JACOB_T ? &jacob_th  : nullptr);
+    cmpl_array   *jacob_n_ptr   = (jacob_flags & REQUIRE_JACOB_N ? &jacob_n   : nullptr);
+    double_array *jacob_acq_ptr = (jacob_flags & REQUIRE_JACOB_A ? &jacob_acq : nullptr);
+
+    switch (sys_kind) {
+    case SYSTEM_SR:
+    {
+        mult_layer_refl_sr(nb_med, ns, ds, lambda, acquisition, result, jacob_th_ptr, jacob_n_ptr, jacob_acq_ptr);
+        break;
+    }
+    case SYSTEM_SE_RPE:
+    case SYSTEM_SE_RAE:
+    case SYSTEM_SE:
+    {
+        const enum se_type se_type = SE_TYPE(sys_kind);
+        ell_ab_t e;
+        mult_layer_refl_se(se_type, nb_med, ns, ds, lambda, acquisition, e, jacob_th_ptr, jacob_n_ptr, jacob_acq_ptr);
+        result[0] = e->alpha;
+        result[1] = e->beta;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+static int fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob) {
+    fit_engine *fit = (fit_engine *) params;
+
+    fit_engine_commit_parameters(fit, x);
+
+    struct spectrum *spectrum = fit->run->spectr;
+    const int npt = spectra_points(spectrum);
+    const int nb_med = fit->stack->nb;
+    const enum system_kind sys_kind = fit->acquisition->type;
+    const int channels_number = SYSTEM_CHANNELS_NUMBER(sys_kind);
+    const double *ths = stack_get_ths_list(fit->stack);
+
+    const enum se_type se_type = SE_TYPE(fit->acquisition->type);
+    double_array16 jacob_th(channels_number * (nb_med - 2));
+    cmpl_array16   jacob_n(channels_number * nb_med);
+    double_array8  jacob_acq(channels_number * SE_ACQ_PARAMETERS_NB(se_type));
+
+    unsigned jacob_flags = 0;
+    if (jacob) {
+        const stack_cache& cache = fit->run->cache;
+        jacob_flags |= REQUIRE_JACOB_T;
+        if (!cache.th_only) {
+            jacob_flags |= REQUIRE_JACOB_N;
+        }
+        if (cache.require_acquisition_jacob) {
+            jacob_flags |= REQUIRE_JACOB_A;
+        }
+    }
+
+    for(int j = 0; j < npt; j++) {
+        const float *spectr_data = spectra_get_values(spectrum, j);
+        const double lambda = spectr_data[0];
+        double result[channels_number];
+
+        cmpl_array8 ns(nb_med);
+        if(fit->run->cache.th_only) {
+            fit_engine_get_cached_ns(fit, j, ns);
+        } else {
+            stack_get_ns_list(fit->stack, ns, lambda);
+        }
+
+        /* STEP 3 : We call the function to compute the model values. */
+        mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, fit->acquisition, result, jacob_th, jacob_n, jacob_acq, jacob_flags);
+
+        const int f_index = j * channels_number;
+        if(f != NULL) {
+            for (int q = 0; q < channels_number; q++) {
+                gsl_vector_set(f, f_index + q, result[q] - spectr_data[q + 1]);
+            }
+        }
+
+        if (jacob) {
+            deriv_info *ideriv = fit->run->cache.deriv_info;
+
+            if (!fit->run->cache.th_only) {
+                std::for_each(&ideriv[0], &ideriv[nb_med], [](deriv_info& deriv) { deriv.is_valid = 0; });
+            }
+
+            for (int kp = 0; kp < fit->parameters->number; kp++) {
+                const fit_param_t& fp = fit->parameters->at(kp);
+                double fp_jacob[channels_number];
+                select_param_jacobian(sys_kind, channels_number, &fp, fit->stack, ideriv, lambda, fp_jacob, jacob_th, jacob_n, jacob_acq);
+                for (int q = 0; q < channels_number; q++) {
+                    gsl_matrix_set(jacob, f_index + q, kp, fp_jacob[q]);
+                }
+            }
+        }
+    }
+
+    return GSL_SUCCESS;
+}
+
+static int
+fit_f(const gsl_vector *x, void *params, gsl_vector *f)
+{
+    return fit_fdf(x, params, f, NULL);
+}
+
+static int
+fit_df(const gsl_vector *x, void *params, gsl_matrix *jacob)
+{
+    return fit_fdf(x, params, NULL, jacob);
+}
+
 // Should never fails if the corresponding function fit_engine_prepare_check_error
 // does not return any error.
 int
@@ -361,7 +548,8 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
     const int acq_policy = FIT_OPTIONS_ACQUISITION(fit_engine_flags);
     const int enable_subsampling = FIT_OPTIONS_SUBSAMPLING(fit_engine_flags);
     struct fit_config *cfg = fit->config;
-    enum system_kind syskind = s->acquisition->type;
+    const enum system_kind syskind = s->acquisition->type;
+    const int channels_number = SYSTEM_CHANNELS_NUMBER(syskind);
 
     if (acq_policy == FIT_RESET_ACQUISITION) {
         fit->acquisition[0] = s->acquisition[0];
@@ -377,10 +565,9 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
         const int min_points_ratio = 2;
         const int min_points_nb = min_points_ratio * fit->parameters->number;
         const int channel_start = 1;
-        const int channels_no = (syskind == SYSTEM_SR ? 1 : 2);
         float accuracy_limit = 0.05;
         for (int k = 0; k < accuracy_max_iter; k++) {
-            bool min_ok = table_sample_minimize(fit->run->spectr, accuracy_limit, channel_start, channel_start + channels_no, min_points_nb);
+            bool min_ok = table_sample_minimize(fit->run->spectr, accuracy_limit, channel_start, channel_start + channels_number, min_points_nb);
             if (min_ok) break;
             accuracy_limit = accuracy_limit / 5.0;
         }
@@ -388,30 +575,14 @@ fit_engine_prepare(struct fit_engine *fit, struct spectrum *s, const int fit_eng
 
     build_fit_engine_cache(fit);
 
-    switch(syskind) {
-    case SYSTEM_SR:
-        fit->run->mffun.f      = & refl_fit_f;
-        fit->run->mffun.df     = & refl_fit_df;
-        fit->run->mffun.fdf    = & refl_fit_fdf;
-        fit->run->mffun.n      = spectra_points(fit->run->spectr);
-        fit->run->mffun.p      = fit->parameters->number;
-        fit->run->mffun.params = fit;
-        break;
-    case SYSTEM_SE_RPE:
-    case SYSTEM_SE_RAE:
-    case SYSTEM_SE:
-        fit->run->mffun.f      = & elliss_fit_f;
-        fit->run->mffun.df     = & elliss_fit_df;
-        fit->run->mffun.fdf    = & elliss_fit_fdf;
-        fit->run->mffun.n      = 2 * spectra_points(fit->run->spectr);
-        fit->run->mffun.p      = fit->parameters->number;
-        fit->run->mffun.params = fit;
-        break;
-    default:
-        return 1;
-    }
+    fit->run->mffun.f      = &fit_f;
+    fit->run->mffun.df     = &fit_df;
+    fit->run->mffun.fdf    = &fit_fdf;
+    fit->run->mffun.n      = channels_number * spectra_points(fit->run->spectr);
+    fit->run->mffun.p      = fit->parameters->number;
+    fit->run->mffun.params = fit;
 
-    if(! cfg->threshold_given) {
+    if(!cfg->threshold_given) {
         cfg->chisq_threshold = (syskind == SYSTEM_SR ? 150 : 3000);
     }
 
