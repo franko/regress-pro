@@ -5,8 +5,7 @@
 #include "fit-engine.h"
 #include "error-messages.h"
 #include "multi-fit-engine.h"
-#include "refl-kernel.h"
-#include "elliss.h"
+#include "lmfit-mlr-adapter.h"
 
 static int  mengine_apply_param_common(struct multi_fit_engine *fit,
                                        const fit_param_t *fp,
@@ -43,94 +42,6 @@ static inline int se_acquisition_enum(int pid) {
     return (-1);
 }
 
-
-static inline int sr_acquisition_enum(int pid) {
-    switch(pid) {
-    case PID_FIRSTMUL:  return SR_RMULT;
-    case PID_BANDWIDTH: return SR_BANDWIDTH;
-    }
-    return (-1);
-}
-
-static inline double select_acquisition_jacob(const enum system_kind sys_kind, const double_array jacob_acq, const int channel, const int pid) {
-    if (sys_kind == SYSTEM_SE_RAE || sys_kind == SYSTEM_SE_RPE || sys_kind == SYSTEM_SE) {
-        const int index = se_acquisition_enum(pid);
-        return jacob_acq[SE_ACQ_INDEX(channel, index)];
-    } else if (sys_kind == SYSTEM_SR) {
-        const int index = sr_acquisition_enum(pid);
-        return jacob_acq[index];
-    }
-    return 0.0;
-}
-
-static void
-select_param_jacobian(const enum system_kind sys_kind, const int channels_number, const fit_param_t *fp, const stack_t *stack,
-                       struct deriv_info *ideriv, double lambda,
-                       double result[], double_array jacob_th, cmpl_array jacob_n, double_array jacob_acq)
-{
-    const int nb_med = stack->nb, nb_lyr = nb_med - 2;
-    const int layer = fp->layer_nb;
-    double dnr, dni;
-
-    switch(fp->id) {
-    case PID_THICKNESS:
-        for (int q = 0; q < channels_number; q++) {
-            result[q] = jacob_th[q * nb_lyr + (layer - 1)];
-        }
-        break;
-    case PID_LAYER_N:
-        get_model_param_deriv(stack->disp[layer],
-                              &ideriv[layer], fp, lambda,
-                              &dnr, &dni);
-        for (int q = 0; q < channels_number; q++) {
-            const cmpl drdn = jacob_n[q * nb_med + layer];
-            result[q] = std::real(drdn) * dnr - std::imag(drdn) * dni;
-        }
-        break;
-    case PID_AOI:
-    case PID_ANALYZER:
-    case PID_NUMAP:
-    case PID_BANDWIDTH:
-    case PID_FIRSTMUL:
-    {
-        for (int q = 0; q < channels_number; q++) {
-            result[q] = select_acquisition_jacob(sys_kind, jacob_acq, q, fp->id);
-        }
-        break;
-    }
-    default:
-        memset(result, 0, channels_number * sizeof(double));
-    }
-}
-
-static void
-mult_layer_refl_sys(const enum system_kind sys_kind, size_t nb, const cmpl ns[],
-                   const double ds[], double lambda,
-                   const struct acquisition_parameters *acquisition, double result[],
-                   double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq)
-{
-    switch (sys_kind) {
-    case SYSTEM_SR:
-    {
-        mult_layer_refl_sr(nb, ns, ds, lambda, acquisition, result, jacob_th, jacob_n, jacob_acq);
-        break;
-    }
-    case SYSTEM_SE_RPE:
-    case SYSTEM_SE_RAE:
-    case SYSTEM_SE:
-    {
-        const enum se_type se_type = SE_TYPE(sys_kind);
-        ell_ab_t e;
-        mult_layer_refl_se(se_type, nb, ns, ds, lambda, acquisition, e, jacob_th, jacob_n, jacob_acq);
-        result[0] = e->alpha;
-        result[1] = e->beta;
-        break;
-    }
-    default:
-        break;
-    }
-}
-
 static int
 multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob)
 {
@@ -159,12 +70,6 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
 
         const double *ths = stack_get_ths_list(stack_sample);
 
-        /* TODO: take into account the case of fixed RIs and when acquisition
-           parameters are not needed. */
-        double_array *jacob_th_ptr  = (jacob ? &jacob_th  : nullptr);
-        cmpl_array   *jacob_n_ptr   = (jacob ? &jacob_n   : nullptr);
-        double_array *jacob_acq_ptr = (jacob ? &jacob_acq : nullptr);
-
         for(int j = 0, jpt = sample_offset; j < npt; j++, jpt += channels_number) {
             float const * spectr_data = spectra_get_values(spectrum, j);
             const double lambda = spectr_data[0];
@@ -173,8 +78,11 @@ multifit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob
             cmpl_array8 ns(nb_med);
             stack_get_ns_list(stack_sample, ns, lambda);
 
+            /* TODO: take into account the case of fixed RIs and when acquisition
+               parameters are not needed. */
+
             /* STEP 3 : We call the ellipsometer kernel function */
-            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, &fit->acquisitions[sample], result, jacob_th_ptr, jacob_n_ptr, jacob_acq_ptr);
+            mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, &fit->acquisitions[sample], result, &jacob_th, &jacob_n, &jacob_acq, REQUIRE_JACOB_NONE);
 
             if(f != nullptr) {
                 for (int q = 0; q < channels_number; q++) {
