@@ -355,6 +355,18 @@ fit_engine_prepare_check_error(struct fit_engine *fit, struct spectrum *s)
     return nullptr;
 }
 
+static unsigned jacobian_require_flags(const stack_cache& cache) {
+        unsigned jacob_flags = 0;
+        jacob_flags |= REQUIRE_JACOB_T;
+        if (!cache.th_only) {
+            jacob_flags |= REQUIRE_JACOB_N;
+        }
+        if (cache.require_acquisition_jacob) {
+            jacob_flags |= REQUIRE_JACOB_A;
+        }
+        return jacob_flags;
+    }
+
 static int fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix *jacob) {
     fit_engine *fit = (fit_engine *) params;
 
@@ -371,17 +383,7 @@ static int fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix 
     cmpl_array16   jacob_n(channels_number * nb_med);
     double_array8  jacob_acq(channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind));
 
-    unsigned jacob_flags = 0;
-    if (jacob) {
-        const stack_cache& cache = fit->run->cache;
-        jacob_flags |= REQUIRE_JACOB_T;
-        if (!cache.th_only) {
-            jacob_flags |= REQUIRE_JACOB_N;
-        }
-        if (cache.require_acquisition_jacob) {
-            jacob_flags |= REQUIRE_JACOB_A;
-        }
-    }
+    const unsigned jacob_flags = jacobian_require_flags(fit->run->cache);
 
     for(int j = 0; j < npt; j++) {
         const float *spectr_data = spectra_get_values(spectrum, j);
