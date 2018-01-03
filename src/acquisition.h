@@ -16,7 +16,7 @@ enum system_kind {
 };
 
 #define SYSTEM_CHANNELS_NUMBER(k) ((k) == SYSTEM_UNDEF ? 0 : ((k) == SYSTEM_SR ? 1 : 2))
-#define SYSTEM_ACQUISITION_PARAMS_NUMBER(k) ((k) == SYSTEM_UNDEF ? 0 : ((k) == SYSTEM_SR ? SR_ACQ_PARAMETERS_NB : ((k) == SYSTEM_SE ? 2 : 3)))
+#define SYSTEM_ACQUISITION_PARAMS_NUMBER(k) ((k) == SYSTEM_UNDEF ? 0 : ((k) == SYSTEM_SR ? 2 : ((k) == SYSTEM_SE ? 3 : 4)))
 
 /* Ellipsometry parameters: */
 struct rpe_acquisition_parameters {

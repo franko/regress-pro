@@ -367,10 +367,9 @@ static int fit_fdf(const gsl_vector *x, void *params, gsl_vector *f, gsl_matrix 
     const enum system_kind sys_kind = fit->acquisition->type;
     const double *ths = stack_get_ths_list(fit->stack);
 
-    const enum se_type se_type = SE_TYPE(fit->acquisition->type);
     double_array16 jacob_th(channels_number * (nb_med - 2));
     cmpl_array16   jacob_n(channels_number * nb_med);
-    double_array8  jacob_acq(channels_number * SE_ACQ_PARAMETERS_NB(se_type));
+    double_array8  jacob_acq(channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind));
 
     unsigned jacob_flags = 0;
     if (jacob) {
