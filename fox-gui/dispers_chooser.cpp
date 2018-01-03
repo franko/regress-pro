@@ -7,7 +7,7 @@
 #include "str-util.h"
 #include "lexer.h"
 
-FXIMPLEMENT(fx_dispers_selector,FXHorizontalFrame,NULL,0);
+FXIMPLEMENT(fx_dispers_selector,FXHorizontalFrame,nullptr,0);
 
 class fx_library_selector : public fx_dispers_selector {
 public:
@@ -111,7 +111,7 @@ fx_newmodel_selector::get_dispersion()
         double b[3] = { 6.00069867e-3, 2.00179144e-2, 1.03560653e+2 };
         return disp_new_sellmeier("*sellmeier", a, b);
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -120,7 +120,7 @@ fx_newmodel_selector::reset()
     combo->setCurrentItem(0);
 }
 
-static disp_list files_list[1] = {{NULL, NULL}};
+static disp_list files_list[1] = {{nullptr, nullptr}};
 
 static const FXchar disp_file_patterns[] =
     "Dispersion files (*.mat,*.txt,*.nkf,*.nk,*.dsp)"
@@ -169,7 +169,7 @@ fx_file_disp_selector::fx_file_disp_selector(FXWindow *chooser, FXComposite *p, 
     if (nb_loaded_disp == 0) {
         m_combo->disable();
     }
-    new FXButton(this, "Browse", NULL, this, ID_CHOOSE_FILE);
+    new FXButton(this, "Browse", nullptr, this, ID_CHOOSE_FILE);
 }
 
 long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
@@ -182,7 +182,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
         FXString filename = open.getFilename();
         regress_pro_app()->disp_dir = open.getDirectory();
         str_ptr error_message;
-        disp_t *disp = NULL;
+        disp_t *disp = nullptr;
         FXString extension = filename.after('.');
         if (comparecase(extension, "mat") == 0) {
             disp = load_mat_dispers(filename.text(), &error_message);
@@ -217,7 +217,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
             free_error_message(error_message);
             return 1;
         }
-        disp_list_add(files_list, disp, NULL);
+        disp_list_add(files_list, disp, nullptr);
         m_combo->appendItem(disp_get_name(disp));
         int items_nb = m_combo->getNumItems();
         m_combo->setCurrentItem(items_nb - 1);
@@ -227,7 +227,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
         if (items_nb <= 10) {
             m_combo->setNumVisible(items_nb);
         }
-        m_chooser->handle(this, FXSEL(SEL_COMMAND, dispers_chooser::ID_DISPERS), NULL);
+        m_chooser->handle(this, FXSEL(SEL_COMMAND, dispers_chooser::ID_DISPERS), nullptr);
     }
     return 1;
 }
@@ -236,7 +236,7 @@ disp_t *
 fx_file_disp_selector::get_dispersion()
 {
     FXint index = m_combo->getCurrentItem() - 1;
-    if (index < 0) return NULL;
+    if (index < 0) return nullptr;
     return disp_list_get_by_index(files_list, index);
 }
 
@@ -298,12 +298,12 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *listspring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 20, 0);
     catlist = new FXList(listspring, this, ID_CATEGORY, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
-    catlist->appendItem("Library", NULL, NULL, TRUE);
-    catlist->appendItem("Choose File", NULL, NULL, TRUE);
-    catlist->appendItem("New Model", NULL, NULL, TRUE);
-    catlist->appendItem("User List", NULL, NULL, TRUE);
-    catlist->appendItem("Preset List", NULL, NULL, TRUE);
-    catlist->appendItem("Glass Library", NULL, NULL, TRUE);
+    catlist->appendItem("Library", nullptr, nullptr, TRUE);
+    catlist->appendItem("Choose File", nullptr, nullptr, TRUE);
+    catlist->appendItem("New Model", nullptr, nullptr, TRUE);
+    catlist->appendItem("User List", nullptr, nullptr, TRUE);
+    catlist->appendItem("Preset List", nullptr, nullptr, TRUE);
+    catlist->appendItem("Glass Library", nullptr, nullptr, TRUE);
     catlist->selectItem(0, FALSE);
 
     FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 80, 0);
@@ -321,8 +321,8 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
 
     FXHorizontalSeparator *hsep = new FXHorizontalSeparator(vframe,SEPARATOR_GROOVE|LAYOUT_FILL_X);
     FXHorizontalFrame *validhf = new FXHorizontalFrame(vframe,LAYOUT_FILL_X);
-    new FXButton(validhf,"&Cancel",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
-    new FXButton(validhf,"&Ok",NULL,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(validhf,"&Cancel",nullptr,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(validhf,"&Ok",nullptr,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 
     dispwin_anchor = hsep;
 }
@@ -354,7 +354,7 @@ FXWindow *
 dispers_chooser::new_dispwin_dummy(FXComposite *frame)
 {
     FXHorizontalFrame *labfr = new FXHorizontalFrame(frame, LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_NONE);
-    new FXLabel(labfr, "Choose a dispersion", NULL, LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
+    new FXLabel(labfr, "Choose a dispersion", nullptr, LAYOUT_CENTER_X|LAYOUT_CENTER_Y);
     dispwin_dummy = labfr;
     return labfr;
 }
@@ -382,7 +382,7 @@ dispers_chooser::on_cmd_dispers(FXObject *, FXSelector, void *)
 {
     int cat = choose_switcher->getCurrent();
     fx_dispers_selector *sel = selector_frame(cat);
-    disp_t *new_disp = (sel ? sel->get_dispersion() : NULL);
+    disp_t *new_disp = (sel ? sel->get_dispersion() : nullptr);
     if (new_disp) {
         release_current_disp();
         current_disp = new_disp;

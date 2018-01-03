@@ -47,7 +47,7 @@ long dataset_table::on_cmd_stack_shift(FXObject *, FXSelector, void *data)
 {
     fit_parameters_fix_layer_shift(fplink.params, *(shift_info *)data);
     for (fit_param_node *p = fplink.top; p; p = p->next) {
-        const fit_param_t *fp = &fplink.params->values[p->fp_index];
+        const fit_param_t *fp = &fplink.params->at(p->fp_index);
         set_column_parameter_name(fp, p->column);
     }
     return 1;
@@ -65,7 +65,7 @@ long dataset_table::on_cmd_select_column(FXObject *obj, FXSelector sel, void *pt
     if (popup_col == 0) return 0;
     FXint x = getShell()->getX() + colHeader->getX() + colHeader->getItemOffset(popup_col);
     FXint y = getShell()->getY() + colHeader->getY();
-    popupmenu->popup(NULL, x, y);
+    popupmenu->popup(nullptr, x, y);
     getApp()->runModalWhileShown(popupmenu);
     return 1;
 }
@@ -74,7 +74,7 @@ void dataset_table::link_parameter(const fit_param_t *fp, const int column)
 {
     for (fit_param_node *p = fplink.top; p; p = p->next) {
         if (p->column == column) {
-            fplink.params->values[p->fp_index] = *fp;
+            fplink.params->at(p->fp_index) = *fp;
             return;
         }
     }
@@ -87,22 +87,22 @@ void dataset_table::link_parameter(const fit_param_t *fp, const int column)
 void dataset_table::set_column_parameter_name(const fit_param_t *fp, int column)
 {
     get_full_param_name(fp, buffer);
-    setColumnText(column, CSTR(buffer));
+    setItemText(0, column, CSTR(buffer));
 }
 
 long dataset_table::on_cmd_fit_param(FXObject *obj, FXSelector sel, void *ptr)
 {
     int fp_index = FXSELID(sel) - ID_FIT_PARAM;
-    const fit_param_t *fp = fit_params->values + fp_index;
+    const fit_param_t *fp = &fit_params->at(fp_index);
     link_parameter(fp, popup_col);
-    set_column_parameter_name(fit_params->values + fp_index, popup_col);
+    set_column_parameter_name(fp, popup_col);
     return 1;
 }
 
 bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_filename)
 {
     for (int i = 0; i < samples_number(); i++) {
-        FXString name = getItemText(i, 0);
+        FXString name = getItemText(i + 1, 0);
         str_ptr error_msg;
         spectrum *s = load_gener_spectrum(name.text(), &error_msg);
         if (!s) {
@@ -110,7 +110,7 @@ bool dataset_table::get_spectra_list(spectrum *spectra_list[], FXString& error_f
             free_error_message(error_msg);
             for (int k = 0; k < i; k++) {
                 spectra_free(spectra_list[k]);
-                spectra_list[k] = NULL;
+                spectra_list[k] = nullptr;
             }
             return false;
         }
@@ -134,20 +134,20 @@ int dataset_table::get_cell_value(int i, int j, double *pvalue)
 bool dataset_table::get_values(int row, const fit_parameters *fps, double value_array[], int& error_col)
 {
     FXString cell_text;
-    for (unsigned i = 0; i < fps->number; i++) {
-        const fit_param_t *fp = &fps->values[i];
+    for (int i = 0; i < fps->number; i++) {
+        const fit_param_t *fp = &fps->at(i);
         fit_param_node *p;
         for (p = fplink.top; p; p = p->next) {
-            const fit_param_t *xfp = &fplink.params->values[p->fp_index];
+            const fit_param_t *xfp = &fplink.params->at(p->fp_index);
             if (fit_param_compare(xfp, fp) == 0) {
-                if (get_cell_value(row, p->column, &value_array[i])) {
+                if (get_cell_value(row + 1, p->column, &value_array[i])) {
                     error_col = p->column;
                     return false;
                 }
                 break;
             }
         }
-        if (p == NULL) { /* Fit parameter not found. */
+        if (p == nullptr) { /* Fit parameter not found. */
             error_col = -1;
             return false;
         }
@@ -161,7 +161,7 @@ int dataset_table::write(writer_t *w)
     int m = 0;
     fit_parameters *active_params = fit_parameters_new();
     for (fit_param_node *p = fplink.top; p; p = p->next, m++) {
-        fit_parameters_add(active_params, &fplink.params->values[p->fp_index]);
+        fit_parameters_add(active_params, &fplink.params->at(p->fp_index));
     }
     writer_printf(w, "dataset %d %d", n, m);
     writer_newline_enter(w);
@@ -169,7 +169,7 @@ int dataset_table::write(writer_t *w)
     writer_printf(w, "samples");
     writer_newline_enter(w);
     for (int i = 0; i < n; i++) {
-        FXString name = getItemText(i, 0);
+        FXString name = getItemText(i + 1, 0);
         str_t quoted_name;
         str_init(quoted_name, 127);
         writer_quote_string(quoted_name, name.text());
@@ -177,7 +177,7 @@ int dataset_table::write(writer_t *w)
         str_free(quoted_name);
         for (fit_param_node *p = fplink.top; p; p = p->next) {
             double cell_value;
-            if (get_cell_value(i, p->column, &cell_value)) {
+            if (get_cell_value(i + 1, p->column, &cell_value)) {
                 writer_printf(w, " undef");
             } else {
                 writer_printf(w, " %g", cell_value);
@@ -204,7 +204,7 @@ int dataset_table::read_update(lexer_t *l)
     }
     fit_param_link new_fplink(new_params);
 
-    fit_param_node *current_node = NULL;
+    fit_param_node *current_node = nullptr;
     for (int j = 0; j < m; j++) {
         int jcolumn = j + 1;
         fit_param_node *new_node = new fit_param_node(j, jcolumn);
@@ -229,15 +229,15 @@ int dataset_table::read_update(lexer_t *l)
                 double val;
                 if (lexer_number(l, &val)) return 1;
                 cell.format("%g", val);
-                setItemText(i, j + 1, cell);
+                setItemText(i + 1, j + 1, cell);
             } else {
-                setItemText(i, j + 1, "");
+                setItemText(i + 1, j + 1, "");
             }
         }
     }
 
     for (int j = 0; j < m; j++) {
-        set_column_parameter_name(&new_fplink.params->values[j], j + 1);
+        set_column_parameter_name(&new_fplink.params->at(j), j + 1);
     }
     for (int j = m + 1; j < getNumColumns(); j++) {
         setColumnText(j, "");

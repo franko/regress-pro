@@ -1,7 +1,7 @@
 #include "fit_panel.h"
 
 #include "fx_numeric_field.h"
-#include "Strcpp.h"
+#include "str_cpp.h"
 #include "regress_pro.h"
 
 // Map
@@ -28,7 +28,7 @@ FXIMPLEMENT(fit_panel,FXHorizontalFrame,fit_panel_map,ARRAYNUMBER(fit_panel_map)
 
 fit_panel::fit_panel(fit_manager* fit, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXHorizontalFrame(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-      m_canvas(0), m_fit(fit), m_results_target(NULL)
+      m_canvas(0), m_fit(fit), m_results_target(nullptr)
 {
     scroll_window = new FXScrollWindow(this, VSCROLLER_ALWAYS | HSCROLLING_OFF | LAYOUT_FILL_Y);
     setup();
@@ -66,7 +66,7 @@ void fit_panel::setup()
 
     m_parameters.resize(m_fit->parameters_number());
 
-    Str pname;
+    str pname;
     FXString label_text;
     int current_layer = 0;
     for(unsigned k = 0; k < m_parameters.size(); k++) {
@@ -89,8 +89,8 @@ void fit_panel::setup()
             current_layer = -1;
         }
 
-        get_param_name(&p->fp, pname.str());
-        FXString fxpname((const FXchar *) pname.cstr());
+        get_param_name(&p->fp, &pname);
+        FXString fxpname((const FXchar *) pname.text());
         FXCheckButton* bt = new FXCheckButton(param_matrix, fxpname, this, ID_PARAM_SELECT);
         FXTextField* tf = new fx_numeric_field(param_matrix, 10, this, ID_PARAM_VALUE, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
 
@@ -106,12 +106,12 @@ void fit_panel::setup()
 
     m_canvas_frame = new FXVerticalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_canvas_frame->setBackColor(FXRGB(255,255,255));
-    m_canvas = new plot_canvas(m_canvas_frame, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    m_canvas = new plot_canvas(m_canvas_frame, nullptr, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y);
     m_fit->config_plot(m_canvas);
 
     FXFont& bold_font = regressProApp()->bold_font;
     const FXint label_height = bold_font.getFontHeight() + DEFAULT_PAD;
-    m_result_label = new FXLabel(m_canvas_frame, "", NULL, LABEL_NORMAL|LAYOUT_FIX_HEIGHT, 0, 0, 0, label_height, DEFAULT_PAD, DEFAULT_PAD, 0, DEFAULT_PAD);
+    m_result_label = new FXLabel(m_canvas_frame, "", nullptr, LABEL_NORMAL|LAYOUT_FIX_HEIGHT, 0, 0, 0, label_height, DEFAULT_PAD, DEFAULT_PAD, 0, DEFAULT_PAD);
     m_result_label->setFont(&bold_font);
     m_result_label->setBackColor(FXRGB(255,255,255));
     m_result_label->setHeight(bold_font.getFontHeight() + 2 * DEFAULT_PAD);
@@ -157,7 +157,7 @@ fit_panel::on_cmd_param_change(FXObject *_txt, FXSelector, void*)
     FXTextField *txt = (FXTextField *) _txt;
     param_info* p = (param_info*) txt->getUserData();
     FXString vstr = txt->getText();
-    double new_val = strtod(vstr.text(), NULL);
+    double new_val = strtod(vstr.text(), nullptr);
     unsigned k = this->get_parameter_index(p);
     set_parameter_value(k, new_val);
     if (m_results_target) {
@@ -233,7 +233,7 @@ fit_panel::on_cmd_spectral_range(FXObject *, FXSelector, void*)
 
 long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
 {
-    struct fit_parameters* fps = fit_parameters_new();
+    fit_parameters* fps = fit_parameters_new();
 
     for(unsigned j = 0; j < m_parameters.size(); j++) {
         if(m_parameters[j].selected) {
@@ -301,8 +301,8 @@ bool fit_panel::set_sampling(double s_start, double s_end)
 double *fit_panel::new_array_fit_values(fit_manager *fm, fit_parameters *fps)
 {
     double *values = new(std::nothrow) double[fps->number];
-    for (unsigned i = 0; i < fps->number; i++) {
-        int k = fm->lookup(&fps->values[i]);
+    for (int i = 0; i < fps->number; i++) {
+        int k = fm->lookup(&fps->at(i));
         values[i] = (k >= 0 ? m_fit->get_parameter_value(k) : 0.0);
     }
     return values;

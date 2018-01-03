@@ -1,5 +1,18 @@
 gsl_dep = dependency('gsl')
 thread_dep = dependency('threads')
+nlopt_dep = dependency('nlopt')
 kernel_incdir = include_directories('.')
-kernel_src = ['common.c', 'data-table.c', 'data-view.c', 'rc_matrix.c', 'disp-table.c', 'disp-sample-table.c', 'disp-lookup.c', 'str.c', 'dispers-library.c', 'str-util.c', 'batch.c', 'error-messages.c', 'cmpl.c', 'minsampling.c', 'dispers.c', 'disp-fb.c', 'disp-tauc-lorentz.c', 'disp-ho.c', 'disp-lorentz.c', 'disp-bruggeman.c', 'disp-cauchy.c', 'disp-sellmeier.c', 'dispers-classes.c', 'stack.c', 'lmfit.c', 'fit-timestamp.c', 'lmfit-simple.c', 'fit-params.c', 'fit-engine.c', 'refl-kernel.c', 'refl-fit.c', 'elliss-fit.c', 'number-parse.c', 'refl-utils.c', 'acquisition.c', 'gauss-legendre-quad.c', 'spectra.c', 'elliss.c', 'multi-fit-engine.c', 'grid-search.c', 'lmfit-multi.c', 'disp-fit-engine.c', 'vector_print.c', 'fit_result.c', 'writer.c', 'lexer.c', 'lmfit_result.c']
-libkernel = static_library('regpro-kernel', kernel_src, dependencies: [gsl_dep, thread_dep])
+
+configure_file(output : 'defs.h', configuration : conf)
+
+kernel_src = [
+    'common.cpp', 'data-table.cpp', 'data-view.cpp', 'rc_matrix.cpp', 'disp-table.cpp', 'disp-sample-table.cpp',
+    'disp-lookup.cpp', 'str.cpp', 'dispers-library.cpp', 'str-util.cpp', 'error-messages.cpp',
+    'minsampling.cpp', 'dispers.cpp', 'disp-fb.cpp', 'disp-tauc-lorentz.cpp', 'disp-ho.cpp', 'disp-lorentz.cpp',
+    'disp-bruggeman.cpp', 'disp-cauchy.cpp', 'disp-sellmeier.cpp', 'dispers-classes.cpp', 'stack.cpp', 'lmfit.cpp',
+    'fit-timestamp.cpp', 'lmfit-simple.cpp', 'fit-params.cpp', 'lmfit-mlr-adapter.cpp', 'fit-engine.cpp', 'refl-kernel.cpp',
+    'number-parse.cpp', 'refl-utils.cpp', 'acquisition.cpp', 'gauss-legendre-quad.cpp', 'spectra.cpp',
+    'elliss.cpp', 'multi-fit-engine.cpp', 'nlopt_fit.cpp', 'lmfit-multi.cpp', 'disp-fit-engine.cpp', 'vector_print.cpp',
+    'fit_result.cpp', 'writer.cpp', 'lexer.cpp', 'lmfit_result.cpp']
+
+libkernel = static_library('regpro-kernel', kernel_src, dependencies: [gsl_dep, thread_dep, nlopt_dep])

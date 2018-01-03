@@ -86,18 +86,18 @@ public:
     }
 
     virtual double get_parameter(unsigned k, fit_param_t* fp) {
-        *fp = m_all_parameters->values[k];
+        *fp = m_all_parameters->at(k);
         return fit_engine_get_parameter_value(m_fit_engine, fp);
     }
 
     virtual void set_parameter_value(unsigned k, double val) {
-        fit_param_t* fp = &m_all_parameters->values[k];
+        fit_param_t* fp = &m_all_parameters->at(k);
         fit_engine_apply_param(m_fit_engine, fp, val);
         generate_spectra();
     }
 
     virtual double get_parameter_value(unsigned k) {
-        fit_param_t* fp = &m_all_parameters->values[k];
+        fit_param_t* fp = &m_all_parameters->at(k);
         return fit_engine_get_parameter_value(m_fit_engine, fp);
     }
 
@@ -119,7 +119,7 @@ public:
         return true;
     }
 
-    virtual lmfit_result run(struct fit_parameters* fps) {
+    virtual lmfit_result run(fit_parameters* fps) {
         lmfit_result result;
 
         if (!spectra_loaded()) {
@@ -131,8 +131,8 @@ public:
         fit_engine_prepare(m_fit_engine, m_ref_spectr, FIT_KEEP_ACQUISITION);
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
-        for(unsigned k = 0; k < fps->number; k++) {
-            fit_param_t* fp = fps->values + k;
+        for(int k = 0; k < fps->number; k++) {
+            fit_param_t* fp = &fps->at(k);
             double val = fit_engine_get_parameter_value(m_fit_engine, fp);
             gsl_vector_set(x, k, val);
         }
@@ -153,8 +153,8 @@ public:
     }
 
     int update_from_fit_results(const fit_engine *src_fit) {
-        for(unsigned k = 0; k < m_all_parameters->number; k++) {
-            const fit_param_t *fp = &m_all_parameters->values[k];
+        for(int k = 0; k < m_all_parameters->number; k++) {
+            const fit_param_t *fp = &m_all_parameters->at(k);
             double val = fit_engine_get_parameter_value(src_fit, fp);
             fit_engine_apply_param(m_fit_engine, fp, val);
         }
@@ -173,7 +173,7 @@ private:
     struct fit_engine* m_fit_engine;
     struct spectrum* m_ref_spectr;
     struct spectrum* m_model_spectr;
-    struct fit_parameters *m_all_parameters;
+    fit_parameters *m_all_parameters;
 };
 
 #endif

@@ -27,10 +27,6 @@
 #include "dispers-classes.h"
 #include "disp-fb.h"
 
-__BEGIN_DECLS
-
 extern struct disp_class tauc_lorentz_disp_class;
-
-__END_DECLS
 
 #endif

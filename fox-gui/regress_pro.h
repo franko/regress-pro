@@ -12,6 +12,8 @@ public:
 
     void setScriptMode(bool mode) { m_script_mode = mode; }
     bool scriptMode() const { return m_script_mode; }
+    FXString get_release_string() const;
+    FXString get_host_string() const;
 
     FXGIFIcon appicon;
     FXFont small_font;

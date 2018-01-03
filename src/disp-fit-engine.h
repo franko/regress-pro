@@ -9,8 +9,6 @@
 #include "fit-params.h"
 #include "lmfit_result.h"
 
-__BEGIN_DECLS
-
 struct disp_fit_engine {
 
     disp_t *ref_disp;
@@ -21,7 +19,7 @@ struct disp_fit_engine {
     /* wavelength's sampling points */
     gsl_vector *wl;
 
-    const struct fit_parameters *parameters;
+    const fit_parameters *parameters;
 };
 
 struct disp_fit_config {
@@ -36,12 +34,10 @@ extern void disp_fit_config_init(struct disp_fit_config *fit);
 extern struct disp_fit_engine * disp_fit_engine_new();
 extern void disp_fit_engine_free(struct disp_fit_engine *fit);
 extern void disp_fit_engine_set_parameters(struct disp_fit_engine *fit,
-        const struct fit_parameters *fps);
+        const fit_parameters *fps);
 
 extern int lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
                       gsl_vector *x, struct lmfit_result *result,
                       str_ptr analysis, str_ptr error_msg);
-
-__END_DECLS
 
 #endif

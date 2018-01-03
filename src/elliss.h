@@ -33,12 +33,12 @@ enum se_type {
     SE_PSI_DEL,
 };
 
-enum { SE_NUMAP = 0, SE_BANDWIDTH, SE_AOI, SE_ANALYZER };
+enum { SE_NUMAP = 0, SE_BANDWIDTH, SE_AOI, SE_ANALYZER, SE_POLARIZER = SE_ANALYZER };
 enum { SE_ALPHA = 0, SE_BETA = 1 };
 enum { SE_TANPSI = 0, SE_COSDEL = 1 };
 
 #define SE_ACQ_INDEX(channel, pid) (2 * (pid) + (channel))
-#define SE_ACQ_PARAMETERS_NB(se) ((se) == SE_ALPHA_BETA ? 4 : 3)
+#define SE_TYPE(sk) (sk == SYSTEM_SE_RPE || sk == SYSTEM_SE_RAE ? SE_ALPHA_BETA : SE_PSI_DEL)
 
 struct elliss_ab {
     double alpha;
@@ -53,6 +53,6 @@ mult_layer_refl_se(enum se_type se_type,
                    size_t nb, const cmpl ns[],
                    const double ds[], double lambda,
                    const struct acquisition_parameters *acquisition, ell_ab_t e,
-                   double *jacob_th, cmpl *jacob_n, double *jacob_acq);
+                   double_array *jacob_th, cmpl_array *jacob_n, double_array *jacob_acq);
 
 #endif

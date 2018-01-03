@@ -28,11 +28,10 @@
 #include "fit-params.h"
 #include "fit-engine-common.h"
 #include "writer.h"
+#include "gsl_cpp.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_multifit_nlin.h>
-
-__BEGIN_DECLS
 
 #define FIT_OPTIONS_ACQUISITION(n) ((n) & ((1 << 8) - 1))
 #define FIT_OPTIONS_SUBSAMPLING(n) ((n) >> 8)
@@ -49,7 +48,6 @@ enum fit_engine_subsamplig {
 struct fit_run {
     struct spectrum *spectr;
     gsl_multifit_function_fdf mffun;
-    gsl_vector *results;
     struct stack_cache cache;
 };
 
@@ -58,14 +56,12 @@ struct fit_engine {
     struct fit_config config[1];
 
     struct stack *stack;
-    struct fit_parameters *parameters;
+    fit_parameters *parameters;
 
     struct fit_run run[1];
 };
 
-#define GET_SE_TYPE(sk) (sk == SYSTEM_ELLISS_AB ? SE_ALPHA_BETA : SE_PSI_DEL)
-
-struct seeds;
+class seeds_list;
 
 extern struct fit_engine *fit_engine_new();
 
@@ -76,13 +72,17 @@ extern struct fit_engine *fit_engine_clone(struct fit_engine *fit);
    It makes internally a copy of the stack and of the config.
    It holds only a reference to the fit parameters and this latter can be
    NULL if the parameters are given later. */
-extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, struct fit_parameters *parameters);
+extern void fit_engine_bind(struct fit_engine *fit, const stack_t *stack, const struct fit_config *config, fit_parameters *parameters);
 
 /* Bind the fit_engine to the provided film stack by taking the ownership.
    No copy of the film stack is made. */
 extern void fit_engine_bind_stack(struct fit_engine *fit, stack_t *stack);
 
 extern void fit_engine_free(struct fit_engine *fit);
+
+/* Check for error before calling the _prepare function. If clean the prepare function
+   should never fail. */
+extern const char * fit_engine_prepare_check_error(struct fit_engine *fit, struct spectrum *s);
 
 extern int  fit_engine_prepare(struct fit_engine *f, struct spectrum *s, const int fit_engine_flags);
 
@@ -92,7 +92,7 @@ extern void fit_engine_disable(struct fit_engine *f);
    caller function. */
 extern stack_t *fit_engine_yield_stack(struct fit_engine *f);
 
-extern int  check_fit_parameters(struct stack *stack, struct fit_parameters *fps, str_ptr *error_msg);
+extern int  check_fit_parameters(struct stack *stack, fit_parameters *fps, str_ptr *error_msg);
 
 extern void fit_engine_commit_parameters(struct fit_engine *fit,
         const gsl_vector *x);
@@ -101,7 +101,7 @@ extern int fit_engine_apply_param(struct fit_engine *fit,
                                   const fit_param_t *fp, double val);
 
 extern void fit_engine_apply_parameters(struct fit_engine *fit,
-                                        const struct fit_parameters *fps,
+                                        const fit_parameters *fps,
                                         const gsl_vector *x);
 
 extern void fit_engine_get_wavelength_limits(const struct fit_engine *fit, double *wavelength_start, double *wavelength_end);
@@ -121,10 +121,9 @@ extern void fit_engine_generate_spectrum(struct fit_engine *fit,
         struct spectrum *ref,
         struct spectrum *synth);
 
-extern void fit_engine_print_fit_results(struct fit_engine *fit,
-        str_t text, int tabular);
+extern void fit_engine_print_fit_results(struct fit_engine *fit, const gsl::vector& x, str_t text, int tabular);
 
-extern struct fit_parameters *
+extern fit_parameters *
 fit_engine_get_all_parameters(struct fit_engine *fit);
 
 extern double
@@ -146,6 +145,8 @@ fit_engine_set_acquisition(struct fit_engine *fit, struct acquisition_parameters
 extern int fit_config_write(writer_t *w, const struct fit_config *config);
 extern int fit_config_read(lexer_t *l, struct fit_config *config);
 
-__END_DECLS
+extern void fit_engine_commit_fit_results(struct fit_engine *fit, const gsl_vector *x);
+
+extern double fit_engine_compute_ss_tot(const fit_engine *fit);
 
 #endif

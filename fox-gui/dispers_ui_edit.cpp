@@ -66,7 +66,7 @@ void fx_disp_window::setup_name()
     FXHorizontalFrame *modelfm = new FXHorizontalFrame(this, LAYOUT_FILL_X|FRAME_GROOVE, 0,0,0,0, 0,0,0,0, 0,0);
     FXString model_name(disp->dclass->full_name);
     model_name.append(" Model");
-    FXLabel *model_label = new FXLabel(modelfm, model_name, NULL, LABEL_NORMAL|LAYOUT_FILL_X, 0, 0, 0, 0, 2*DEFAULT_PAD, 2*DEFAULT_PAD, 3*DEFAULT_PAD, 3*DEFAULT_PAD);
+    FXLabel *model_label = new FXLabel(modelfm, model_name, nullptr, LABEL_NORMAL|LAYOUT_FILL_X, 0, 0, 0, 0, 2*DEFAULT_PAD, 2*DEFAULT_PAD, 3*DEFAULT_PAD, 3*DEFAULT_PAD);
     model_label->setFont(&app->big_web_font);
     model_label->setTextColor(app->blue_web);
     model_label->setBackColor(FXRGB(255, 206, 91));
@@ -97,9 +97,9 @@ void fx_disp_window::setup_name()
 
     m_description_frame = new FXVerticalFrame(descr_group, FRAME_NONE | LAYOUT_FILL_X | LAYOUT_FILL_Y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     auto descr_label_frame = new FXHorizontalFrame(m_description_frame, FRAME_NONE, 0, 0, 0, 0, 0, 0, 0, 0);
-    m_description_button = new FXButton(descr_label_frame, ">", NULL, this, ID_DESCRIPTION_TOGGLE, BUTTON_TOOLBAR, 0, 0, 0, 0, 0, 0, 0, 0);
+    m_description_button = new FXButton(descr_label_frame, ">", nullptr, this, ID_DESCRIPTION_TOGGLE, BUTTON_TOOLBAR, 0, 0, 0, 0, 0, 0, 0, 0);
     m_description_button->setFont(&app->monospace_font);
-    new FXLabel(descr_label_frame, "Description", NULL, LABEL_NORMAL);
+    new FXLabel(descr_label_frame, "Description", nullptr, LABEL_NORMAL);
 
     if (str_is_null(disp->info->description)) {
         m_description_widget = nullptr;
@@ -111,7 +111,7 @@ void fx_disp_window::setup_name()
     if (disp->info->modifications_stamp) {
         m_message_frame = new FXHorizontalFrame(descr_group, LAYOUT_FILL_X | FRAME_NONE, 0, 0, 0, 0, 0, 0, 0, 0);
         new FXButton(m_message_frame, "", app->broom_icon, this, ID_CLEAR_FLAG, BUTTON_TOOLBAR, 0, 0, 0, 0, 0, 0, 0, 0);
-        auto label = new FXLabel(m_message_frame, CSTR(disp->info->modifications_stamp), NULL, LABEL_NORMAL);
+        auto label = new FXLabel(m_message_frame, CSTR(disp->info->modifications_stamp), nullptr, LABEL_NORMAL);
         label->setFont(&app->small_font);
         label->setTextColor(app->blue_highlight);
     }
@@ -137,7 +137,7 @@ long
 fx_disp_window::on_cmd_value(FXObject*, FXSelector sel, void *data)
 {
     double *pvalue = this->map_parameter(FXSELID(sel) - ID_PARAM_0);
-    double new_value = strtod((FXchar*)data, NULL);
+    double new_value = strtod((FXchar*)data, nullptr);
     *pvalue = new_value;
     return 1;
 }
@@ -151,7 +151,7 @@ fx_disp_window::on_changed_description(FXObject *, FXSelector, void *)
     description_textfield->getText((FXchar *) disp->info->description->heap, length);
     disp->info->description->heap[length] = 0;
     disp->info->description->length = length;
-    this->handle(this, FXSEL(SEL_UPDATE, ID_DESCRIPTION), NULL);
+    this->handle(this, FXSEL(SEL_UPDATE, ID_DESCRIPTION), nullptr);
     return 1;
 }
 
@@ -438,8 +438,8 @@ long fx_disp_fb_window::on_cmd_coeff_form(FXObject *, FXSelector, void *data)
 void fx_disp_cauchy_window::setup_dialog()
 {
     FXMatrix *matrix = new FXMatrix(this, 2, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS, 0,0,0,0, 8*DEFAULT_SPACING,8*DEFAULT_SPACING,DEFAULT_SPACING,DEFAULT_SPACING, 6*DEFAULT_SPACING,DEFAULT_SPACING);
-    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "N" : "A", NULL, LAYOUT_CENTER_X);
-    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "K" : "B (µm^2)", NULL, LAYOUT_CENTER_X);
+    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "N" : "A", nullptr, LAYOUT_CENTER_X);
+    new FXLabel(matrix, disp->type == DISP_CAUCHY ? "K" : "B (µm^2)", nullptr, LAYOUT_CENTER_X);
 
     for (int p = 0; p < 6; p++) {
         int i = p / 2, j = p % 2;
@@ -491,12 +491,12 @@ fx_components_window::fx_components_window(disp_t *d, disp_components *component
     : fx_disp_window(d, p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs), m_components(components)
 {
     popupmenu = new FXMenuPane(this);
-    new FXMenuCommand(popupmenu,"Remove Component", NULL, this, ID_DELETE_COMP);
-    new FXMenuCommand(popupmenu,"Replace Component", NULL, this, ID_REPLACE_COMP);
-    new FXMenuCommand(popupmenu,"Insert Component", NULL, this, ID_INSERT_COMP);
-    new FXMenuCommand(popupmenu,"Edit Component", NULL, this, ID_EDIT_COMP);
+    new FXMenuCommand(popupmenu,"Remove Component", nullptr, this, ID_DELETE_COMP);
+    new FXMenuCommand(popupmenu,"Replace Component", nullptr, this, ID_REPLACE_COMP);
+    new FXMenuCommand(popupmenu,"Insert Component", nullptr, this, ID_INSERT_COMP);
+    new FXMenuCommand(popupmenu,"Edit Component", nullptr, this, ID_EDIT_COMP);
     new FXMenuSeparator(popupmenu);
-    new FXMenuCommand(popupmenu,"Save to User Library", NULL, this, ID_SAVE_USERLIB);
+    new FXMenuCommand(popupmenu,"Save to User Library", nullptr, this, ID_SAVE_USERLIB);
 }
 
 fx_components_window::~fx_components_window()
@@ -514,7 +514,7 @@ double *fx_components_window::map_parameter(int index)
     if (index < m_components->length()) {
         return m_components->map_component_value(index);
     }
-    return NULL;
+    return nullptr;
 }
 
 void fx_components_window::create()
@@ -526,14 +526,14 @@ void fx_components_window::create()
 void fx_components_window::add_matrix_component(int index, FXuint sel_id, bool use_textfield, bool create) {
     FXString istr;
     istr.format("%d", index + 1);
-    FXButton *db = new FXButton(matrix, istr, NULL, this, ID_MENU_COMPONENT + index, FRAME_SUNKEN);
+    FXButton *db = new FXButton(matrix, istr, nullptr, this, ID_MENU_COMPONENT + index, FRAME_SUNKEN);
     FXTextField *tf1 = new FXTextField(matrix, 24, this, ID_COMPONENT_NAME + index, FRAME_SUNKEN);
     tf1->setText(disp_get_name(m_components->disp(index)));
     FXWindow *tf2;
     if (use_textfield) {
         tf2 = create_textfield(matrix, this, sel_id);
     } else {
-        tf2 = new FXLabel(matrix, "", NULL);
+        tf2 = new FXLabel(matrix, "", nullptr);
     }
     if (create) {
         db->create();
@@ -597,7 +597,7 @@ long fx_components_window::on_cmd_save_userlib(FXObject *, FXSelector, void *)
 {
     const int i = selected_component;
     disp_t *d = disp_copy(m_components->disp(i));
-    disp_list_add(user_lib, d, NULL);
+    disp_list_add(user_lib, d, nullptr);
     return 1;
 }
 
@@ -615,7 +615,7 @@ fx_components_window::on_button_menu_component(FXObject*sender, FXSelector sel, 
     FXEvent *event = (FXEvent *) ptr;
     selected_component = FXSELID(sel) - ID_MENU_COMPONENT;
     if(!event->moved){
-        popupmenu->popup(NULL, event->root_x, event->root_y);
+        popupmenu->popup(nullptr, event->root_x, event->root_y);
         getApp()->runModalWhileShown(popupmenu);
     }
     return 1;
@@ -685,7 +685,7 @@ void fx_disp_table_window::setup_dialog()
 {
     int rows = m_iterator->rows();
 
-    m_table = new FXTable(this, NULL, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY);
+    m_table = new FXTable(this, nullptr, 0, LAYOUT_FILL_X|LAYOUT_FILL_Y|TABLE_READONLY);
     m_table->setTableSize(rows, 3);
 
     m_table->setRowHeaderWidth(0);
@@ -708,7 +708,7 @@ fx_disp_window::on_cmd_clear_flag(FXObject*, FXSelector, void *data)
     if (disp->info->modifications_stamp) {
         str_free(disp->info->modifications_stamp);
         free(disp->info->modifications_stamp);
-        disp->info->modifications_stamp = NULL;
+        disp->info->modifications_stamp = nullptr;
     }
     delete m_message_frame;
     recalc();

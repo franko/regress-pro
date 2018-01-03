@@ -36,7 +36,7 @@ FXIMPLEMENT(recipe_window,FXPacker,recipe_window_map,ARRAYNUMBER(recipe_window_m
 
 recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint x, FXint y, FXint w, FXint h, FXint pl, FXint pr, FXint pt, FXint pb, FXint hs, FXint vs)
     : FXPacker(p, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
-    recipe(rcp), param_list(NULL), seed_dirty(true)
+    recipe(rcp), param_list(nullptr), seed_dirty(true)
 {
     top_frame = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
@@ -73,14 +73,14 @@ recipe_window::recipe_window(fit_recipe *rcp, FXComposite *p, FXuint opts, FXint
     setup_parameters_list();
 
     FXMatrix *matrix = new FXMatrix(fpgroup, 2, MATRIX_BY_COLUMNS|LAYOUT_FILL_X|LAYOUT_FILL_Y|LAYOUT_SIDE_RIGHT);
-    new FXLabel(matrix, "Value", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Value", nullptr, LAYOUT_FILL_ROW);
     seed_tf = new FXTextField(matrix, 8, this, ID_SEED, FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     seed_tf->setTipText("Initial value of fitting parameter");
-    new FXLabel(matrix, "Range", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Range", nullptr, LAYOUT_FILL_ROW);
     range_tf = new FXTextField(matrix, 8, this, ID_RANGE, LAYOUT_FILL_ROW|FRAME_SUNKEN|TEXTFIELD_REAL|TEXTFIELD_ENTER_ONLY);
     range_tf->setTipText("Optional range used in grid search");
 
-    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    list_populate(fit_list, recipe->parameters, recipe->seeds, true);
 
     if (recipe->ms_setup) {
         setup_multi_sample_parameters(false);
@@ -139,12 +139,12 @@ void recipe_window::setup_multi_sample_parameters(bool create_elements)
             cparams_listbox->clearItems();
         }
         multi_sample_recipe *ms = recipe->ms_setup;
-        for (unsigned i = 0; i < ms->iparameters->number; i++) {
-            const fit_param_t *fp = &ms->iparameters->values[i];
+        for (int i = 0; i < ms->iparameters->number; i++) {
+            const fit_param_t *fp = &ms->iparameters->at(i);
             iparams_listbox->appendItem(format_fit_parameter(fp));
         }
-        for (unsigned i = 0; i < ms->cparameters->number; i++) {
-            const fit_param_t *fp = &ms->cparameters->values[i];
+        for (int i = 0; i < ms->cparameters->number; i++) {
+            const fit_param_t *fp = &ms->cparameters->at(i);
             cparams_listbox->appendItem(format_fit_parameter(fp));
         }
     }
@@ -161,9 +161,9 @@ recipe_window::selected_parameter()
     FXint no = param_listbox->getCurrentItem();
     if (no >= 0) {
         int index = (intptr_t)(param_listbox->getItemData(no)) - 1;
-        return index >= 0 ? &param_list->values[index] : NULL;
+        return index >= 0 ? &param_list->at(index) : nullptr;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -198,7 +198,7 @@ recipe_window::update_seed_value(const fit_param_t *fp)
 {
     int i = fit_parameters_find(recipe->parameters, fp);
     if (i >= 0) {
-        set_seed_fields(&recipe->seeds_list->values[i]);
+        set_seed_fields(&recipe->seeds->at(i));
     } else {
         clear_seed_textfield();
         clear_range_textfield();
@@ -219,7 +219,7 @@ recipe_window::on_keypress_param_select(FXObject*, FXSelector sel, void *ptr)
     FXEvent* event=(FXEvent*)ptr;
     switch(event->code) {
     case KEY_Return:
-        return handle(this, FXSEL(SEL_COMMAND, ID_SEED), NULL);
+        return handle(this, FXSEL(SEL_COMMAND, ID_SEED), nullptr);
     default:
         /* */ ;
     }
@@ -245,11 +245,11 @@ recipe_window::set_fit_parameter(const fit_param_t *fp, const seed_t *value)
 {
     int i = fit_parameters_find(recipe->parameters, fp);
     if (i >= 0) {
-        recipe->seeds_list->values[i] = *value;
+        recipe->seeds->at(i) = *value;
         fit_list_update_parameter(i, fp, value);
     } else {
         fit_parameters_add(recipe->parameters, fp);
-        seed_list_add(recipe->seeds_list, value);
+        seed_list_add(recipe->seeds, value);
         fit_list_append_parameter(fp, value);
     }
 }
@@ -262,12 +262,12 @@ seed_t recipe_window::get_seed_from_ui(const fit_param_t *fp)
             s.type = SEED_UNDEF;
         } else {
             s.type = SEED_SIMPLE;
-            s.seed = strtod(seed_tf->getText().text(), NULL);
+            s.seed = strtod(seed_tf->getText().text(), nullptr);
         }
     } else {
         s.type = SEED_RANGE;
-        s.seed = strtod(seed_tf->getText().text(), NULL);
-        s.delta = strtod(range_tf->getText().text(), NULL);
+        s.seed = strtod(seed_tf->getText().text(), nullptr);
+        s.delta = strtod(range_tf->getText().text(), nullptr);
     }
     return s;
 }
@@ -276,7 +276,7 @@ long
 recipe_window::on_cmd_seed(FXObject *, FXSelector, void *)
 {
     const fit_param_t *selfp = selected_parameter();
-    if (selfp == NULL) return 0;
+    if (selfp == nullptr) return 0;
     seed_t s = get_seed_from_ui(selfp);
     set_fit_parameter(selfp, &s);
     return 1;
@@ -306,7 +306,7 @@ recipe_window::on_keypress_parameter(FXObject *sender, FXSelector sel, void *ptr
             if (index < 0) return 0;
             fit_list->removeItem(index);
             fit_parameters_remove(recipe->parameters, index);
-            seed_list_remove(recipe->seeds_list, index);
+            seed_list_remove(recipe->seeds, index);
             return 1;
         } else if (sender == iparams_listbox || sender == cparams_listbox) {
             FXList *list = (FXList *) sender;
@@ -387,7 +387,7 @@ recipe_window::on_changed_subsampling(FXObject *, FXSelector sel, void *ptr)
 long
 recipe_window::on_cmd_stack_change(FXObject *, FXSelector, void *)
 {
-    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    list_populate(fit_list, recipe->parameters, recipe->seeds, true);
     setup_parameters_list();
     return 1;
 }
@@ -396,7 +396,7 @@ long
 recipe_window::on_select_parameter(FXObject *, FXSelector, void *)
 {
     FXint index = fit_list->getCurrentItem();
-    const fit_param_t *selfp = &recipe->parameters->values[index];
+    const fit_param_t *selfp = &recipe->parameters->at(index);
     int fp_index = fit_parameters_find(param_list, selfp);
     listbox_select_parameter(param_listbox, fp_index);
     return 1;
@@ -419,7 +419,7 @@ void
 recipe_window::bind_new_fit_recipe(fit_recipe *rcp)
 {
     recipe = rcp;
-    list_populate(fit_list, recipe->parameters, recipe->seeds_list, true);
+    list_populate(fit_list, recipe->parameters, recipe->seeds, true);
     setup_parameters_list();
     setup_multi_sample_parameters();
     setup_config_parameters();
@@ -437,8 +437,8 @@ recipe_window::enable_multi_sample(bool create_elements)
 
 
     ms_params_frame = new FXHorizontalFrame(params_group, LAYOUT_FILL_Y);
-    new FXButton(ms_params_frame, "sample", NULL, this, ID_ADD_INDIV, BUTTON_NORMAL|LAYOUT_FILL_X);
-    new FXButton(ms_params_frame, "constr", NULL, this, ID_ADD_CONSTR, BUTTON_NORMAL|LAYOUT_FILL_X);
+    new FXButton(ms_params_frame, "sample", nullptr, this, ID_ADD_INDIV, BUTTON_NORMAL|LAYOUT_FILL_X);
+    new FXButton(ms_params_frame, "constr", nullptr, this, ID_ADD_CONSTR, BUTTON_NORMAL|LAYOUT_FILL_X);
 
     if (create_elements) {
         ms_params_frame->create();
@@ -469,7 +469,7 @@ recipe_window::on_cmd_multi_sample(FXObject *, FXSelector, void *ptr)
         return 1;
     } else if (!ptr && recipe->ms_setup) {
         delete recipe->ms_setup;
-        recipe->ms_setup = NULL;
+        recipe->ms_setup = nullptr;
         disable_multi_sample();
         return 1;
     }
@@ -507,11 +507,11 @@ long recipe_window::on_select_param(FXObject *, FXSelector sel, void *)
     if (id == ID_PARAM_INDIV) {
         FXint index = iparams_listbox->getCurrentItem();
         /* Get the selected fit parameter. */
-        selfp = &ms->iparameters->values[index];
+        selfp = &ms->iparameters->at(index);
     } else {
         FXint index = cparams_listbox->getCurrentItem();
         /* Get the selected fit parameter. */
-        selfp = &ms->cparameters->values[index];
+        selfp = &ms->cparameters->at(index);
     }
     /* Find the index of the fit parameter in the list of all
        possible parameters. */

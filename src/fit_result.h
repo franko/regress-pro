@@ -11,7 +11,6 @@ struct fit_result {
     double chisq_threshold;
     gsl_vector *gsearch_x;
     int status;
-    int iter;
     int interrupted;
     double chisq;
 };

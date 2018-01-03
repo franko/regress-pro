@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "regress_pro.h"
 #include "icons_all.h"
 
@@ -33,6 +34,18 @@ regress_pro::regress_pro() :
     delete_icon = new FXGIFIcon(this, delete_gif);
     add_icon = new FXGIFIcon(this, new_gif);
     broom_icon = new FXGIFIcon(this, broom_gif);
+}
+
+FXString regress_pro::get_release_string() const {
+#ifdef RELEASE_BUILD
+    return FXStringFormat("%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+#else
+    return FXStringFormat("%d.%d.%d-development", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+#endif
+}
+
+FXString regress_pro::get_host_string() const {
+    return FXStringFormat("%s %s", HOST_SYSTEM, CPU_FAMILY);
 }
 
 regress_pro::~regress_pro()

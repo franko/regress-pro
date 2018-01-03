@@ -1,7 +1,7 @@
 #include "batch_window.h"
-#include "grid-search.h"
 #include "regress_pro_window.h"
 #include "error-messages.h"
+#include "nlopt_fit.h"
 
 extern "C" {
     static int window_process_events(void *data, float p, const char *msg);
@@ -20,12 +20,12 @@ batch_window::batch_window(regress_pro_window *w, FXuint opts, FXint pl, FXint p
     app_window(w)
 {
     FXHorizontalFrame *hframe = new FXHorizontalFrame(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    table = new filelist_table(hframe, NULL, 0, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    table = new filelist_table(hframe, nullptr, 0, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXVerticalFrame *bframe = new FXVerticalFrame(hframe, LAYOUT_FILL_Y);
-    new FXButton(bframe, "Add Files", NULL, table, filelist_table::ID_ADD_FILES);
-    new FXButton(bframe, "Remove all", NULL, table, filelist_table::ID_REMOVE_FILES);
-    new FXButton(bframe, "Run", NULL, this, ID_RUN_BATCH);
+    new FXButton(bframe, "Add Files", nullptr, table, filelist_table::ID_ADD_FILES);
+    new FXButton(bframe, "Remove all", nullptr, table, filelist_table::ID_REMOVE_FILES);
+    new FXButton(bframe, "Run", nullptr, this, ID_RUN_BATCH);
 }
 
 int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
@@ -40,45 +40,39 @@ int batch_window::batch_run(fit_recipe *recipe, str_ptr *error_msg)
         table->insertColumns(table->getNumColumns(), missing_columns);
     }
 
+    table->removeRange(0, table->samples_number(), 1, table->getNumColumns() - 1);
+
     str_t pname;
     str_init(pname, 15);
     int j;
     for (j = 0; j < int(recipe->parameters->number); j++) {
-        get_param_name(&recipe->parameters->values[j], pname);
-        table->setColumnText(j + 1, CSTR(pname));
+        get_param_name(&recipe->parameters->at(j), pname);
+        table->setItemText(0, j + 1, CSTR(pname));
     }
-    table->setColumnText(j + 1, "Chi Square");
+    table->setItemText(0, j + 1, "Chi Square");
     str_free(pname);
-    for (j++; j + 1 < table->getNumColumns(); j++) {
-        table->setColumnText(j + 1, "");
-    }
-
-    table->removeRange(0, table->samples_number() - 1, 1, table->getNumColumns() - 1);
 
     fit_engine *fit = fit_engine_new();
     fit_engine_bind(fit, recipe->stack, recipe->config, recipe->parameters);
 
     FXString result;
     for (int i = 0; i < table->samples_number(); i++) {
-        FXString name = table->getItemText(i, 0);
+        FXString name = table->getItemText(i + 1, 0);
         spectrum *s = load_gener_spectrum(name.text(), error_msg);
-        if (!s) {
+        if (!s || fit_engine_prepare_check_error(fit, s) != nullptr) {
             return 1;
         }
-        fit_engine_prepare(fit, s, FIT_RESET_ACQUISITION);
+        gsl::vector x(fit->parameters->number);
         lmfit_result fresult;
-        lmfit_grid(fit, recipe->seeds_list, &fresult, NULL, LMFIT_PRESERVE_STACK,
-                   window_process_events, this);
-
-        unsigned j;
+        nlopt_fit(fit, s, x, recipe->seeds, &fresult, nullptr, LMFIT_PRESERVE_STACK, window_process_events, this);
+        int j;
         for (j = 0; j < recipe->parameters->number; j++) {
-            result.format("%g", gsl_vector_get(fit->run->results, j));
-            table->setItemText(i, j + 1, result);
+            result.format("%g", x[j]);
+            table->setItemText(i + 1, j + 1, result);
         }
         result.format("%g", fresult.chisq);
-        table->setItemText(i, j + 1, result);
+        table->setItemText(i + 1, j + 1, result);
 
-        fit_engine_disable(fit);
         spectra_free(s);
     }
 

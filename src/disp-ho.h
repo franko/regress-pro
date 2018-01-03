@@ -24,8 +24,6 @@
 #include "defs.h"
 #include "dispers-classes.h"
 
-__BEGIN_DECLS
-
 struct ho_params {
     double nosc;
     double en;
@@ -49,7 +47,5 @@ extern struct disp_struct * disp_new_ho(const char *name, int nb_hos,
 extern void disp_add_ho(struct disp_struct *d);
 extern void disp_delete_ho(struct disp_struct *d, int index);
 extern int disp_ho_oscillator_parameters_number(struct disp_struct *d);
-
-__END_DECLS
 
 #endif

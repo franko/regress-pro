@@ -5,9 +5,8 @@
 #include <gsl/gsl_multifit_nlin.h>
 
 #include "fit-engine.h"
+#include "lmfit_result.h"
 #include "str.h"
-
-__BEGIN_DECLS
 
 enum {
     LMFIT_GET_RESULTING_STACK = 0,
@@ -22,6 +21,6 @@ extern int  lmfit_iter(gsl_vector *x, gsl_multifit_function_fdf *f,
                        double epsabs, double epsrel, int *nb_iter,
                        gui_hook_func_t hfun, void *hdata, int *user_stop);
 
-__END_DECLS
+extern void fit_engine_lmfit(fit_engine *fit, gsl_vector *x, lmfit_result *result, fit_config *cfg, gui_hook_func_t hfun, void *hdata, int& stop_request);
 
 #endif /* __LMFIT_H */

@@ -1,0 +1,12 @@
+Recipe tests/recipes/si-implant-bilayer-cr2-model.rcp :
+       T1 : 17.9281
+       T2 : 129.058
+        P : -0.0654685
+       T3 : 336.013
+        P : 0.676423
+Residual Chisq/pt: 23.7819
+
+Grid search best point: 15 75 0 187.5 0.5
+With Chi Square: 6.41257. Required threshold was: 5.
+
+Nb of iterations to converge: 10

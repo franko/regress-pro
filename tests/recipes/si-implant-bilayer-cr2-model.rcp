@@ -1,0 +1,80 @@
+stack 5
+  15 0 0
+  cauchy "vacuum"
+    1 0 0
+    0 0 0
+  library "sio2"
+  lookup "Poly lookup UV-Vis"
+    range 190 1000
+    3 0
+      0
+      tauc-lorentz "! aSi #1"
+        range 190 1000
+        1 1 0.737868 1.40243
+        24.3756 3.23805 3.87619
+      0.7
+      ho "! Poly Part Ann #1"
+        annotation "modified by fit on 07/11/2016 at 14:29:03"
+        range 190 780
+        5
+        50.3242 9.5 0 0.333333 0
+        8.2992 3.46021 0.453995 0 -0.389458
+        34.9302 3.72626 3.4785 0 2.99966
+        199.101 4.33177 1.35587 0 0.629959
+        137.098 4.62208 1.57131 0 -1.79466
+      1
+      ho "! Poly ANN #ms3b"
+        annotation "modified by fit on 07/11/2016 at 14:29:03"
+        range 190 780
+        5
+        11.9823 9.5 0 0.333333 0
+        18.9061 3.38792 0.35721 0 -0.703185
+        188.791 9.4372 36.1223 0 1.52479
+        80.0295 4.38862 0.754777 0 1.42034
+        152.788 4.39168 1.59529 0 -0.737394
+    lookup "Poly lookup UV-Vis"
+      range 190 1000
+      3 0
+        0
+        tauc-lorentz "! aSi #1"
+          range 190 1000
+          1 1 0.737868 1.40243
+          24.3756 3.23805 3.87619
+        0.7
+        ho "! Poly Part Ann #1"
+          annotation "modified by fit on 07/11/2016 at 14:29:03"
+          range 190 780
+          5
+          50.3242 9.5 0 0.333333 0
+          8.2992 3.46021 0.453995 0 -0.389458
+          34.9302 3.72626 3.4785 0 2.99966
+          199.101 4.33177 1.35587 0 0.629959
+          137.098 4.62208 1.57131 0 -1.79466
+        1
+        ho "! Poly ANN #ms3b"
+          annotation "modified by fit on 07/11/2016 at 14:29:03"
+          range 190 780
+          5
+          11.9823 9.5 0 0.333333 0
+          18.9061 3.38792 0.35721 0 -0.703185
+          188.791 9.4372 36.1223 0 1.52479
+          80.0295 4.38862 0.754777 0 1.42034
+          152.788 4.39168 1.59529 0 -0.737394
+      library "silicon-1"
+    fit-config
+      threshold 5
+      max-iterations 30
+      subsampling 1
+      epsilon 1e-007 1e-007
+    fit-parameters 5
+      thickness 1
+      thickness 2
+      n 2 lookup 0
+      thickness 3
+      n 3 lookup 0
+    seed-list 5
+      undef
+      range 150 150
+      range 0.5 0.5
+      range 750 750
+      range 0.5 0.5

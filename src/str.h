@@ -7,8 +7,6 @@
 
 #include "defs.h"
 
-__BEGIN_DECLS
-
 struct _str {
     char *heap;
     size_t size;
@@ -25,17 +23,6 @@ typedef struct _str const *const_str_ptr;
     (s) = NULL;					\
   }
 
-#define STR_MEMCPY(dst, src) { \
-  (dst)->size = (src)->size; \
-  (dst)->length = (src)->length; \
-  (dst)->heap = (src)->heap; \
-  }
-
-#define STR_NULL(s) { \
-  (s)->size = 0; \
-  (s)->length = 0; \
-  (s)->heap = 0; \
-  }
 
 #define STR_SIZE_CHECK(s, len) { \
     if((len)+1 > (s)->size) { \
@@ -52,7 +39,6 @@ typedef struct _str const *const_str_ptr;
 extern str_ptr  str_new(void);
 extern void     str_init(str_ptr s, int len);
 extern void     str_init_view(str_ptr s, const char *data);
-extern void     str_init_raw(str_ptr s, size_t len);
 extern void     str_free(str_ptr s);
 extern void     str_resize(str_t s, size_t reqlen);
 extern void     str_init_from_c(str_ptr s, const char *sf);
@@ -72,7 +58,5 @@ extern void     str_printf_add(str_t d, const char *fmt, ...);
 extern void     str_vprintf(str_t d, const char *fmt, int append,
                             va_list ap);
 extern void     str_pad(str_t d, int len, char sep);
-
-__END_DECLS
 
 #endif

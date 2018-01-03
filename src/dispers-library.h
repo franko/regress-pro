@@ -5,8 +5,6 @@
 #include "dispers.h"
 #include "str.h"
 
-__BEGIN_DECLS
-
 struct disp_node {
     disp_t *content;
     str_ptr id;
@@ -33,7 +31,5 @@ extern disp_t *lib_disp_table_get(const char *id);
 extern struct disp_list app_lib[1];
 extern struct disp_list user_lib[1];
 extern struct disp_list preset_lib[1];
-
-__END_DECLS
 
 #endif

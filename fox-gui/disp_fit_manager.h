@@ -120,13 +120,13 @@ public:
         return false;
     }
 
-    virtual lmfit_result run(struct fit_parameters* fps) {
+    virtual lmfit_result run(fit_parameters* fps) {
         lmfit_result result;
         disp_t* d = m_fit_engine->model_disp;
         gsl_vector* x = gsl_vector_alloc(fps->number);
 
-        for(unsigned k = 0; k < fps->number; k++) {
-            double val = disp_get_param_value(d, &fps->values[k]);
+        for(int k = 0; k < fps->number; k++) {
+            double val = disp_get_param_value(d, &fps->at(k));
             gsl_vector_set(x, k, val);
         }
 
@@ -165,12 +165,12 @@ public:
         disp_t* model = m_fit_engine->model_disp;
         disp_t* ref   = m_fit_engine->ref_disp;
 
-        disp_vs<sampling_unif>* ref_n = new disp_vs<sampling_unif>(ref,   cmpl::real_part, m_sampling);
-        disp_vs<sampling_unif>* mod_n = new disp_vs<sampling_unif>(model, cmpl::real_part, m_sampling);
+        disp_vs<sampling_unif>* ref_n = new disp_vs<sampling_unif>(ref,   REAL_PART, m_sampling);
+        disp_vs<sampling_unif>* mod_n = new disp_vs<sampling_unif>(model, REAL_PART, m_sampling);
         add_new_plot(canvas, ref_n, mod_n, "refractive index");
 
-        disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   cmpl::imag_part, m_sampling);
-        disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, cmpl::imag_part, m_sampling);
+        disp_vs<sampling_unif>* ref_k = new disp_vs<sampling_unif>(ref,   IMAGINARY_PART, m_sampling);
+        disp_vs<sampling_unif>* mod_k = new disp_vs<sampling_unif>(model, IMAGINARY_PART, m_sampling);
         add_new_plot(canvas, ref_k, mod_k, "absorption coeff");
     }
 

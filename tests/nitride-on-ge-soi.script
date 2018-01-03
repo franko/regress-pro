@@ -1,0 +1,3 @@
+load-spectrum "tests/spectres/nitride-on-ge-soi.dat"
+load-recipe "tests/recipes/nitride-on-ge-soi.rcp"
+fit

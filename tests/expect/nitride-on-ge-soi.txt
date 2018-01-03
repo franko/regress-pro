@@ -1,0 +1,11 @@
+Recipe tests/recipes/nitride-on-ge-soi.rcp :
+       T1 : 351.961
+       T3 : 2529.46
+       T4 : 883.124
+       T5 : 7258.63
+Residual Chisq/pt: 271.494
+
+Grid search best point: 300 2500 800 7200
+With Chi Square: 321.964. Required threshold was: 3000.
+
+Nb of iterations to converge: 8

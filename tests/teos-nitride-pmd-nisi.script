@@ -1,0 +1,3 @@
+load-spectrum "tests/spectres/teos-nitride-pmd-nisi.dat"
+load-recipe "tests/recipes/teos-nitride-pmd-nisi.rcp"
+fit

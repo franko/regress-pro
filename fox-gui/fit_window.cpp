@@ -37,16 +37,16 @@ fit_window::fit_window(fit_manager* fit, FXWindow *win, const FXString& name, FX
     m_fit_panel = new fit_panel(fit, this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     fitmenu = new FXMenuPane(this);
-    new FXMenuCommand(fitmenu, "Run\t\tFit with the selected parameters.", NULL, m_fit_panel, fit_panel::ID_RUN_FIT);
-    new FXMenuCommand(fitmenu, "Undo\tCtl-Z\tUndo last action.", NULL, m_fit_panel, fit_panel::ID_ACTION_UNDO);
-    new FXMenuCommand(fitmenu, "Redo\tCtr-R\tRedo previous action.", NULL, m_fit_panel, fit_panel::ID_ACTION_REDO);
-    new FXMenuTitle(menubar, "Fit", NULL, fitmenu);
+    new FXMenuCommand(fitmenu, "Run\t\tFit with the selected parameters.", nullptr, m_fit_panel, fit_panel::ID_RUN_FIT);
+    new FXMenuCommand(fitmenu, "Undo\tCtl-Z\tUndo last action.", nullptr, m_fit_panel, fit_panel::ID_ACTION_UNDO);
+    new FXMenuCommand(fitmenu, "Redo\tCtr-R\tRedo previous action.", nullptr, m_fit_panel, fit_panel::ID_ACTION_REDO);
+    new FXMenuTitle(menubar, "Fit", nullptr, fitmenu);
 
     plotmenu = new FXMenuPane(this);
-    new FXMenuCommand(plotmenu, "&Auto Scale", NULL, m_fit_panel, fit_panel::ID_PLOT_SCALE);
-    new FXMenuCommand(plotmenu, "&Copy as Text", NULL, m_fit_panel, fit_panel::ID_PLOT_COPY);
-    new FXMenuCommand(plotmenu, "Copy as &Image", NULL, m_fit_panel, fit_panel::ID_PLOT_COPY_AS_IMAGE);
-    new FXMenuTitle(menubar, "&Plot", NULL, plotmenu);
+    new FXMenuCommand(plotmenu, "&Auto Scale", nullptr, m_fit_panel, fit_panel::ID_PLOT_SCALE);
+    new FXMenuCommand(plotmenu, "&Copy as Text", nullptr, m_fit_panel, fit_panel::ID_PLOT_COPY);
+    new FXMenuCommand(plotmenu, "Copy as &Image", nullptr, m_fit_panel, fit_panel::ID_PLOT_COPY_AS_IMAGE);
+    new FXMenuTitle(menubar, "&Plot", nullptr, plotmenu);
 }
 
 fit_window::~fit_window()

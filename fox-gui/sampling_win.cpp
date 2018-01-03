@@ -14,28 +14,28 @@ sampling_win::sampling_win(FXWindow *win, sampling_unif* samp)
 {
     FXVerticalFrame *mfr  = new FXVerticalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXMatrix *matrix = new FXMatrix(mfr,3,MATRIX_BY_COLUMNS|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    new FXLabel(matrix, "Lower limit", NULL, LAYOUT_FILL_ROW);
-    new FXLabel(matrix, "Upper limit", NULL, LAYOUT_FILL_ROW);
-    new FXLabel(matrix, "Sample step", NULL, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Lower limit", nullptr, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Upper limit", nullptr, LAYOUT_FILL_ROW);
+    new FXLabel(matrix, "Sample step", nullptr, LAYOUT_FILL_ROW);
 
     FXString txt;
 
-    m_start  = new FXTextField(matrix, 10, NULL, 0, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    m_start  = new FXTextField(matrix, 10, nullptr, 0, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     txt.format("%g", m_sampling->start());
     m_start->setText(txt);
 
-    m_end    = new FXTextField(matrix, 10, NULL, 0, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    m_end    = new FXTextField(matrix, 10, nullptr, 0, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     txt.format("%g", m_sampling->end());
     m_end->setText(txt);
 
-    m_stride = new FXTextField(matrix, 10, NULL, 0, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
+    m_stride = new FXTextField(matrix, 10, nullptr, 0, FRAME_SUNKEN|FRAME_THICK|TEXTFIELD_REAL|LAYOUT_FILL_ROW);
     txt.format("%g", m_sampling->stride());
     m_stride->setText(txt);
 
     new FXHorizontalSeparator(mfr,SEPARATOR_GROOVE|LAYOUT_FILL_X);
     FXHorizontalFrame *btframe = new FXHorizontalFrame(mfr,LAYOUT_FILL_X|LAYOUT_RIGHT);
-    new FXButton(btframe,"&Cancel",NULL,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
-    new FXButton(btframe,"&Ok",NULL,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(btframe,"&Cancel",nullptr,this,ID_CANCEL,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
+    new FXButton(btframe,"&Ok",nullptr,this,ID_ACCEPT,FRAME_THICK|FRAME_RAISED|LAYOUT_FILL_Y|LAYOUT_RIGHT,0,0,0,0,10,10,5,5);
 }
 
 long

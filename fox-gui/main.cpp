@@ -37,7 +37,7 @@ int main(int argc,char *argv[])
     app.init(argc, argv);
 
     if (argc >= 2 && strcmp(argv[1], "-v") == 0) {
-        printf("regress-pro version %d.%d.%d\n", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+        printf("regress-pro version %s\n", app.get_release_string().text());
         exit(0);
     }
 

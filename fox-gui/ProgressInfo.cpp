@@ -2,14 +2,14 @@
 #include "ProgressInfo.h"
 
 ProgressInfo::ProgressInfo(FXApp *a, FXWindow *w)
-    : app(a), window(w), dialog(NULL)
+    : app(a), window(w), dialog(nullptr)
 {
-    gettimeofday(this->start, NULL);
+    gettimeofday(this->start, nullptr);
 }
 
 ProgressInfo::~ProgressInfo()
 {
-    if(dialog == NULL) {
+    if(dialog == nullptr) {
         return;
     }
 
@@ -19,7 +19,7 @@ ProgressInfo::~ProgressInfo()
 void
 ProgressInfo::hide()
 {
-    if(dialog == NULL) {
+    if(dialog == nullptr) {
         return;
     }
 

@@ -4,8 +4,6 @@
 #include "defs.h"
 #include "str.h"
 
-__BEGIN_DECLS
-
 struct _writer {
     str_t text;
     int indent;
@@ -25,7 +23,5 @@ extern void      writer_newline_enter(writer_t *w);
 extern void      writer_newline_exit(writer_t *w);
 extern int       writer_save_tofile(writer_t *w, const char *filename);
 extern void      writer_quote_string(str_ptr quoted, const char *s);
-
-__END_DECLS
 
 #endif

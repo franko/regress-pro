@@ -10,7 +10,7 @@
 template <class Sampling>
 class disp_base_vs {
 public:
-    disp_base_vs(const disp_t* d, cmpl::part_e comp, Sampling& samp) :
+    disp_base_vs(const disp_t* d, complex_part_e comp, Sampling& samp) :
         m_disp(d), m_comp(comp), m_sampling(samp), m_index(0)
     {}
 
@@ -24,9 +24,9 @@ public:
             cmpl n = n_value(m_disp, m_sampling[m_index]);
             *x = m_sampling[m_index];
             m_index ++;
-            double c = n.data[m_comp];
-            if (isfinite(c)) {
-                *y = (m_comp == cmpl::real_part ? c : -c);
+            double c = complex_part(n, m_comp);
+            if (std::isfinite(c)) {
+                *y = (m_comp == REAL_PART ? c : -c);
                 return (line_start ? agg::path_cmd_move_to : agg::path_cmd_line_to);
             }
             line_start = true;
@@ -36,7 +36,7 @@ public:
 
 private:
     const disp_t* m_disp;
-    cmpl::part_e m_comp;
+    complex_part_e m_comp;
     Sampling& m_sampling;
     unsigned m_index;
 };
@@ -45,7 +45,7 @@ template <class Sampling>
 class disp_vs : public vs_object {
     typedef disp_base_vs<Sampling> base_type;
 public:
-    disp_vs(const disp_t* d, cmpl::part_e comp, Sampling& samp) :
+    disp_vs(const disp_t* d, complex_part_e comp, Sampling& samp) :
         m_source(d, comp, samp), m_mtx(), m_trans(m_source, m_mtx)
     {}
 
@@ -58,7 +58,7 @@ public:
     }
 
     virtual void apply_transform(const agg::trans_affine& m, double as) {
-        m_trans.transformer(m);
+        m_mtx = m;
     }
 
     virtual void bounding_box(double *x1, double *y1, double *x2, double *y2) {

@@ -14,6 +14,6 @@ dataset_window::dataset_window(fit_recipe *rcp, FXWindow *topwin, FXuint opts, F
     table = new dataset_table(rcp, hframe, this, ID_TABLE, TABLE_COL_SIZABLE|TABLE_ROW_SIZABLE|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXVerticalFrame *bframe = new FXVerticalFrame(hframe, LAYOUT_FILL_Y);
-    new FXButton(bframe, "Add Files", NULL, table, dataset_table::ID_ADD_FILES);
-    new FXButton(bframe, "Remove all", NULL, table, dataset_table::ID_REMOVE_FILES);
+    new FXButton(bframe, "Add Files", nullptr, table, dataset_table::ID_ADD_FILES);
+    new FXButton(bframe, "Remove all", nullptr, table, dataset_table::ID_REMOVE_FILES);
 }

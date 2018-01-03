@@ -1,10 +1,7 @@
-
 #ifndef DISPERS_CLASSES_H
 #define DISPERS_CLASSES_H
 
 #include "defs.h"
-
-__BEGIN_DECLS
 
 enum disp_type {
     DISP_UNSET = 0,
@@ -39,7 +36,5 @@ extern struct disp_class * disp_class_lookup(int tp);
    return NULL. */
 extern void * disp_class_next(void *iter);
 extern struct disp_class * disp_class_from_iter(void *iter);
-
-__END_DECLS
 
 #endif

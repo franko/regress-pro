@@ -14,21 +14,21 @@ filelist_table::filelist_table(FXComposite *p,FXObject* tgt,FXSelector sel,FXuin
 {
     setTableSize(FILELIST_MIN_ROWS, FILELIST_MIN_COLUMNS);
     setRowHeaderWidth(28);
-    setColumnText(0, "Filename");
+    setItemText(0, 0, "Filename");
 }
 
 void filelist_table::set_filename(int i, const char *filename)
 {
     char rowlabel[64];
     sprintf(rowlabel, "%d", i + 1);
-    setRowText(i, rowlabel);
-    setItemText(i, 0, filename);
+    setRowText(i + 1, rowlabel);
+    setItemText(i + 1, 0, filename);
 }
 
 void filelist_table::append_rows(int n)
 {
-    if (entries_no + n > getNumRows()) {
-        int add_no = entries_no + n - getNumRows();
+    if (entries_no + n > getNumRows() - 1) {
+        int add_no = entries_no + n - getNumRows() + 1;
         insertRows(entries_no, add_no);
     }
     entries_no += n;
@@ -36,7 +36,7 @@ void filelist_table::append_rows(int n)
 
 void filelist_table::clear_samples()
 {
-    removeRows(0, entries_no);
+    removeRows(0, entries_no + 1);
     insertRows(0, FILELIST_MIN_ROWS);
     entries_no = 0;
 }

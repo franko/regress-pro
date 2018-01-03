@@ -34,7 +34,7 @@ public:
     };
 
     enum {
-        FILELIST_MIN_COLUMNS = 6,
+        FILELIST_MIN_COLUMNS = 12,
         FILELIST_MIN_ROWS = 20,
     };
 
