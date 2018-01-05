@@ -5,15 +5,15 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#include "agg2/agg_basics.h"
-#include "agg2/agg_rendering_buffer.h"
-#include "agg2/agg_rasterizer_scanline_aa.h"
-#include "agg2/agg_pixfmt_rgba.h"
-#include "agg2/agg_scanline_p.h"
-#include "agg2/agg_renderer_scanline.h"
-#include "agg2/agg_trans_viewport.h"
-#include "agg2/agg_conv_stroke.h"
-#include "agg2/agg_gamma_lut.h"
+#include "agg_basics.h"
+#include "agg_rendering_buffer.h"
+#include "agg_rasterizer_scanline_aa.h"
+#include "agg_pixfmt_rgba.h"
+#include "agg_scanline_p.h"
+#include "agg_renderer_scanline.h"
+#include "agg_trans_viewport.h"
+#include "agg_conv_stroke.h"
+#include "agg_gamma_lut.h"
 
 #define DISABLE_GAMMA_CORR 1
 

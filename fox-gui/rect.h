@@ -2,7 +2,7 @@
 #define AGGPLOT_RECT_H
 
 #include <assert.h>
-#include "agg2/agg_basics.h"
+#include "agg_basics.h"
 
 enum set_oper_e { rect_union, rect_intersect };
 

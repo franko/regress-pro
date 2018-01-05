@@ -1,7 +1,7 @@
 #ifndef SAMPLING_H
 #define SAMPLING_H
 
-#include "agg2/agg_array.h"
+#include "agg_array.h"
 
 class sampling_unif {
     unsigned m_nb_points;

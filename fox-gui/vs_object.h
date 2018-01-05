@@ -3,8 +3,8 @@
 
 #include "defs.h"
 
-#include "agg2/agg_trans_affine.h"
-#include "agg2/agg_conv_transform.h"
+#include "agg_trans_affine.h"
+#include "agg_conv_transform.h"
 
 class owner_management {
 public:
