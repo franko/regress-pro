@@ -2,6 +2,7 @@
 #include "regress_pro.h"
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
+#include "disp-load-binary-dat.h"
 #include "glass_sellmeier_data.h"
 #include "error-messages.h"
 #include "str-util.h"
@@ -123,7 +124,7 @@ fx_newmodel_selector::reset()
 static disp_list files_list[1] = {{nullptr, nullptr}};
 
 static const FXchar disp_file_patterns[] =
-    "Dispersion files (*.mat,*.txt,*.nkf,*.nk,*.dsp)"
+    "Dispersion files (*.mat,*.txt,*.nkf,*.nk,*.dsp,*.dat)"
     "\nAll Files (*)";
 
 class fx_file_disp_selector : public fx_dispers_selector {
@@ -190,6 +191,8 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
             disp = disp_sample_table_new_from_txt_file(filename.text(), 0, &error_message);
         } else if (comparecase(extension, "nkf") == 0) {
             disp = disp_sample_table_new_from_txt_file(filename.text(), 1, &error_message);
+        } else if (comparecase(extension, "dat") == 0) {
+            disp = disp_binary_dat_load(filename.text(), &error_message);
         } else if (comparecase(extension, "nk") == 0) {
             disp = load_nk_table(filename.text(), &error_message);
         } else if (comparecase(extension, "dsp") == 0) {
