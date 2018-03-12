@@ -2,7 +2,7 @@
 #include "regress_pro.h"
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
-#include "disp-load-binary-dat.h"
+#include "disp-load-binary.h"
 #include "glass_sellmeier_data.h"
 #include "error-messages.h"
 #include "str-util.h"
@@ -192,7 +192,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
         } else if (comparecase(extension, "nkf") == 0) {
             disp = disp_sample_table_new_from_txt_file(filename.text(), 1, &error_message);
         } else if (comparecase(extension, "dat") == 0) {
-            disp = disp_binary_dat_load(filename.text(), &error_message);
+            disp = disp_load_binary(filename.text(), &error_message);
         } else if (comparecase(extension, "nk") == 0) {
             disp = load_nk_table(filename.text(), &error_message);
         } else if (comparecase(extension, "dsp") == 0) {
