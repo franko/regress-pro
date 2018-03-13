@@ -5,7 +5,7 @@
 #include "error-messages.h"
 #include "str_cpp.h"
 #include "pod_vector.h"
-#include "disp-ho.h"
+#include "disp-ho-build.h"
 
 const char *hoTag = "\x25\x44\xab\x7a\xfc\x02";
 
@@ -91,6 +91,16 @@ bool BinaryDispData::readModelParameters(pod::array<float>& parameters, str& dis
   return true;
 }
 
+class HOParametersFromBinary {
+    enum { NB_DISCARD = 3, NB_OSC_PARAMETERS = 5 };
+public:
+    HOParametersFromBinary(const pod::array<float>& data): m_data(data) { }
+    int number() const { return (m_data.size() - NB_DISCARD) / NB_OSC_PARAMETERS; }
+    double parameter(int i, int k) const { return m_data[NB_DISCARD + NB_OSC_PARAMETERS * i + k]; }
+private:
+    const pod::array<float>& m_data;
+};
+
 disp_t *BinaryDispData::parse(str_ptr *error_msg) {
     if (!expectString(BinaryString("datafile\0", 9))) {
         *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalid or unknown binary format");
@@ -100,18 +110,10 @@ disp_t *BinaryDispData::parse(str_ptr *error_msg) {
         pod::array<float> parameters;
         str dispname;
         readModelParameters(parameters, dispname);
-        const int ndiscard = 3;
-        int nbOsc = (parameters.size() - ndiscard) / 5;
-        ho_params *oscParameters = new ho_params[nbOsc];
-        for (int i = 0; i < nbOsc; i++) {
-            oscParameters[i].nosc = parameters[ndiscard + i*5    ];
-            oscParameters[i].en   = parameters[ndiscard + i*5 + 1];
-            oscParameters[i].eg   = parameters[ndiscard + i*5 + 2];
-            oscParameters[i].nu   = parameters[ndiscard + i*5 + 3];
-            oscParameters[i].phi  = parameters[ndiscard + i*5 + 4];
+        disp_t *new_disp = new_ho<HOParametersFromBinary>(dispname.text(), HOParametersFromBinary{parameters});
+        if (!new_disp) {
+            *error_msg = new_error_message(LOADING_FILE_ERROR, "Error creating the HO model");
         }
-        disp_t *new_disp = disp_new_ho(dispname.text(), nbOsc, oscParameters);
-        delete [] oscParameters;
         return new_disp;
     }
     *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalid or unknown binary format");
