@@ -6,8 +6,11 @@
 #include "str_cpp.h"
 #include "pod_vector.h"
 #include "disp-ho-build.h"
+#include "disp-fb.h"
+#include "math-utils.h"
 
 const char *hoTag = "\x25\x44\xab\x7a\xfc\x02";
+const char *taucLorentzTag = "\x25\x44\x47\xba\xce\x04";
 
 struct BinaryString {
     BinaryString(const char *cont, int len): content(cont), length(len) { }
@@ -31,7 +34,7 @@ private:
     str readLenPrefixString();
     int readIntByte();
     float readFloat32();
-    bool readModelParameters(pod::array<float>& parameters, str& dispname);
+    bool readModelParameters(pod::array<float>& parameters, str& dispname, const int ndiscard = 0);
 
     const char *m_content;
     int m_pos;
@@ -78,14 +81,17 @@ str BinaryDispData::readLenPrefixString() {
     return value;
 }
 
-bool BinaryDispData::readModelParameters(pod::array<float>& parameters, str& dispname) {
+bool BinaryDispData::readModelParameters(pod::array<float>& parameters, str& dispname, const int ndiscard) {
   skip(5);
   int nparameters = readIntByte();
   skip(4);
   dispname = readLenPrefixString();
   skip(3);
-  parameters.resize(nparameters);
-  for (int i = 0; i < nparameters; i++) {
+  for (int i = 0; i < ndiscard; i++) {
+    readFloat32();
+  }
+  parameters.resize(nparameters - ndiscard);
+  for (int i = 0; i < nparameters - ndiscard; i++) {
     parameters[i] = readFloat32();
   }
   return true;
@@ -99,13 +105,21 @@ disp_t *BinaryDispData::parse(str_ptr *error_msg) {
     if (findString(hoTag)) {
         pod::array<float> parameters;
         str dispname;
-        readModelParameters(parameters, dispname);
-        const int osc_num = (parameters.size() - 3) / 5;
-        disp_t *new_disp = new_ho(dispname.text(), osc_num, [&parameters](int i) { return double(parameters[i + 3]); });
+        readModelParameters(parameters, dispname, 3);
+        const int osc_num = parameters.size() / 5;
+        disp_t *new_disp = new_ho(dispname.text(), osc_num, [&parameters](int i) { return double(parameters[i]); });
         if (!new_disp) {
             *error_msg = new_error_message(LOADING_FILE_ERROR, "Error creating the HO model");
             return nullptr;
         }
+        disp_set_info_wavelength(new_disp, 240.0, 780.0);
+        return new_disp;
+    } else if (findString(taucLorentzTag)) {
+        pod::array<float> parameters;
+        str dispname;
+        readModelParameters(parameters, dispname, 1);
+        fb_osc osc[3] = {parameters[1], parameters[3], parameters[4]};
+        disp_t *new_disp = disp_new_tauc_lorentz(dispname.text(), TAUC_LORENTZ_STANDARD, 1, pow2(parameters[0]), parameters[2], osc);
         disp_set_info_wavelength(new_disp, 240.0, 780.0);
         return new_disp;
     }
