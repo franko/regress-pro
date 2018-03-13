@@ -91,16 +91,6 @@ bool BinaryDispData::readModelParameters(pod::array<float>& parameters, str& dis
   return true;
 }
 
-class HOParametersFromBinary {
-    enum { NB_DISCARD = 3, NB_OSC_PARAMETERS = 5 };
-public:
-    HOParametersFromBinary(const pod::array<float>& data): m_data(data) { }
-    int number() const { return (m_data.size() - NB_DISCARD) / NB_OSC_PARAMETERS; }
-    double parameter(int i, int k) const { return m_data[NB_DISCARD + NB_OSC_PARAMETERS * i + k]; }
-private:
-    const pod::array<float>& m_data;
-};
-
 disp_t *BinaryDispData::parse(str_ptr *error_msg) {
     if (!expectString(BinaryString("datafile\0", 9))) {
         *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalid or unknown binary format");
@@ -110,10 +100,13 @@ disp_t *BinaryDispData::parse(str_ptr *error_msg) {
         pod::array<float> parameters;
         str dispname;
         readModelParameters(parameters, dispname);
-        disp_t *new_disp = new_ho<HOParametersFromBinary>(dispname.text(), HOParametersFromBinary{parameters});
+        const int osc_num = (parameters.size() - 3) / 5;
+        disp_t *new_disp = new_ho(dispname.text(), osc_num, [&parameters](int i) { return double(parameters[i + 3]); });
         if (!new_disp) {
             *error_msg = new_error_message(LOADING_FILE_ERROR, "Error creating the HO model");
+            return nullptr;
         }
+        disp_set_info_wavelength(new_disp, 240.0, 780.0);
         return new_disp;
     }
     *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalid or unknown binary format");

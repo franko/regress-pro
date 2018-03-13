@@ -3,6 +3,7 @@
 #include "disp_library_iter.h"
 #include "dispers_ui_edit.h"
 #include "disp-load-binary.h"
+#include "disp-ho-build.h"
 #include "glass_sellmeier_data.h"
 #include "error-messages.h"
 #include "str-util.h"
@@ -83,8 +84,8 @@ fx_newmodel_selector::get_dispersion()
         struct lorentz_osc param0 = {0.0, 6.5, 0.5};
         return disp_new_lorentz("* Lorentz", LORENTZ_STYLE_AE2, 1, &param0);
     } else if (name == "Harmonic Oscillator") {
-        struct ho_params param0 = {0.0, 15.7, 0.0, 1.0 / 3.0, 0.0};
-        return disp_new_ho("*HO", 1, &param0);
+        double param0[] = {0.0, 15.7, 0.0, 1.0 / 3.0, 0.0};
+        return new_ho("*HO", 1, [&param0](int i) { return param0[i]; });
     } else if (name == "Cauchy") {
         double n[3] = { 1.0, 0.0, 0.0 };
         double k[3] = { 0.0, 0.0, 0.0 };
