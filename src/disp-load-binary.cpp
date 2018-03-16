@@ -9,9 +9,6 @@
 #include "disp-fb.h"
 #include "math-utils.h"
 
-const char *hoTag = "\x25\x44\xab\x7a\xfc\x02";
-const char *taucLorentzTag = "\x25\x44\x47\xba\xce\x04";
-
 struct BinaryString {
     BinaryString(const char *cont, int len): content(cont), length(len) { }
     BinaryString(const char *cont): content(cont), length(strlen(cont)) { }
@@ -21,6 +18,8 @@ struct BinaryString {
 };
 
 class BinaryDispData {
+    struct tag { static const char *ho, *tauclorentz, *cauchy; };
+
 public:
     BinaryDispData(const char *content, int len): m_content(content), m_pos(0), m_length(len) { }
 
@@ -40,6 +39,10 @@ private:
     int m_pos;
     int m_length;
 };
+
+const char *BinaryDispData::tag::ho          = "\x25\x44\xab\x7a\xfc\x02";
+const char *BinaryDispData::tag::tauclorentz = "\x25\x44\x47\xba\xce\x04";
+const char *BinaryDispData::tag::cauchy      = "\x25\x44\x01\x54\xda\x02";
 
 bool BinaryDispData::expectString(const BinaryString& s) {
     if (strncmp(s.content, current(), s.length) == 0) {
@@ -102,7 +105,7 @@ disp_t *BinaryDispData::parse(str_ptr *error_msg) {
         *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalid or unknown binary format");
         return nullptr;
     }
-    if (findString(hoTag)) {
+    if (findString(tag::ho)) {
         pod::array<float> parameters;
         str dispname;
         readModelParameters(parameters, dispname, 3);
@@ -114,12 +117,21 @@ disp_t *BinaryDispData::parse(str_ptr *error_msg) {
         }
         disp_set_info_wavelength(new_disp, 240.0, 780.0);
         return new_disp;
-    } else if (findString(taucLorentzTag)) {
+    } else if (findString(tag::tauclorentz)) {
         pod::array<float> parameters;
         str dispname;
         readModelParameters(parameters, dispname, 1);
         fb_osc osc[3] = {parameters[1], parameters[3], parameters[4]};
         disp_t *new_disp = disp_new_tauc_lorentz(dispname.text(), TAUC_LORENTZ_STANDARD, 1, pow2(parameters[0]), parameters[2], osc);
+        disp_set_info_wavelength(new_disp, 240.0, 780.0);
+        return new_disp;
+    } else if (findString(tag::cauchy)) {
+        pod::array<float> parameters;
+        str dispname;
+        readModelParameters(parameters, dispname, 1);
+        double n_cauchy[3] = {parameters[0], parameters[1] / 1.0E2, parameters[2] / 1.0E4};
+        double k_cauchy[3] = {parameters[4], parameters[5] / 1.0E2, parameters[6] / 1.0E4};
+        disp_t *new_disp = disp_new_cauchy(dispname.text(), n_cauchy, k_cauchy);
         disp_set_info_wavelength(new_disp, 240.0, 780.0);
         return new_disp;
     }
