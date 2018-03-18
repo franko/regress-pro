@@ -29,7 +29,7 @@
 #include "fit-params.h"
 #include "disp-fb-priv.h"
 
-static cmpl tauc_lorentz_n_value(const disp_t *disp, double lam);
+extern cmpl tauc_lorentz_n_value(const disp_t *disp, double lam);
 static cmpl tauc_lorentz_n_value_deriv(const disp_t *disp, double lam,
                              cmpl_vector *der);
 static void tauc_lorentz_encode_param(str_t param, const fit_param_t *fp);
@@ -79,6 +79,7 @@ static inline double pow4(double x)
     return s * s;
 }
 
+#if 0
 cmpl
 tauc_lorentz_n_value(const disp_t *d, double lambda)
 {
@@ -116,6 +117,12 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
         const double gamma_sq = E0q - Cq / 2;
         const double zeta4 = pow2(Eq - gamma_sq) + alpha_sq * Cq / 4;
 
+        fprintf(stderr, "a_ln   (%g) = %g\n", lambda, a_ln);
+        fprintf(stderr, "a_tan  (%g) = %g\n", lambda, a_tan);
+        fprintf(stderr, "alpha2 (%g) = %g\n", lambda, alpha_sq);
+        fprintf(stderr, "gamma2 (%g) = %g\n", lambda, gamma_sq);
+        fprintf(stderr, "zeta4  (%g) = %g\n", lambda, zeta4);
+
         const double ei_term = (A * E0 * C * pow2(E - Eg)) / (E * den);
         ei_sum += egap_k(E, Eg, ei_term);
 
@@ -134,6 +141,9 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
             const double er_term1 = (A * C * a_ln) / (2 * pi_zeta4 * alpha * E0) * log((E0q + Egq + alpha * Eg) / (E0q + Egq - alpha * Eg));
             const double er_term2 = - (A * a_tan) / (pi_zeta4 * E0) * (M_PI - atanp + atanm);
             const double er_term3 = (2 * A * E0 * Eg * (Eq - gamma_sq)) / (pi_zeta4 * alpha) * (M_PI + 2 * atan(2 * (gamma_sq - Egq) / (alpha * C)));
+            fprintf(stderr, "eps1_1  (%g) = %g\n", lambda, er_term1);
+            fprintf(stderr, "eps1_2  (%g) = %g\n", lambda, er_term2);
+            fprintf(stderr, "eps1_3  (%g) = %g\n", lambda, er_term3);
             er_sum += er_term1 + er_term2 + er_term3;
         }
 
@@ -144,10 +154,81 @@ tauc_lorentz_n_value(const disp_t *d, double lambda)
         } else {
             const double er_term4 = - (A * E0 * C * (Eq + Egq)) / (pi_zeta4 * E) * log(fabs(E - Eg)/(E + Eg));
             const double er_term5 = (2 * A * E0 * C * Eg) / pi_zeta4 * log((fabs(E - Eg) * (E + Eg)) / log_den);
+            fprintf(stderr, "eps1_4  (%g) = %g\n", lambda, er_term4);
+            fprintf(stderr, "eps1_5  (%g) = %g\n", lambda, er_term5);
             er_sum += er_term4 + er_term5;
         }
     }
 
+    fprintf(stderr, "eps1 (%g) = %g\n", lambda, er_sum);
+    fprintf(stderr, "eps2 (%g) = %g\n", lambda, ei_sum);
+
+    return std::sqrt(er_sum - 1i * ei_sum);
+}
+#endif
+
+cmpl
+tauc_lorentz_n_value(const disp_t *d, double lambda)
+{
+    const struct disp_fb *fb = &d->disp.fb;
+    const int nb = fb->n;
+    // double er_sum = fb->n_inf, ei_sum = 0;
+    double en = TL_EV_NM / lambda;
+
+    /* If Eg is negative use zero instead. A negative Eg is not meaningful. */
+    const double eg = (fb->eg >= 0 ? fb->eg : 0.0);
+    double er_sum = fb->n_inf, ei_sum = 0.0;
+    for (int k = 0; k < nb; k++) {
+        const struct fb_osc *osc = fb->osc + k;
+        double a, e0, c;
+        if (fb->form == TAUC_LORENTZ_STANDARD) {
+            a = osc->a;
+            e0 = osc->b;
+            c = osc->c;
+        } else {
+            /* Use rationalized lorentzian coefficients of the abs peak:
+               - osc->a is AL' and gives the height of the peak
+               - osc->b is Ep and is the energy position
+               - osc->c is Gamma and is the peak width. */
+            e0 = pow(pow4(osc->b) + pow4(osc->c) / 4, 0.25);
+            c = sqrt(2 * pow2(e0) - 2 * pow2(osc->b));
+            a = osc->a * pow4(osc->c) / (4 * e0 * c);
+        }
+
+        double x0 = 1.0/M_PI;
+        double x1 = std::pow(c, 2);
+        double x2 = -x1;
+        double x3 = std::pow(e0, 2);
+        double x4 = x2 + 4*x3;
+        double x5 = std::pow(en, 2);
+        double x6 = -x3;
+        double x7 = x5 + x6;
+        double x8 = (1.0L/2.0L)*x1 + x7;
+        double x9 = 1.0/((1.0L/4.0L)*x1*x4 + std::pow(x8, 2));
+        double x10 = a*x0*x9/e0;
+        double x11 = std::sqrt(x4);
+        double x12 = 1.0/x11;
+        double x13 = std::pow(eg, 2);
+        double x14 = x1*x13;
+        double x15 = x13 + x3;
+        double x16 = eg*x11;
+        double x17 = 1.0/c;
+        double x18 = 2*eg;
+        double x19 = 2*a*e0*eg*x0*x9;
+        double x20 = 1.0/en;
+        double x21 = eg + en;
+        double x22 = fabs(eg - en);
+
+        double eps1_1 = (1.0L/2.0L)*c*x10*x12*(x14 - x3*(3*x13 + x3) + x5*(x13 + x6))*log((x15 + x16)/(x15 - x16));
+        double eps1_2 = -x10*(x14 + x15*x7)*(atan(x17*(x11 - x18)) - atan(x17*(x11 + x18)) + M_PI);
+        double eps1_3 = x12*x19*x8*(2*atan(x12*x17*(-2*x13 + x2 + 2*x3)) + M_PI);
+        double eps1_4 = -a*c*e0*x0*x20*x9*(x13 + x5)*log(x22/x21);
+        double eps1_5 = c*x19*log(x21*x22/std::sqrt(x14 + std::pow(-x13 + x3, 2)));
+        double eps2 = ((en > eg) ? a*c*e0*x20*std::pow(-eg + en, 2)/(x1*x5 + std::pow(x7, 2)) : 0);
+
+        er_sum += eps1_1 + eps1_2 + eps1_3 + eps1_4 + eps1_5;
+        ei_sum += eps2;
+    }
     return std::sqrt(er_sum - 1i * ei_sum);
 }
 
