@@ -189,7 +189,7 @@ struct eval_param {
     double *param_ptr;
 };
 
-double n_eval_real(double x, void *params)
+static double n_eval_real(double x, void *params)
 {
     struct eval_param *p = (struct eval_param *) params;
     *p->param_ptr = x;
@@ -197,7 +197,7 @@ double n_eval_real(double x, void *params)
     return std::real(n);
 }
 
-double n_eval_imag(double x, void *params)
+static double n_eval_imag(double x, void *params)
 {
     struct eval_param *p = (struct eval_param *) params;
     *p->param_ptr = x;
