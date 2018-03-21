@@ -29,46 +29,51 @@ bool disp_deriv_check(disp_t *d, double wavelength) {
     const int n_parameters = disp_get_number_of_params(d);
     disp_deriv_data data[1] = {{d, nullptr, wavelength}};
 
-    pod::array<cmpl> num_deriv(n_parameters);
-    pod::array<cmpl> num_abserr(n_parameters);
-
-    gsl_function F;
-    F.params = (void *) data;
-    for (int i = 0; i < n_parameters; i++) {
-        data->param_ptr = disp_map_param(d, i);
-
-        double rderiv, ideriv;
-
-        F.function = &n_eval_real;
-        double rabserr, iabserr;
-        const double p0 = *data->param_ptr;
-        const double h = std::max(1e-6, p0 * 1e-4);
-        gsl_deriv_central(&F, p0, h, &rderiv, &rabserr);
-        *data->param_ptr = p0;
-
-        F.function = &n_eval_imag;
-        gsl_deriv_central(&F, p0, h, &ideriv, &iabserr);
-        *data->param_ptr = p0;
-
-        num_deriv[i] = cmpl(rderiv, ideriv);
-        num_abserr[i] = cmpl(rabserr, iabserr);
-    }
-
     pod::array<cmpl> computed_deriv(n_parameters);
     n_value_deriv(d, &computed_deriv, wavelength);
 
-    bool success = true;
+    bool deriv_pass = true;
+    gsl_function F;
+    F.params = (void *) data;
     for (int i = 0; i < n_parameters; i++) {
-        fprintf(stderr, "Parameter %d\n", i);
-        cmpl n = num_deriv[i], c = computed_deriv[i], e = num_abserr[i];
-        if (std::real(n - c) > std::real(e) || std::imag(n - c) > std::imag(e)) {
-            fprintf(stderr, "FAIL REAL numeric: %g +/- %g, computed: %g\n", std::real(n), std::real(e), std::real(c));
-            fprintf(stderr, "FAIL IMAG numeric: %g +/- %g, computed: %g\n", std::imag(n), std::imag(e), std::imag(c));
-            success = false;
-        } else {
-            fprintf(stderr, "PASS REAL numeric: %g +/- %g, computed: %g\n", std::real(n), std::real(e), std::real(c));
-            fprintf(stderr, "PASS IMAG numeric: %g +/- %g, computed: %g\n", std::imag(n), std::imag(e), std::imag(c));
+        const cmpl cder = computed_deriv[i];
+        data->param_ptr = disp_map_param(d, i);
+
+        double nder[3], abserr[3];
+
+        F.function = &n_eval_real;
+        const double p0 = *data->param_ptr;
+        const double h = std::max(1e-6, p0 * 1e-4);
+        gsl_deriv_central(&F, p0, h, &nder[0], &abserr[0]);
+        gsl_deriv_forward(&F, p0, h, &nder[1], &abserr[1]);
+        gsl_deriv_backward(&F, p0, h, &nder[2], &abserr[2]);
+        *data->param_ptr = p0;
+
+        bool deriv_pass_real = false;
+        for (int q = 0; q < 3; q++) {
+            const bool qpass = (fabs(nder[q] - std::real(cder)) <= abserr[q]);
+            deriv_pass_real = deriv_pass_real || qpass;
         }
+        if (!deriv_pass_real) {
+            fprintf(stderr, "FAIL parameter %d REAL (%g nm) numeric: (%g +/- %g) %g +/- %g (%g +/- %g), computed: %g\n", i, wavelength, nder[1], abserr[1], nder[0], abserr[0], nder[2], abserr[2], std::real(cder));
+        }
+
+        F.function = &n_eval_imag;
+        gsl_deriv_central(&F, p0, h, &nder[0], &abserr[0]);
+        gsl_deriv_forward(&F, p0, h, &nder[1], &abserr[1]);
+        gsl_deriv_backward(&F, p0, h, &nder[2], &abserr[2]);
+        *data->param_ptr = p0;
+
+        bool deriv_pass_imag = false;
+        for (int q = 0; q < 3; q++) {
+            const bool qpass = (fabs(nder[q] - std::imag(cder)) <= abserr[q]);
+            deriv_pass_imag = deriv_pass_imag || qpass;
+        }
+        if (!deriv_pass_imag) {
+            fprintf(stderr, "FAIL parameter %d IMAG (%g nm) numeric: (%g +/- %g) %g +/- %g (%g +/- %g), computed: %g\n", i, wavelength, nder[1], abserr[1], nder[0], abserr[0], nder[2], abserr[2], std::imag(cder));
+        }
+        deriv_pass = deriv_pass && deriv_pass_real && deriv_pass_imag;
     }
-    return success;
+
+    return deriv_pass;
 }
