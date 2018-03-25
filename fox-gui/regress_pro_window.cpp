@@ -49,6 +49,9 @@
 #include "lexer.h"
 #include "gsl_cpp.h"
 
+// DEBUG only
+#include "disp-fb.h"
+
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config, str_ptr *error_msg);
 
@@ -86,7 +89,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
     {FXRGB(255,255,255), FXRGB(255,0,0), 0, 0, 0, 0, 0, 0}
 };
 
-
+extern cmpl tauc_lorentz_n_value(const disp_t *disp, double lam);
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
@@ -148,6 +151,12 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     init_class_list();
 
     dispers_library_init();
+
+    fb_osc tl_debug_osc[] = {110.0, 9.5, 3.4};
+    const double wl0 = 200.0;
+    disp_t *tl_debug = disp_new_tauc_lorentz("Nitride TL", TAUC_LORENTZ_STANDARD, 1, 1.0, 4.25, tl_debug_osc);
+    cmpl tl_n = tauc_lorentz_n_value(tl_debug, wl0);
+    fprintf(stderr, "n(%g) = %g, k(%g) = %g\n", wl0, std::real(tl_n), wl0, std::imag(tl_n));
 
     recipe = new fit_recipe();
     recipe->setup_default_stack();
