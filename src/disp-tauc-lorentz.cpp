@@ -158,7 +158,7 @@ cmpl tauc_lorentz_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         double a, e0, c;
         oscillator_parameters(fb->form, fb->osc + k, a, e0, c);
 
-        const auto x0 = std::pow(eg, 2);
+const auto x0 = std::pow(eg, 2);
 const auto x1 = std::pow(en, 2);
 const auto x2 = x0 + x1;
 const auto x3 = 1.0/M_PI;
