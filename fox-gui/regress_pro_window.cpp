@@ -48,6 +48,7 @@
 #include "batch_window.h"
 #include "lexer.h"
 #include "gsl_cpp.h"
+#include "disp-deriv-check.h"
 
 // DEBUG only
 #include "disp-fb.h"
@@ -152,11 +153,26 @@ regress_pro_window::regress_pro_window(regress_pro* a)
 
     dispers_library_init();
 
+#if 0
     fb_osc tl_debug_osc[] = {110.0, 9.5, 3.4};
     const double wl0 = 200.0;
     disp_t *tl_debug = disp_new_tauc_lorentz("Nitride TL", TAUC_LORENTZ_STANDARD, 1, 1.0, 4.25, tl_debug_osc);
     cmpl tl_n = tauc_lorentz_n_value(tl_debug, wl0);
     fprintf(stderr, "n(%g) = %g, k(%g) = %g\n", wl0, std::real(tl_n), wl0, std::imag(tl_n));
+    ho_params test_params[1] = {{145, 15.7, 0, 0.3333, 0}};
+    disp_t *d_test = disp_new_ho("Test HO", 1, test_params);
+    fb_osc osc[1] = {{110.0, 9.5, 3.4}};
+    disp_t *d_test = disp_new_tauc_lorentz("Test TL", TAUC_LORENTZ_STANDARD, 1, 1.0, 4.25, osc);
+    double cauchy_n[3] = {1.95726, 10853.2, 4.29231e+008};
+    double cauchy_k[3] = {0.017, -4973.2, 4.02541e+008};
+    disp_t *d_test = disp_new_cauchy("Test Cauchy", cauchy_n, cauchy_k);
+    ho_params test_params[2] = {{220, 13.8562, 2.90047, 0.333333, 0}, {1.9, 5.76994, 3.5, 0.333333, -2.6}};
+    disp_t *d_test = disp_new_ho("! Nitride HO", 2, test_params);
+    
+    disp_deriv_check(d_test, 190.0);
+    disp_deriv_check(d_test, 240.0);
+    disp_deriv_check(d_test, 633.0);
+#endif
 
     recipe = new fit_recipe();
     recipe->setup_default_stack();

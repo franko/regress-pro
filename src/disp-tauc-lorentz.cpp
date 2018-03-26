@@ -75,32 +75,35 @@ static inline double pow4(double x)
     return s * s;
 }
 
+static void oscillator_parameters(const int form, const fb_osc osc[], double& a, double& e0, double& c) {
+    if (form == TAUC_LORENTZ_STANDARD) {
+        a = osc->a;
+        e0 = osc->b;
+        c = osc->c;
+    } else {
+        /* Use rationalized lorentzian coefficients of the abs peak:
+           - osc->a is AL' and gives the height of the peak
+           - osc->b is Ep and is the energy position
+           - osc->c is Gamma and is the peak width. */
+        e0 = pow(pow4(osc->b) + pow4(osc->c) / 4, 0.25);
+        c = sqrt(2 * pow2(e0) - 2 * pow2(osc->b));
+        a = osc->a * pow4(osc->c) / (4 * e0 * c);
+    }
+}
+
 cmpl
 tauc_lorentz_n_value(const disp_t *d, double lambda)
 {
     const struct disp_fb *fb = &d->disp.fb;
     const int nb = fb->n;
-    double en = TL_EV_NM / lambda;
+    const double en = TL_EV_NM / lambda;
 
     /* If Eg is negative use zero instead. A negative Eg is not meaningful. */
     const double eg = (fb->eg >= 0 ? fb->eg : 0.0);
     double er_sum = fb->n_inf, ei_sum = 0.0;
     for (int k = 0; k < nb; k++) {
-        const struct fb_osc *osc = fb->osc + k;
         double a, e0, c;
-        if (fb->form == TAUC_LORENTZ_STANDARD) {
-            a = osc->a;
-            e0 = osc->b;
-            c = osc->c;
-        } else {
-            /* Use rationalized lorentzian coefficients of the abs peak:
-               - osc->a is AL' and gives the height of the peak
-               - osc->b is Ep and is the energy position
-               - osc->c is Gamma and is the peak width. */
-            e0 = pow(pow4(osc->b) + pow4(osc->c) / 4, 0.25);
-            c = sqrt(2 * pow2(e0) - 2 * pow2(osc->b));
-            a = osc->a * pow4(osc->c) / (4 * e0 * c);
-        }
+        oscillator_parameters(fb->form, fb->osc + k, a, e0, c);
 
         double x0 = 1.0/M_PI;
         double x1 = std::pow(c, 2);
@@ -152,23 +155,10 @@ cmpl tauc_lorentz_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
 
     double er_sum = fb->n_inf, ei_sum = 0.0;
     for (int osc_index = TL_OSC_OFFS, k = 0; k < nb; k++, osc_index += TL_NB_OSC_PARAMS) {
-        const struct fb_osc *osc = fb->osc + k;
         double a, e0, c;
-        if (fb->form == TAUC_LORENTZ_STANDARD) {
-            a = osc->a;
-            e0 = osc->b;
-            c = osc->c;
-        } else {
-            /* Use rationalized lorentzian coefficients of the abs peak:
-               - osc->a is AL' and gives the height of the peak
-               - osc->b is Ep and is the energy position
-               - osc->c is Gamma and is the peak width. */
-            e0 = pow(pow4(osc->b) + pow4(osc->c) / 4, 0.25);
-            c = sqrt(2 * pow2(e0) - 2 * pow2(osc->b));
-            a = osc->a * pow4(osc->c) / (4 * e0 * c);
-        }
+        oscillator_parameters(fb->form, fb->osc + k, a, e0, c);
 
-        const auto x0 = std::pow(eg, 2);
+const auto x0 = std::pow(eg, 2);
 const auto x1 = std::pow(en, 2);
 const auto x2 = x0 + x1;
 const auto x3 = 1.0/M_PI;
