@@ -6,6 +6,7 @@ from string import Template
 def tauc_lorentz_epsilon_cse():
     eg, e0, c, en, a = symbols('eg e0 c en a')
     eps_inf = symbols('eps_inf')
+    eg_delta = symbols('eg_delta')
 
     alpha2 = 4*e0**2 - c**2
     alpha = sqrt(alpha2)
@@ -29,9 +30,13 @@ def tauc_lorentz_epsilon_cse():
 
     eps1ts.append(2 * (a * e0) / (pi * csi4 * alpha) * eg * (en**2 - gamma2) * (pi + 2 * atan(2 * (gamma2 - eg**2) / (alpha * c))))
 
-    eps1ts.append(- (a * e0 * c) / (pi * csi4) * (en**2 + eg**2) / en * (log_abs_en_eg - log(en + eg)))
+    eps1_4 = - (a * e0 * c) / (pi * csi4) * (en**2 + eg**2) / en * (log_abs_en_eg - log(en + eg))
+    eps1_5 = (2 * a * e0 * c) / (pi * csi4) * eg * (log_abs_en_eg + log(en + eg) - log(sqrt((e0**2 - eg**2)**2 + eg**2 * c**2)))
 
-    eps1ts.append((2 * a * e0 * c) / (pi * csi4) * eg * (log_abs_en_eg + log(en + eg) - log(sqrt((e0**2 - eg**2)**2 + eg**2 * c**2))))
+    # limiting term replacing term4 + term5 of epsilon1 when E -> Eg
+    eps45_limit = (2 * a * en * e0 * c) / (pi * ((en**2 - gamma2)**2 + alpha2 * c**2 / 4)) * log((4 * en**2) / sqrt((e0**2 - eg**2)**2 + eg**2 * c**2))
+
+    eps1ts.append(Piecewise((eps45_limit, (en < eg + eg_delta) & (en > eg - eg_delta)), (eps1_4 + eps1_5, True)))
 
     # epsilon_1 obtained summing all the terms EXCLUDING eps_inf
     eps1 = sum(eps1ts)

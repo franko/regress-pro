@@ -2,6 +2,7 @@ cmpl tauc_lorentz_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
     const struct disp_fb *fb = &d->disp.fb;
     const int nb = fb->n;
     const double en = TL_EV_NM / lambda;
+    const double eg_delta = 1.0e-4;
 
     /* If Eg is negative use zero instead. A negative Eg is not meaningful. */
     const double eg = (fb->eg >= 0 ? fb->eg : 0.0);
