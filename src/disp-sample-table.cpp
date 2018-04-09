@@ -284,21 +284,21 @@ disp_sample_table_new_from_mat_file(const char * filename, str_ptr *error_msg)
     str_getline(name, f);
     str_getline(row, f);
 
-    if(strncasecmp(CSTR(row), "CAUCHY", 6) == 0) {
+    if(strncmp(CSTR(row), "CAUCHY", 6) == 0 || strncmp(CSTR(row), "cauchy", 6) == 0) {
         dtype = DISP_CAUCHY;
-    } else if(strncasecmp(CSTR(row), "ev", 2) == 0) {
+    } else if(strncmp(CSTR(row), "EV", 2) == 0 || strncmp(CSTR(row), "ev", 2) == 0) {
         wl_unit_conv |= WL_UNIT_CONVERT_EV;
-    } else if(strncasecmp(CSTR(row), "ANGSTROMS", 9) == 0) {
+    } else if(strncmp(CSTR(row), "ANGSTROMS", 9) == 0 || strncmp(CSTR(row), "angstroms", 9) == 0) {
         wl_unit_conv |= WL_UNIT_CONVERT_ANGSTROMS;
-    } else if(strncasecmp(CSTR(row), "nm", 2) != 0) {
+    } else if(strncmp(CSTR(row), "NM", 2) != 0 || strncmp(CSTR(row), "nm", 2) != 0) {
         *error_msg = new_error_message(LOADING_FILE_ERROR, "Invalide MAT file: \"%s\"", filename);
         goto close_exit;
     }
 
     str_getline(row, f);
-    if(strncasecmp(CSTR(row), "nk", 2) == 0) {
+    if(strncmp(CSTR(row), "NK", 2) == 0 || strncmp(CSTR(row), "nk", 2) == 0) {
         dtype = DISP_SAMPLE_TABLE;
-    } else if(strncasecmp(CSTR(row), "e1e2", 4) == 0) {
+    } else if(strncmp(CSTR(row), "E1E2", 4) == 0 || strncmp(CSTR(row), "e1e2", 4) == 0) {
         dtype = DISP_SAMPLE_TABLE;
         provide_diel_k = 1;
     } else {
