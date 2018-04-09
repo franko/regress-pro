@@ -40,7 +40,7 @@ FXString regress_pro::get_release_string() const {
 #ifdef RELEASE_BUILD
     return FXStringFormat("%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 #else
-    return FXStringFormat("%d.%d.%d-development", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    return FXStringFormat("%d.%d.%d-%s", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD_EXT);
 #endif
 }
 
