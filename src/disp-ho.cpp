@@ -264,18 +264,6 @@ ho_get_param_value(const disp_t *d, const fit_param_t *fp)
     return *pval;
 }
 
-disp_t *
-disp_new_ho(const char *name, int nb_hos, struct ho_params *params)
-{
-    disp_t *d = disp_new_with_name(DISP_HO, name);
-
-    d->disp.ho.nb_hos = nb_hos;
-    d->disp.ho.params = (ho_params *) emalloc(nb_hos * sizeof(struct ho_params));
-    memcpy(d->disp.ho.params, params, nb_hos * sizeof(struct ho_params));
-
-    return d;
-}
-
 int
 ho_write(writer_t *w, const disp_t *_d)
 {

@@ -20,8 +20,8 @@ static inline void set(_str& dest, _str& src) {
 
 class str : public _str {
 public:
-    str() {
-        str_init_raw(this, 64);
+    str(int initial_size = 64) {
+        str_init_raw(this, initial_size);
         heap[0] = 0;
         length = 0;
     }

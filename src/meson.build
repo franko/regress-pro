@@ -13,6 +13,6 @@ kernel_src = [
     'fit-timestamp.cpp', 'lmfit-simple.cpp', 'fit-params.cpp', 'lmfit-mlr-adapter.cpp', 'fit-engine.cpp', 'refl-kernel.cpp',
     'number-parse.cpp', 'refl-utils.cpp', 'acquisition.cpp', 'gauss-legendre-quad.cpp', 'spectra.cpp',
     'elliss.cpp', 'multi-fit-engine.cpp', 'nlopt_fit.cpp', 'lmfit-multi.cpp', 'disp-fit-engine.cpp', 'vector_print.cpp',
-    'fit_result.cpp', 'writer.cpp', 'lexer.cpp', 'lmfit_result.cpp']
+    'fit_result.cpp', 'writer.cpp', 'lexer.cpp', 'lmfit_result.cpp', 'disp-load-binary.cpp']
 
 libkernel = static_library('regpro-kernel', kernel_src, dependencies: [gsl_dep, thread_dep, nlopt_dep])
