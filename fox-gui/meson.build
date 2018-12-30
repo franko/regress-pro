@@ -7,4 +7,4 @@ executable('regress-pro', fox_src,
            include_directories: [foxgui_incdir, kernel_incdir],
            dependencies: [gsl_dep, nlopt_dep, fox_dep, agg_dep, thread_dep],
            link_with: libkernel,
-           gui_app: not debug_build)
+           gui_app: not debug_build, install: true)
