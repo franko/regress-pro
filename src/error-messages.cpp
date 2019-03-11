@@ -5,6 +5,7 @@ static const char * error_type_id[] = {
     "Error checking recipe.",
     "Error running script.",
     "Spectrum not found.",
+    "Spectrum invalid.",
     "Error running fit.",
 };
 

@@ -4,6 +4,8 @@
 #include "defs.h"
 #include "str.h"
 
+/* NB: if anything is changed here a corresponding change should be made in
+   error-messages.cpp. */
 enum error_type_e {
     LOADING_FILE_ERROR,
     RECIPE_CHECK,
