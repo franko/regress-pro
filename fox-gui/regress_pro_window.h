@@ -108,6 +108,7 @@ public:
     long onCmdStackShift(FXObject*,FXSelector,void*);
     long onUpdate(FXObject*,FXSelector,void*);
     long onCmdResultStack(FXObject*,FXSelector,void*);
+    long onCmdEngineeringScript(FXObject*,FXSelector,void*);
 
 public:
     enum {
@@ -126,6 +127,7 @@ public:
         ID_STACK_CHANGE,
         ID_STACK_SHIFT,
         ID_RESULT_STACK,
+        ID_ENG_SCRIPT,
         ID_LAST
     };
 

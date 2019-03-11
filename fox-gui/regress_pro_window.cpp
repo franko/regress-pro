@@ -49,6 +49,8 @@
 #include "lexer.h"
 #include "gsl_cpp.h"
 
+#include "lmfit-mlr-adapter.h"
+
 static float timeval_subtract(struct timeval *x, struct timeval *y);
 static fit_engine *prepare_fit_engine(stack_t *stack, fit_parameters *parameters, const fit_config *config, str_ptr *error_msg);
 
@@ -68,6 +70,7 @@ FXDEFMAP(regress_pro_window) regress_pro_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_CHANGE, regress_pro_window::onCmdStackChange),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_STACK_SHIFT, regress_pro_window::onCmdStackShift),
     FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_RESULT_STACK, regress_pro_window::onCmdResultStack),
+    FXMAPFUNC(SEL_COMMAND, regress_pro_window::ID_ENG_SCRIPT, regress_pro_window::onCmdEngineeringScript),
 };
 
 
@@ -128,6 +131,7 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     new FXMenuCommand(fitmenu, "Run &Multiple Fit",nullptr,this,ID_RUN_MULTI_FIT);
     new FXMenuCommand(fitmenu, "&Batch Window",nullptr,this,ID_RUN_BATCH);
     new FXMenuCommand(fitmenu, "Edit Result Stack",nullptr,this,ID_RESULT_STACK);
+    new FXMenuCommand(fitmenu, "Run Engineering Script",nullptr,this,ID_ENG_SCRIPT);
     new FXMenuTitle(menubar,"Fittin&g",nullptr,fitmenu);
 
     helpmenu = new FXMenuPane(this);
@@ -774,5 +778,57 @@ regress_pro_window::onCmdRecipeLoad(FXObject *, FXSelector, void *)
 long regress_pro_window::onCmdResultStack(FXObject *, FXSelector, void *)
 {
     m_filmstack_dialog->show(PLACEMENT_OWNER);
+    return 1;
+}
+
+static str_ptr run_engineering_script(fit_recipe *recipe, struct spectrum *spectrum) {
+    str_ptr error_msg;
+    fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
+    if (!fit) {
+        return error_msg;
+    }
+    const char *check_error = fit_engine_prepare_check_error(fit, spectrum);
+    if (check_error) {
+        return new_error_message(SPECTRUM_INVALID, check_error);
+    }
+
+    // Prepare the new fit engine using the spectrum and enable subsumpling.
+    fit_engine_prepare(fit, spectrum, FIT_RESET_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
+    fit_engine_disable(fit);
+
+    const double lambda = 940.0;
+    const int nb_med = fit->stack->nb;
+    const int channels_number = SYSTEM_CHANNELS_NUMBER(fit->acquisition->type);
+    const enum system_kind sys_kind = fit->acquisition->type;
+    const double *ths = stack_get_ths_list(fit->stack);
+    cmpl_array8 ns(nb_med);
+    stack_get_ns_list(fit->stack, ns, lambda);
+
+    double_array16 jacob_th(channels_number * (nb_med - 2));
+    cmpl_array16   jacob_n(channels_number * nb_med);
+    double_array8  jacob_acq(channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind));
+    const unsigned jacob_flags = REQUIRE_JACOB_T|REQUIRE_JACOB_N; //jacobian_require_flags(fit->run->cache);
+    double result[channels_number];
+
+    mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, fit->acquisition, result, &jacob_th, &jacob_n, &jacob_acq, jacob_flags);
+
+    for (int i = 0; i < channels_number; i++) {
+        fprintf(stderr, "Engineering result[%d] = %g\n", i, result[i]);
+        for (int k = 0; k < nb_med; k++) {
+            cmpl jacob_el = jacob_n[i * nb_med + k];
+            fprintf(stderr, "Engineering JACOB(n)[channel=%d, layer=%d] = %g + %gi\n", i, k, std::real(jacob_el), std::imag(jacob_el));
+        }
+    }
+
+    fit_engine_free(fit);
+    return nullptr;
+}
+
+long regress_pro_window::onCmdEngineeringScript(FXObject *, FXSelector, void *)
+{
+    if(!check_spectrum("Fitting")) {
+        return 0;
+    }
+    run_engineering_script(recipe, spectrum);
     return 1;
 }
