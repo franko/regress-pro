@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <unistd.h>
+#include <nlopt.h>
 
 #include <gsl/gsl_vector.h>
 
@@ -781,6 +782,77 @@ long regress_pro_window::onCmdResultStack(FXObject *, FXSelector, void *)
     return 1;
 }
 
+struct nk_opt_data {
+    nk_opt_data(unsigned channels_number, unsigned nb_med, unsigned nb_acq):
+        ns{nb_med},
+        jacob_th{channels_number * (nb_med - 2)},
+        jacob_n{channels_number * nb_med},
+        jacob_acq{channels_number * nb_acq}
+    {
+    }
+
+    fit_engine *fit;
+    double lambda;
+    cmpl_array8 ns;
+    double_array16 jacob_th;
+    cmpl_array16   jacob_n;
+    double_array8  jacob_acq;
+    unsigned jacob_flags;
+    int medium_sensitivity_index;
+    bool opt_real_part;
+    double result[4]; // Using up to 4 channels.
+};
+
+static double nk_opt_objective_func(unsigned n, const double *x, double *grad, void *_data) {
+    nk_opt_data *data = (nk_opt_data *) _data;
+    gsl_vector_const_view x_view = gsl_vector_const_view_array(x, n);
+
+    fit_engine *fit = data->fit;
+    fit_engine_apply_parameters(fit, fit->parameters, &x_view.vector);
+
+    const int nb_med = fit->stack->nb;
+    const int channels_number = SYSTEM_CHANNELS_NUMBER(fit->acquisition->type);
+    const enum system_kind sys_kind = fit->acquisition->type;
+    const double *ths = stack_get_ths_list(fit->stack);
+
+    mult_layer_refl_sys(sys_kind, nb_med, data->ns, ths, data->lambda, fit->acquisition, data->result, &data->jacob_th, &data->jacob_n, &data->jacob_acq, data->jacob_flags);
+    const int index = data->medium_sensitivity_index;
+
+    double jc_square = 0.0;
+    for (int i = 0; i < channels_number; i++) {
+        cmpl jz = data->jacob_n[nb_med * i + index];
+        const double jc = data->opt_real_part ? std::real(jz) : std::imag(jz);
+        jc_square += jc * jc;
+    }
+    return std::sqrt(jc_square);
+}
+
+static void set_eng_optimizer_bounds(nlopt_opt opt, fit_engine *fit, seeds_list *seeds, const gsl_vector *x) {
+    const int dim = fit->parameters->number;
+    double_array8 lower_bounds(dim), upper_bounds(dim);
+    for(int j = 0; j < dim; j++) {
+        const seed_t& seed = seeds->at(j);
+        const double xc = gsl_vector_get(x, j);
+        if(seed.type == SEED_RANGE) {
+            lower_bounds[j] = xc - seed.delta;
+            upper_bounds[j] = xc + seed.delta;
+        } else {
+            lower_bounds[j] = 0;
+            upper_bounds[j] = 2 * xc;
+        }
+    }
+    nlopt_set_lower_bounds(opt, lower_bounds);
+    nlopt_set_upper_bounds(opt, upper_bounds);
+}
+
+static void set_eng_initial_seeds(fit_engine *fit, seeds_list *seeds, gsl_vector *x) {
+    const int dim = fit->parameters->number;
+    for(int j = 0; j < dim; j++) {
+        const double xc = fit_engine_get_seed_value(fit, &fit->parameters->at(j), &seeds->at(j));
+        gsl_vector_set(x, j, xc);
+    }
+}
+
 static str_ptr run_engineering_script(fit_recipe *recipe, struct spectrum *spectrum) {
     str_ptr error_msg;
     fit_engine *fit = prepare_fit_engine(recipe->stack, recipe->parameters, recipe->config, &error_msg);
@@ -794,32 +866,46 @@ static str_ptr run_engineering_script(fit_recipe *recipe, struct spectrum *spect
 
     // Prepare the new fit engine using the spectrum and enable subsumpling.
     fit_engine_prepare(fit, spectrum, FIT_RESET_ACQUISITION|FIT_ENABLE_SUBSAMPLING);
-    fit_engine_disable(fit);
 
-    const double lambda = 940.0;
-    const int nb_med = fit->stack->nb;
-    const int channels_number = SYSTEM_CHANNELS_NUMBER(fit->acquisition->type);
     const enum system_kind sys_kind = fit->acquisition->type;
-    const double *ths = stack_get_ths_list(fit->stack);
-    cmpl_array8 ns(nb_med);
-    stack_get_ns_list(fit->stack, ns, lambda);
+    nk_opt_data data(SYSTEM_CHANNELS_NUMBER(sys_kind), fit->stack->nb, SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind));
+    data.lambda = 940.0;
+    data.jacob_flags = REQUIRE_JACOB_T|REQUIRE_JACOB_N;
+    data.medium_sensitivity_index = 2;
+    data.opt_real_part = false;
+    data.fit = fit;
 
-    double_array16 jacob_th(channels_number * (nb_med - 2));
-    cmpl_array16   jacob_n(channels_number * nb_med);
-    double_array8  jacob_acq(channels_number * SYSTEM_ACQUISITION_PARAMS_NUMBER(sys_kind));
-    const unsigned jacob_flags = REQUIRE_JACOB_T|REQUIRE_JACOB_N; //jacobian_require_flags(fit->run->cache);
-    double result[channels_number];
+    // We take here the index. We are assuling that during optimization
+    // they will not change. This is not necessarily true but is ok for
+    // optimization on parameters of thickness only.
+    stack_get_ns_list(fit->stack, data.ns, data.lambda);
 
-    mult_layer_refl_sys(sys_kind, nb_med, ns, ths, lambda, fit->acquisition, result, &jacob_th, &jacob_n, &jacob_acq, jacob_flags);
+    const int nk_opt_dim = fit->parameters->number;
+    nlopt_opt opt = nlopt_create(NLOPT_GN_CRS2_LM, nk_opt_dim);
 
-    for (int i = 0; i < channels_number; i++) {
-        fprintf(stderr, "Engineering result[%d] = %g\n", i, result[i]);
-        for (int k = 0; k < nb_med; k++) {
-            cmpl jacob_el = jacob_n[i * nb_med + k];
-            fprintf(stderr, "Engineering JACOB(n)[channel=%d, layer=%d] = %g + %gi\n", i, k, std::real(jacob_el), std::imag(jacob_el));
-        }
+    gsl_vector *x = gsl_vector_alloc(nk_opt_dim);
+    set_eng_initial_seeds(fit, recipe->seeds, x);
+    set_eng_optimizer_bounds(opt, fit, recipe->seeds, x);
+
+    nlopt_set_max_objective(opt, nk_opt_objective_func, (void *) &data);
+    nlopt_set_maxtime(opt, 20.0); // Max time in seconds.
+    // nlopt_set_xtol_rel(opt, 1e-4);
+
+    double opt_f;
+    int nlopt_status = nlopt_optimize(opt, x->data, &opt_f);
+
+    fprintf(stderr, "OPTIMIZE STATUS: %s\n", nlopt_status >= 0 ? "success" : (nlopt_status == NLOPT_FORCED_STOP ? "stop request" : "fail"));
+    str parameter_name;
+    for (int i = 0; i < nk_opt_dim; i++) {
+        get_param_name(&fit->parameters->at(i), &parameter_name);
+        fprintf(stderr, "OPTIMIZE %s = %g\n", parameter_name.text(), gsl_vector_get(x, i));
     }
+    fprintf(stderr, "OPTIMIZE GOAL: %g\n", opt_f);
+    fflush(stderr);
 
+    nlopt_destroy(opt);
+
+    fit_engine_disable(fit);
     fit_engine_free(fit);
     return nullptr;
 }
