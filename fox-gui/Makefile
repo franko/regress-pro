@@ -17,8 +17,8 @@ ifeq ($(HOST_SYS),Windows)
   GSL_LIBS = $(shell pkg-config --libs gsl)
   GSL_INCLUDES = $(shell pkg-config --cflags gsl)
 else
-  FOX_LIBS = $(shell fox-config --libs)
-  FOX_INCLUDES = $(shell fox-config --cflags)
+  FOX_LIBS = $(shell pkg-config fox --libs)
+  FOX_INCLUDES = $(shell pkg-config fox --cflags)
 
   GSL_LIBS = -lgsl -lblas -lm
   GSL_INCLUDES =
