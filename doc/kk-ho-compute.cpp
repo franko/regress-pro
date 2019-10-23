@@ -1,11 +1,9 @@
-#include "window.h"
-#include "debug_log.h"
-#include "path.h"
-
 #include <cstdio>
 #include <gsl/gsl_integration.h>
 
-constexpr double m_pi() { return 3.14159265358979323846; }
+#include "libcanvas.h"
+
+using namespace libcanvas;
 
 template <typename Float> Float sqr(Float x) { return x * x; }
 
@@ -29,26 +27,25 @@ double hoRealPart(const HOModel& ho, double e) {
 static double hoKKImgPartFfun(double x, void *param) {
     const HOModel *ho = (const HOModel *) param;
     double chi2 = hoImaginaryPart(*ho, x);
-    return (2 / m_pi()) * x * chi2 / (sqr(x) - sqr(ho->e));
+    return (2 / math::Pi()) * x * chi2 / (sqr(x) - sqr(ho->e));
 }
 
 static double hoImgPartFfun(double x, void *param) {
     const HOModel *ho = (const HOModel *) param;
     double chi2 = hoImaginaryPart(*ho, x);
-    return (2 / m_pi()) * x * chi2 / (x + ho->e);
+    return (2 / math::Pi()) * x * chi2 / (x + ho->e);
 }
 
 int main() {
-    graphics::initialize_fonts();
-    graphics::window win;
-    graphics::plot p(graphics::plot::show_units | graphics::plot::auto_limits);
-    p.set_clip_mode(false);
+    InitializeFonts();
+    Plot plot(Plot::ShowUnits | Plot::AutoLimits);
+    plot.SetClipMode(false);
 
     const int integLimit = 256;
     gsl_integration_workspace *gs = gsl_integration_workspace_alloc(integLimit);
     const double eCut = 12.0;
 
-    HOModel hoTest{3.5, 0.3, 10.0, m_pi() / 4, 0.0};
+    HOModel hoTest{3.5, 0.3, 10.0, math::Pi() / 4, 0.0};
 
     gsl_function hoImgPartF;
     hoImgPartF.function = &hoImgPartFfun;
@@ -60,12 +57,11 @@ int main() {
 
     double epsabs = 1e-5, epsrel = 1e-5;
 
-    auto lineN = new graphics::path(), lineNRef = new graphics::path();
-    auto lineK = new graphics::path();
+    Path lineN{}, lineNRef{}, lineK;
 
     const double e1 = 0.01, e2 = 10.0;
-    const int nIntervals = 256;
-    for (int i = 0; i <= 256; i++) {
+    const int nIntervals = 1024;
+    for (int i = 0; i <= nIntervals; i++) {
         const double eEval = e1 + (e2 - e1) * i / nIntervals;
 
         hoTest.e = eEval;
@@ -79,36 +75,31 @@ int main() {
         printf("%g, %g, %g\n", eEval, result1 + result2, hoRealPart(hoTest, hoTest.e));
 
         if (i == 0) {
-            lineN->move_to(eEval, result1 + result2);
+            lineN.MoveTo(eEval, result1 + result2);
         } else {
-            lineN->line_to(eEval, result1 + result2);
+            lineN.LineTo(eEval, result1 + result2);
         }
 
         if (i == 0) {
-            lineNRef->move_to(eEval, -hoRealPart(hoTest, hoTest.e));
+            lineNRef.MoveTo(eEval, -hoRealPart(hoTest, hoTest.e));
         } else {
-            lineNRef->line_to(eEval, -hoRealPart(hoTest, hoTest.e));
+            lineNRef.LineTo(eEval, -hoRealPart(hoTest, hoTest.e));
         }
 
         if (i == 0) {
-            lineK->move_to(eEval, -hoImaginaryPart(hoTest, hoTest.e));
+            lineK.MoveTo(eEval, -hoImaginaryPart(hoTest, hoTest.e));
         } else {
-            lineK->line_to(eEval, -hoImaginaryPart(hoTest, hoTest.e));
+            lineK.LineTo(eEval, -hoImaginaryPart(hoTest, hoTest.e));
         }
     }
 
-    agg::rgba8 none(0,0,0,0);
-    agg::rgba8 blue(0, 0, 180, 255);
-    agg::rgba8 red(180, 0, 0, 255);
-    agg::rgba8 gray(50, 50, 50, 255);
-    p.add(lineNRef, gray, 1.0, none, graphics::property::stroke);
-    p.add(lineN, blue, 1.5, none, graphics::property::stroke);
-    p.add(lineK, red,  1.5, none, graphics::property::stroke);
-    int index = win.attach(&p, "");
-    win.start(640, 480, graphics::window_resize);
-    win.slot_refresh(index);
-    p.commit_pending_draw();
-    win.wait();
+    plot.AddStroke(lineNRef, color::Gray, 1.0);
+    plot.AddStroke(lineN, color::Blue, 1.5);
+    plot.AddStroke(lineK, color::Red,  1.5);
 
+    Window window;
+    window.Attach(plot, "");
+    window.Start(640, 480, WindowResize);
+    window.Wait();
     return 0;
 }
