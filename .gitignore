@@ -1,13 +1,3 @@
-*.[oa]
-*.exe
-*.deb
-*~
-builds
-examples/stuff
-debian_build
-fox-gui/gitversion.cpp
-fox-gui/regress
+build*
 tests/log
-build-*
-.deps
-
+fox-gui/gitversion.cpp
