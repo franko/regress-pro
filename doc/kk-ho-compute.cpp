@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cmath>
 #include <gsl/gsl_integration.h>
 
 #include "libcanvas.h"
