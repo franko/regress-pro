@@ -23,7 +23,6 @@
 
 #include <new>
 
-#include "utils.h"
 #include "list.h"
 #include "canvas.h"
 #include "plot_units.h"
@@ -41,6 +40,14 @@
 #include "agg_conv_dash.h"
 #include "agg_gsv_text.h"
 #include "plot_clipboard.h"
+#include "utils.h"
+
+static void affine_compose(agg::trans_affine& a, const agg::trans_affine& b) {
+    double a_tx = a.tx, a_ty = a.ty;
+    a.premultiply(b);
+    a.tx = b.sx  * a_tx + b.shx * a_ty + b.tx;
+    a.ty = b.shy * a_tx + b.sy  * a_ty + b.ty;
+}
 
 namespace newplot {
 
@@ -303,7 +310,7 @@ void plot<VS,RM>::draw_title(canvas &canvas, agg::trans_affine& canvas_mtx)
 
     agg::trans_affine m;
     this->viewport_scale(m);
-    trans_affine_compose(m, canvas_mtx);
+    affine_compose(m, canvas_mtx);
 
     double scale = compute_scale(canvas_mtx);
 
@@ -344,7 +351,7 @@ agg::trans_affine plot<VS,RM>::get_scaled_matrix(agg::trans_affine& canvas_mtx)
 {
     agg::trans_affine m = m_trans;
     viewport_scale(m);
-    trans_affine_compose(m, canvas_mtx);
+    affine_compose(m, canvas_mtx);
     return m;
 }
 
@@ -354,7 +361,7 @@ void plot<VS,RM>::clip_plot_area(canvas &canvas, agg::trans_affine& canvas_mtx)
     if(this->clip_is_active()) {
         agg::trans_affine mvp;
         viewport_scale(mvp);
-        trans_affine_compose(mvp, canvas_mtx);
+        affine_compose(mvp, canvas_mtx);
         agg::rect_base<int> clip = rect_of_slot_matrix<int>(mvp);
         canvas.clip_box(clip);
     }
@@ -440,7 +447,7 @@ void plot<VS,RM>::draw_axis(canvas &canvas, agg::trans_affine& canvas_mtx)
 
     agg::trans_affine m;
     this->viewport_scale(m);
-    trans_affine_compose(m, canvas_mtx);
+    affine_compose(m, canvas_mtx);
 
     double scale = compute_scale(canvas_mtx);
 
@@ -559,7 +566,7 @@ void plot<VS,RM>::viewport_scale(agg::trans_affine& m)
 {
     const double xoffs = 0.09375, yoffs_d = 0.09375, yoffs_u = 1.5*0.09375;
     static agg::trans_affine rsz(1-2*xoffs, 0.0, 0.0, 1-(yoffs_d+yoffs_u), xoffs, yoffs_d);
-    trans_affine_compose(m, rsz);
+    affine_compose(m, rsz);
 }
 
 template<class VS, class RM>

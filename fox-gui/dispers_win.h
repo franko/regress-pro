@@ -3,22 +3,19 @@
 
 #include <fx.h>
 
+#include "FXLibcanvasWindow.h"
+
 #include "dispers.h"
 #include "sampling.h"
-#include "plot_canvas.h"
 
 class dispers_win : public FXDialogBox {
     FXDECLARE(dispers_win)
 
 public:
     dispers_win(FXWindow* w, disp_t *disp);
-
-    ~dispers_win() {
-        delete dispmenu;
-    };
+    ~dispers_win();
 
     void config_plot();
-
     long on_cmd_set_range(FXObject*,FXSelector,void*);
 
     enum {
@@ -36,7 +33,8 @@ private:
     sampling_unif m_sampling;
 
     FXMenuPane* dispmenu;
-    plot_canvas* m_canvas;
+    FXLibcanvasWindow *m_canvas;
+    libcanvas::Plot m_plot_n, m_plot_k;
 };
 
 #endif
