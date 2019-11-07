@@ -37,20 +37,13 @@ public:
     double stride() const {
         return m_stride;
     }
-
-    const double operator [](unsigned i) const {
+    double operator [](unsigned i) const {
         return m_start + i * m_stride;
     }
-    double operator [](unsigned i)       {
+    double at(unsigned i) const {
         return m_start + i * m_stride;
     }
-    const double at(unsigned i) const           {
-        return m_start + i * m_stride;
-    }
-    double at(unsigned i)                 {
-        return m_start + i * m_stride;
-    }
-    double value_at(unsigned i) const           {
+    double value_at(unsigned i) const {
         return m_start + i * m_stride;
     }
 };
