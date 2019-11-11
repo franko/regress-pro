@@ -45,22 +45,24 @@ dispers_win::~dispers_win() {
     delete dispmenu;
 };
 
+static void add_nk_plots_with_sampling(libcanvas::Plot& plot_n, libcanvas::Plot& plot_k, const disp_t *dispers, const sampling_unif& sampling) {
+    libcanvas::Path n_path, k_path;
+    for (unsigned k = 0; k < sampling.size(); k++) {
+        const double wavelength = sampling[k];
+        cmpl n = n_value(dispers, wavelength);
+        n_path.LineTo(wavelength,  std::real(n));
+        k_path.LineTo(wavelength, -std::imag(n));
+    }
+    plot_n.AddStroke(std::move(n_path), libcanvas::color::Red, 1.5);
+    plot_k.AddStroke(std::move(k_path), libcanvas::color::Red, 1.5);
+}
+
 void
 dispers_win::config_plot()
 {
     m_plot_n.SetClipMode(false);
     m_plot_k.SetClipMode(false);
-
-    libcanvas::Path n_path, k_path;
-    for (unsigned k = 0; k < m_sampling.size(); k++) {
-        const double wavelength = m_sampling[k];
-        cmpl n = n_value(m_dispers, wavelength);
-        n_path.LineTo(wavelength,  std::real(n));
-        k_path.LineTo(wavelength, -std::imag(n));
-    }
-
-    m_plot_n.AddStroke(std::move(n_path), libcanvas::color::Red, 1.5);
-    m_plot_k.AddStroke(std::move(k_path), libcanvas::color::Red, 1.5);
+    add_nk_plots_with_sampling(m_plot_n, m_plot_k, m_dispers, m_sampling);
     m_canvas->Attach(m_plot_n, "2");
     m_canvas->Attach(m_plot_k, "1");
 }
@@ -68,14 +70,12 @@ dispers_win::config_plot()
 long
 dispers_win::on_cmd_set_range(FXObject*,FXSelector,void*)
 {
-// TODO: NYI
-#if 0
     sampling_win win(this, &m_sampling);
     if(win.execute()) {
-        m_canvas->update_limits();
-        m_canvas->set_dirty(true);
+        m_plot_n.ClearLayer();
+        m_plot_k.ClearLayer();
+        add_nk_plots_with_sampling(m_plot_n, m_plot_k, m_dispers, m_sampling);
         return 1;
     }
-#endif
     return 0;
 }
