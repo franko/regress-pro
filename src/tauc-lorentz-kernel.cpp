@@ -1,3 +1,4 @@
+/* Generated with sympy using the command: tauc-lorentz-sympy.py ../src/tauc-lorentz-template.cpp */
 cmpl
 tauc_lorentz_n_value(const disp_t *d, double lambda)
 {
@@ -72,3 +73,4 @@ const auto x30 = 1.0/x24;
     }
     return std::sqrt(er_sum - 1i * ei_sum);
 }
+

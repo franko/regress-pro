@@ -85,9 +85,12 @@ xdefs_p, xexprs_p = parameters_cse()
 if len(sys.argv) != 2:
     print("Usage: %s <filename>" % sys.argv[0])
     exit(1)
+
+code_header = "/* Generated with sympy using the command: %s */\n" % " ".join(sys.argv)
+
 template_filename = sys.argv[1]
 template_file = open(template_filename, 'r')
-tauc_lorentz_code = template_file.read()
+tauc_lorentz_code = code_header + template_file.read()
 template_file.close()
 
 cxxcode = printing.cxxcode

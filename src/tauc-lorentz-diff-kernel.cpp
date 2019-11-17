@@ -1,3 +1,4 @@
+/* Generated with sympy using the command: tauc-lorentz-diff-sympy.py ../src/tauc-lorentz-diff-template.cpp */
 cmpl tauc_lorentz_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd) {
     const struct disp_fb *fb = &d->disp.fb;
     const int nb = fb->n;
@@ -347,3 +348,4 @@ const double dp33 = x10*x12*x6;
 
     return nn;
 }
+
