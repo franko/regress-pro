@@ -210,8 +210,6 @@ const auto x181 = x54*x77;
 const auto x182 = x26*x91;
 const auto x183 = x88/std::pow(x89, 2);
 
-    fprintf(stderr, "x76 (c < 2*e0): %g %g %d\n", c, 2*e0, x76 ? 1 : 0);
-
         er_sum += ((x25) ? (
    x0*x24
 )
