@@ -1,2 +1,3 @@
 option('release_build', type : 'boolean', value : 'false', description : 'Is it an official release build')
 option('dev_tag', type : 'string', value : '', description : 'Tag for dev builds')
+option('debug_deriv', type : 'boolean', value : 'false', description : 'Enable debug of dispersions derivatives')

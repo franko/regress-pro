@@ -55,7 +55,13 @@ bool disp_deriv_check(disp_t *d, double wavelength) {
             deriv_pass_real = deriv_pass_real || qpass;
         }
         if (!deriv_pass_real) {
-            fprintf(stderr, "FAIL parameter %d REAL (%g nm) numeric: (%g +/- %g) %g +/- %g (%g +/- %g), computed: %g\n", i, wavelength, nder[1], abserr[1], nder[0], abserr[0], nder[2], abserr[2], std::real(cder));
+            fprintf(stderr, "FAIL parameter %d REAL (%g nm) numeric: " \
+                "CENTRAL : %g +/- %g " \
+                "FORWARD : %g +/- %g " \
+                "BACKWARD: %g +/- %g " \
+                "computed: %g\n",
+                i, wavelength, nder[1], abserr[1], nder[0], abserr[0],
+                nder[2], abserr[2], std::real(cder));
         }
 
         F.function = &n_eval_imag;

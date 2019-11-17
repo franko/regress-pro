@@ -10,6 +10,10 @@
 #include "str.h"
 #include "fit-timestamp.h"
 
+#ifdef DEBUG_DISP_DERIV
+#include "disp-deriv-check.h"
+#endif
+
 static int disp_fit_fdf(const gsl_vector *x, void *_fit, gsl_vector *f,
                         gsl_matrix * jacob);
 
@@ -132,6 +136,15 @@ disp_fit_f(const gsl_vector *x, void *_fit, gsl_vector *f)
     return disp_fit_fdf(x, _fit, f, nullptr);
 }
 
+#ifdef DEBUG_DISP_DERIV
+static void check_disp_derivatives(disp_fit_engine *fit) {
+    for (unsigned k = 0; k < fit->wl->size; k++) {
+        const double wavelength = gsl_vector_get(fit->wl, k);
+        disp_deriv_check(fit->model_disp, wavelength);
+    }
+}
+#endif
+
 int
 lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
            gsl_vector *x, struct lmfit_result *result, str_ptr analysis, str_ptr error_msg)
@@ -163,6 +176,12 @@ lmfit_disp(struct disp_fit_engine *fit, struct disp_fit_config *cfg,
     f.n      = 2 * nsp;
     f.p      = nfp;
     f.params = fit;
+
+#ifdef DEBUG_DISP_DERIV
+    fprintf(stderr, "checking dispersions derivatives...\n");
+    check_disp_derivatives(fit);
+    fprintf(stderr, "done.\n");
+#endif
 
     /* We choose Levenberg-Marquardt algorithm, scaled version*/
     T = gsl_multifit_fdfsolver_lmsder;

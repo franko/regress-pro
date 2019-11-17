@@ -3,6 +3,10 @@ project('regress-pro', 'cpp', version: '2.1.0', default_options : ['cpp_std=c++1
 debug_build = get_option('buildtype') != 'release'
 dev_tag = get_option('dev_tag')
 
+if get_option('debug_deriv')
+    add_global_arguments('-DDEBUG_DISP_DERIV', language: 'cpp')
+endif
+
 conf = configuration_data()
 conf.set('VERSION_MAJOR', '2')
 conf.set('VERSION_MINOR', '1')
