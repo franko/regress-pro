@@ -29,6 +29,9 @@ def epsilon():
     eps1_3 = 2 * (a * e0) / (pi * csi4 * alpha) * eg * (en**2 - gamma2) * (pi + 2 * atan(2 * (gamma2 - eg**2) / (alpha * c)))
 
     # First 3 terms of epsilon1 when alpha is imaginary
+    # In this case alpha is close to 0 or it is imaginary. To avoid NaNs we consider
+    # alpha = 0 and use a special form of the expression. Note in this case that
+    # gamma^2 is negative equal to -E0^2. */
     eps1_alpha_imag_1 = (2 * eg * a * c * a_ln) / (2 * pi * csi4 * e0 * (e0**2 + eg**2))
     eps1_alpha_imag_2 = - (a * a_tan) / (pi * csi4 * e0) * (2 * atan(c / (2 * eg)))
     eps1_alpha_imag_3 = (2 * a * e0 * eg * (en**2 - gamma2)) / (pi * csi4) * (c / (e0**2 + eg**2))
