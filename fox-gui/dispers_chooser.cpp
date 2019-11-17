@@ -185,7 +185,7 @@ long fx_file_disp_selector::on_cmd_choose_file(FXObject *, FXSelector, void *)
         regress_pro_app()->disp_dir = open.getDirectory();
         str_ptr error_message;
         disp_t *disp = nullptr;
-        FXString extension = filename.after('.');
+        FXString extension = filename.rafter('.');
         if (comparecase(extension, "mat") == 0) {
             disp = load_mat_dispers(filename.text(), &error_message);
         } else if (comparecase(extension, "txt") == 0) {
