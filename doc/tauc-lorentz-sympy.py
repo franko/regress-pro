@@ -6,7 +6,7 @@ import tauc_lorentz
 
 def tauc_lorentz_epsilon_cse():
     eps1, eps2 = tauc_lorentz.epsilon()
-    return cse([eps1, eps2])
+    return cse([eps1, eps2], optimizations='basic')
 
 xdefs, xexprs = tauc_lorentz_epsilon_cse()
 

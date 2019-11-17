@@ -11,7 +11,7 @@ def tauc_lorentz_diff_epsilon_cse():
     diff_variables = [eg, a, e0, c]
     eps1der = [diff(eps1, var) for var in diff_variables]
     eps2der = [diff(eps2, var) for var in diff_variables]
-    return cse(cse_expr_list + eps1der + eps2der)
+    return cse(cse_expr_list + eps1der + eps2der, optimizations='basic')
 
 xdefs, xexprs = tauc_lorentz_diff_epsilon_cse()
 

@@ -19,51 +19,51 @@ const auto x1 = std::pow(c, 2);
 const auto x2 = std::pow(eg, 2);
 const auto x3 = x1*x2;
 const auto x4 = std::pow(e0, 2);
-const auto x5 = std::sqrt(x3 + std::pow(-x2 + x4, 2));
-const auto x6 = -x1;
-const auto x7 = 4*x4 + x6;
-const auto x8 = -x4;
-const auto x9 = x0 + x8;
-const auto x10 = (1.0/2.0)*x1 + x9;
-const auto x11 = a/(M_PI*((1.0/4.0)*x1*x7 + std::pow(x10, 2)));
-const auto x12 = c*e0;
-const auto x13 = x11*x12;
-const auto x14 = std::log(eg + en);
-const auto x15 = -eg + en;
-const auto x16 = eg < en;
-const auto x17 = ((x16) ? (
+const auto x5 = -x2 + x4;
+const auto x6 = std::sqrt(x3 + std::pow(x5, 2));
+const auto x7 = 4*x4;
+const auto x8 = x1 - 2*x4;
+const auto x9 = 2*x0 + x8;
+const auto x10 = a/(M_PI*(x1*(x1 - x7) - std::pow(x9, 2)));
+const auto x11 = c*e0;
+const auto x12 = 1.0/en;
+const auto x13 = std::log(eg + en);
+const auto x14 = eg < en;
+const auto x15 = eg - en;
+const auto x16 = ((x14) ? (
+   std::log(-eg + en)
+)
+: (
    std::log(x15)
-)
-: (
-   std::log(eg - en)
 ));
-const auto x18 = x12/en;
-const auto x19 = 2*eg;
-const auto x20 = x13*x19;
-const auto x21 = std::sqrt(x7);
-const auto x22 = 1.0/x21;
-const auto x23 = 1.0/c;
-const auto x24 = x2 + x4;
-const auto x25 = x11/e0;
-const auto x26 = x25*(x24*x9 + x3);
-const auto x27 = eg*x21;
-const auto x28 = (1.0/2.0)*c;
-const auto x29 = x25*(x0*(x2 + x8) + x3 - x4*(3*x2 + x4));
-const auto x30 = 1.0/x24;
+const auto x17 = 2*eg;
+const auto x18 = 4*x10;
+const auto x19 = std::sqrt(-x1 + x7);
+const auto x20 = 1.0/x19;
+const auto x21 = -M_PI;
+const auto x22 = 1.0/c;
+const auto x23 = e0*x9;
+const auto x24 = 1.0/e0;
+const auto x25 = x2 + x4;
+const auto x26 = -x0 + x4;
+const auto x27 = 2*x24*(-x25*x26 + x3);
+const auto x28 = eg*x19;
+const auto x29 = c*x24*(x0*x5 - x3 + x4*(3*x2 + x4));
+const auto x30 = eg/x25;
 
-        double eps1 = ((en > eg - eg_delta && en < eg + eg_delta) ? (
-   2*en*x13*std::log(4*x0/x5)
+        double eps1 = ((c < 1.9999999999*e0) ? (
+   2*x10*(x17*x20*x23*(x21 + 2*std::atan(x20*x22*(2*x2 + x8))) + x20*x29*std::log((x25 + x28)/(x25 - x28)) - x27*(x21 + std::atan(x22*(x17 - x19)) + std::atan(x22*(x17 + x19))))
 )
 : (
-   -x11*x18*(x0 + x2)*(-x14 + x17) + x20*(x14 + x17 - std::log(x5))
-)) + ((c < 1.9999999999*e0) ? (
-   e0*x10*x11*x19*x22*(2*std::atan(x22*x23*(-2*x2 + 2*x4 + x6)) + M_PI) + x22*x28*x29*std::log((x24 + x27)/(x24 - x27)) - x26*(std::atan(x23*(-x19 + x21)) - std::atan(x23*(x19 + x21)) + M_PI)
+   x18*(-c*x23*x30 + x27*std::atan((1.0/2.0)*c/eg) + x29*x30)
+)) + ((en > eg - eg_delta && en < eg + eg_delta) ? (
+   -8*en*x10*x11*std::log(4*x0/x6)
 )
 : (
-   c*eg*x29*x30 + x10*x20*x30 - 2*x26*std::atan(x28/eg)
+   x11*x18*(x12*(x0 + x2)*(-x13 + x16) - x17*(x13 + x16 - std::log(x6)))
 ));
-        double eps2 = ((x16) ? (
-   a*std::pow(x15, 2)*x18/(x0*x1 + std::pow(x9, 2))
+        double eps2 = ((x14) ? (
+   a*x11*x12*std::pow(x15, 2)/(x0*x1 + std::pow(x26, 2))
 )
 : (
    0

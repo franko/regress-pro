@@ -16,232 +16,211 @@ cmpl tauc_lorentz_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
         double a, e0, c;
         oscillator_parameters(fb->form, fb->osc + k, a, e0, c);
 
-const auto x0 = a*c;
-const auto x1 = std::pow(en, 2);
-const auto x2 = std::pow(c, 2);
-const auto x3 = std::pow(eg, 2);
-const auto x4 = x2*x3;
-const auto x5 = std::pow(e0, 2);
-const auto x6 = -x3 + x5;
-const auto x7 = x4 + std::pow(x6, 2);
-const auto x8 = std::sqrt(x7);
-const auto x9 = std::log(4*x1/x8);
-const auto x10 = 2*e0;
-const auto x11 = M_1_PI;
-const auto x12 = -x2;
-const auto x13 = 4*x5;
-const auto x14 = x12 + x13;
-const auto x15 = (1.0/4.0)*x2;
-const auto x16 = (1.0/2.0)*x2;
-const auto x17 = -x5;
-const auto x18 = x1 + x17;
-const auto x19 = x16 + x18;
-const auto x20 = x14*x15 + std::pow(x19, 2);
-const auto x21 = x11/x20;
-const auto x22 = x10*x21;
-const auto x23 = en*x22;
-const auto x24 = x23*x9;
-const auto x25 = en > eg - eg_delta && en < eg + eg_delta;
-const auto x26 = 1.0/en;
-const auto x27 = c*e0;
-const auto x28 = x26*x27;
-const auto x29 = a*x28;
-const auto x30 = eg + en;
-const auto x31 = std::log(x30);
-const auto x32 = -eg + en;
-const auto x33 = eg < en;
-const auto x34 = eg - en;
-const auto x35 = ((x33) ? (
-   std::log(x32)
+const auto x0 = std::pow(en, 2);
+const auto x1 = std::pow(c, 2);
+const auto x2 = std::pow(eg, 2);
+const auto x3 = x1*x2;
+const auto x4 = std::pow(e0, 2);
+const auto x5 = -x2 + x4;
+const auto x6 = x3 + std::pow(x5, 2);
+const auto x7 = std::sqrt(x6);
+const auto x8 = std::log(4*x0/x7);
+const auto x9 = 8*x8;
+const auto x10 = M_1_PI;
+const auto x11 = 4*x4;
+const auto x12 = x1 - x11;
+const auto x13 = x1*x12;
+const auto x14 = 2*x4;
+const auto x15 = x1 - x14;
+const auto x16 = 2*x0 + x15;
+const auto x17 = std::pow(x16, 2);
+const auto x18 = 1.0/(x13 - x17);
+const auto x19 = x10*x18;
+const auto x20 = c*e0;
+const auto x21 = x19*x20;
+const auto x22 = en*x21*x9;
+const auto x23 = en > eg - eg_delta && en < eg + eg_delta;
+const auto x24 = 4*x19;
+const auto x25 = a*x24;
+const auto x26 = eg + en;
+const auto x27 = std::log(x26);
+const auto x28 = eg < en;
+const auto x29 = eg - en;
+const auto x30 = ((x28) ? (
+   std::log(-eg + en)
 )
 : (
-   std::log(x34)
+   std::log(x29)
 ));
-const auto x36 = -x31 + x35;
-const auto x37 = x1 + x3;
-const auto x38 = x21*x37;
-const auto x39 = x36*x38;
-const auto x40 = x31 + x35 - std::log(x8);
-const auto x41 = 2*eg;
-const auto x42 = x21*x41;
-const auto x43 = x40*x42;
-const auto x44 = x27*x43;
-const auto x45 = std::sqrt(x14);
-const auto x46 = 1.0/x45;
-const auto x47 = 1.0/c;
-const auto x48 = 2*x3;
-const auto x49 = x12 - x48 + 2*x5;
-const auto x50 = x46*x49;
-const auto x51 = 2*std::atan(x47*x50) + M_PI;
-const auto x52 = x46*x51;
-const auto x53 = x19*x52;
-const auto x54 = a*e0;
-const auto x55 = x42*x54;
-const auto x56 = -x41 + x45;
-const auto x57 = x41 + x45;
-const auto x58 = std::atan(x47*x56) - std::atan(x47*x57) + M_PI;
-const auto x59 = x3 + x5;
-const auto x60 = x18*x59 + x4;
-const auto x61 = 1.0/e0;
-const auto x62 = x21*x61;
-const auto x63 = x60*x62;
-const auto x64 = x58*x63;
-const auto x65 = (1.0/2.0)*c;
-const auto x66 = 3*x3 + x5;
-const auto x67 = x1*(x17 + x3) + x4 - x5*x66;
-const auto x68 = eg*x45;
-const auto x69 = x59 + x68;
-const auto x70 = x59 - x68;
-const auto x71 = 1.0/x70;
-const auto x72 = std::log(x69*x71);
-const auto x73 = x46*x62*x72;
-const auto x74 = x67*x73;
-const auto x75 = x65*x74;
-const auto x76 = c < 1.9999999999*e0;
-const auto x77 = 1.0/x59;
-const auto x78 = c*x19;
-const auto x79 = x77*x78;
-const auto x80 = a*x63;
-const auto x81 = 1.0/eg;
-const auto x82 = std::atan(x65*x81);
-const auto x83 = 2*x82;
-const auto x84 = c*eg;
-const auto x85 = x62*x77;
-const auto x86 = x67*x85;
-const auto x87 = x84*x86;
-const auto x88 = std::pow(x32, 2);
-const auto x89 = x1*x2 + std::pow(x18, 2);
-const auto x90 = 1.0/x89;
-const auto x91 = x88*x90;
-const auto x92 = x28*x91;
-const auto x93 = eg*x2;
-const auto x94 = x41*x6;
-const auto x95 = 1.0/x7;
-const auto x96 = x23*x95;
-const auto x97 = x29*x36;
-const auto x98 = 1.0/x30;
-const auto x99 = ((x33) ? (
-   -1/x32
-)
-: (
-   1.0/x34
-));
-const auto x100 = x0*x40;
-const auto x101 = a*x42;
-const auto x102 = x101*x27;
-const auto x103 = a*x22;
-const auto x104 = x2*x41;
-const auto x105 = x104 + x18*x41;
-const auto x106 = a*x58;
-const auto x107 = x106*x62;
-const auto x108 = 1.0/x14;
-const auto x109 = 1.0/x2;
-const auto x110 = x21/(x108*x109*std::pow(x49, 2) + 1);
-const auto x111 = eg*x5;
-const auto x112 = x1*x41 + x104 - 6*x111;
-const auto x113 = a*x73;
-const auto x114 = x113*x65;
-const auto x115 = 1.0/(x109*std::pow(x56, 2) + 1);
-const auto x116 = 2*x47;
-const auto x117 = 1.0/(x109*std::pow(x57, 2) + 1);
-const auto x118 = x69/std::pow(x70, 2);
-const auto x119 = x46*x65;
-const auto x120 = x62*x67;
-const auto x121 = a*x119*x120*x70/x69;
-const auto x122 = std::pow(x59, -2);
-const auto x123 = 4*e0;
-const auto x124 = x123*x19;
-const auto x125 = x0*x21;
-const auto x126 = a*x83;
-const auto x127 = x126*x62;
-const auto x128 = a*x84;
-const auto x129 = x128*x85;
-const auto x130 = 1.0/x3;
-const auto x131 = 1.0/(x130*x15 + 1);
-const auto x132 = x0*x67;
-const auto x133 = x122*x132;
-const auto x134 = e0*x42;
-const auto x135 = 2*en;
-const auto x136 = x6*x95;
-const auto x137 = x10*x2;
-const auto x138 = x124 - x137;
-const auto x139 = x11/std::pow(x20, 2);
-const auto x140 = x138*x139;
-const auto x141 = en*x0*x10*x9;
-const auto x142 = x13*x21;
-const auto x143 = x26*x39;
-const auto x144 = x37*x97;
-const auto x145 = x140*x41;
-const auto x146 = a*x27*x40;
-const auto x147 = a*eg;
-const auto x148 = x142*x147;
-const auto x149 = std::pow(x14, -3.0/2.0);
-const auto x150 = x149*x21;
-const auto x151 = x10*x18 - x10*x59;
-const auto x152 = x106*x60;
-const auto x153 = x21/x5;
-const auto x154 = -2*std::pow(e0, 3) - x1*x10 - x10*x66;
-const auto x155 = x145*x54;
-const auto x156 = x139*x61;
-const auto x157 = x152*x156;
-const auto x158 = x153*x67;
-const auto x159 = a*x72;
-const auto x160 = x119*x159;
-const auto x161 = x123*x46;
-const auto x162 = x161*x47;
-const auto x163 = x149*x49;
-const auto x164 = x110*x124*x147*x46;
-const auto x165 = x156*x67;
-const auto x166 = x160*x165;
-const auto x167 = eg*x161;
-const auto x168 = x128*x77;
-const auto x169 = x126*x60;
-const auto x170 = x156*x169;
-const auto x171 = x165*x168;
-const auto x172 = (1.0/2.0)*std::pow(c, 3) - x14*x65 - 2*x78;
-const auto x173 = x139*x172;
-const auto x174 = std::pow(eg, 3);
-const auto x175 = a*x137;
-const auto x176 = x173*x41;
-const auto x177 = x0*x62;
-const auto x178 = x176*x54;
-const auto x179 = -x46;
-const auto x180 = x46*x84;
-const auto x181 = x54*x77;
-const auto x182 = x26*x91;
-const auto x183 = x88/std::pow(x89, 2);
+const auto x31 = -x27 + x30;
+const auto x32 = 1.0/en;
+const auto x33 = x0 + x2;
+const auto x34 = x32*x33;
+const auto x35 = x31*x34;
+const auto x36 = std::log(x7);
+const auto x37 = x27 + x30 - x36;
+const auto x38 = 2*eg;
+const auto x39 = x37*x38;
+const auto x40 = x20*(x35 - x39);
+const auto x41 = -x1 + x11;
+const auto x42 = std::sqrt(x41);
+const auto x43 = 1.0/x42;
+const auto x44 = x38*x43;
+const auto x45 = -M_PI;
+const auto x46 = 2*x2;
+const auto x47 = x15 + x46;
+const auto x48 = 1.0/c;
+const auto x49 = x43*x48;
+const auto x50 = 2*std::atan(x47*x49);
+const auto x51 = x45 + x50;
+const auto x52 = e0*x16;
+const auto x53 = x51*x52;
+const auto x54 = x2 + x4;
+const auto x55 = -x0;
+const auto x56 = x4 + x55;
+const auto x57 = x3 - x54*x56;
+const auto x58 = 2*x57;
+const auto x59 = 1.0/e0;
+const auto x60 = x38 + x42;
+const auto x61 = std::atan(x48*x60);
+const auto x62 = -x42;
+const auto x63 = x38 + x62;
+const auto x64 = std::atan(x48*x63);
+const auto x65 = x59*(x45 + x61 + x64);
+const auto x66 = 3*x2;
+const auto x67 = x4*(x4 + x66);
+const auto x68 = x0*x5;
+const auto x69 = x59*(-x3 + x67 + x68);
+const auto x70 = eg*x42;
+const auto x71 = x54 + x70;
+const auto x72 = x71/(x54 - x70);
+const auto x73 = std::log(x72);
+const auto x74 = x43*x73;
+const auto x75 = x69*x74;
+const auto x76 = 2*x19;
+const auto x77 = x76*(c*x75 + x44*x53 - x58*x65);
+const auto x78 = c < 1.9999999999*e0;
+const auto x79 = 1.0/x54;
+const auto x80 = c*x79;
+const auto x81 = x16*x80;
+const auto x82 = e0*x81;
+const auto x83 = 1.0/eg;
+const auto x84 = std::atan((1.0/2.0)*c*x83);
+const auto x85 = x58*x84;
+const auto x86 = x69*x80;
+const auto x87 = x24*(-eg*x82 + eg*x86 + x59*x85);
+const auto x88 = x0*x1;
+const auto x89 = 1.0/(std::pow(x56, 2) + x88);
+const auto x90 = std::pow(x29, 2)*x89;
+const auto x91 = x32*x90;
+const auto x92 = x20*x91;
+const auto x93 = 1.0/x6;
+const auto x94 = eg*x93;
+const auto x95 = x47*x94;
+const auto x96 = 8*en;
+const auto x97 = 1.0/x26;
+const auto x98 = 1.0/x29;
+const auto x99 = 4*x65;
+const auto x100 = x0 + x1;
+const auto x101 = eg*(x100 - x4);
+const auto x102 = 2*x43;
+const auto x103 = 1.0/x12;
+const auto x104 = 1.0/x1;
+const auto x105 = 1.0/(-x103*x104*std::pow(x47, 2) + 1);
+const auto x106 = x105*x52;
+const auto x107 = 16*x48;
+const auto x108 = x59*(x100 - 3*x4);
+const auto x109 = 1.0/(x104*std::pow(x60, 2) + 1);
+const auto x110 = 1.0/(x104*std::pow(x63, 2) + 1);
+const auto x111 = 4*x59;
+const auto x112 = x111*x57;
+const auto x113 = 1.0/x71;
+const auto x114 = -x38;
+const auto x115 = c*x69;
+const auto x116 = a*x76;
+const auto x117 = x111*x84;
+const auto x118 = std::pow(x54, -2);
+const auto x119 = x118*x46;
+const auto x120 = 1.0/x2;
+const auto x121 = x112/(x1*x120 + 4);
+const auto x122 = 1.0/(-x13 + x17);
+const auto x123 = x122*x56;
+const auto x124 = 16*x123;
+const auto x125 = x124*x4;
+const auto x126 = x10*x122;
+const auto x127 = a*x126;
+const auto x128 = x127*x96;
+const auto x129 = eg*x4;
+const auto x130 = 32*x123;
+const auto x131 = x129*x130;
+const auto x132 = -x35 + x39;
+const auto x133 = 4*x127;
+const auto x134 = M_PI - x50;
+const auto x135 = 8*x129*x134;
+const auto x136 = x134*x16;
+const auto x137 = -x61 - x64 + M_PI;
+const auto x138 = 4*x14 + 4*x2 + 4*x55;
+const auto x139 = std::pow(x41, -3.0/2.0);
+const auto x140 = x0 + x14 + x66;
+const auto x141 = 2*x74;
+const auto x142 = 1.0/x4;
+const auto x143 = x114 + x42;
+const auto x144 = x3 - x67 - x68;
+const auto x145 = c*x144;
+const auto x146 = x139*x73;
+const auto x147 = 1.0/x41;
+const auto x148 = x147*x47;
+const auto x149 = x145*x74;
+const auto x150 = x130*x57;
+const auto x151 = 2*a;
+const auto x152 = eg*x80;
+const auto x153 = eg*x81;
+const auto x154 = c*eg;
+const auto x155 = x144*x152;
+const auto x156 = x122*x88;
+const auto x157 = 2*x1;
+const auto x158 = std::pow(eg, 3)*x157;
+const auto x159 = 4*eg;
+const auto x160 = c*x2;
+const auto x161 = x1*x69;
+const auto x162 = 16*x0*x18;
+const auto x163 = c*x162*x57;
+const auto x164 = 8*x18*x88;
+const auto x165 = eg*x79;
+const auto x166 = x165*x52;
+const auto x167 = x165*x69;
 
-        er_sum += ((x25) ? (
-   x0*x24
+        er_sum += ((x23) ? (
+   -a*x22
 )
 : (
-   a*x44 - x29*x39
-)) + ((x76) ? (
-   -a*x64 + a*x75 + x53*x55
+   x25*x40
+)) + ((x78) ? (
+   a*x77
 )
 : (
-   a*x87 + x55*x79 - x80*x83
+   a*x87
 ));
-        ei_sum += ((x33) ? (
+        ei_sum += ((x28) ? (
    a*x92
 )
 : (
    0
 ));
 
-        const double d_eg_real = ((x25) ? (
-   x0*x96*(-x93 + x94)
+        const double d_eg_real = ((x78) ? (
+   x116*(-c*x108*x44*x73 - x101*x99 + x102*x53 - x103*x106*x107*x2 - x112*x48*(x109 + x110) - x113*x115*x43*(x114 + x62 + x63*x72))
 )
 : (
-   x100*x22 + x102*(-x95*(x93 - x94) + x98 + x99) - x29*x38*(-x98 + x99) - x42*x97
-)) + ((x76) ? (
-   x103*x53 - x105*x107 - 16*x108*x110*x19*x3*x47*x54 + x112*x114 + x121*(x118*x56 + x57*x71) - x80*(-x115*x116 - x116*x117)
+   x25*(c*x119*x52 - c*x120*x121 + x101*x117 - x108*x46*x80 - x115*x119 - x82 + x86)
+)) + ((x23) ? (
+   a*x21*x95*x96
 )
 : (
-   x0*x130*x131*x63 + x103*x79 - x105*x127 + x112*x129 - x122*x124*x125*x3 + x132*x85 - x133*x48*x62
+   x20*x25*(-2*x27 - 2*x30 + x31*x32*x38 - x34*(x97 - x98) + 2*x36 - x38*(-x95 + x97 + x98))
 ));
-        const double d_eg_imag = ((x33) ? (
-   x29*x90*(-x135 + x41)
+        const double d_eg_imag = ((x28) ? (
+   x151*x20*x29*x32*x89
 )
 : (
    0
@@ -249,18 +228,18 @@ const auto x183 = x88/std::pow(x89, 2);
         const cmpl d_eg = cmpl(d_eg_real, -d_eg_imag);
         pd->at(TL_EG_OFFS) += d_eg;
 
-        const double d_a_real = ((x25) ? (
-   c*x24
+        const double d_a_real = ((x23) ? (
+   -x22
 )
 : (
-   -x28*x39 + x44
-)) + ((x76) ? (
-   x134*x53 - x64 + x75
+   x24*x40
+)) + ((x78) ? (
+   x77
 )
 : (
-   x134*x79 - x63*x83 + x87
+   x87
 ));
-        const double d_a_imag = ((x33) ? (
+        const double d_a_imag = ((x28) ? (
    x92
 )
 : (
@@ -268,38 +247,38 @@ const auto x183 = x88/std::pow(x89, 2);
 ));
         const cmpl d_a = cmpl(d_a_real, -d_a_imag);
 
-        const double d_e0_real = ((x25) ? (
-   -en*x125*x13*x136 + x125*x135*x9 + x140*x141
+        const double d_e0_real = ((x23) ? (
+   c*x128*(-x125*x8 - x14*x5*x93 + x8)
 )
 : (
-   -x0*x143 + x100*x42 - x128*x136*x142 - x140*x144 + x145*x146
-)) + ((x76) ? (
-   -8*a*x111*x150*x19*x51 + x101*x53 - x107*x151 + x114*x154 + x121*(x118*(-x10 + x167) + x71*(x10 + x167)) - 2*x132*x150*x72 - x138*x157 + x138*x166 - x148*x52 + x152*x153 + x155*x53 - x158*x160 + x164*(-x123*x163*x47 + x162) - x80*(x115*x162 - x117*x162)
+   c*x133*(-x11*x5*x94 + x125*x35 - x131*x37 + x132)
+)) + ((x78) ? (
+   x126*x151*(-c*x140*x141 + x102*x113*x145*(x44 + x72*(x44 - 1) + 1) + x105*x107*x129*x147*x16*(x148 + 1) - x124*x149 - x131*x136*x43 - x135*x139*x16 - x135*x43 + x136*x44 + x137*x138 + x137*x142*x58 + x137*x150 - x142*x149 - 4*x145*x146 + 8*x49*x57*(x109 - 1/(x104*std::pow(x143, 2) + 1)))
 )
 : (
-   x101*x79 - x122*x148*x78 - x127*x151 + x129*x154 - x133*x42 - x138*x170 + x138*x171 - x142*x168 + x153*x169 + x155*x79 - x158*x168
+   x133*(-x11*x152 - x118*x14*x154*x16 - x118*x145*x38 - x124*x155 - x125*x153 + x138*x84 - x140*x38*x80 - x142*x155 + x142*x85 + x150*x84 + x153)
 ));
-        const double d_e0_imag = ((x33) ? (
-   x0*x13*x18*x183*x26 + x0*x182
+        const double d_e0_imag = ((x28) ? (
+   a*c*x91*(-x11*x56*x89 + 1)
 )
 : (
    0
 ));
         const cmpl d_e0 = cmpl(d_e0_real, -d_e0_imag);
 
-        const double d_c_real = ((x25) ? (
-   a*x24 - a*x4*x96 + x141*x173
+        const double d_c_real = ((x78) ? (
+   x116*(c*x139*x38*x53 - eg*x113*x147*x161*(x72 + 1) + x106*x147*x159*(-x104*x47 + x148 + 2) - x141*x3*x59 + x146*x161 + x154*x162*x43*x53 + x159*x20*x43*x51 - x160*x99 - x163*x65 + x164*x75 - x58*x59*(-x109*(x104*x60 + x43) + x110*(x104*x143 + x43)) + x75)
 )
 : (
-   -x143*x54 - x144*x173 + x146*x176 - x174*x175*x21*x95 + x43*x54
-)) + ((x76) ? (
-   (1.0/2.0)*a*x74 + x102*x52 + x113*x4 + x120*x149*x159*x16 + x121*(-x118*x180 - x180*x71) + x149*x51*x55*x78 - x157*x172 + x164*(-x109*x50 + x163 - 2*x46) + x166*x172 - x177*x48*x58 + x178*x53 - x80*(x115*(-x109*x56 + x179) - x117*(-x109*x57 + x179))
+   x25*(-e0*x1*x38*x79 + x117*x160 + x121*x83 - x158*x59*x79 + x163*x59*x84 - x164*x166 + x164*x167 - x166 + x167)
+)) + ((x23) ? (
+   e0*x128*(-x156*x9 - x3*x93 + x8)
 )
 : (
-   2*a*x174*x2*x85 + x104*x181*x21 - x131*x80*x81 + x147*x86 - x170*x172 + x171*x172 - 4*x177*x3*x82 + x178*x79 + x181*x19*x42
+   e0*x133*(-16*eg*x156*x37 + x1*x122*x31*x33*x96 + x132 - x158*x93)
 ));
-        const double d_c_imag = ((x33) ? (
-   -en*x175*x183 + x182*x54
+        const double d_c_imag = ((x28) ? (
+   a*e0*x90*(-en*x157*x89 + x32)
 )
 : (
    0
