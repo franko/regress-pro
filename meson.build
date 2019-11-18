@@ -20,11 +20,10 @@ if host_machine.system() == 'windows'
     add_global_arguments('-DWIN32', language : 'cpp')
 endif
 
-if meson.get_compiler('cpp').get_id() == 'gcc'
-    add_global_arguments('-ffast-math', language : 'cpp')
-    if not debug_build
-        add_global_arguments(['-fno-exceptions', '-fno-rtti'], language : 'cpp')
-    endif
+regpro_link_args = []
+compiler_id = meson.get_compiler('cpp').get_id()
+if get_option('release_build') and compiler_id in ['gcc', 'clang']
+    regpro_link_args += ['-static-libgcc', '-static-libstdc++']
 endif
 
 if debug_build
