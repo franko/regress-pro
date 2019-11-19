@@ -22,7 +22,7 @@ endif
 
 regpro_link_args = []
 compiler_id = meson.get_compiler('cpp').get_id()
-if get_option('release_build') and compiler_id in ['gcc', 'clang']
+if not debug_build and compiler_id in ['gcc', 'clang']
     regpro_link_args += ['-static-libgcc', '-static-libstdc++']
 endif
 
