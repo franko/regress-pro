@@ -21,15 +21,17 @@ struct HO2ndOrderModel {
 
 double hoImpImaginaryPart(const HO2ndOrderModel& ho, double e) {
     const std::complex<double> ld{sqr(ho.en) - sqr(e), ho.eg * e};
-    const double normalize_factor = ho.eg / (2 * ho.en);
-    const double k = normalize_factor * ho.a * (sqr(ho.en) + sqr(e)) / sqr(std::norm(ld)) * (2 * ho.eg * e * (sqr(ho.en) - sqr(e)));
+    const std::complex<double> ld2{sqr(ho.en) - sqr(e), ho.en * e};
+    const double normalize_factor = 1 / 2.0;
+    const double k = normalize_factor * ho.a * (sqr(ho.en) + sqr(e)) / (std::norm(ld) * std::norm(ld2)) * (e * (sqr(ho.en) - sqr(e)) * (ho.eg + ho.en));
     return (ho.clamp_k_to_zero && k >= 0.0) ? 0.0 : k;
 }
 
 double hoImpRealPart(const HO2ndOrderModel& ho, double e) {
     const std::complex<double> ld{sqr(ho.en) - sqr(e), ho.eg * e};
-    const double normalize_factor = ho.eg / (2 * ho.en);
-    const double n = - normalize_factor * ho.a * (sqr(ho.en) + sqr(e)) / sqr(std::norm(ld)) * (sqr(sqr(ho.en) - sqr(e)) - sqr(ho.eg) * sqr(e));
+    const std::complex<double> ld2{sqr(ho.en) - sqr(e), ho.en * e};
+    const double normalize_factor = 1 / 2.0;
+    const double n = - normalize_factor * ho.a * (sqr(ho.en) + sqr(e)) / (std::norm(ld) * std::norm(ld2)) * (sqr(sqr(ho.en) - sqr(e)) - ho.eg * ho.en * sqr(e));
     return n;
 }
 
@@ -52,8 +54,7 @@ int main() {
     gsl_integration_workspace *gs = gsl_integration_workspace_alloc(integLimit);
     const double eCut = 12.0;
 
-    // HO2ndOrderModel hoTest{3.5, 0.3, 10.0, false};
-    HO2ndOrderModel hoTest{3.5, 0.6, 10.0, false};
+    HO2ndOrderModel hoTest{3.5, 0.3, 10.0, false};
 
     gsl_function kKPValIntegrandF;
     kKPValIntegrandF.function = &hoImpKKImgPValIntegrandF;
