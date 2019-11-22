@@ -8,7 +8,7 @@ configure_file(output : 'defs.h', configuration : conf)
 kernel_src = [
     'common.cpp', 'data-table.cpp', 'data-view.cpp', 'rc_matrix.cpp', 'disp-table.cpp', 'disp-sample-table.cpp',
     'disp-lookup.cpp', 'str.cpp', 'dispers-library.cpp', 'str-util.cpp', 'error-messages.cpp',
-    'minsampling.cpp', 'dispers.cpp', 'disp-fb.cpp', 'disp-tauc-lorentz.cpp', 'disp-ho.cpp', 'disp-lorentz.cpp',
+    'minsampling.cpp', 'dispers.cpp', 'disp-fb.cpp', 'disp-tauc-lorentz.cpp', 'disp-kramers.cpp', 'disp-ho.cpp', 'disp-lorentz.cpp',
     'disp-bruggeman.cpp', 'disp-cauchy.cpp', 'disp-sellmeier.cpp', 'dispers-classes.cpp', 'disp-deriv-check.cpp', 'stack.cpp', 'lmfit.cpp',
     'fit-timestamp.cpp', 'lmfit-simple.cpp', 'fit-params.cpp', 'lmfit-mlr-adapter.cpp', 'fit-engine.cpp', 'refl-kernel.cpp',
     'number-parse.cpp', 'refl-utils.cpp', 'acquisition.cpp', 'gauss-legendre-quad.cpp', 'spectra.cpp',

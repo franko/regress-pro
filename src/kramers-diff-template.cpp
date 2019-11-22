@@ -1,6 +1,6 @@
 cmpl kramers_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd) {
     const disp_kramers *kramers = &d->disp.kramers;
-    const double e = TL_EV_NM / lambda;
+    const double e = wavelength_nm_to_energy_ev(lambda);
 
     double er_sum = 1.0, ei_sum = 0.0;
     for (int osc_index = KRAMERS_OSC_OFFS, k = 0; k < kramers->n; k++, osc_index += KRAMERS_NB_OSC_PARAMS) {
@@ -35,7 +35,7 @@ ${epsilon_defs}
 
     cmpl nn = sqrt(cmpl(er_sum, -ei_sum));
 
-    for (int i = 0; i < TL_NB_GLOBAL_PARAMS + nb * TL_NB_OSC_PARAMS; i++) {
+    for (int i = 0; i < kramers->n * KRAMERS_NB_OSC_PARAMS; i++) {
         pd->at(i) = cmpl(1, 0) / (2 * nn) * pd->at(i);
     }
 

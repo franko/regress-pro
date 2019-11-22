@@ -125,4 +125,9 @@ extern void     disp_info_copy(struct disp_info *src, struct disp_info *dst);;
 // Validity condition for a wavelength range store in disp_info.
 #define DISP_VALID_RANGE(wl1, wl2) ((wl1) > 0.0 && (wl2) > (wl1))
 
+template <typename T>
+static inline T wavelength_nm_to_energy_ev(T wavelength) {
+    return 1239.852 / wavelength;
+}
+
 #endif

@@ -19,6 +19,7 @@ FXDEFMAP(fx_disp_window) fx_disp_window_map[]= {
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DISP_ELEMENT_ADD,    fx_disp_window::on_disp_element_add),
     FXMAPFUNCS(SEL_COMMAND, fx_disp_window::ID_DISP_ELEMENT_DELETE, fx_disp_window::ID_DISP_ELEMENT_DELETE_LAST, fx_disp_window::on_disp_element_delete),
     FXMAPFUNCS(SEL_CHANGED, fx_disp_ho_window::ID_PARAM_0,          fx_disp_ho_window::ID_PARAM_LAST, fx_disp_ho_window::on_cmd_value),
+    FXMAPFUNCS(SEL_CHANGED, fx_disp_kramers_window::ID_PARAM_0,     fx_disp_kramers_window::ID_PARAM_LAST, fx_disp_kramers_window::on_cmd_value),
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_CLEAR_FLAG,          fx_disp_window::on_cmd_clear_flag),
     FXMAPFUNC(SEL_COMMAND,  fx_disp_window::ID_DESCRIPTION_TOGGLE,  fx_disp_window::on_cmd_description_toggle),
 };
@@ -280,6 +281,49 @@ void fx_disp_ho_window::delete_dispersion_element(int index)
     reload();
 }
 
+void fx_disp_kramers_window::setup_dialog()
+{
+    FXScrollWindow *scroll_window = new FXScrollWindow(this, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    vframe = new FXVerticalFrame(scroll_window, LAYOUT_FILL_X|LAYOUT_FILL_Y);
+
+    matrix = new FXMatrix(vframe, 5, LAYOUT_SIDE_TOP|MATRIX_BY_COLUMNS);
+    new FXLabel(matrix, "");
+    new FXLabel(matrix, "A");
+    new FXLabel(matrix, "En");
+    new FXLabel(matrix, "Eg");
+    new FXLabel(matrix, "Phi");
+
+    const int osc_params_no = disp_kramers_oscillator_parameters_number(disp);
+    for (int i = 0; i < disp->disp.kramers.n; i++) {
+        FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + i, FRAME_SUNKEN);
+        if (disp->disp.kramers.n == 1) { db->disable(); }
+        for (int j = osc_params_no*i; j < osc_params_no*(i+1); j++) {
+            create_textfield(matrix, this, ID_PARAM_0 + j);
+        }
+    }
+    new FXButton(vframe, "", regressProApp()->add_icon, this, ID_DISP_ELEMENT_ADD, FRAME_SUNKEN);
+}
+
+void fx_disp_kramers_window::add_dispersion_element() {
+    int n = disp->disp.kramers.n;
+    disp_kramers_add_osc(disp);
+    FXButton *db = new FXButton(matrix, "", regressProApp()->delete_icon, this, ID_DISP_ELEMENT_DELETE + n, FRAME_SUNKEN);
+    db->create();
+    const int osc_params_no = disp_kramers_oscillator_parameters_number(disp);
+    for (int j = osc_params_no*n; j < osc_params_no*(n+1); j++) {
+        FXTextField *tf = create_textfield(matrix, this, ID_PARAM_0 + j);
+        tf->create();
+    }
+    matrix->childAtRowCol(1, 0)->enable();
+    vframe->recalc();
+}
+
+void fx_disp_kramers_window::delete_dispersion_element(int index)
+{
+    disp_kramers_delete_osc(disp, index);
+    reload();
+}
+
 // Map
 FXDEFMAP(fx_disp_lorentz_window) fx_disp_lorentz_window_map[]= {
     FXMAPFUNC(SEL_COMMAND, fx_disp_lorentz_window::ID_COEFF_FORM, fx_disp_lorentz_window::on_cmd_coeff_form),
@@ -467,6 +511,8 @@ fx_disp_window *new_disp_window(disp_t *d, FXComposite *comp)
         dispwin = new fx_disp_fb_window(d, comp, opts);
     } else if (d->type == DISP_LORENTZ) {
         dispwin = new fx_disp_lorentz_window(d, comp, opts);
+    } else if (d->type == DISP_KRAMERS) {
+        dispwin = new fx_disp_kramers_window(d, comp, opts);
     } else {
         dispwin = new fx_disp_window(d, comp, opts);
     }

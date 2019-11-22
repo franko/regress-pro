@@ -41,8 +41,9 @@ struct disp_struct;
 /* Kramers dispersion class */
 extern struct disp_class kramers_disp_class;
 
-extern void disp_add_osc(struct disp_struct *d);
-extern void disp_delete_osc(struct disp_struct *d, int index);
+extern disp_struct *disp_kramers_new(const char *name);
+extern void disp_kramers_add_osc(struct disp_struct *d);
+extern void disp_kramers_delete_osc(struct disp_struct *d, int index);
 extern int disp_kramers_oscillator_parameters_number(struct disp_struct *d);
 
 #endif

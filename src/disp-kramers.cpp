@@ -25,45 +25,43 @@
 #include "math-utils.h"
 #include "cmpl.h"
 
-static void     ho_free(disp_t *d);
-static disp_t * ho_copy(const disp_t *d);
+static void     kramers_free(disp_t *d);
+static disp_t * kramers_copy(const disp_t *d);
 
-static cmpl ho_n_value(const disp_t *disp, double lam);
-static cmpl ho_n_value_deriv(const disp_t *disp, double lam,
+static cmpl kramers_n_value(const disp_t *disp, double lam);
+static cmpl kramers_n_value_deriv(const disp_t *disp, double lam,
                              cmpl_vector *der);
-static int  ho_fp_number(const disp_t *disp);
-static double * ho_map_param(disp_t *d, int index);
-static int  ho_apply_param(struct disp_struct *d,
+static int  kramers_fp_number(const disp_t *disp);
+static double * kramers_map_param(disp_t *d, int index);
+static int  kramers_apply_param(struct disp_struct *d,
                            const fit_param_t *fp, double val);
-static void ho_encode_param(str_t param, const fit_param_t *fp);
+static void kramers_encode_param(str_t param, const fit_param_t *fp);
 
-static double ho_get_param_value(const struct disp_struct *d,
+static double kramers_get_param_value(const struct disp_struct *d,
                                  const fit_param_t *fp);
 
-static int ho_write(writer_t *w, const disp_t *_d);
-static int ho_read(lexer_t *l, disp_t *d);
+static int kramers_write(writer_t *w, const disp_t *_d);
+static int kramers_read(lexer_t *l, disp_t *d);
 
 using namespace std::complex_literals;
 
-struct disp_class ho_disp_class = {
-    DISP_HO, "Harmonic Oscillator", "ho",
-    ho_free,
-    ho_copy,
-    ho_n_value,
-    ho_fp_number,
-    ho_n_value_deriv,
-    ho_apply_param,
-    ho_map_param,
-    ho_get_param_value,
+struct disp_class kramers_disp_class = {
+    DISP_KRAMERS, "Kramers Oscillators", "kramers",
+    kramers_free,
+    kramers_copy,
+    kramers_n_value,
+    kramers_fp_number,
+    kramers_n_value_deriv,
+    kramers_apply_param,
+    kramers_map_param,
+    kramers_get_param_value,
     nullptr, nullptr,
-    ho_encode_param,
-    ho_read,
-    ho_write,
+    kramers_encode_param,
+    kramers_read,
+    kramers_write,
 };
 
 static const char *kramers_param_names[] = {"A", "En", "Eg", "Phi"};
-
-#define HO_EV_NM 1239.852
 
 #define KRAMERS_OSC_OFFS 0
 #define KRAMERS_NB_OSC_PARAMS 4
@@ -72,219 +70,134 @@ static const char *kramers_param_names[] = {"A", "En", "Eg", "Phi"};
 #define KRAMERS_EG_OFFS  2
 #define KRAMERS_PHI_OFFS 3
 
-#define HO_PARAM_NB(hn,pn) (HO_NB_PARAMS * (hn) + pn)
+#define KRAMERS_PARAM_NB(hn,pn) (KRAMERS_NB_OSC_PARAMS * (hn) + pn)
 
-void
-ho_free(disp_t *d)
-{
-    struct disp_kramers *ho = & d->disp.ho;
-    assert(d->type == DISP_HO);
-    free(ho->params);
+disp_t *disp_kramers_new(const char *name) {
+    kramers_params *params = (kramers_params *) malloc(sizeof(kramers_params));
+    if (!params) return nullptr;
+    disp_t *d = disp_new_with_name(DISP_KRAMERS, name);
+    d->disp.kramers.n = 1;
+    d->disp.kramers.oscillators = params;
+    params->a = 100;
+    params->en = 12.0;
+    params->eg = 0.5;
+    params->phi = 0.0;
+    return d;
+}
+
+void kramers_free(disp_t *d) {
+    disp_kramers *kramers = & d->disp.kramers;
+    assert(d->type == DISP_KRAMERS);
+    free(kramers->oscillators);
     disp_base_free(d);
 }
 
-disp_t *
-ho_copy(const disp_t *src)
-{
-    struct disp_struct *res;
-    struct disp_kramers *ho;
-    struct kramers_params *params;
-
-    res = disp_base_copy(src);
-
-    ho = & res->disp.ho;
-    params = ho->params;
-    ho->params = (struct kramers_params *) emalloc(sizeof(struct kramers_params) * ho->nb_hos);
-    memcpy(ho->params, params, sizeof(struct kramers_params) * ho->nb_hos);
+disp_t *kramers_copy(const disp_t *src) {
+    disp_struct *res = disp_base_copy(src);
+    disp_kramers *kramers = &res->disp.kramers;
+    kramers_params *params = kramers->oscillators;
+    kramers->oscillators = (kramers_params *) emalloc(sizeof(kramers_params) * kramers->n);
+    memcpy(kramers->oscillators, params, sizeof(kramers_params) * kramers->n);
 
     return res;
 }
 
-void
-disp_add_ho(struct disp_struct *d)
-{
-    struct disp_kramers *ho = &d->disp.ho;
-    int n = ho->nb_hos;
-    struct kramers_params *params = (struct kramers_params *) emalloc(sizeof(struct kramers_params) * (n + 1));
-    memcpy(params, ho->params, sizeof(struct kramers_params) * n);
-    params[n].nosc = 0.0;
-    params[n].en = 15.7;
-    params[n].eg = 0.3;
-    params[n].nu = 1.0 / 3.0;
+void disp_kramers_add_osc(struct disp_struct *d) {
+    disp_kramers *kramers = &d->disp.kramers;
+    int n = kramers->n;
+    kramers_params *params = (kramers_params *) emalloc(sizeof(kramers_params) * (n + 1));
+    memcpy(params, kramers->oscillators, sizeof(kramers_params) * n);
+    params[n].a = 0.0;
+    params[n].en = 12.0;
+    params[n].eg = 0.5;
     params[n].phi = 0.0;
 
-    free(ho->params);
-    ho->params = params;
-    ho->nb_hos = n + 1;
+    free(kramers->oscillators);
+    kramers->oscillators = params;
+    kramers->n = n + 1;
 }
 
-void
-disp_delete_ho(struct disp_struct *d, int index)
-{
-    struct disp_kramers *ho = &d->disp.ho;
-    int n = ho->nb_hos;
+void disp_kramers_delete_osc(struct disp_struct *d, int index) {
+    disp_kramers *kramers = &d->disp.kramers;
+    int n = kramers->n;
     int nrem = n - index - 1;
-    memcpy(ho->params + index, ho->params + index + 1, sizeof(struct kramers_params) * nrem);
-    ho->nb_hos = n - 1;
+    memcpy(kramers->oscillators + index, kramers->oscillators + index + 1, sizeof(kramers_params) * nrem);
+    kramers->n = n - 1;
 }
 
-cmpl
-ho_n_value(const disp_t *disp, double lam)
-{
-    return ho_n_value_deriv(disp, lam, nullptr);
+#include "kramers-kernel.cpp"
+#include "kramers-diff-kernel.cpp"
+
+int kramers_fp_number(const disp_t *disp) {
+    return disp->disp.kramers.n * KRAMERS_NB_OSC_PARAMS;
 }
 
-cmpl
-ho_n_value_deriv(const disp_t *d, double lambda, cmpl_vector *pd)
-{
-    const struct disp_kramers *m = & d->disp.ho;
-    const int nb = m->nb_hos;
-    const double e = HO_EV_NM/ lambda;
-    cmpl_array8 hh(nb), invhhden(nb);
-
-    cmpl hsum = 0.0, hnusum = 0.0;
-    for (int k = 0; k < nb; k++) {
-        const struct kramers_params *p = m->params + k;
-        const double nosc = p->nosc, en = p->en, eg = p->eg, nu = p->nu, phi = p->phi;
-
-        invhhden[k] = 1.0 / (pow2(en) - pow2(e) + 1i * eg * e);
-        hh[k] = HO_MULT_FACT * (cos(phi) - 1i * sin(phi)) * invhhden[k];
-
-        hsum += nosc * hh[k];
-        hnusum += nu * nosc * hh[k];
-    }
-
-    const cmpl invden = 1.0 / (1.0 - hnusum);
-    const cmpl eps = 1.0 + hsum * invden;
-    const cmpl n_raw = std::sqrt(eps);
-    const int chop_k = (std::imag(n_raw) > 0.0);
-
-    if(pd == NULL) {
-        return (chop_k ? std::real(n_raw) : n_raw);
-    }
-
-    const cmpl epsfact = 1.0 / (2 * n_raw);
-
-    const cmpl dndnuhc = epsfact * hsum * pow2(invden);
-    for (int k = 0; k < nb; k++) {
-        const struct kramers_params *p = m->params + k;
-        const double nosc = p->nosc, en = p->en, nu = p->nu;
-        const int koffs = k * HO_NB_PARAMS;
-
-        pd->at(koffs + HO_NU_OFFS) = dndnuhc * nosc * hh[k];
-
-        const cmpl dndh = (nu * hsum * invden + 1.0) * invden;
-        const cmpl hhdndosc = epsfact * dndh * hh[k];
-        const cmpl hhdndh = nosc * hhdndosc;
-
-        pd->at(koffs + HO_NOSC_OFFS) = hhdndosc;
-        pd->at(koffs + HO_PHI_OFFS) = - 1i * hhdndh;
-
-        const cmpl depsde = hhdndh * invhhden[k];
-        pd->at(koffs + HO_EN_OFFS) = - 2 * en * depsde;
-        pd->at(koffs + HO_EG_OFFS) = - 1i * e * depsde;
-    }
-
-    if (chop_k) {
-        for (int k = 0; k < nb * HO_NB_PARAMS; k++) {
-            const cmpl y = pd->at(k);
-            pd->at(k) = std::real(y);
-        }
-        return std::real(n_raw);
-    }
-    return n_raw;
+int disp_kramers_oscillator_parameters_number(struct disp_struct *d) {
+    return KRAMERS_NB_OSC_PARAMS;
 }
 
-int
-ho_fp_number(const disp_t *disp)
-{
-    return disp->disp.ho.nb_hos * HO_NB_PARAMS;
-}
-
-int disp_ho_oscillator_parameters_number(struct disp_struct *d)
-{
-    return HO_NB_PARAMS;
-}
-
-double *
-ho_map_param(disp_t *_d, int index)
-{
-    const struct disp_kramers *d = &_d->disp.ho;
-    if (index >= d->nb_hos * HO_NB_PARAMS) return nullptr;
-    int no = index / HO_NB_PARAMS;
-    int np = index % HO_NB_PARAMS;
-    struct kramers_params *ho = d->params + no;
+double *kramers_map_param(disp_t *_d, int index) {
+    const disp_kramers *d = &_d->disp.kramers;
+    if (index >= d->n * KRAMERS_NB_OSC_PARAMS) return nullptr;
+    int no = index / KRAMERS_NB_OSC_PARAMS;
+    int np = index % KRAMERS_NB_OSC_PARAMS;
+    kramers_params *kramers = d->oscillators + no;
     switch(np) {
-    case 0: return &ho->nosc;
-    case 1: return &ho->en;
-    case 2: return &ho->eg;
-    case 3: return &ho->nu;
+    case 0: return &kramers->a;
+    case 1: return &kramers->en;
+    case 2: return &kramers->eg;
     default: ;
     }
-    return &ho->phi;
+    return &kramers->phi;
 }
 
-void
-ho_encode_param(str_t param, const fit_param_t *fp)
-{
-    int onb = fp->param_nb / HO_NB_PARAMS;
-    int pnb = fp->param_nb % HO_NB_PARAMS;
-    str_printf(param, "%s:%i", ho_param_names[pnb], onb);
+void kramers_encode_param(str_t param, const fit_param_t *fp) {
+    int onb = fp->param_nb / KRAMERS_NB_OSC_PARAMS;
+    int pnb = fp->param_nb % KRAMERS_NB_OSC_PARAMS;
+    str_printf(param, "%s:%i", kramers_param_names[pnb], onb);
 }
 
-int
-ho_apply_param(struct disp_struct *disp, const fit_param_t *fp,
-               double val)
-{
-    double *pval = ho_map_param(disp, fp->param_nb);
+int kramers_apply_param(struct disp_struct *disp, const fit_param_t *fp, double val) {
+    double *pval = kramers_map_param(disp, fp->param_nb);
     if(! pval) return 1;
     *pval = val;
     return 0;
 }
 
-double
-ho_get_param_value(const disp_t *d, const fit_param_t *fp)
-{
-    const double *pval = ho_map_param((disp_t *) d, fp->param_nb);
+double kramers_get_param_value(const disp_t *d, const fit_param_t *fp) {
+    const double *pval = kramers_map_param((disp_t *) d, fp->param_nb);
     assert(pval != nullptr);
     return *pval;
 }
 
-int
-ho_write(writer_t *w, const disp_t *_d)
-{
-    const struct disp_kramers *d = &_d->disp.ho;
-    writer_printf(w, "%d", d->nb_hos);
+int kramers_write(writer_t *w, const disp_t *_d) {
+    const disp_kramers *d = &_d->disp.kramers;
+    writer_printf(w, "%d", d->n);
     writer_newline(w);
-    struct kramers_params *ho = d->params;
-    int i;
-    for (i = 0; i < d->nb_hos; i++, ho++) {
+    kramers_params *kramers = d->oscillators;
+    for (int i = 0; i < d->n; i++, kramers++) {
         if (i > 0) {
             writer_newline(w);
         }
-        writer_printf(w, "%g %g %g %g %g", ho->nosc, ho->en, ho->eg, ho->nu, ho->phi);
+        writer_printf(w, "%g %g %g %g", kramers->a, kramers->en, kramers->eg, kramers->phi);
     }
     writer_newline_exit(w);
     return 0;
 }
 
-int
-ho_read(lexer_t *l, disp_t *d_gen)
-{
-    struct disp_kramers *d = &d_gen->disp.ho;
-    d->params = nullptr;
+int kramers_read(lexer_t *l, disp_t *d_gen) {
+    disp_kramers *d = &d_gen->disp.kramers;
+    d->oscillators = nullptr;
     int n_osc;
     if (lexer_integer(l, &n_osc)) return 1;
-    d->nb_hos = n_osc;
-    d->params = (kramers_params *) emalloc(n_osc * sizeof(struct kramers_params));
-    struct kramers_params *ho = d->params;
-    int i;
-    for (i = 0; i < n_osc; i++, ho++) {
-        if (lexer_number(l, &ho->nosc)) return 1;
-        if (lexer_number(l, &ho->en)) return 1;
-        if (lexer_number(l, &ho->eg)) return 1;
-        if (lexer_number(l, &ho->nu)) return 1;
-        if (lexer_number(l, &ho->phi)) return 1;
+    d->n = n_osc;
+    d->oscillators = (kramers_params *) emalloc(n_osc * sizeof(kramers_params));
+    kramers_params *kramers = d->oscillators;
+    for (int i = 0; i < n_osc; i++, kramers++) {
+        if (lexer_number(l, &kramers->a)) return 1;
+        if (lexer_number(l, &kramers->en)) return 1;
+        if (lexer_number(l, &kramers->eg)) return 1;
+        if (lexer_number(l, &kramers->phi)) return 1;
     }
     return 0;
 }

@@ -64,7 +64,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
 {
     new FXLabel(this, "New Model");
     combo = new FXComboBox(this, 10, chooser, dispers_chooser::ID_DISPERS, COMBOBOX_STATIC|FRAME_SUNKEN);
-    combo->setNumVisible(8);
+    combo->setNumVisible(10);
     combo->appendItem("- choose a model");
     combo->appendItem("Harmonic Oscillator");
     combo->appendItem("Tauc-Lorentz");
@@ -74,6 +74,7 @@ fx_newmodel_selector::fx_newmodel_selector(FXWindow *chooser, FXComposite *p, FX
     combo->appendItem("Bruggeman");
     combo->appendItem("Sellmeier");
     combo->appendItem("Forouhi-Bloomer");
+    combo->appendItem("Kramers Oscillators");
 }
 
 disp_t *
@@ -112,6 +113,8 @@ fx_newmodel_selector::get_dispersion()
         double a[3] = { 1.03961212, 0.231792344, 1.01046945 };
         double b[3] = { 6.00069867e-3, 2.00179144e-2, 1.03560653e+2 };
         return disp_new_sellmeier("*sellmeier", a, b);
+    } else if (name == "Kramers Oscillators") {
+        return disp_kramers_new("*Kramers");
     }
     return nullptr;
 }

@@ -1,6 +1,6 @@
 cmpl kramers_n_value(const disp_t *d, double lambda) {
     const disp_kramers *kramers = &d->disp.kramers;
-    const double e = TL_EV_NM / lambda;
+    const double e = wavelength_nm_to_energy_ev(lambda);
 
     double er_sum = 1.0, ei_sum = 0.0;
     for (int k = 0; k < kramers->n; k++) {
