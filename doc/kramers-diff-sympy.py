@@ -2,11 +2,11 @@ import sys
 from sympy import *
 from string import Template
 
-import kramers_model
+import kramers
 
 def kramers_diff_epsilon_cse():
     a, en, eg, phi = symbols('a, en, eg, phi')
-    eps1, eps2 = kramers_model.epsilon()
+    eps1, eps2 = kramers.epsilon()
     cse_expr_list = [eps1, eps2]
     diff_variables = [a, en, eg, phi]
     eps1der = [diff(eps1, var) for var in diff_variables]
@@ -33,7 +33,7 @@ xe_cxx = [cxxcode(expr) for expr in xexprs]
 def format_definitions(defs):
     return "\n".join(["const auto %s = %s;" % (cxxcode(s), cxxcode(val)) for s, val in defs])
 
-print(Template(tauc_lorentz_code).substitute(
+print(Template(template_code).substitute(
     epsilon_defs= format_definitions(xdefs),
     eps1 = xe_cxx[0],
     eps2 = xe_cxx[1],

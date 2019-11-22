@@ -2,10 +2,10 @@ import sys
 from sympy import *
 from string import Template
 
-import kramers_model
+import kramers
 
 def kramers_epsilon_cse():
-    eps1, eps2 = kramers_model.epsilon()
+    eps1, eps2 = kramers.epsilon()
     return cse([eps1, eps2], optimizations='basic')
 
 xdefs, xexprs = kramers_epsilon_cse()

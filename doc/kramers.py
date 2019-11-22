@@ -19,7 +19,7 @@ def epsilon():
     eps_f2_re = cos(phi) + sin(phi) / (2 * lor_dp) * (en**2 + e**2) * (en**2 - e**2)
     eps_f2_im = - sin(phi) / (2 * lor_dp) * (en**2 + e**2) * egp * e
 
-    # We calculate now the real part of the epsion by taking the product
+    # We calculate now the real part of the epsilon by taking the product
     # of the two complex terms.
     eps_re = eps_f1_re * eps_f2_re - eps_f1_im * eps_f2_im
     eps_im = eps_f1_re * eps_f2_im + eps_f1_im * eps_f2_re
