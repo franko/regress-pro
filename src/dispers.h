@@ -14,6 +14,7 @@
 #include "disp-cauchy.h"
 #include "disp-sellmeier.h"
 #include "disp-lorentz.h"
+#include "disp-kramers.h"
 #include "dispers-classes.h"
 #include "writer.h"
 #include "lexer.h"
@@ -76,6 +77,7 @@ struct disp_struct {
         struct disp_bruggeman bruggeman;
         struct disp_fb fb;
         struct disp_lorentz lorentz;
+        struct disp_kramers kramers;
     } disp;
 };
 
