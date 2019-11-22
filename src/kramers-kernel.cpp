@@ -19,10 +19,10 @@ cmpl kramers_n_value(const disp_t *d, double lambda) {
         const auto x3 = std::pow(x2, 2);
         const auto x4 = (x0 + x1) * std::sin(phi) / (x0 * x1 + x3);
         const auto x5 = x2 * x4;
-        const auto x6 = -x5 + 2 * std::cos(phi);
+        const auto x6 = x5 - 2 * std::cos(phi);
         const auto x7 = (1.0 / 2.0) * a / (std::pow(eg, 2) * x0 + x3);
 
-        double eps1 = -x7 * (eg * en * x0 * x4 + x2 * x6);
+        double eps1 = x7 * (eg * en * x0 * x4 + x2 * x6);
         double eps2 = e * x7 * (-eg * x6 + en * x5);
         er_sum += eps1;
         ei_sum += eps2;
