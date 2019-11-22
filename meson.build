@@ -3,6 +3,10 @@ project('regress-pro', 'cpp', version: '2.1.0', default_options : ['cpp_std=c++1
 debug_build = get_option('buildtype') != 'release'
 dev_tag = get_option('dev_tag')
 
+if get_option('debug_deriv')
+    add_global_arguments('-DDEBUG_DISP_DERIV', language: 'cpp')
+endif
+
 conf = configuration_data()
 conf.set('VERSION_MAJOR', '2')
 conf.set('VERSION_MINOR', '1')
@@ -16,11 +20,10 @@ if host_machine.system() == 'windows'
     add_global_arguments('-DWIN32', language : 'cpp')
 endif
 
-if meson.get_compiler('cpp').get_id() == 'gcc'
-    add_global_arguments('-ffast-math', language : 'cpp')
-    if not debug_build
-        add_global_arguments(['-fno-exceptions', '-fno-rtti'], language : 'cpp')
-    endif
+regpro_link_args = []
+compiler_id = meson.get_compiler('cpp').get_id()
+if not debug_build and compiler_id in ['gcc', 'clang']
+    regpro_link_args += ['-static-libgcc', '-static-libstdc++']
 endif
 
 if debug_build
