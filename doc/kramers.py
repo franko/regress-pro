@@ -12,7 +12,7 @@ def epsilon():
     # first multiplicative term, real and imaginary part
     # \frac{N}{E_n^2 - E^2 + i E_g E}
     eps_f1_re = a * (en**2 - e**2) / lor_d
-    eps_f1_im = a * eg * e / lor_d
+    eps_f1_im = - a * eg * e / lor_d
 
     # second multiplicative term, real and imaginary part
     # \cos \phi + \sin \phi \, \frac{1}{2} \, \frac{E_n^2 + E^2}{E_n^2 - E^2 + i E_n E}
@@ -24,4 +24,4 @@ def epsilon():
     eps_re = eps_f1_re * eps_f2_re - eps_f1_im * eps_f2_im
     eps_im = eps_f1_re * eps_f2_im + eps_f1_im * eps_f2_re
 
-    return (eps_re, eps_im)
+    return (eps_re, -eps_im)
