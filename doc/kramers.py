@@ -16,8 +16,9 @@ def epsilon():
 
     # second multiplicative term, real and imaginary part
     # \cos \phi + \sin \phi \, \frac{1}{2} \, \frac{E_n^2 + E^2}{E_n^2 - E^2 + i E_n E}
-    eps_f2_re = cos(phi) + sin(phi) / (2 * lor_dp) * (en**2 + e**2) * (en**2 - e**2)
-    eps_f2_im = - sin(phi) / (2 * lor_dp) * (en**2 + e**2) * egp * e
+    f = (en**2 + e**2) / (2 * lor_dp)
+    eps_f2_re = cos(phi) + sin(phi) * f * (en**2 - e**2)
+    eps_f2_im = - sin(phi) * f * egp * e
 
     # We calculate now the real part of the epsilon by taking the product
     # of the two complex terms.
