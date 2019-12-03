@@ -65,15 +65,15 @@ template <typename Float> Float sqr(Float x) { return x * x; }
 static double KKIntegrandF(double x, void *param) {
     const KramersKKData *data = (const KramersKKData *) param;
     const cmpl epsilon = kramers_epsilon_raw(data->kramers, x);
-    const double chi2 = epsilon.imag();
-    return -(2 / math::Pi()) * x * chi2 / (sqr(x) - sqr(data->e));
+    const double chi2 = -epsilon.imag();
+    return (2 / math::Pi()) * x * chi2 / (sqr(x) - sqr(data->e));
 }
 
 static double KKPValIntegrandF(double x, void *param) {
     const KramersKKData *data = (const KramersKKData *) param;
     const cmpl epsilon = kramers_epsilon_raw(data->kramers, x);
-    const double chi2 = epsilon.imag();
-    return -(2 / math::Pi()) * x * chi2 / (x + data->e);
+    const double chi2 = -epsilon.imag();
+    return (2 / math::Pi()) * x * chi2 / (x + data->e);
 }
 
 int main() {
@@ -124,13 +124,13 @@ int main() {
 
         lineN.LineTo(e_eval, result_pval + result_inf);
         lineNRef.LineTo(e_eval, eps_expected.real());
-        lineK.LineTo(e_eval, eps_expected.imag());
+        lineK.LineTo(e_eval, -eps_expected.imag());
 
         const double lambda_eval = EnergyToWavelength(e_eval);
         if (lambda_eval >= lambda_min && lambda_eval <= lambda_max) {
             lineNLam.LineTo(lambda_eval, result_pval + result_inf);
             lineNRefLam.LineTo(lambda_eval, eps_expected.real());
-            lineKLam.LineTo(lambda_eval, eps_expected.imag());
+            lineKLam.LineTo(lambda_eval, -eps_expected.imag());
         }
     }
 
