@@ -3,9 +3,9 @@
 #include <cmath>
 #include <gsl/gsl_integration.h>
 
-#include "libcanvas.h"
+#include "elem/elem.h"
 
-using namespace libcanvas;
+using namespace elem;
 
 typedef std::complex<double> cmpl;
 
