@@ -1,3 +1,4 @@
 build*
+.build*
 tests/log
-fox-gui/gitversion.cpp
+__pycache__
