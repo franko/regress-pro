@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "FXLibcanvasWindow.h"
+#include "elem/elem.h"
+
 #include "regress_pro_window.h"
 #include "regress_pro_testing.h"
 
@@ -32,7 +33,7 @@ const char *read_script_options(int argc, char** argv) {
 
 int main(int argc,char *argv[])
 {
-    libcanvas::InitializeFonts();
+    elem::InitializeFonts();
     regress_pro app;
 
     // Open display

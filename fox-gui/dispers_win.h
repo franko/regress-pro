@@ -3,7 +3,8 @@
 
 #include <fx.h>
 
-#include "FXLibcanvasWindow.h"
+#include "elem/elem.h"
+#include "FXElemWindow.h"
 
 #include "dispers.h"
 #include "sampling.h"
@@ -33,8 +34,8 @@ private:
     sampling_unif m_sampling;
 
     FXMenuPane* dispmenu;
-    FXLibcanvasWindow *m_canvas;
-    libcanvas::Plot m_plot_n, m_plot_k;
+    FXElemWindow *m_elem_window;
+    elem::Plot m_plot_n, m_plot_k;
 };
 
 #endif

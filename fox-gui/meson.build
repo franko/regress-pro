@@ -1,6 +1,6 @@
 fox_dep = dependency('fox')
 agg_dep = dependency('libagg')
-libcanvasfox_dep = dependency('libcanvasfox')
+libelemfox_dep = dependency('libelemfox')
 
 foxgui_incdir = include_directories('.')
 
@@ -8,7 +8,7 @@ fox_src = ['disp-lookup-components.cpp', 'dispers_sampling_optim.cpp', 'Progress
 
 executable('regress-pro', fox_src,
            include_directories: [foxgui_incdir, kernel_incdir],
-           dependencies: [gsl_dep, nlopt_dep, fox_dep, agg_dep, libcanvasfox_dep, thread_dep],
+           dependencies: [gsl_dep, nlopt_dep, fox_dep, agg_dep, libelemfox_dep, thread_dep],
            link_with: libkernel,
            link_args: regpro_link_args,
            gui_app: not debug_build, install: true)
