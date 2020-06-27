@@ -7,4 +7,6 @@ if libelem_dep.found()
         dependencies: [gsl_dep, libelem_dep, thread_dep])
     executable('kk-kramers-test-compute', 'kk-kramers-test-compute.cpp',
         dependencies: [gsl_dep, libelem_dep, thread_dep])
+    executable('kk-ho-first-order-deriv-compute', 'kk-ho-first-order-deriv-compute.cpp',
+        dependencies: [gsl_dep, libelem_dep, thread_dep])
 endif
