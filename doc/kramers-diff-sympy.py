@@ -5,7 +5,7 @@ from string import Template
 import kramers
 
 def kramers_diff_epsilon_cse():
-    a, en, eg, phi = symbols('a, en, eg, phi')
+    a, en, eg, phi = symbols('a, en, eg, phi', real=True)
     eps1, eps2 = kramers.epsilon()
     cse_expr_list = [eps1, eps2]
     diff_variables = [a, en, eg, phi]
