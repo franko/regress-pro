@@ -2,9 +2,9 @@
 #include <cmath>
 #include <gsl/gsl_integration.h>
 
-#include "libcanvas.h"
+#include "elem/elem.h"
 
-using namespace libcanvas;
+using namespace elem;
 
 template <typename Float> Float sqr(Float x) { return x * x; }
 
