@@ -7,24 +7,18 @@ include $(SOURCE_DIR)/makesystem
 
 COMPILE = $(CC) $(CFLAGS) $(DEFS) $(INCLUDES)
 
-ifeq ($(HOST_SYS),Windows)
-  INCLUDES += -Ic:/fra/apps/include
-  LIBS += -Lc:/fra/apps/lib
+FOX_INCLUDES = $(shell pkg-config --cflags fox)
+FOX_LIBS = $(shell pkg-config --libs fox)
 
-  FOX_HOME = c:/fra/src/fox-1.6.43
-  FOX_LIBS = -L$(FOX_HOME)/src -lfox
-  FOX_INCLUDES = -I$(FOX_HOME)/include
-else
-  FOX_LIBS = $(shell fox-config --libs)
-  FOX_INCLUDES = $(shell fox-config --cflags)
-endif
+GSL_INCLUDES = $(shell pkg-config --cflags gsl)
+GSL_LIBS = $(shell pkg-config --libs gsl)
 
-GSL_LIBS = -lgsl -lblas -lm
-GSL_INCLUDES =
+AGG_INCLUDES = $(shell pkg-config --cflags libagg)
+AGG_LIBS = $(shell pkg-config --libs libagg)
+
+LIBS += $(FOX_LIBS) $(GSL_LIBS) $(AGG_LIBS) -lsupc++ -pthread
 
 REG_LIBS = -lmhash -lgmp
-
-LIBS += $(FOX_LIBS) $(GSL_LIBS) -lagg -lsupc++
 
 ifeq ($(HOST_SYS),Windows)
   LIBS += -lgdi32 -lwsock32 -mwindows
