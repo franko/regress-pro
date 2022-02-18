@@ -278,7 +278,7 @@ regress_pro_window::onCmdAbout(FXObject *, FXSelector, void *)
     new FXLabel(side,"R e g r e s s   P r o",nullptr,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
     new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
     FXString release_string = regressProApp()->get_release_string();
-    new FXLabel(side,FXStringFormat("\nRegress Pro, version %s, %s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",release_string.text(),regressProApp()->get_host_string().text(),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),nullptr,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    new FXLabel(side,FXString::value("\nRegress Pro, version %s, %s.\n\n" "Regress Pro is a scientific / industrial software to perform regression\nanalysis of measurement data coming from spectroscopic\nellipsometers or reflectometers.\n" "Regress Pro uses the FOX Toolkit version %d.%d.%d.\nCopyright (C) 2005-2015 Francesco Abbate (francesco.bbt@gmail.com).\n",release_string.text(),regressProApp()->get_host_string().text(),FOX_MAJOR,FOX_MINOR,FOX_LEVEL),nullptr,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXButton *button=new FXButton(side,"&OK",nullptr,&about,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);
     button->setFocus();
     about.execute(PLACEMENT_OWNER);
@@ -410,7 +410,7 @@ regress_pro_window::onCmdRunMultiFit(FXObject*,FXSelector,void *)
     text_fit_result.append(analysis.text());
 
     resulttext->setText(text_fit_result);
-    resulttext->setModified(TRUE);
+    resulttext->setModified(true);
 
     set_stack_result(stack_copy(fit->stack_list[0]));
     m_result_stack_match = true;
@@ -536,7 +536,7 @@ str_ptr regress_pro_window::run_fit_command() {
         fputs(fit_result.text(), stdout);
     } else {
         resulttext->setText(fit_result);
-        resulttext->setModified(TRUE);
+        resulttext->setModified(true);
     }
     return nullptr;
 }

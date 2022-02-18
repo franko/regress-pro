@@ -302,13 +302,13 @@ dispers_chooser::dispers_chooser(FXWindow* win, FXuint opts, FXint pl, FXint pr,
     FXHorizontalFrame *hf = new FXHorizontalFrame(this,LAYOUT_FILL_X|LAYOUT_FILL_Y);
     FXSpring *listspring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 20, 0);
     catlist = new FXList(listspring, this, ID_CATEGORY, LIST_SINGLESELECT|LAYOUT_FILL_Y|LAYOUT_FILL_X);
-    catlist->appendItem("Library", nullptr, nullptr, TRUE);
-    catlist->appendItem("Choose File", nullptr, nullptr, TRUE);
-    catlist->appendItem("New Model", nullptr, nullptr, TRUE);
-    catlist->appendItem("User List", nullptr, nullptr, TRUE);
-    catlist->appendItem("Preset List", nullptr, nullptr, TRUE);
-    catlist->appendItem("Glass Library", nullptr, nullptr, TRUE);
-    catlist->selectItem(0, FALSE);
+    catlist->appendItem("Library", nullptr, nullptr, true);
+    catlist->appendItem("Choose File", nullptr, nullptr, true);
+    catlist->appendItem("New Model", nullptr, nullptr, true);
+    catlist->appendItem("User List", nullptr, nullptr, true);
+    catlist->appendItem("Preset List", nullptr, nullptr, true);
+    catlist->appendItem("Glass Library", nullptr, nullptr, true);
+    catlist->selectItem(0, false);
 
     FXSpring *vframespring = new FXSpring(hf, LAYOUT_FILL_X|LAYOUT_FILL_Y, 80, 0);
     vframe = new FXVerticalFrame(vframespring,LAYOUT_FILL_X|LAYOUT_FILL_Y);
