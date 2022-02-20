@@ -46,9 +46,9 @@ void fit_panel::config_spectral_range()
     m_fit->get_sampling(wls, wle, wld);
 
     if(wld == 0.0) {
-        m_wl_entry->setText(FXStringFormat("%.3g-%.3g", wls, wle));
+        m_wl_entry->setText(FXString::value("%.3g-%.3g", wls, wle));
     } else {
-        m_wl_entry->setText(FXStringFormat("%.3g-%.3g,%g", wls, wle, wld));
+        m_wl_entry->setText(FXString::value("%.3g-%.3g,%g", wls, wle, wld));
     }
     range_dirty = false;
 }
@@ -122,7 +122,7 @@ fit_panel::on_update_param(FXObject *_txt, FXSelector, void*)
     param_info* p = (param_info*) txt->getUserData();
     if(p->is_dirty) {
         unsigned k = this->get_parameter_index(p);
-        FXString s = FXStringFormat("%g", m_fit->get_parameter_value(k));
+        FXString s = FXString::value("%g", m_fit->get_parameter_value(k));
         txt->setText(s, false);
         p->is_dirty = false;
         return 1;
@@ -243,7 +243,7 @@ long fit_panel::on_cmd_run_fit(FXObject*, FXSelector, void* ptr)
 
         for(unsigned k = 0; k < m_parameters.size(); k++) {
             param_info& p = m_parameters[k];
-            FXString s = FXStringFormat("%g", m_fit->get_parameter_value(k));
+            FXString s = FXString::value("%g", m_fit->get_parameter_value(k));
             p.text_field->setText(s);
             p.is_dirty = true;
         }

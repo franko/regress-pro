@@ -157,7 +157,7 @@ registered_app::show_registration_dialog()
     new FXLabel(side,"R e g r e s s   P r o",NULL,JUSTIFY_LEFT|ICON_BEFORE_TEXT|LAYOUT_FILL_X);
     new FXHorizontalSeparator(side,SEPARATOR_LINE|LAYOUT_FILL_X);
     new FXLabel(side,FXString("\nPlease register your copy of Regress Pro for Windows.\n"),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    new FXLabel(side,FXStringFormat("Product Release Tag : %03i\n", REGISTRATION_VERSION),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    new FXLabel(side,FXString::value("Product Release Tag : %03i\n", REGISTRATION_VERSION),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXMatrix *mat = new FXMatrix(side, 2, LAYOUT_FILL_X|LAYOUT_FILL_Y|MATRIX_BY_COLUMNS, 0, 0, 0, 0, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, DEFAULT_SPACING, 1, 1);
 
@@ -203,7 +203,7 @@ registered_app::show_registration_message()
     new FXLabel(mat, "Key:");
     new FXLabel(mat, key);
 
-    new FXLabel(side,FXStringFormat("Product Release Tag : %03i\n", REGISTRATION_VERSION),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
+    new FXLabel(side,FXString::value("Product Release Tag : %03i\n", REGISTRATION_VERSION),NULL,JUSTIFY_LEFT|LAYOUT_FILL_X|LAYOUT_FILL_Y);
 
     FXHorizontalFrame *bfrm = new FXHorizontalFrame(side, LAYOUT_SIDE_RIGHT|LAYOUT_FILL_X,0,0,0,0, 10,10,10,10, 0,0);
     FXButton *button = new FXButton(bfrm,"&Ok",NULL,&dlg,FXDialogBox::ID_ACCEPT,BUTTON_INITIAL|BUTTON_DEFAULT|FRAME_RAISED|FRAME_THICK|LAYOUT_RIGHT,0,0,0,0,32,32,2,2);

@@ -125,13 +125,13 @@ void recipe_window::setup_parameters_list()
 void recipe_window::setup_multi_sample_parameters(bool create_elements)
 {
     if (!recipe->ms_setup) {
-        if (multi_sample_button->getCheck() == TRUE) {
-            multi_sample_button->setCheck(FALSE, FALSE);
+        if (multi_sample_button->getCheck() == true) {
+            multi_sample_button->setCheck(false, false);
             disable_multi_sample();
         }
     } else {
-        if (multi_sample_button->getCheck() != TRUE) {
-            multi_sample_button->setCheck(TRUE, FALSE);
+        if (multi_sample_button->getCheck() != true) {
+            multi_sample_button->setCheck(true, false);
             enable_multi_sample(create_elements);
         } else {
             iparams_listbox->clearItems();

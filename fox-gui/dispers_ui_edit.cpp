@@ -457,8 +457,8 @@ void fx_disp_table_window::setup_dialog()
     for (int i = 0; i < rows; i++) {
         float n, k;
         float wl = m_iterator->get_nk_row(i, &n, &k);
-        m_table->setItemText(i, 0, FXStringFormat("%g", wl));
-        m_table->setItemText(i, 1, FXStringFormat("%g", n));
-        m_table->setItemText(i, 2, FXStringFormat("%g", k));
+        m_table->setItemText(i, 0, FXString::value("%g", wl));
+        m_table->setItemText(i, 1, FXString::value("%g", n));
+        m_table->setItemText(i, 2, FXString::value("%g", k));
     }
 }
