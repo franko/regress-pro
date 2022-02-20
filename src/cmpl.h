@@ -3,8 +3,11 @@
 
 #include <math.h>
 
-#ifdef __cplusplus
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
+#ifdef __cplusplus
 
 struct cmpl {
     enum part_e {

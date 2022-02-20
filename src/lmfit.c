@@ -81,7 +81,8 @@ lmfit_iter(gsl_vector *x, gsl_multifit_function_fdf *f,
 
         status = gsl_multifit_test_delta(s->dx, s->x, epsabs, epsrel);
 
-#ifdef FIT_DEBUG
+/* Disabled because it errors out, s->J is not defined. */
+#if 0 && defined(FIT_DEBUG)
         gsl_multifit_gradient(s->J, s->f, grad);
         printf("gradient: ");
         print_vector_stdout(" %f", grad);

@@ -1,0 +1,2 @@
+option('registration', type : 'boolean', value : false, description : 'Activate product registration')
+
