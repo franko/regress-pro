@@ -136,7 +136,7 @@ registered_app::on_registration_enter(FXObject*,FXSelector,void*)
                                   "We would like to remember your that Regress Pro is Free Software.\n"
                                   "By registering your copy you support its development.\n"
                                   "Thank you very much.",
-                                  VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH);
+                                  REGPRO_VERSION_MAJOR, REGPRO_VERSION_MINOR, REGPRO_VERSION_PATCH);
 
         m_registered = true;
 
