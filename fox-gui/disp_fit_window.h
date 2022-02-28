@@ -6,6 +6,7 @@
 #include "fit_window.h"
 
 class disp_fit_manager;
+class regress_pro;
 
 class disp_fit_window : public fit_window {
     FXDECLARE(disp_fit_window)
@@ -16,7 +17,7 @@ private:
     disp_fit_window &operator=(const disp_fit_window&);
 
 public:
-    disp_fit_window(disp_fit_manager* fit,FXWindow* win,const FXString& name,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
+    disp_fit_window(regress_pro *app, disp_fit_manager* fit,FXWindow* win,const FXString& name,FXuint opts=DECOR_ALL,FXint x=0,FXint y=0,FXint w=0,FXint h=0,FXint pl=0,FXint pr=0,FXint pt=0,FXint pb=0,FXint hs=0,FXint vs=0);
     virtual ~disp_fit_window();
 
     long on_cmd_select(FXObject *, FXSelector, void *);

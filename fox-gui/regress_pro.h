@@ -17,6 +17,9 @@ public:
     regress_pro();
     virtual ~regress_pro();
 
+    // Get the system's scaling factor;
+    double scale() const;
+
 #ifndef REGPRO_REGISTRATION
     bool is_registered() const { return true; }
 #endif

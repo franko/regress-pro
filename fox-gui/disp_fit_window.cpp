@@ -3,6 +3,7 @@
 #include "dispers_ui_utils.h"
 #include "dispers_edit_window.h"
 #include "dispers-library.h"
+#include "regress_pro.h"
 
 // Map
 FXDEFMAP(disp_fit_window) disp_fit_window_map[]= {
@@ -16,8 +17,8 @@ FXDEFMAP(disp_fit_window) disp_fit_window_map[]= {
 // Object implementation
 FXIMPLEMENT(disp_fit_window,fit_window,disp_fit_window_map,ARRAYNUMBER(disp_fit_window_map));
 
-disp_fit_window::disp_fit_window(disp_fit_manager* fit, FXWindow *win, const FXString& name,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
-    fit_window(fit, win, name, opts, x, y, w, h, pl, pr, pt, pb, hs, vs),
+disp_fit_window::disp_fit_window(regress_pro *app, disp_fit_manager* fit, FXWindow *win, const FXString& name,FXuint opts,FXint x,FXint y,FXint w,FXint h,FXint pl,FXint pr,FXint pt,FXint pb,FXint hs,FXint vs):
+    fit_window(fit, win, name, opts, x, y, w * app->scale(), h * app->scale(), pl, pr, pt, pb, hs, vs),
     m_fit_manager(fit)
 {
     dispmenu = new FXMenuPane(this);

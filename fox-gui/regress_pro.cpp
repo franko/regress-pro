@@ -26,8 +26,17 @@ regress_pro::regress_pro() :
     add_icon = new FXGIFIcon(this, new_gif);
 }
 
+double regress_pro::scale() const {
+    const double scale_factor = (double) monospace_font.getCharWidth('x') / 6.66667;
+    if (scale_factor <= 1.01) {
+        return 1.0;
+    }
+    return scale_factor;
+}
+
 regress_pro::~regress_pro()
 {
 	delete delete_icon;
 	delete add_icon;
 }
+

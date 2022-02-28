@@ -92,6 +92,7 @@ public:
     regress_pro* regressProApp() const { return (regress_pro*) getApp(); }
 
     fit_recipe *get_current_recipe() const { return recipe; }
+    void scale_resize();
 
     long onCmdDatasetEdit(FXObject*,FXSelector,void*);
     long onCmdLoadSpectra(FXObject*,FXSelector,void*);

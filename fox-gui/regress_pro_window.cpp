@@ -94,7 +94,7 @@ const FXHiliteStyle regress_pro_window::tstyles[] = {
 
 // Make some windows
 regress_pro_window::regress_pro_window(regress_pro* a)
-    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,720,520),
+    : FXMainWindow(a,"Regress Pro",NULL,&a->appicon,DECOR_ALL,20,20,800,600),
       spectrum(NULL), recipeFilename("untitled"),
       result_filmstack_window(NULL), m_disp_fit_window(NULL), my_batch_window(NULL),
       m_enlarged_window(false), m_result_stack_match(true)
@@ -174,6 +174,14 @@ regress_pro_window::regress_pro_window(regress_pro* a)
     m_interactive_fit_target.bind(result_filmstack_window);
 
     m_title_dirty = true;
+}
+
+void regress_pro_window::scale_resize() {
+    const double scale = regressProApp()->scale();
+    if (scale > 1.0) {
+        FXint w = getWidth(), h = getHeight();
+        resize(w * scale, h * scale);
+    }
 }
 
 void
@@ -258,6 +266,7 @@ long
 regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 {
     reg_check_point(this);
+    regress_pro *app = regressProApp();
 
     struct disp_fit_engine *fit = disp_fit_engine_new();
 
@@ -266,7 +275,7 @@ regress_pro_window::onCmdDispersOptim(FXObject*,FXSelector,void*)
 
     if (!m_disp_fit_window) {
         disp_fit_manager *mgr = new disp_fit_manager(fit);
-        m_disp_fit_window = new disp_fit_window(mgr, this, "Dispersion Fit", DECOR_ALL, 0, 0, 640, 480);
+        m_disp_fit_window = new disp_fit_window(app, mgr, this, "Dispersion Fit", DECOR_ALL, 0, 0, 640, 480);
         m_disp_fit_window->create();
     }
 

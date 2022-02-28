@@ -29,8 +29,8 @@ int main(int argc,char *argv[])
     new FXToolTip(&app);
     // Main window
     regress_pro_window* window = new regress_pro_window(&app);
-
     app.create();
+    window->scale_resize();
     window->show(PLACEMENT_SCREEN);
     return app.run();
 }
