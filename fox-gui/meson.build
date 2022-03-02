@@ -1,8 +1,8 @@
 regpro_gui_deps = []
 
 regpro_gui_deps += dependency('fox')
-libagg_proj = subproject('libagg')
-regpro_gui_deps += libagg_proj.get_variable('libagg_dep')
+libagg_dep = dependency('libagg', fallback: ['libagg', 'libagg_dep'])
+regpro_gui_deps += libagg_dep
 
 regpro_cpp_args = regpro_core_args
 
