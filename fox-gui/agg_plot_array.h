@@ -1,8 +1,8 @@
 #ifndef AGG_PLOT_ARRAY_H
 #define AGG_PLOT_ARRAY_H
 
-#include <agg2/agg_array.h>
-#include <agg2/agg_trans_affine.h>
+#include <agg_array.h>
+#include <agg_trans_affine.h>
 
 #include "canvas.h"
 

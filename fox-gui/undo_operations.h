@@ -1,7 +1,7 @@
 #ifndef UNDO_OPERATIONS_H
 #define UNDO_OPERATIONS_H
 
-#include <agg2/agg_array.h>
+#include <agg_array.h>
 
 #include "fit-params.h"
 #include "fit_manager.h"

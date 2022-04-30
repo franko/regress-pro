@@ -2,7 +2,7 @@
 #define AGGPLOT_COLORS_H
 
 #include "defs.h"
-#include "agg2/agg_color_rgba.h"
+#include "agg_color_rgba.h"
 
 namespace colors {
 

@@ -2,7 +2,7 @@
 #define FIT_PANEL_H
 
 #include <fx.h>
-#include <agg2/agg_array.h>
+#include <agg_array.h>
 
 #include "fit_manager.h"
 #include "plot_canvas.h"

@@ -1,7 +1,7 @@
 #ifndef DISP_VS_H
 #define DISP_VS_H
 
-#include <agg2/agg_basics.h>
+#include <agg_basics.h>
 
 #include "cmpl.h"
 #include "dispers.h"

@@ -1,7 +1,7 @@
 #ifndef AGGPLOT_UTILS_H
 #define AGGPLOT_UTILS_H
 
-#include "agg2/agg_trans_affine.h"
+#include "agg_trans_affine.h"
 
 #ifdef min
 #undef min

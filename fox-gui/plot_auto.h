@@ -24,8 +24,8 @@
 #include "agg_plot.h"
 #include "rect.h"
 
-#include "agg2/agg_array.h"
-#include "agg2/agg_basics.h"
+#include "agg_array.h"
+#include "agg_basics.h"
 
 namespace newplot {
 

@@ -3,7 +3,7 @@
 
 #include <fx.h>
 
-#include <agg2/agg_rendering_buffer.h>
+#include <agg_rendering_buffer.h>
 
 #include "plot_auto.h"
 #include "agg_plot_array.h"

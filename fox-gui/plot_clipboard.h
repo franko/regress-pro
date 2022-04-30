@@ -1,7 +1,7 @@
 #ifndef PLOT_CLIPBOARD_H
 #define PLOT_CLIPBOARD_H
 
-#include "agg2/agg_array.h"
+#include "agg_array.h"
 #include "str_cpp.h"
 
 struct cpair {
